@@ -2,13 +2,13 @@
 // Copyright (C) 2026 realvirtual GmbH <https://realvirtual.io>
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = resolve(__dirname, '..');
 const VIGNETTE = resolve(ROOT, 'public/embed/vignettes/conveyor-sensor.glb');
-const DIST = resolve(ROOT, 'dist-embed');
 const MAX_VIGNETTE_BYTES = 3 * 1024 * 1024;
 const REQUIRED_COMPONENTS = [
   'ConveyorBelt',
@@ -87,35 +87,43 @@ describe('rv-embed AP3 vignette pipeline', () => {
   });
 
   it('emits the Draco decoder beside the CDN-relative embed entry', () => {
+    const dist = mkdtempSync(join(tmpdir(), 'rv-embed-vignette-'));
     const npxCli = process.platform === 'win32'
       ? resolve(dirname(process.execPath), 'node_modules/npm/bin/npx-cli.js')
       : null;
-    execFileSync(npxCli ? process.execPath : 'npx', [
-      ...(npxCli ? [npxCli] : []),
-      'vite',
-      'build',
-      '--config',
-      'vite.embed.config.ts',
-    ], {
-      cwd: ROOT,
-      stdio: 'pipe',
-    });
+    try {
+      execFileSync(npxCli ? process.execPath : 'npx', [
+        ...(npxCli ? [npxCli] : []),
+        'vite',
+        'build',
+        '--config',
+        'vite.embed.config.ts',
+        '--outDir',
+        dist,
+      ], {
+        cwd: ROOT,
+        stdio: 'pipe',
+        maxBuffer: 50 * 1024 * 1024,
+      });
 
-    for (const file of DRACO_FILES) {
-      const path = resolve(DIST, 'draco', file);
-      expect(existsSync(path), `missing dist decoder ${file}`).toBe(true);
-      expect(statSync(path).size).toBeGreaterThan(0);
+      for (const file of DRACO_FILES) {
+        const path = resolve(dist, 'draco', file);
+        expect(existsSync(path), `missing dist decoder ${file}`).toBe(true);
+        expect(statSync(path).size).toBeGreaterThan(0);
+      }
+      const chunkDir = resolve(dist, 'chunks');
+      const decoderOwner = readdirSync(chunkDir)
+        .filter((file) => file.endsWith('.js'))
+        .map((file) => resolve(chunkDir, file))
+        .find((file) => (
+          /new URL\(["']\.\.\/draco\/["'],\s*import\.meta\.url\)/u
+            .test(readFileSync(file, 'utf8'))
+        ));
+      expect(decoderOwner, 'missing module-relative Draco URL').toBeTruthy();
+      expect(resolve(dirname(decoderOwner!), '../draco')).toBe(resolve(dist, 'draco'));
+    } finally {
+      rmSync(dist, { recursive: true, force: true });
     }
-    const chunkDir = resolve(DIST, 'chunks');
-    const decoderOwner = readdirSync(chunkDir)
-      .filter((file) => file.endsWith('.js'))
-      .map((file) => resolve(chunkDir, file))
-      .find((file) => (
-        /new URL\(["']\.\.\/draco\/["'],\s*import\.meta\.url\)/u
-          .test(readFileSync(file, 'utf8'))
-      ));
-    expect(decoderOwner, 'missing module-relative Draco URL').toBeTruthy();
-    expect(resolve(dirname(decoderOwner!), '../draco')).toBe(resolve(DIST, 'draco'));
   }, 120_000);
 });
 

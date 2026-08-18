@@ -10,6 +10,20 @@
       "WebFetch",
       "mcp__playwright__*"
     ],
-    "deny": []
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git checkout -- .)",
+      "Bash(git restore .)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(killall *)",
+      "Bash(pkill *)",
+      "Bash(taskkill *)",
+      "Bash(sudo *)",
+      "Bash(npm publish *)",
+      "Bash(chmod 777 *)"
+    ]
   }
 }

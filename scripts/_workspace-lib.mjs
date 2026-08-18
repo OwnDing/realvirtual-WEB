@@ -2128,8 +2128,12 @@ function rewriteCustomerWorkspaceNames(root) {
 
 function curateCoreMarkdownLinks(workspaceRoot, coreOutput) {
   const managedRootTargets = new Map([
+    ['AGENTS.md', '../AGENTS.md'],
     ['CLAUDE.md', '../CLAUDE.md'],
     ['CONTRIBUTING.md', '../CONTRIBUTING.md'],
+    ['docs/README.md', '../docs/README.md'],
+    ['docs/governance/', '../docs/governance/'],
+    ['docs/exec-plans/', '../docs/exec-plans/'],
     ['.claude/commands/', '../.claude/commands/'],
   ]);
   walk(coreOutput, (absolute, _rel, entry) => {

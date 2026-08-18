@@ -22,6 +22,8 @@ authority: normative
 | `superseded` | 已被替代 | 禁止用于新实现 |
 | `generated` | 由代码或工具生成 | 以生成源为准，禁止手改生成区块 |
 
+`authority` 与 `status` 是两个维度：前者说明文档承担规范、流程、登记、提议或证据中的哪一种职责，后者说明它是否已生效。完整枚举、Owner 注册表、合法组合和复审告警周期以机器可读的 [`governance/document-metadata-policy.json`](governance/document-metadata-policy.json) 为单一事实源。
+
 ## 权威入口
 
 | 类别 | 文档 |
@@ -62,9 +64,9 @@ authority: normative
 doc_id: UNIQUE-ID
 title: 文档标题
 status: approved|draft|reference|snapshot|superseded|generated
-owner: product|architecture|engineering|qa|security|maintainers
+owner: product|architecture|engineering|qa|security|maintainers|ux
 last_reviewed: YYYY-MM-DD
-authority: normative|normative-process|normative-registry|reference|snapshot|generated
+authority: normative|normative-process|normative-registry|proposed|reference|snapshot|generated
 ---
 ```
 
@@ -77,3 +79,4 @@ authority: normative|normative-process|normative-registry|reference|snapshot|gen
 5. 移动或重命名文档必须同步链接、代码注释、索引和登记表。
 6. 根目录旧技术文档在迁移前由 [`LEGACY_DOCUMENT_REGISTER.md`](LEGACY_DOCUMENT_REGISTER.md) 管理，不强行一次性重写。
 7. 运行 `./scripts/verify.sh governance` 检查元数据、唯一 ID、目录索引、链接、计划状态、旧文档登记和危险 AI 命令。
+8. `approved` 文档超过策略中的复审周期只产生显式 warning，不会仅因时间自动失效；Owner 必须结合语义漂移决定复审、降级或替代。

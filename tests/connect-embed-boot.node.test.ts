@@ -35,7 +35,7 @@ describe('CONNECT embedded boot gate', () => {
 
     const loaderBody = mainSource.slice(mainSource.indexOf('async function loadModel'), mainSource.indexOf('// Expose loadModel'));
     expect(loaderBody).toContain('if (!connectEmbedEnabled)');
-    expect(loaderBody).toContain('localStorage.setItem(LS_KEY_MODEL, url)');
-    expect(loaderBody).toContain('sceneStore.markGlbActive(url, label)');
+    expect(loaderBody).toContain('localStorage.setItem(LS_KEY_MODEL, identityUrl)');
+    expect(loaderBody).toContain('sceneStore.markGlbActive(identityUrl, label)');
   });
 });

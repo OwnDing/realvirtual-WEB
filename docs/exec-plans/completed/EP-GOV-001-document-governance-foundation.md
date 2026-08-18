@@ -5,7 +5,7 @@ status: approved
 plan_status: completed
 owner: architecture
 last_reviewed: 2026-08-18
-authority: normative-when-accepted
+authority: normative-process
 ---
 
 # EP-GOV-001：建立 AI Coding 文档治理基座

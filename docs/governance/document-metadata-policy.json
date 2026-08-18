@@ -1,0 +1,53 @@
+{
+  "statuses": [
+    "approved",
+    "draft",
+    "reference",
+    "snapshot",
+    "superseded",
+    "generated"
+  ],
+  "authorities": [
+    "normative",
+    "normative-process",
+    "normative-registry",
+    "proposed",
+    "reference",
+    "snapshot",
+    "generated"
+  ],
+  "owners": [
+    "product",
+    "architecture",
+    "engineering",
+    "qa",
+    "security",
+    "maintainers",
+    "ux"
+  ],
+  "allowed_authorities_by_status": {
+    "approved": [
+      "normative",
+      "normative-process",
+      "normative-registry"
+    ],
+    "draft": [
+      "proposed"
+    ],
+    "reference": [
+      "reference"
+    ],
+    "snapshot": [
+      "snapshot"
+    ],
+    "superseded": [
+      "reference"
+    ],
+    "generated": [
+      "generated"
+    ]
+  },
+  "review_warning_days": {
+    "approved": 180
+  }
+}

@@ -32,17 +32,20 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 ## 3. Governance 门禁
 
 - `docs/` 每个目录都有 `README.md`。
-- `docs/**/*.md` 都有完整 front matter，`doc_id` 全局唯一。
-- `archive`、`references`、`generated`、`delivery/snapshots` 的状态与路径一致。
-- Active/Completed ExecPlan 的 `plan_status` 与目录一致。
+- `docs/**/*.md` 都有完整 front matter，`doc_id` 全局唯一，`status`、`authority`、`owner` 和组合符合机器策略。
+- 每个目录 README 直接索引同目录 Markdown；CRLF/LF front matter 都按同一规则解析。
+- 特殊内容目录的 README 是 Approved 索引，目录中的 archive/reference/generated/snapshot 内容状态与路径一致。
+- Proposed/Active/Completed ExecPlan 的 `plan_status` 与目录一致，根目录只允许索引和模板。
 - Governed Markdown 和 Agent 入口的本地链接存在。
 - 每一份根目录 `doc-*.md` 与 `webviewer.mcp.md` 都被旧文档登记表覆盖。
-- `.claude/commands` 不包含全局 Node 进程清理、宽泛破坏性 Git/文件命令。
+- `.claude/commands`、活动 ExecPlan/Agent 入口的 shell 代码块、workflow 和 package scripts 不包含宽泛破坏性命令。
+- Claude Code 必须具备与 AI 安全规则对应的 deny 配置；该配置不替代跨工具 Governance Harness。
+- Approved 文档超过机器策略复审周期时输出 warning，但不只按日期自动撤销权威性。
 - 现有公开文档发布检查继续通过。
 
 ## 4. Static 门禁
 
-- 执行 `npm run lint`，保持 `engine -> viewer/plugin` 等已存在边界失败关闭。
+- 执行 `npm run lint`，保持 `engine -> viewer/plugin` 等已存在边界失败关闭。当前可证明的语义覆盖是已配置的边界规则；为兼容缺失私有 sibling 注册的 no-op 规则名不提供额外 Lint 保证。
 - 执行公共 `tsconfig.json`，不要求不存在的私有 sibling。
 - 执行 `git diff --check` 和 `git diff --cached --check`。
 - 不在 static 中生成文档、更新快照或自动修复格式。
@@ -73,9 +76,9 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 
 1. 无依赖 Governance Gate；
 2. 安装锁定依赖后的 Static Gate；
-3. Node + Browser 测试和公共 Build。
+3. 独立的 Node Gate、Browser Gate 和 Build Gate，使一个失败不会遮蔽其他证据。
 
-首次远程成功前状态是 `configured-pending-remote-run`；分支保护是否强制由 OD-005 决定。CI 不能替代 E2E、真实设备和人工 UX 验收。
+2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败；当时 `main`、`develop` 均没有 branch protection/ruleset。分支保护是否强制仍由 OD-005 决定，在 required checks 启用前不得使用 `enforced`。CI 不能替代 E2E、真实设备和人工 UX 验收。
 
 ## 8. 新增或修改门禁
 

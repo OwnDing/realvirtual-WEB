@@ -1,10 +1,10 @@
 ---
 doc_id: ARCHIVE-INDEX
 title: 历史归档索引
-status: superseded
+status: approved
 owner: architecture
 last_reviewed: 2026-08-18
-authority: reference
+authority: normative-registry
 ---
 
 # 历史归档索引

@@ -1,10 +1,10 @@
 ---
 doc_id: REFERENCE-INDEX
 title: 参考资料索引
-status: reference
+status: approved
 owner: architecture
 last_reviewed: 2026-08-18
-authority: reference
+authority: normative-registry
 ---
 
 # 参考资料索引

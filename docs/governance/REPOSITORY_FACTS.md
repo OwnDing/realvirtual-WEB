@@ -22,6 +22,7 @@ authority: normative-process
 | 完整 maintainer TypeScript 门禁 | `tsconfig.full.json`，可能依赖私有 sibling | 只有依赖存在且任务明确需要时运行 |
 | 测试 | Vitest Node + Browser、Playwright E2E | 读取 `package.json`、`vite.config.ts`、`playwright.config.ts` |
 | 文档状态 | 根 `doc-*.md` 尚未逐份治理审计 | 查看 [`../LEGACY_DOCUMENT_REGISTER.md`](../LEGACY_DOCUMENT_REGISTER.md) |
+| Quality Gates | run `32151338635`：Governance/Static 成功，组合 Node job 失败；`main`/`develop` 无 branch protection/ruleset | `gh run list`、`gh run view <id>`、GitHub branch protection/ruleset API；每次推送后重新验证 |
 
 ## 必做工作树检查
 

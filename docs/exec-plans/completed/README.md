@@ -10,5 +10,6 @@ authority: normative-registry
 # 已完成 ExecPlan 索引
 
 - [`EP-GOV-001-document-governance-foundation.md`](EP-GOV-001-document-governance-foundation.md)：建立文档优先、AI 安全、ExecPlan/ADR、Harness 与 CI 基座。
+- [`EP-GOV-002-governance-hardening.md`](EP-GOV-002-governance-hardening.md)：加固元数据/索引/计划状态、安全指令与 Quality Gates 证据闭环。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

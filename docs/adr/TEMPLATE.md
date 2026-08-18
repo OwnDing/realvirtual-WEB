@@ -5,7 +5,7 @@ status: draft
 adr_status: proposed
 owner: <owner>
 last_reviewed: YYYY-MM-DD
-authority: normative-when-accepted
+authority: proposed
 ---
 
 # ADR-XXXX：<决策标题>

@@ -78,7 +78,7 @@ describe('CONNECT plugin model-independent lifecycle', () => {
       setSignalMeta: vi.fn(),
       registerSignalProvider: vi.fn(),
     };
-    const viewer = { signalStore };
+    const viewer = { signalStore, loadTrust: { trusted: true } };
     const result = {};
     plugin.init();
     plugin.onModelLoaded(result as never, viewer as never);

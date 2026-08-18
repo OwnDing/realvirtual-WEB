@@ -51,4 +51,4 @@ Accepted ADR 必须同时满足 `status: approved` 和 `adr_status: accepted`。
 - 根目录 `doc-*.md` 保留原路径，由 [`../LEGACY_DOCUMENT_REGISTER.md`](../LEGACY_DOCUMENT_REGISTER.md) 统一登记为参考材料，直至逐份审计并迁入正式目录。
 - `schema/v1/rv-odt.json`、`schema/v1/specification.md` 和 conformance fixture 共同构成当前 rv-ODT 正式契约；三者不一致属于阻断性漂移。
 - `webviewer.mcp.md` 与 `src/plugins/mcp-bridge/help/*.md` 的生成围栏由 MCP 装饰器生成；围栏外解释文字仍需按普通文档维护。
-- `docs/archive/**` 必须是 `superseded`，`docs/references/**` 必须是 `reference`，`docs/generated/**` 必须是 `generated`，`docs/delivery/snapshots/**` 必须是 `snapshot`。
+- 特殊内容目录的 `README.md` 是 `approved + normative-registry` 索引；除此之外，`docs/archive/**` 内容必须是 `superseded`，`docs/references/**` 内容必须是 `reference`，`docs/generated/**` 内容必须是 `generated`，`docs/delivery/snapshots/**` 内容必须是 `snapshot`。

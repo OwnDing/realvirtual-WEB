@@ -5,7 +5,7 @@ status: draft
 plan_status: proposed
 owner: <owner>
 last_reviewed: YYYY-MM-DD
-authority: normative-when-accepted
+authority: proposed
 ---
 
 # EP-<AREA>-<NNN>：<任务标题>

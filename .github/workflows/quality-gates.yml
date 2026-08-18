@@ -35,8 +35,20 @@ jobs:
       - run: npm ci
       - run: ./scripts/verify.sh static
 
-  test-and-build:
-    name: Node, Browser and Build
+  node:
+    name: Node Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: ./scripts/verify.sh node
+
+  browser:
+    name: Browser Gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +58,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: ./scripts/verify.sh node
       - run: ./scripts/verify.sh browser
+
+  build:
+    name: Build Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
       - run: ./scripts/verify.sh build
