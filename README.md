@@ -283,13 +283,20 @@ This means AI assistants can design, build, test, and debug industrial digital t
 
 ### Getting Started with AI Development
 
-This repo includes a full [Claude Code](https://claude.ai/code) setup:
+This repo includes a tool-neutral AI Coding governance system plus a
+[Claude Code](https://claude.ai/code) compatibility setup:
 
-- **[CLAUDE.md](CLAUDE.md)** — Project conventions, architecture overview, and coding guidelines for AI assistants
+- **[AGENTS.md](AGENTS.md)** — Short, tool-neutral Agent entry and P0 rules
+- **[docs/README.md](docs/README.md)** — Governed product, architecture, contract, plan and acceptance index
+- **[docs/governance/](docs/governance/)** — Document priority, AI safety, change control, Definition of Done and Harness
+- **[docs/exec-plans/](docs/exec-plans/)** — Executable plans for cross-cutting or compatibility-sensitive work
+- **[CLAUDE.md](CLAUDE.md)** — Claude Code compatibility pointer to the same governed entry
 - **[.claude/commands/](.claude/commands/)** — Slash commands for common workflows: `/dev`, `/debug`, `/test`, `/build`, `/inspect`, `/license-check`
 - **[webviewer.mcp.md](webviewer.mcp.md)** — MCP tools reference for browser-side scene inspection
 
-Open this project in Claude Code and use `/dev` to start the dev server, `/debug drives` to inspect drive states, or `/test` to run the full test suite — all through natural language.
+Start by reading `AGENTS.md`. Use `./scripts/verify.sh governance` for documentation-only
+changes and `./scripts/verify.sh all` for the governed static, Node, browser and build gates.
+The `all` scope deliberately does not claim E2E, real PLC/device, CONNECT, WebXR or manual UX validation.
 
 ## The Two-Platform Strategy
 

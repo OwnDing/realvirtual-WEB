@@ -9,16 +9,23 @@ Start the Vite dev server with HMR.
 
 ## Task
 
-1. Kill any leftover Node.js processes to free ports:
+1. Inspect the intended port without changing any process:
 
 ```bash
-taskkill //F //IM node.exe 2>/dev/null || true
+lsof -nP -iTCP:5173 -sTCP:LISTEN 2>/dev/null || true
 ```
 
-2. Start the dev server in the background:
+If the port is occupied, identify the command and working directory. Reuse a healthy
+realvirtual WEB server when appropriate. Otherwise report the conflict or select an
+explicit alternate port for this task. Never terminate all Node.js processes and never
+stop a process that this task did not start.
+
+2. Start the dev server in an agent-managed background session:
 
 ```bash
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Run step 2 in the background. The server runs on `localhost:5173` and opens the browser automatically.
+Record the command, working directory, port and exact child PID/session. Stop only that
+recorded process when cleanup is requested. The server runs on `localhost:5173` unless
+an alternate port was explicitly selected.

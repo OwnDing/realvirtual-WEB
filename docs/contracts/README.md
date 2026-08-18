@@ -1,0 +1,18 @@
+---
+doc_id: CONTRACT-INDEX
+title: 契约文档索引
+status: approved
+owner: architecture
+last_reviewed: 2026-08-18
+authority: normative-registry
+---
+
+# 契约文档索引
+
+当前正式版本化契约主要位于：
+
+- [`../../schema/v1/rv-odt.json`](../../schema/v1/rv-odt.json)
+- [`../../schema/v1/specification.md`](../../schema/v1/specification.md)
+- [`../../schema/v1/conformance/README.md`](../../schema/v1/conformance/README.md)
+
+后续契约应逐步覆盖：项目清单、配置层级、插件 API、稳定装配端口、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。

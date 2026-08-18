@@ -16,7 +16,11 @@
  *      only gated the generated customer workspace; the mirror push was manual
  *      discipline. doc-deploy.md reached the public mirror that way.
  *
- * Exit 0 = the tracked docs are safe to publish. Exit 1 = findings (listed).
+ * The candidate set is tracked files plus non-ignored untracked files. Including
+ * untracked files makes the gate useful before `git add`: a new doc and the links
+ * pointing to it are validated as one prospective mirror change.
+ *
+ * Exit 0 = the candidate docs are safe to publish. Exit 1 = findings (listed).
  * `--warn-only` reports without failing.
  *
  * Usage: node scripts/assert-docs-publishable.mjs [--warn-only]
@@ -62,7 +66,7 @@ function neverDeliveredDocs() {
 }
 
 const tracked = new Set(
-  execFileSync('git', ['ls-files', '-z'], { cwd: ROOT })
+  execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
     .toString('utf8').split('\0').filter(Boolean).map((p) => p.replace(/\\/g, '/')),
 );
 

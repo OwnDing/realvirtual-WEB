@@ -55,6 +55,11 @@ Use `WebFetch` for all GET requests.
 
 ### WRITE operations (use Bash with curl POST)
 
+Only run a WRITE operation when the user explicitly requested that mutation and the
+target is confirmed as a local simulation or otherwise authorized test environment.
+For real devices, follow `docs/governance/AI_SAFETY.md`. A timeout is an unknown outcome:
+read back state before considering any retry.
+
 **Set a signal:**
 ```bash
 curl -s -X POST http://localhost:5173/__api/debug/cmd \

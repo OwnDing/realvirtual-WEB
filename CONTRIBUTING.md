@@ -9,6 +9,9 @@ rights described below.
 
 ## Development & Required Checks
 
+Read [AGENTS.md](AGENTS.md) and the [documentation governance index](docs/README.md)
+before changing governed contracts, persistence, industrial interfaces or cross-cutting architecture.
+
 ```bash
 npm install
 npm run dev          # Vite dev server with HMR
@@ -17,13 +20,15 @@ npm run dev          # Vite dev server with HMR
 Before opening a pull request, all of the following must be green:
 
 ```bash
-npx tsc --noEmit     # Type check — the community view (see below)
-npm run lint         # ESLint (flat config, boundaries rule)
-npm test             # Browser tests (headless Chromium via Playwright)
-npm run test:node    # Node tests (fs, glob, ESLint instance)
+./scripts/verify.sh all
 ```
 
-Use plain `npx tsc --noEmit`. It type-checks against the base `tsconfig.json`, which is the
+`all` runs governance, ESLint, the community TypeScript view, Node tests, browser
+tests and the public build. Run focused Playwright E2E scenarios for user-visible
+flows; real PLC/device, CONNECT, WebXR and manual UX validation remain explicit
+task-specific evidence rather than implied by this command.
+
+The Harness type-checks against the base `tsconfig.json`, which is the
 **community view**: it excludes the generated list of tests that depend on modules only
 maintainers have. `npm run typecheck` is the maintainer full check — it needs the private
 sibling repository `../realvirtual-WebViewer-Private~`, which is not part of this

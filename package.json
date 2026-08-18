@@ -20,6 +20,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.full.json --noEmit",
     "gen:mcp-docs": "node scripts/gen-mcp-docs.mjs",
+    "verify:governance": "node scripts/verify-governance-selftest.mjs && node scripts/verify-governance.mjs && node scripts/assert-docs-publishable.mjs",
+    "verify:static": "./scripts/verify.sh static",
     "build:project-scripts": "node scripts/compile-project-scripts.mjs",
     "gen:private-excludes": "node scripts/gen-private-test-excludes.mjs",
     "posttest": "node scripts/test-lock.mjs release",

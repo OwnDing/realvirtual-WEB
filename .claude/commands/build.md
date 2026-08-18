@@ -5,27 +5,16 @@ allowed-tools: Bash(*)
 
 # Build Command
 
-Build realvirtual WEB for production deployment.
+Verify and build realvirtual WEB without publishing it.
 
 ## Task
 
-1. Run type-check:
+1. Read `AGENTS.md` and the Harness rules.
+
+2. Run the governed delivery gate (it includes the public production build):
 ```bash
-npx tsc --noEmit
+./scripts/verify.sh all
 ```
 
-If errors: fix them before proceeding.
-
-2. Run tests:
-```bash
-npm test
-```
-
-If failures: fix them before proceeding.
-
-3. Build production bundle:
-```bash
-npm run build
-```
-
-4. Report: output directory (`dist/`), bundle size, any warnings.
+3. Report: output directory (`dist/`), bundle size, warnings, and any validation not
+   covered by `all`. Do not deploy, upload or publish unless the user separately asks.

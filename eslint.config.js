@@ -92,7 +92,12 @@ export default [
       // These stubs register the rule names as no-ops — they do NOT activate
       // any style or quality checking.
       'react-hooks': stubPlugin(['exhaustive-deps', 'rules-of-hooks']),
-      '@typescript-eslint': stubPlugin(['no-explicit-any', 'no-unused-vars', 'ban-ts-comment']),
+      '@typescript-eslint': stubPlugin([
+        'no-explicit-any',
+        'no-implied-eval',
+        'no-unused-vars',
+        'ban-ts-comment',
+      ]),
     },
     settings: {
       // Configure eslint-module-utils to resolve TypeScript imports without extension.

@@ -5,22 +5,16 @@ allowed-tools: Bash(*)
 
 # Test Command
 
-Run TypeScript type-check and all Vitest browser tests.
+Run the repository's governed comprehensive verification entry.
 
 ## Task
 
-1. Run type-check:
+1. Read `AGENTS.md` and the Harness rules.
+
+2. Run:
 ```bash
-npx tsc --noEmit
+./scripts/verify.sh all
 ```
 
-If errors: show them and stop.
-
-2. Run all tests:
-```bash
-npm test
-```
-
-If failures: show them and stop.
-
-3. Report summary: number of test files, total tests passed, any warnings.
+3. Report every gate that ran, failures/warnings, and explicitly note that `all` does
+   not include Playwright E2E, real PLC/device, CONNECT, WebXR or manual UX validation.

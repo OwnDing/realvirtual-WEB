@@ -535,7 +535,10 @@ this codebase, without you having to brief it manually:
 
 | Artifact | Purpose |
 |----------|---------|
-| `CLAUDE.md` (repo root) | Project-wide guidance: stack, code conventions, naming, license headers, operating modes, test policy, git workflow. Claude Code reads this automatically. |
+| `AGENTS.md` (repo root) | Tool-neutral Agent entry: required reading order, P0 safety rules, planning thresholds and validation routing. |
+| `docs/README.md` + `docs/governance/` | Document status/priority, constitution, AI safety, change control, Definition of Done and Harness. |
+| `docs/exec-plans/` + `docs/adr/` | Self-contained execution plans and durable architecture decisions. |
+| `CLAUDE.md` (repo root) | Short Claude Code compatibility pointer to `AGENTS.md`; it does not duplicate repository rules. |
 | `.claude/commands/` | Pre-wired slash commands: `/dev`, `/build`, `/test`, `/debug`, `/inspect`, `/license-check`. They encode the standard "run the right thing the right way" workflow. |
 | `.claude/settings.json` | Shared agent settings for the project. |
 | `doc-*.md` files | Per-area architectural documents (this one, behaviors, lifecycle, extending, multiuser, persistence, interfaces, debugging). They are the agent's reference material when it needs to look up *how something works* before changing it. |
@@ -545,9 +548,8 @@ this codebase, without you having to brief it manually:
 
 ### 6.2 Recommended workflow
 
-1. **Open the WEB folder with Claude Code** (or another agent that picks up
-   `CLAUDE.md`). The project-level instructions and conventions are
-   loaded automatically.
+1. **Open the WEB folder with a coding agent and read `AGENTS.md`.** Claude Code
+   reaches the same entry through the short `CLAUDE.md` compatibility file.
 2. **Describe the customization in natural language** — e.g. *"Create a
    model plugin pack for `LineA.glb` that shows a KPI bar with parts/h,
    OEE and downtime, plus a maintenance panel with three procedures."*
