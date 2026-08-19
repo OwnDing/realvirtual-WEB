@@ -3,7 +3,7 @@ doc_id: ACCEPTANCE-MATRIX
 title: 全局验收追踪矩阵
 status: draft
 owner: qa
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-19
 authority: proposed
 ---
 
@@ -20,6 +20,6 @@ authority: proposed
 | 多语言 | OD-002，待建产品规格和契约 | 待定 | 待定 | blocked-by-decision |
 | 分层配置 | OD-003，待建配置契约 | 待定 | 待定 | blocked-by-decision |
 | 稳定装配端口 | OD-004，待建 ADR/Schema | 现有 Snap 测试仅覆盖当前约定 | 待定 | current-behavior-only |
-| Quality Gates | `GOV-HARNESS` | GitHub Actions workflow | run 32151338635：Governance/Static 通过，Node 3 项失败；`main`/`develop` 无 branch protection/ruleset | remote-partial-not-enforced |
+| Quality Gates | `GOV-HARNESS`、`EP-GOV-003` | GitHub Actions workflow；名称探测终止、包体积与完整 Browser 回归 | 本地 governance/static/node/build 通过；Browser 944 files、10,366 tests 通过；远程 run 32157736678 的旧 Browser job 超时，修订 workflow 尚待提交后验证；`main`/`develop` 无 branch protection/ruleset | automated-local-remote-pending-not-enforced |
 
 本矩阵在产品规格建立后继续细化；`draft` 表示当前仅是治理基线，不得据此声称多语言或平台化能力已经完成。

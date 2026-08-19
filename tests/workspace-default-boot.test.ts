@@ -509,12 +509,12 @@ describe('plan-716 Phase 1 — the verbs still work, now inside My Workspace', (
 
     const docs = workspaceDocuments(project);
     expect(docs).toHaveLength(1);
-    expect(docs[0]!.path).toBe('scenes/Demo.glb');
+    expect(docs[0]!.path).toBe('Demo.glb');
     expect(store.getSnapshot().isDraft).toBe(false);
     // RE-PINNED: no catalogue row anywhere. The document IS the artefact.
     expect(listMetas()).toEqual([]);
     // The bytes really landed in the project the boot opened.
-    expect(await project.getBackend()!.readBlobBytes('scenes/Demo.glb')).not.toBeNull();
+    expect(await project.getBackend()!.readBlobBytes('Demo.glb')).not.toBeNull();
     store.dispose();
     await project.closeProject();
   });

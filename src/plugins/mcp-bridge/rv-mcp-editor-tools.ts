@@ -64,6 +64,22 @@ import {
 
 const r3 = (n: number): number => +n.toFixed(3);
 
+/** Public document transform snapshot; independent of the private editor UI. */
+function snapshotLocalTransform(node: Object3D): NodeTransform {
+  return {
+    position: node.position.toArray() as [number, number, number],
+    quaternion: node.quaternion.toArray() as [number, number, number, number],
+    scale: node.scale.toArray() as [number, number, number],
+  };
+}
+
+/** Keep only top-most selected paths so deleting a parent never double-deletes a child. */
+function pruneDescendantPaths(paths: string[]): string[] {
+  const unique = [...new Set(paths)];
+  return unique.filter((candidate) =>
+    !unique.some((parent) => parent !== candidate && candidate.startsWith(`${parent}/`)));
+}
+
 /** Refusal shown for every structural verb aimed at the GLB root (plan-715 F4). */
 const MODEL_ROOT_LOCKED =
   'The model root is locked: it cannot be renamed, transformed, hidden, deleted or reparented '
@@ -462,8 +478,7 @@ export class McpEditorTools {
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
     if (isModelRoot(node, ctx.viewer.currentModelRoot)) return JSON.stringify({ error: MODEL_ROOT_LOCKED });
-    const mods = await this._load();
-    const prev = mods.transform.snapshotLocal(node);
+    const prev = snapshotLocalTransform(node);
     const num = (v: number | undefined, dflt: number): number =>
       typeof v === 'number' && !Number.isNaN(v) ? v : dflt;
     const next: NodeTransform = {
@@ -572,12 +587,11 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const mods = await this._load();
     const candidates = parsePathsParam(paths).filter((p) => {
       const node = ctx.viewer.registry?.getNode(p);
       return !!node && !!node.parent && !isModelRoot(node, ctx.viewer.currentModelRoot);
     });
-    const pruned = mods.del.pruneDescendantPaths(candidates);
+    const pruned = pruneDescendantPaths(candidates);
     if (pruned.length === 0) return JSON.stringify({ error: 'No deletable nodes among the given paths' });
     await ctx.doc.deleteNodes(pruned);
     return JSON.stringify({ ok: true, deleted: pruned.length });

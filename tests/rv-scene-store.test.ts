@@ -336,7 +336,7 @@ describe('SceneStore', () => {
       expect(id).toMatch(/^doc_/);
       const row = documentsOf(project.project()).find(d => d.id === id)!;
       expect(row.name).toBe('Empty A');
-      expect(row.path).toBe('scenes/Empty A.glb');
+      expect(row.path).toBe('Empty A.glb');
       expect(listMetas()).toEqual([]);
     });
 

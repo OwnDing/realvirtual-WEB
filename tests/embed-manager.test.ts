@@ -3,6 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defaultZoneRegistry } from '../src/core/engine/rv-zone-registry';
+import type { LoadResult } from '../src/core/engine/rv-scene-loader';
 import {
   defineRVEmbedElement,
   RVEmbedElement,
@@ -24,6 +25,7 @@ import {
 import { DEV_GLB } from './fixtures/glb-paths.mjs';
 
 const MODEL_URL = DEV_GLB.physicsZone;
+const realLoadModel = RVEmbedViewer.prototype.loadModel;
 const elements: RVEmbedElement[] = [];
 let mocks: EmbedBrowserMocks;
 let originalDevicePixelRatio: PropertyDescriptor | undefined;
@@ -31,6 +33,11 @@ let originalDevicePixelRatio: PropertyDescriptor | undefined;
 beforeEach(() => {
   defineRVEmbedElement();
   mocks = installEmbedBrowserMocks(false);
+  // This file owns the manager contract, not GLB parsing. Real model integration
+  // has dedicated embed boot and rehydrate suites; keep it out by default so
+  // unrelated full-suite load pressure cannot dominate manager assertions.
+  vi.spyOn(RVEmbedViewer.prototype, 'loadModel')
+    .mockResolvedValue(undefined as unknown as LoadResult);
   originalDevicePixelRatio = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
 });
 
@@ -91,22 +98,18 @@ describe('rv-embed vignette manager', () => {
   }, 30_000);
 
   it('serializes simultaneously requested GLB loads', async () => {
-    const originalLoadModel = RVEmbedViewer.prototype.loadModel;
     let overlappingLoads = 0;
     let maximumOverlap = 0;
-    const loadSpy = vi.spyOn(RVEmbedViewer.prototype, 'loadModel').mockImplementation(
+    const loadSpy = vi.mocked(RVEmbedViewer.prototype.loadModel).mockImplementation(
       async function (
         this: RVEmbedViewer,
-        ...args: Parameters<RVEmbedViewer['loadModel']>
+        ..._args: Parameters<RVEmbedViewer['loadModel']>
       ) {
         overlappingLoads++;
         maximumOverlap = Math.max(maximumOverlap, overlappingLoads);
         await delay(50);
-        try {
-          return await originalLoadModel.apply(this, args);
-        } finally {
-          overlappingLoads--;
-        }
+        overlappingLoads--;
+        return undefined as unknown as LoadResult;
       },
     );
     const first = makeElement();
@@ -123,6 +126,9 @@ describe('rv-embed vignette manager', () => {
   }, 30_000);
 
   it('recycles an offscreen context, preserves a frame and freezes director simulation time', async () => {
+    // Context loss and director time require a genuine loaded result; this is
+    // the one manager case that deliberately crosses the real loader boundary.
+    vi.mocked(RVEmbedViewer.prototype.loadModel).mockImplementation(realLoadModel);
     const element = makeElement();
     element.setAttribute('poster', '/poster.webp');
     const observer = MockIntersectionObserver.latest();
@@ -164,7 +170,7 @@ describe('rv-embed vignette manager', () => {
     );
     engine.step(0.8);
     expect(directorFinished).toBe(true);
-  }, 30_000);
+  }, 60_000);
 
   it('applies DPR and 30-fps scroll mode only at hysteresis transitions', async () => {
     Object.defineProperty(window, 'devicePixelRatio', {

@@ -3,7 +3,7 @@ doc_id: GOV-HARNESS
 title: realvirtual WEB AI Coding Harness
 status: approved
 owner: engineering
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-19
 authority: normative-process
 ---
 
@@ -22,7 +22,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 | `./scripts/verify.sh governance` | Harness 自检、文档元数据/链接/状态、旧文档登记、危险 Agent 命令、发布文档检查 | 所有文档与治理变更 |
 | `./scripts/verify.sh static` | governance + ESLint 架构边界 + 公共 TypeScript 检查 + Git whitespace | 常规代码变更 |
 | `./scripts/verify.sh node` | Node 环境 Vitest | 纯逻辑、脚本、文件和结构门禁 |
-| `./scripts/verify.sh browser` | 浏览器模式 Vitest | 引擎、React、Three.js 行为 |
+| `./scripts/verify.sh browser` | 浏览器模式 Vitest；不隐式构建 `dist/` | 引擎、React、Three.js 行为；包体积测试前先运行 build |
 | `./scripts/verify.sh build` | 公共生产构建 | 打包、公共 Stub 和资源发现 |
 | `./scripts/verify.sh e2e` | Playwright 端到端场景 | 关键用户流程和发布前验证 |
 | `./scripts/verify.sh all` | static + node + browser + build | 综合交付门禁，不包含真实设备和 E2E |
@@ -76,9 +76,12 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 
 1. 无依赖 Governance Gate；
 2. 安装锁定依赖后的 Static Gate；
-3. 独立的 Node Gate、Browser Gate 和 Build Gate，使一个失败不会遮蔽其他证据。
+3. 独立的 Node Gate、Browser Gate 和 Build Gate，使一个失败不会遮蔽其他证据；
+4. Browser Gate 显式拉取 Git LFS、先生成 `dist/`，再安装 Chromium 并运行浏览器套件；job 以 20 分钟失败关闭，避免测试进程永久占用 Runner。
 
-2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败；当时 `main`、`develop` 均没有 branch protection/ruleset。分支保护是否强制仍由 OD-005 决定，在 required checks 启用前不得使用 `enforced`。CI 不能替代 E2E、真实设备和人工 UX 验收。
+2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败。拆分后的远程 run `32157736678` 中 Governance、Static、Node、Build 通过，旧 Browser job 因 LFS/`dist` 输入缺口和无界名称探测在 GitHub 6 小时上限被取消。EP-GOV-003 的本地证据为 Browser `944 files / 10,366 tests` 通过，耗时约 124 秒；修订后的远程 run 仍待提交后验证。
+
+当时 `main`、`develop` 均没有 branch protection/ruleset。分支保护是否强制仍由 OD-005 决定，在 required checks 启用前不得使用 `enforced`。CI 不能替代 E2E、真实设备和人工 UX 验收。
 
 ## 8. 新增或修改门禁
 

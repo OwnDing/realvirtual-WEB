@@ -162,7 +162,10 @@ describe('saveSettingsIntoModel pre-flight', () => {
 
   it('refuses an empty scene, which has no model file to write into', async () => {
     setBackend(fakeBackend());
-    await store.newEmpty();
+    // `newEmpty()` now mints a document in a writable project. This case is
+    // specifically about an empty-base draft, so use the boot/resume entry that
+    // deliberately preserves that state instead of invoking document creation.
+    await store.openEmpty();
     expect(await store.saveSettingsIntoModel('Untitled')).toEqual({ kind: 'no-model-base' });
   });
 });

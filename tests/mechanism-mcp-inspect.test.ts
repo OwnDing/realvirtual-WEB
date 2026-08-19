@@ -19,11 +19,11 @@
  *    once the asset reaches a Professional build.
  *
  * Real `McpEditorTools` over a real `AssetDocument`, `NodeRegistry` and `Scene`
- * (the `mcp-editor-doc-mutations` fixture), with a RECORDING bridge double in
- * place of the private side.
+ * (the `mcp-editor-doc-mutations` fixture), with a RECORDING bridge double and
+ * an explicit authoring-plan adapter double in place of the private side.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Scene, Group, Object3D } from 'three';
 import type { RVViewer } from '../src/core/rv-viewer';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
@@ -40,6 +40,94 @@ import {
   type MechanismView,
 } from '../src/core/engine/rv-kinematic-registry';
 import { allSchemas } from './helpers/mcp-schemas';
+
+/**
+ * The public checkout intentionally maps the commercial authoring module to an
+ * inert stub. T1b tests MCP orchestration with a solver present, so inject the
+ * smallest honest adapter needed to record ordinary document ops; T2 still
+ * proves every tool refuses before reaching it when the bridge is absent.
+ */
+vi.mock('@rv-private/plugins/asset-editor/mechanism/mechanism-authoring', () => {
+  type Intent = {
+    op: 'addComponent' | 'setField' | 'unsetField';
+    nodePath: string;
+    baseType?: string;
+    componentType?: string;
+    fieldName?: string;
+    value?: unknown;
+    fields?: Record<string, unknown>;
+  };
+  type Plan = { label: string; intents: Intent[] };
+  const setFields = (
+    label: string,
+    nodePath: string,
+    componentType: string,
+    fields: Record<string, unknown>,
+  ): Plan => ({
+    label,
+    intents: Object.entries(fields).map(([fieldName, value]) => ({
+      op: 'setField', nodePath, componentType, fieldName, value,
+    })),
+  });
+
+  return {
+    DENSITY_PRESETS: [
+      { id: 'steel', density: 7850 },
+      { id: 'aluminum', density: 2700 },
+    ],
+    JOINT_KINDS: ['Revolute', 'Prismatic', 'Spherical', 'Universal'],
+    planAddBody: (nodePath: string, densityPreset: string): Plan => ({
+      label: 'Add mechanism body',
+      intents: [{
+        op: 'addComponent', nodePath, baseType: 'MechanismBody',
+        fields: { DensityPreset: densityPreset },
+      }],
+    }),
+    planSetAnchor: (
+      nodePath: string,
+      componentType: string,
+      anchors: { anchorA?: unknown; anchorB?: unknown },
+    ): Plan => setFields('Set joint anchors', nodePath, componentType, {
+      ...(anchors.anchorA !== undefined ? { AnchorA: anchors.anchorA } : {}),
+      ...(anchors.anchorB !== undefined ? { AnchorB: anchors.anchorB } : {}),
+    }),
+    planSetLimits: (
+      nodePath: string,
+      componentType: string,
+      limits: { useLimits: boolean; lower?: number; upper?: number },
+    ): Plan => setFields('Set joint limits', nodePath, componentType, {
+      UseLimits: limits.useLimits,
+      ...(limits.lower !== undefined ? { LowerLimit: limits.lower } : {}),
+      ...(limits.upper !== undefined ? { UpperLimit: limits.upper } : {}),
+    }),
+    runMechanismPlan: async (
+      doc: {
+        withTransaction: (label: string, fn: () => void) => unknown;
+        addComponent: (nodePath: string, baseType: string, fields?: Record<string, unknown>) => void;
+        setField: (nodePath: string, componentType: string, fieldName: string, value: unknown, prev?: unknown) => void;
+        unsetField: (nodePath: string, componentType: string, fieldName: string, prev?: unknown) => void;
+      },
+      plan: Plan,
+      readField: (nodePath: string, componentType: string, fieldName: string) => unknown,
+    ) => doc.withTransaction(plan.label, () => {
+      for (const intent of plan.intents) {
+        if (intent.op === 'addComponent') {
+          doc.addComponent(intent.nodePath, intent.baseType!, intent.fields);
+        } else if (intent.op === 'setField') {
+          doc.setField(
+            intent.nodePath, intent.componentType!, intent.fieldName!, intent.value,
+            readField(intent.nodePath, intent.componentType!, intent.fieldName!),
+          );
+        } else {
+          doc.unsetField(
+            intent.nodePath, intent.componentType!, intent.fieldName!,
+            readField(intent.nodePath, intent.componentType!, intent.fieldName!),
+          );
+        }
+      }
+    }),
+  };
+});
 
 // ─── Bridge double ──────────────────────────────────────────────────────────
 

@@ -46,6 +46,8 @@ import { McpProjectTools } from './mcp-bridge/rv-mcp-project-tools';
 import { McpDescribeTool } from './mcp-bridge/rv-mcp-describe-tool';
 import { installMcpDialogPolicy, withDialogReport } from './mcp-bridge/rv-mcp-dialog-policy';
 import { McpHelpTool } from './mcp-bridge/rv-mcp-help-tool';
+import { DEFAULT_BRIDGE_PORT } from './mcp-bridge/rv-mcp-bridge-defaults';
+export { DEFAULT_BRIDGE_PORT } from './mcp-bridge/rv-mcp-bridge-defaults';
 import {
   DELTA_PROBES, mergeDelta, parseResult, releaseCall, safeProbe,
 } from './mcp-bridge/rv-mcp-delta-probes';
@@ -162,10 +164,8 @@ const STORAGE_KEY = 'rv-ai-bridge';
 
 /** Default bridge port: realvirtual CONNECT (plan-327 AP5). CONNECT is the standard
  *  `web_*` transport — it needs neither Node nor Vite and is the only path that works
- *  for a static WebViewer delivery. A profile that still carries a Node port (18714 /
- *  18715) keeps it: that counts as an explicitly pinned port, so the emergency
- *  fallback survives the default change instead of being silently taken away. */
-export const DEFAULT_BRIDGE_PORT = '5100';
+ *  for a static WebViewer delivery. The value lives in the dependency-free defaults
+ *  module so the eager settings hook does not pull this lazy plugin into startup. */
 
 /** The Node bridge's historic default port — kept only as the documented fallback
  *  (see `doc-ai-integration.md` → *Falling back to the Node bridge*). */

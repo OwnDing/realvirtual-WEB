@@ -11,7 +11,7 @@
 import { useViewerEvent } from './use-viewer-event';
 import { useViewer } from './use-viewer';
 import type { McpBridgePluginAPI } from '../core/types/plugin-types';
-import { DEFAULT_BRIDGE_PORT } from '../plugins/mcp-bridge-plugin';
+import { DEFAULT_BRIDGE_PORT } from '../plugins/mcp-bridge/rv-mcp-bridge-defaults';
 import type { McpBridgeSnapshot, McpServerLogLine } from '../plugins/mcp-bridge-plugin';
 
 /** Default state when MCP plugin is not loaded or model not yet available. */

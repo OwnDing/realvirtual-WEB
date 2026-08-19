@@ -146,9 +146,9 @@ describe('SceneStore — Examples / published scenes', () => {
       expect(rows).toHaveLength(1);
       expect(rows[0]!.id).toBe(id);
       expect(rows[0]!.name).toBe('Planner Demo');
-      expect(rows[0]!.path).toBe('scenes/Planner Demo.glb');
+      expect(rows[0]!.path).toBe('Planner Demo.glb');
       // The example's own bytes, copied — not an empty GLB.
-      expect(project.files.get('scenes/Planner Demo.glb')).toEqual(exampleGlb);
+      expect(project.files.get('Planner Demo.glb')).toEqual(exampleGlb);
       // Nothing landed in the catalogue that used to carry it.
       expect(listMetas()).toEqual([]);
 

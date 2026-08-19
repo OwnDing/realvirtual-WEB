@@ -111,12 +111,16 @@ describe('recent projects', () => {
   });
 
   it('still offers a handle whose display row was lost', async () => {
-    await putHandle(cloneableHandle('orphan'), projectHandleKey('prj_orphan'));
+    // IndexedDB is shared by browser test files and the product deliberately
+    // caps the result at ten. Put this fixture before normal `prj_*` ids in the
+    // key order so unrelated handles cannot crowd out the row being asserted.
+    const orphanId = 'prj_000000000000000000000_orphan';
+    await putHandle(cloneableHandle('orphan'), projectHandleKey(orphanId));
     try {
       const rows = await listAvailableRecentProjects();
-      expect(rows.map(r => r.id)).toContain('prj_orphan');
+      expect(rows.map(r => r.id)).toContain(orphanId);
     } finally {
-      await deleteStoredHandle(projectHandleKey('prj_orphan'));
+      await deleteStoredHandle(projectHandleKey(orphanId));
     }
   });
 });

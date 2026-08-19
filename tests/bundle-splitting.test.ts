@@ -317,20 +317,16 @@ describe('bundle splitting — panel chunks', () => {
 /**
  * plan-707 NF4 — the self-describing MCP tooling must not grow the startup path.
  *
- * One honest correction to the plan's assumption, made here rather than in a
- * comment nobody reads: the MCP bridge is NOT lazy today. `main.ts` loads it
- * through `await import(...)`, but a single value import in
- * `src/hooks/use-mcp-bridge.ts` (`DEFAULT_BRIDGE_PORT`) drags the whole cluster
- * back into the entry — documented at length in the ENTRY_BUDGET_BYTES history
- * above. So "the delta probes are not in the entry" is not an assertion that
- * can be true while the bridge itself is there, and pretending otherwise would
- * be a green tick over a false statement.
+ * EP-GOV-003 restores the lazy boundary that plan-707 found missing: the eager
+ * settings hook now reads `DEFAULT_BRIDGE_PORT` from a dependency-free module,
+ * while `main.ts` remains the only value importer of the plugin entry point.
+ * The bridge cluster and its embedded help therefore stay out of startup.
  *
  * What IS assertable, and what NF4 actually cares about:
  *   1. The documentation renderer is test-only and reaches NO shipped chunk.
  *   2. The probes stay small and self-contained — they must not be the thing
  *      that pulls the asset-editor plugin into the startup path.
- *   3. The existing entry budget still holds, which bounds the whole feature.
+ *   3. The existing entry budget still holds, without raising the threshold.
  */
 describe('bundle cost — plan-707 self-describing MCP tooling', () => {
   /**

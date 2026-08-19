@@ -306,7 +306,7 @@ describe('plan-386 §9.4 — transient workspace', () => {
       expect(store.isTransient()).toBe(false);
       expect(documentsOf(project.project())).toHaveLength(1);
       expect(project.writes.map(w => w.relPath))
-        .toEqual(['scenes/Pick & Place Cell.glb']);
+        .toEqual(['Pick & Place Cell.glb']);
     } finally {
       project.restore();
       resetProjectStore();

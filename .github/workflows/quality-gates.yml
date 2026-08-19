@@ -50,13 +50,18 @@ jobs:
   browser:
     name: Browser Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Build browser test artifacts
+        run: ./scripts/verify.sh build
       - run: npx playwright install --with-deps chromium
       - run: ./scripts/verify.sh browser
 

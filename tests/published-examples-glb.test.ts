@@ -15,8 +15,8 @@
  *   2. the shipped example files are GLBs carrying their classification;
  *   3. opening one is the ordinary GLB path — a transient scene over the
  *      example URL, no fetch and no op log in the store;
- *   4. "Add to My Scenes" copies the BYTES (compared byte for byte) into the
- *      user's own body slot and writes a v3 catalogue row with an empty op log;
+ *   4. "Add to My Scenes" copies the BYTES (compared byte for byte) into a
+ *      first-class document in the writable project;
  *   5. `BundledBackend.readScene()` answers a GLB `SceneRecord` for it.
  */
 
@@ -28,11 +28,14 @@ import {
   publishedSceneUrl,
   type PublishedSceneEntry,
 } from '../src/core/hmi/scene/rv-published-scenes';
-import { listMetas, readScene } from '../src/core/hmi/scene/rv-scene-storage';
-import { readSceneGlbBody } from '../src/core/hmi/scene/rv-scene-glb-io';
-import { classificationOfGlbBlob } from '../src/core/project/rv-project-documents';
+import { listMetas } from '../src/core/hmi/scene/rv-scene-storage';
+import {
+  classificationOfGlbBlob,
+  documentsOf,
+  sceneDocumentsOf,
+} from '../src/core/project/rv-project-documents';
 import { BundledBackend } from '../src/core/project/backends/bundled-backend';
-import { sceneDocumentsOf } from '../src/core/project/rv-project-documents';
+import { installFakeDocumentProject } from './helpers/fake-document-project';
 
 /** The catalogue as the deploy publishes it. */
 async function shippedCatalogue(): Promise<PublishedSceneEntry[]> {
@@ -119,33 +122,33 @@ describe('published examples are GLBs (plan-413 §9.3)', () => {
     store.dispose();
   });
 
-  it('"Add to My Scenes" copies the bytes and writes a v3 row with no op log', async () => {
+  it('"Add to My Scenes" copies the bytes into a first-class project document', async () => {
+    const project = installFakeDocumentProject();
     const viewer = makeViewer(catalogue);
     const store = new SceneStore(viewer as unknown as ConstructorParameters<typeof SceneStore>[0]);
     const entry = catalogue[0];
+    try {
+      const source = new Uint8Array(
+        await (await fetch(publishedSceneUrl(entry.file), { cache: 'no-store' })).arrayBuffer(),
+      );
 
-    const source = new Uint8Array(
-      await (await fetch(publishedSceneUrl(entry.file), { cache: 'no-store' })).arrayBuffer(),
-    );
+      const id = await store.addPublishedToMyScenes(entry);
+      const row = documentsOf(project.project()).find((candidate) => candidate.id === id);
+      expect(row).toBeTruthy();
+      expect(row!.path).toBe(`${entry.label}.glb`);
 
-    const id = await store.addPublishedToMyScenes(entry);
+      // The bytes are a copy, not a re-encode: compared in full.
+      const copied = project.files.get(row!.path);
+      expect(copied).toBeTruthy();
+      expect(Array.from(copied!)).toEqual(Array.from(source));
+      expect((await classificationOfGlbBlob(new Blob([copied! as BlobPart])))?.level).toBe('scene');
 
-    // 1. The bytes are a copy, not a re-encode: compared in full.
-    const body = await readSceneGlbBody(id);
-    expect(body).toBeTruthy();
-    expect(body!.glb.byteLength).toBe(source.byteLength);
-    expect(Array.from(body!.glb)).toEqual(Array.from(source));
-
-    // 2. The row is a v3 shell over that body — no JSON op log anywhere.
-    const row = readScene(id)!;
-    expect(row.schemaVersion).toBe(3);
-    expect(row.base).toMatchObject({ kind: 'scene-glb', sceneId: id });
-    expect(row.edits.ops).toEqual([]);
-
-    // 3. The classification cache on the row came out of the copied bytes.
-    expect(row.classification?.level).toBe('scene');
-    expect(listMetas().find(m => m.id === id)?.classification?.level).toBe('scene');
-    store.dispose();
+      // Nothing landed in the retired local scene catalogue.
+      expect(listMetas()).toEqual([]);
+    } finally {
+      store.dispose();
+      project.restore();
+    }
   });
 
   it('BundledBackend.readScene answers a GLB SceneRecord for an example', async () => {

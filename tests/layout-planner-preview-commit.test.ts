@@ -17,7 +17,7 @@
  * by `layout-planner-async-placement.test.ts`. `_startDraft` still returns a
  * promise for this branch, hence the `await`s below.
  */
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Group, PerspectiveCamera } from 'three';
 import type { Object3D } from 'three';
 import { LayoutPlannerPlugin } from '../src/plugins/layout-planner';
@@ -96,6 +96,8 @@ function internals(plugin: LayoutPlannerPlugin) {
 }
 
 describe('LayoutPlannerPlugin — live-draft drag-in (virtual entries)', () => {
+  beforeEach(() => localStorage.clear());
+
   test('ENTER: a virtual entry never becomes a pending placeholder', async () => {
     const { plugin } = makePlugin();
     const p = internals(plugin);

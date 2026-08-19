@@ -89,6 +89,13 @@ export interface DocumentManifestHost {
 
 // ─── Naming ─────────────────────────────────────────────────────────────
 
+/**
+ * A corrupt or dishonest backend must not turn name probing into an infinite
+ * microtask loop. One thousand collisions is already far beyond a usable
+ * project directory; after that the caller needs an actionable storage error.
+ */
+const MAX_DOCUMENT_NAME_ATTEMPTS = 1_000;
+
 /** A display name → a safe GLB file stem. Same rule as the migration's. */
 export function safeDocumentFileName(raw: string): string {
   return (raw ?? '')
@@ -143,15 +150,24 @@ export async function planDocument(
 
   let name = base;
   let relPath = `${prefix}${name}.glb`;
-  for (let n = 2; ; n++) {
+  let available = false;
+  for (let attempt = 0, n = 2; attempt < MAX_DOCUMENT_NAME_ATTEMPTS; attempt++, n++) {
     if (!taken.has(normalisePath(relPath))) {
       const stored = normalisePath(relPath) === exclude
         ? null
         : await backend.readBlobBytes(relPath).catch(() => null);
-      if (!stored) break;
+      if (!stored) {
+        available = true;
+        break;
+      }
     }
     name = `${base} ${n}`;
     relPath = `${prefix}${name}.glb`;
+  }
+  if (!available) {
+    throw new Error(
+      `Could not find a free document name for "${base}" after ${MAX_DOCUMENT_NAME_ATTEMPTS} attempts.`,
+    );
   }
 
   const takenIds = new Set(documentsOf(project).map(d => d.id));
@@ -372,4 +388,3 @@ export async function retireDocument(
   await commitDocuments(host, documentsOf(project).filter(d => d.id !== documentId));
   return true;
 }
-
