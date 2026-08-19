@@ -28,13 +28,21 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 若本 ADR 被接受：
 
 1. 使用 `i18next` 作为框架无关核心，使用 `react-i18next` 连接 React；非 React 插件和管理器通过窄封装调用同一实例，不直接依赖 React Context。
-2. `zh-CN` 和 `en-US` 目录随公共构建静态打包；黄金切片不引入 HTTP backend、浏览器语言探测插件或运行时远程目录。
-3. `zh-CN` 是默认语言、产品源文案和 `fallbackLng`；英文目录缺 key 时回退中文，中文仍缺失时返回稳定 key 并向可测试的诊断入口报告。
+2. `zh-CN`、`en-US` 以及黄金切片使用的 namespace 随公共构建静态、同步打包；黄金切片不引入 HTTP backend、浏览器语言探测插件、运行时远程目录或语言切换时的异步资源加载。未来全量迁移如需对非启动 namespace 分包，必须先用 ADR 修订明确加载状态、失败回退、离线行为和包体积预算；本 ADR 当前不授权该异步边界。
+3. `zh-CN` 是默认语言、产品源文案和 `fallbackLng`；英文目录缺 key 时回退中文，中文仍缺失时返回稳定 key 并向可测试的诊断入口报告。「源目录=最终回退」的自洽性依赖源目录不缺 key，因此源目录的建立方向必须明确写死。
+
+   当前事实：`src/` 中尚未发现中文字符，现有 UI 源文案以英文为基准；数量和覆盖范围必须由 `EP-I18N-001` 的可重复盘点脚本产生，不在 ADR 中固化一次性统计。因此首次迁移的方向是：**既有英文原文逐字迁入 `en-US`**，`zh-CN` 由 AI 从既有英文翻译产生并自此成为源目录；迁移完成后新增文案以中文为源，由 AI 生成英文。
+
+   漂移门禁只校验 key 集合、占位符、富文本标记和空值对齐，**禁止对既有英文措辞做回译或批量重写**；确需修改既有英文措辞时必须是独立、可在评审中看到的改动，不得作为目录同步的副作用发生。本条不改变 `PS-I18N-001` 的回退链和翻译责任，也不引入人工翻译或语言复核步骤，只约束首次目录建立的方向，避免「英文 → AI 中文 → AI 回译英文」把上游英文术语、根目录 `doc-*.md`、`docs/images/` 截图和现有测试字面量的共同基准一次性改写。
 4. 翻译 key 与显示文本解耦，按领域 namespace 组织；TypeScript 资源类型和严格 key 检查在黄金切片中失败关闭。
 5. 用户选择存入版本化 `localStorage` key，并登记到 `rv-storage-keys.ts`；存储不可用或值无效时使用内存态 `zh-CN`，不得污染项目、文档或 GLB。
 6. 日期和数字使用浏览器原生 `Intl.DateTimeFormat`/`Intl.NumberFormat` 并显式传入当前 locale；工业单位、信号名称和稳定 ID 不本地化。
-7. AI 在开发流程中直接生成并维护 `en-US` 静态目录，不要求人工翻译或语言复核；目录合入前必须通过 key、占位符、标记、空值、漂移和 Browser 行为门禁。
+7. AI 在开发流程中直接生成并维护 `en-US` 静态目录（首次建立方向见第 3 条：既有英文逐字迁入，不回译重写），不要求人工翻译或语言复核；目录合入前必须通过 key、占位符、标记、空值、漂移和 Browser 行为门禁。
 8. 浏览器运行时不得调用 AI 或第三方翻译服务，不得需要翻译令牌，不把网络可用性加入启动和语言切换关键路径。
+9. 语言切换的传播契约由核心 i18n 模块定义。现有公开插件契约中的 `label` 字符串形式及已支持的函数/getter 形式必须保持兼容，不得删除、收窄或强制调用方一次性改成 key；可通过新增可选的本地化描述符/key/getter、解析适配层或等价的向后兼容设计逐步迁移。注册表在渲染或 `languageChanged` 后重新解析可本地化文本；把文本烤进 `CanvasTexture` 的世界空间标签在语言切换后必须失效并重建纹理。黄金切片至少覆盖一个非 React 注册标签和一个 CanvasTexture 标签；全量调用点放到后续增量里程碑。
+10. 单一 i18next 实例由核心 i18n 模块在 `src/main.ts` 中、早于 `initHMI` **同步**初始化，并通过 `initReactI18next` 注册为默认实例，使 `useTranslation` 在没有 `I18nextProvider` 的情况下同样可用。主 HMI 由 `@rv-private/custom/hmi-entry` 挂载（公共仓库只有 stub），另有多个独立 React Root；语言可用性不得依赖任何单个入口记得包裹 Provider。静态目录下不使用 Suspense（`react: { useSuspense: false }`）。黄金切片验证主 HMI 和至少一个独立 Root；其余 Root 随后按盘点迁移。
+11. `index.html` 的 `<html lang>` 与 pre-boot 加载遮罩在 React 挂载前可见，必须由同一次同步初始化读取偏好并更新，避免默认中文产品在启动阶段先显示英文。黄金切片只迁移代表性 Planner/HMI 流程直接使用的 `Intl` 调用和 MUI 内建文案面；全仓 `Intl`/`toLocale*`、MUI locale 和其余 pre-boot 之外的用户可见文本通过后续里程碑按可重复盘点逐批迁移，不扩大第一阶段范围。
+12. 中文依赖系统字体，不打包 CJK 字体子集。`src/core/hmi/theme.ts` 的 `typography.fontFamily` 和黄金切片使用的 canvas font 串必须补充明确的 CJK 回退族；没有系统中文字体的精简 Linux/kiosk 镜像属于部署前提，在部署文档中声明。黄金切片验证代表性 React 文本和一个 CanvasTexture 文本不出现缺字方块，全仓字体调用点随增量迁移覆盖。
 
 ## Alternatives
 
@@ -71,7 +79,13 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 - key 集合、占位符、标记、空值、源目录漂移和 AI 目标目录漂移检查；
 - React Hook、非 React `t()`、多个 Root 同步切换的 Browser 测试；
 - 默认中文、切换英文、刷新恢复、缺 key、保存/重载项目和 Reset all 黄金切片；
-- static、node、browser、build 和入口包体积基线。
+- static、node、browser、build 和入口包体积基线；
+- 英文逐字迁入证据：迁移脚本可重复运行，输出 `en-US` 与迁移前源码字面量的逐字比对报告；漂移门禁必须对「回译改写既有英文措辞」这一反例失败（第 3 条）；
+- 入口 chunk 预算：实施前从 `tests/bundle-splitting.test.ts` 读取当前预算并记录 `dist/` 实测基线；实施后记录 i18n 运行时和黄金切片同步目录的净增量并证明既有包体积门禁仍通过。未来全量目录分包必须先修订本 ADR（第 2 条）；
+- 语言切换传播：一个非 React 注册标签与一个 `CanvasTexture` 烤字标签在 `languageChanged` 后更新的 Browser 测试，并包含「纹理未失效」反例（第 9 条）；
+- 测试 locale 固定策略：测试装置必须显式 pin 运行时 locale，不依赖实现默认值；受黄金切片影响的 UI 断言和 e2e 文本定位同步更新，禁止为让门禁通过而放宽或删除断言；
+- pre-boot 与 `<html lang>`：首屏（React 挂载前）按已保存偏好语言渲染、`<html lang>` 同步正确的 Browser/E2E 证据（第 11 条）；
+- 字体回退：中文默认下代表性 React 文本与一个 CanvasTexture 文本不出现缺字方块的 Browser 证据（第 12 条）。
 
 ## Rollback or Supersession
 
