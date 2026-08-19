@@ -16,6 +16,9 @@ import { useViewer } from '../../hooks/use-viewer';
 
 // Core HMI components
 import { rvDarkTheme, createBrandedTheme } from './theme';
+import { createTheme } from '@mui/material/styles';
+import { enUS as muiEnUS, zhCN as muiZhCN } from '@mui/material/locale';
+import { useRvTranslation } from '../i18n';
 import { useCustomBranding } from './branding-store';
 import { HMIShell, SlotRenderer } from './HMIShell';
 import { TopBar } from './TopBar';
@@ -161,12 +164,19 @@ export function App() {
     getConnectEmbedSnapshot,
   );
 
-  // Build theme: apply custom branding colors if set
+  // Build theme: apply custom branding colors if set, then MUI's own locale
+  // bundle. The second half is what translates the strings MUI ships itself —
+  // the Alert close button's accessible name and friends — which no `t()` call
+  // in this repository can reach (ADR-0001 §11).
+  const { locale } = useRvTranslation('common');
   const theme = useMemo(
-    () => branding?.primaryColor || branding?.secondaryColor
-      ? createBrandedTheme(branding.primaryColor, branding.secondaryColor)
-      : rvDarkTheme,
-    [branding?.primaryColor, branding?.secondaryColor],
+    () => createTheme(
+      branding?.primaryColor || branding?.secondaryColor
+        ? createBrandedTheme(branding.primaryColor, branding.secondaryColor)
+        : rvDarkTheme,
+      locale === 'zh-CN' ? muiZhCN : muiEnUS,
+    ),
+    [branding?.primaryColor, branding?.secondaryColor, locale],
   );
 
   // Context-aware visibility: each area declares its default hiddenIn rule.

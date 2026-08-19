@@ -25,6 +25,7 @@ import { showInfoOverlay } from '../info-overlay-store';
 import { RENDER_MODES, getRenderMode, type RenderMode } from '../../rv-render-modes';
 import { STATIC_MERGE_LS_KEY, isStaticMeshMergingEnabled } from '../../engine/rv-static-merge-flag';
 import { SettingsSection, FieldRow, SliderRow } from './settings-helpers';
+import { LanguageSection } from './LanguageSection';
 
 /** Outer wrapper: remounts the body (via `key`) after a preset is applied so all
  *  sliders/dropdowns re-read the freshly-applied visual settings. */
@@ -376,6 +377,15 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+
+      {/* Language sits FIRST and outside the preset machinery: it is a user
+          preference about the whole interface, not a look that a visual preset
+          can carry, and it must stay reachable when a preset is locked. */}
+      <SettingsSection id="visual-language" title="Language / 语言">
+        <FieldRow label="Language / 语言">
+          <LanguageSection />
+        </FieldRow>
+      </SettingsSection>
 
       {/* Visual Presets — full-look snapshots (render mode + environment + post). */}
       <SettingsSection id="visual-presets" title="Visual Presets">

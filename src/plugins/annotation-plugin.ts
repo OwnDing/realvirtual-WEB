@@ -19,6 +19,7 @@
 
 import { Raycaster, Vector2, Vector3 } from 'three';
 import type { Object3D } from 'three';
+import { rvT } from '../core/i18n';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
@@ -337,7 +338,12 @@ export class AnnotationPlugin implements RVViewerPlugin, AnnotationPluginAPI {
       items: [
         {
           id: 'annotations.add',
-          label: 'Annotate',
+          // The FUNCTION form of the existing `label: string | ((target) => string)`
+          // contract, which `context-menu-store` already resolves each time the
+          // menu opens. That is ADR-0001 §9 satisfied without narrowing anything:
+          // every plugin still passing a plain string keeps working untouched,
+          // and this one re-resolves after a language switch for free.
+          label: () => rvT('plugins', 'annotate'),
           order: 50,
           // Annotations are a viewing/review feature — hidden in editor mode
           condition: () => viewer.modes.activeMode !== 'editor',

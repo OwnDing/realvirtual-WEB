@@ -1,0 +1,25 @@
+// Every literal here looked like copy on an early regex pass and is not.
+import { Box } from '@mui/material';
+
+const MODE = 'auto';
+const RESULT = { message: 'signal-bind-failed', id: 'measure-tool', type: 'conveyor' };
+
+export function Styled() {
+  console.log('Loading the scene now');
+  return (
+    <Box
+      id="react-root"
+      className="rv-extras-editor"
+      data-testid="viewer-root"
+      name="signalName"
+      variant="outlined"
+      color="primary"
+      href="https://realvirtual.io/docs"
+      sx={{ fontFamily: 'monospace', border: '1px solid #4fc3f7' }}
+      style={{ width: '12px' }}
+    >
+      {MODE}
+      {RESULT.id}
+    </Box>
+  );
+}

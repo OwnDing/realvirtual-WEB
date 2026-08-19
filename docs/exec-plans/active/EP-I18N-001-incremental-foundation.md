@@ -70,13 +70,31 @@ authority: normative-process
 - [x] 产品确认 `zh-CN`/`en-US`、中文最终回退、AI 直接翻译和 locale 格式范围，关闭 OD-002。
 - [x] 架构 Owner 评审并接受 `ADR-0001`（2026-08-19）。
 - [x] Owner 评审并激活计划（2026-08-19）；计划移入 `active/`，状态改为 `approved`/`active`。
-- [ ] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁设计。
-- [ ] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片。
+- [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
+- [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [ ] Milestone 4：保存恢复、缺失 key、布局/可访问性验证，再按风险分批迁移。
 
 ## Surprises & Discoveries
 
-待激活后填写；任何字符串数量和覆盖率必须附可重复命令。
+Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引用时必须附命令与 schema 版本，不得手抄。
+
+- 受门禁基线为 1944 处、231 个文件：`react-copy` 1514、`a11y-name` 95、`plugin-registry` 133、`dynamic-text` 170、`pre-boot` 20、`dom-text` 10、`canvas-texture` 2。
+- `error-message` 324 与 `intl-format` 38（其中 35 处未显式传 locale）**只报告不入门禁**，也不写进基线文件。静态扫描无法区分「用户可见错误」与「内部不变量断言」，把它们纳入门禁会让与 i18n 无关的日常开发失败；一个拦错东西的门禁最后会被关掉。二者的处置放在后续里程碑逐站点分诊。
+- `canvas-texture` 只有 2 处字面量，远少于 17 处 `fillText` 调用点：多数调用画的是节点名、测量值等数据。`ADR-0001` 第 9 条的纹理失效要求因此由**表面**而非字面量数量驱动，黄金切片必须显式挑一处世界空间标签来验证，不能等扫描自动指出来。
+- `src/` 中文字符数为 0，与 `ADR-0001` 第 3 条「既有英文逐字迁入 `en-US`」的方向前提一致。
+- 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
+- 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
+- `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### Milestone 3（2026-08-19）
+
+- 黄金切片为 Projects Dashboard（`ProjectsDashboardHost.tsx`），该文件受门禁命中已归零；全仓受门禁债务 1971 → **1904**（`npm run i18n:inventory`，schema v2）。
+- 扫描器补了 `ui-state-text` 规则：`setMessage(...)` 这类把文案交给渲染型状态设置器的调用，任何 JSX 位置规则都看不见，而黄金切片里就有 12 处。补规则时顺带发现 `LayoutLibraryPanel.tsx` 有一条**德文**残留文案。
+- `context-menu-store` 的 `label: string | ((target) => string)` 契约本就在菜单打开时解析，所以非 React 注册标签用**函数形式**即可随语言切换，`ADR-0001` 第 9 条不需要任何契约变更，仍传字符串的插件一行不用改。
+- CanvasTexture 重绘只对**目录来源**的标签生效：带 `ErrorText` 的徽标是模型内容而非界面文案，重绘会静默改写模型自己的报错。重绘保持原画布尺寸并按需缩字号，因为 sprite 的世界缩放是按首次 aspect 算的。
+- 浏览器反例暴露出一个真实缺陷：`clearAllRVStorage()` 清了键，但偏好模块的内存回退值仍在应答，导致「Reset all」后语言并未真正重置。已修正为「存储可读时以存储为准，内存只在存储不可读时兜底」。
+- i18next 的 `parseMissingKeyHandler` 只拿到**裸 key**，截图里的 `noSuchKey` 远不如 `viewer:noSuchKey` 可定位，因此缺失路径由本仓自己的 `probeLookup` 返回带 namespace 的 key。
+- i18next v23 起 `initImmediate` 改名为 `initAsync`（语义反转）；同步初始化必须写 `initAsync: false`，否则首帧可能读不到目录。
 
 ## Decision Log
 
@@ -97,11 +115,41 @@ rg -n 'Intl\.|toLocale[A-Za-z]*\(' src --glob '*.{ts,tsx}'
 rg -n "['\"]en-US['\"]" src --glob '*.{ts,tsx}'
 ```
 
-Milestone 1 必须再建立版本化盘点脚本和 fixture，按 React 文案、插件/注册表、CanvasTexture、pre-boot、`Intl`/MUI、可访问名称、动态设备文本与误报例外输出机器可读基线。只有脚本命令、版本和忽略理由一同入库的数字才可写入验收记录；后续迁移必须由同一脚本重算。
+Milestone 1 已交付版本化盘点脚本，上述 `rg` 命令此后只用于临时定位，不作为数字来源：
+
+| 产物 | 路径 | 职责 |
+| --- | --- | --- |
+| 盘点脚本 | `scripts/i18n-inventory.mjs` | 基于 TypeScript AST 的分类扫描；`--json` 输出全部命中，`--write` 刷新基线 |
+| 类型声明 | `scripts/i18n-inventory.d.mts` | 供 `tests/` 以类型安全方式导入 |
+| 基线 | `tests/i18n-inventory-baseline.json` | 生成物，只含受门禁类别的分类别与分文件计数 |
+| 例外登记 | `scripts/i18n-inventory-exceptions.json` | 手工维护的误报与不可本地化项，每条必须写理由 |
+| 门禁与分类 fixture | `tests/i18n-inventory.node.test.ts`、`tests/fixtures/i18n-inventory/` | 基线漂移守卫 + 正例/反例分类规则 fixture |
+| i18n 运行时 | `src/core/i18n/` | 单实例、locale 归一化、偏好存储、诊断、React 绑定与目录 |
+| 逐字迁入门禁 | `scripts/i18n-verbatim-check.mjs`、`tests/i18n-preboot.node.test.ts` | 证明 `en-US` 每条值都能逐字追溯到迁移前源码 |
+
+门禁语义：基线**双向**比对。数字变大＝新增散落硬编码文本，违反 `GOV-CONSTITUTION` UI-1，必须改走 i18n 入口或附理由登记例外；数字变小＝迁移落地，用 `node scripts/i18n-inventory.mjs --write` 刷新基线。刷新只有一条命令，正是为了让人没有理由去放宽分类规则——分类规则才是此处的契约。
 
 ## Validation
 
-激活前先定义盘点脚本、分类规则和误报 fixture；实现阶段至少需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
+Milestone 1 已验证（2026-08-19，本地）：`npm run lint` 通过；`tsc -p tsconfig.json --noEmit` 干净；`npm run test:node` 通过（含本门禁 10 例）；`./scripts/verify.sh governance` 通过。门禁非空洞性由反例证明：临时在 `src/` 放入一个含硬编码文案的组件后，守卫测试失败并给出分类别增量（`react-copy` 1514→1515、`a11y-name` 95→96），移除后恢复通过。
+
+Milestone 3 已验证（2026-08-19，本地）：
+
+| 项 | 结果 |
+| --- | --- |
+| `./scripts/verify.sh static`（governance + ESLint 边界 + 社区 tsc） | 通过 |
+| `npm run test:node` | 54 文件 **497** 用例通过（新增 i18n runtime/catalog/preboot 共 27 例） |
+| `npx vitest run tests/i18n-golden-slice.test.tsx` | **11 例通过**（多 Root 同步、非 React `t()`、纹理重绘、缺字检测、Reset all） |
+| `npm run build` | 通过 |
+| 入口 chunk | 3_287_254 → **3_348_520 B**，净增 **59.8 KB**；预算 `ENTRY_BUDGET_BYTES = 3_520_000` 仍余 **167.5 KB** |
+| `node scripts/i18n-verbatim-check.mjs` | 88 条 `en-US` 值全部逐字追溯到 `d1949a5` |
+| 严格 key 反例 | `rvT('projects', 'nav.doesNotExist')` 编译失败（TS2345），符合 `ADR-0001` 第 4 条失败关闭 |
+| 漂移反例 | 把一条英文改写成回译腔后 `i18n-verbatim-check` 失败并指名该 key |
+| 纹理反例 | 带模型自有 `ErrorText` 的徽标在切换语言后像素不变；目录来源徽标重绘且 `texture.version` 递增 |
+
+**未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 950 文件中 25 文件 / 80 用例失败，全部为 `THREE.WebGLRenderer: Error creating WebGL context.`（本机 SwiftShader 无法创建 WebGL 上下文，隔离运行同样失败），**没有一条失败涉及译文**（失败信息中中文出现次数为 0）。受本次改动影响的 UI 测试单独运行 7 文件 64 例全部通过。完整浏览器门禁需要在可用 GPU 的环境重跑后才能声称通过。
+
+后续里程碑至少仍需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
 
 ## Rollback
 

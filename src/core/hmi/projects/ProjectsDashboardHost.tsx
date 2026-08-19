@@ -73,6 +73,7 @@ import { withTransferSession } from '../../project/rv-document-transfer';
 import { FolderBackend } from '../../project/backends/folder-backend';
 import { TransferTargetDialog, type TransferRequest, type TransferTargetOption } from './TransferTargetDialog';
 import { PROJECT_LIBRARY_PROVIDER_ID } from '../../library/project-library-provider';
+import { rvT, useRvTranslation } from '../../i18n';
 import { GLOBAL_LIBRARY_PROVIDER_ID } from '../../library/global-library-provider';
 import {
   documentBase,
@@ -195,6 +196,12 @@ interface DocumentRow extends ClassifiedRow {
 }
 
 export function ProjectsDashboardHost() {
+  // Render-position text goes through the hook so a language switch re-renders it.
+  // Text produced at EVENT time — a thrown error, a snackbar line, a confirm body
+  // built on click — uses the imperative `rvT` instead: it reads the live locale
+  // when the handler runs, so it cannot go stale and it keeps `t` out of a dozen
+  // dependency arrays that have nothing else to do with translation.
+  const { t } = useRvTranslation('projects');
   const dash = useSyncExternalStore(subscribeProjectsDashboard, getProjectsDashboardSnapshot);
   const store = getProjectStore();
   const project = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -309,7 +316,7 @@ export function ProjectsDashboardHost() {
         ? [{
             id: DEMO_PROJECT_ID,
             name: DEMO_PROJECT_NAME,
-            caption: 'realvirtual demo scenes & library',
+            caption: rvT('projects', 'demoCaption'),
             origin: 'workspace' as const,
           }]
         : []),
@@ -376,7 +383,7 @@ export function ProjectsDashboardHost() {
     try {
       await fn();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : `${label} failed: ${String(e)}`);
+      setMessage(e instanceof Error ? e.message : rvT('projects', 'error.verbFailed', { verb: label, detail: String(e) }));
     } finally {
       setBusy(false);
     }
@@ -403,7 +410,7 @@ export function ProjectsDashboardHost() {
       setProjectsView('project');      // genuinely already open — pure navigation
       return;
     }
-    void runVerb('Open project', async () => {
+    void runVerb(rvT('projects', 'verb.openProject'), async () => {
       pendingResumeRef.current = true;
       try {
         // The folder wins whenever there is one: it is writable, and the HTTP
@@ -413,7 +420,7 @@ export function ProjectsDashboardHost() {
           : id === DEMO_PROJECT_ID
             ? await store.openDemoProject()
             : await store.openRecentProject(id);
-        if (!ok) setMessage('That project could not be opened.');
+        if (!ok) setMessage(rvT('projects', 'error.projectOpenFailed'));
         else setProjectsView('project');
       } finally {
         // A failed open must not leave the flag armed for the next one.
@@ -436,7 +443,7 @@ export function ProjectsDashboardHost() {
    * neither of them is here — this function is only the dispatch.
    */
   const handleOpen = useCallback(() => {
-    void runVerb('Open', async () => {
+    void runVerb(rvT('projects', 'verb.open'), async () => {
       // Picked under the project key rather than the workspace one: a folder we
       // have not classified yet must not become "the workspace" just by being
       // looked at. `adoptWorkspace` below is what promotes it, once we know.
@@ -449,7 +456,7 @@ export function ProjectsDashboardHost() {
         const ok = await store.openProjectFolder(dir);
         if (!ok) {
           pendingResumeRef.current = false;
-          setMessage('That project could not be opened.');
+          setMessage(rvT('projects', 'error.projectOpenFailed'));
           return;
         }
         setProjectsView('project');
@@ -483,11 +490,11 @@ export function ProjectsDashboardHost() {
     if (!request) return;
     const name = request.name.trim();
     if (!name) return;
-    void runVerb('New project', async () => {
+    void runVerb(rvT('projects', 'verb.newProject'), async () => {
       const result = await createProjectFromScenes(request.dir, name, []);
       if (!result.ok) throw new Error(result.message);
       const ok = await store.openProjectFolder(request.dir);
-      if (!ok) throw new Error('The project was created but could not be opened.');
+      if (!ok) throw new Error(rvT('projects', 'error.projectCreatedNotOpened'));
       setProjectsView('project');
     });
   }, [createHere, runVerb, store]);
@@ -499,9 +506,9 @@ export function ProjectsDashboardHost() {
    * nowhere else rather than failing after the click.
    */
   const handleExportProject = useCallback(() => {
-    void runVerb('Export project', async () => {
+    void runVerb(rvT('projects', 'verb.exportProject'), async () => {
       const dir = store.getProjectDir();
-      if (!dir) throw new Error('Only a project folder can be exported.');
+      if (!dir) throw new Error(rvT('projects', 'error.onlyFolderExport'));
       const result = await exportProject(dir, project.project?.name ?? 'project');
       if (result.kind !== 'exported') throw new Error(result.message);
       const url = URL.createObjectURL(result.blob);
@@ -516,14 +523,14 @@ export function ProjectsDashboardHost() {
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
       }
       if (result.skipped.length > 0) {
-        setMessage(`Exported ${result.entryCount} files. Caches and secrets were excluded.`);
+        setMessage(rvT('projects', 'status.exported', { count: result.entryCount }));
       }
     });
   }, [runVerb, store, project.project?.name]);
 
   /** Unpack a .rvproject into a folder the user picks. */
   const handleImportProject = useCallback(() => {
-    void runVerb('Import project', async () => {
+    void runVerb(rvT('projects', 'verb.importProject'), async () => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = RVPROJECT_EXTENSION;
@@ -541,7 +548,7 @@ export function ProjectsDashboardHost() {
       const result = await importProject(file, dir);
       if (result.kind !== 'imported') throw new Error(
         'message' in result ? result.message : 'Import failed.');
-      setMessage(`Imported "${result.project.name}" (${result.entryCount} files).`);
+      setMessage(rvT('projects', 'status.imported', { name: result.project.name, count: result.entryCount }));
     });
   }, [runVerb]);
 
@@ -575,9 +582,9 @@ export function ProjectsDashboardHost() {
   ) => {
     return runVerb(label, async () => {
       const backend = store.getBackend();
-      if (!backend?.writable) throw new Error('This project is read-only.');
+      if (!backend?.writable) throw new Error(rvT('projects', 'error.readOnly'));
       const result = await fn(backend);
-      if (result.kind !== 'ok') throw new Error(result.message ?? `${label} failed.`);
+      if (result.kind !== 'ok') throw new Error(result.message ?? rvT('projects', 'error.verbFailedShort', { verb: label }));
       // BOTH listings re-read after every successful mutation: the document
       // scan feeds the tree rows, the folder cards and the detail pane; the
       // provider catalog feeds thumbnails and drag-into-scene. Skipping either
@@ -648,15 +655,15 @@ export function ProjectsDashboardHost() {
   const handleDeleteAsset = useCallback((relPath: string, name: string) => {
     const doc = documentByPath.get(`${LIBRARY_FOLDER}/${relPath}`);
     setConfirmReq({
-      title: 'Delete asset',
-      message: `Delete "${name}"? It is moved to the project's trash folder.`,
-      confirmLabel: 'Delete',
+      title: rvT('projects', 'confirm.deleteAssetTitle'),
+      message: rvT('projects', 'confirm.deleteAssetMessage', { name }),
+      confirmLabel: rvT('projects', 'action.delete'),
       onConfirm: () => {
-        void runAssetOp('Delete asset', async () => {
+        void runAssetOp(rvT('projects', 'verb.deleteAsset'), async () => {
           if (!doc) {
             return {
               kind: 'error',
-              message: `"${name}" is not registered in this project — reopen the project and try again.`,
+              message: rvT('projects', 'error.assetNotRegistered', { name }),
             };
           }
           await retireDocument(store, doc.id);
@@ -701,10 +708,10 @@ export function ProjectsDashboardHost() {
     const doc = documentByPath.get(req.documentPath);
     const label = req.mode === 'move' ? 'Move document' : 'Copy document';
     void runVerb(label, async () => {
-      if (!ws) throw new Error('That project is no longer in the workspace.');
-      if (!doc) throw new Error('That document is no longer part of this project.');
+      if (!ws) throw new Error(rvT('projects', 'error.projectGone'));
+      if (!doc) throw new Error(rvT('projects', 'error.documentGone'));
       const backend = store.getBackend();
-      if (!backend?.writable) throw new Error('This project is read-only.');
+      if (!backend?.writable) throw new Error(rvT('projects', 'error.readOnly'));
 
       const result = await withTransferSession(
         {
@@ -736,7 +743,11 @@ export function ProjectsDashboardHost() {
       if (result.warning) {
         setMessage(result.warning);
       } else {
-        setMessage(`"${doc.name}" ${req.mode === 'move' ? 'moved' : 'copied'} to "${ws.name}".`);
+        // Two keys rather than one with an interpolated verb: a language that
+        // inflects the object would otherwise be handed an unusable sentence frame.
+        setMessage(req.mode === 'move'
+          ? rvT('projects', 'status.moved', { name: doc.name, target: ws.name })
+          : rvT('projects', 'status.copied', { name: doc.name, target: ws.name }));
       }
       // A move took bytes out of THIS project's library, so the source listing
       // is stale until it is re-read — the same refresh every asset op does.
@@ -764,10 +775,10 @@ export function ProjectsDashboardHost() {
     const request = (mode: 'copy' | 'move'): TransferRequest =>
       ({ mode, documentName: doc.name, documentPath: doc.path });
     return [
-      { key: 'copyTo', label: 'Copy to…', onClick: () => setTransferReq(request('copy')) },
-      { key: 'moveTo', label: 'Move to…', onClick: () => setTransferReq(request('move')) },
+      { key: 'copyTo', label: t('action.copyTo'), onClick: () => setTransferReq(request('copy')) },
+      { key: 'moveTo', label: t('action.moveTo'), onClick: () => setTransferReq(request('move')) },
     ];
-  }, [project.writable, transferTargets.length]);
+  }, [project.writable, transferTargets.length, t]);
 
   /**
    * Actions for a library asset (§3.6).
@@ -788,7 +799,7 @@ export function ProjectsDashboardHost() {
         key: 'edit',
         // A read-only source gets "Edit a copy": the editor opens either way,
         // but saving lands in the user's own library, and the label says so.
-        label: writable ? 'Edit' : 'Edit a copy',
+        label: writable ? t('action.edit') : t('action.editCopy'),
         primary: true,
         onClick: () => openAssetInEditor(ref, entry.name),
       },
@@ -800,18 +811,18 @@ export function ProjectsDashboardHost() {
     // same `renameLibraryAsset` commit this button used to reach via a dialog.
     actions.push({
       key: 'dup',
-      label: 'Duplicate',
+      label: t('action.duplicate'),
       // The ROW route (plan-717 §2.7): `duplicateDocument` copies the file AND
       // registers the copy with a NEW id, carrying the source's collections over
       // — the same inheritance `duplicateAsset` gave through the sidecar, now
       // from the one place the filing lives.
       onClick: () => {
         const doc = documentByPath.get(`${LIBRARY_FOLDER}/${relPath}`);
-        void runAssetOp('Duplicate asset', async () => {
+        void runAssetOp(rvT('projects', 'verb.duplicateAsset'), async () => {
           if (!doc) {
             return {
               kind: 'error',
-              message: `"${entry.name}" is not registered in this project — reopen the project and try again.`,
+              message: rvT('projects', 'error.assetNotRegistered', { name: entry.name }),
             };
           }
           await duplicateDocument(store, doc.id);
@@ -821,7 +832,7 @@ export function ProjectsDashboardHost() {
     });
     actions.push({
       key: 'collections',
-      label: 'Collections…',
+      label: t('action.collections'),
       // The ROW's collections, not the catalog entry's: since plan-717 §2.6 the
       // entry shows the union of the filing and the folder chips, and offering
       // "library/Conveyors" for editing would invite the user to delete a chip
@@ -837,12 +848,12 @@ export function ProjectsDashboardHost() {
     actions.push(...transferActionsFor(documentByPath.get(`${LIBRARY_FOLDER}/${relPath}`)));
     actions.push({
       key: 'delete',
-      label: 'Delete',
+      label: t('action.delete'),
       destructive: true,
       onClick: () => handleDeleteAsset(relPath, entry.name),
     });
     return actions;
-  }, [openAssetInEditor, runAssetOp, handleDeleteAsset, transferActionsFor, documentByPath, store]);
+  }, [openAssetInEditor, runAssetOp, handleDeleteAsset, transferActionsFor, documentByPath, store, t]);
 
   const [addLibraryOpen, setAddLibraryOpen] = useState(false);
   // The planner plugin owns the private cloud store when it is loaded. Reading
@@ -855,7 +866,7 @@ export function ProjectsDashboardHost() {
     // project: a later mode switch would otherwise try to open a path that no
     // longer resolves.
     setOpenDocumentBase(null);
-    void runVerb('Close project', () => store.requestCloseProject());
+    void runVerb(rvT('projects', 'verb.closeProject'), () => store.requestCloseProject());
   }, [runVerb, store]);
 
   // ── Project rename / delete (workspace rows only) ─────────────────────
@@ -876,7 +887,7 @@ export function ProjectsDashboardHost() {
     if (!trimmed) return;
     const ws = workspaceProjects.find(p => p.id === id);
     if (!ws) return;
-    void runVerb('Rename project', async () => {
+    void runVerb(rvT('projects', 'verb.renameProject'), async () => {
       await writeManifest(ws.dir, { ...ws.manifest, name: trimmed });
       const scan = await scanStoredWorkspace({ prompt: false });
       setWorkspaceProjects(scan.projects);
@@ -895,17 +906,17 @@ export function ProjectsDashboardHost() {
     // Deleting the folder under the open project would leave the store
     // writing into nowhere — closing first is the user's explicit step.
     if (project.project?.id === id) {
-      setMessage('Close the project before deleting it.');
+      setMessage(rvT('projects', 'error.closeBeforeDelete'));
       return;
     }
     setConfirmReq({
-      title: 'Delete project',
-      message: `Delete the project "${ws.name}" and its folder "${ws.folderName}"? This cannot be undone.`,
-      confirmLabel: 'Delete project',
+      title: rvT('projects', 'confirm.deleteProjectTitle'),
+      message: rvT('projects', 'confirm.deleteProjectMessage', { name: ws.name, folder: ws.folderName }),
+      confirmLabel: rvT('projects', 'confirm.deleteProjectTitle'),
       onConfirm: () => {
-        void runVerb('Delete project', async () => {
+        void runVerb(rvT('projects', 'verb.deleteProject'), async () => {
           const root = await getWorkspaceHandle();
-          if (!root) throw new Error('The workspace folder is not accessible.');
+          if (!root) throw new Error(rvT('projects', 'error.workspaceInaccessible'));
           await root.removeEntry(ws.folderName, { recursive: true });
           // A recents entry pointing at the deleted folder would be a row
           // that can only ever fail to open.
@@ -992,9 +1003,9 @@ export function ProjectsDashboardHost() {
     const name = (newProjectName ?? '').trim();
     if (!name) return;
     setNewProjectName(null);
-    void runVerb('New project', async () => {
+    void runVerb(rvT('projects', 'verb.newProject'), async () => {
       const root = await getWorkspaceHandle();
-      if (!root) throw new Error('No workspace folder is open — pick one first.');
+      if (!root) throw new Error(rvT('projects', 'error.noWorkspace'));
       const dir = await root.getDirectoryHandle(canonicalNameOf(name), { create: true });
       const result = await createProjectFromScenes(dir, name, []);
       if (!result.ok) throw new Error(result.message);
@@ -1003,7 +1014,7 @@ export function ProjectsDashboardHost() {
       setWorkspaceMeta(getWorkspaceMeta());
 
       const opened = await store.openProjectFolder(dir);
-      if (!opened) throw new Error('The project was created but could not be opened.');
+      if (!opened) throw new Error(rvT('projects', 'error.projectCreatedNotOpened'));
       setProjectsView('project');
 
       // In the project ROOT ('' — a real target since the folder rule was
@@ -1073,11 +1084,11 @@ export function ProjectsDashboardHost() {
     if (!sceneStore) return;
     // A destructive, irreversible action always asks first.
     setConfirmReq({
-      title: 'Delete scene',
-      message: `Delete the scene "${name}"? This cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: rvT('projects', 'confirm.deleteSceneTitle'),
+      message: rvT('projects', 'confirm.deleteSceneMessage', { name }),
+      confirmLabel: rvT('projects', 'action.delete'),
       onConfirm: () => {
-        void runVerb('Delete scene', async () => {
+        void runVerb(rvT('projects', 'verb.deleteScene'), async () => {
           await sceneStore.delete(id);
           setProjectsSelection({ kind: 'none' });
         });
@@ -1087,7 +1098,7 @@ export function ProjectsDashboardHost() {
 
   const duplicateScene = useCallback((id: string) => {
     if (!sceneStore) return;
-    void runVerb('Duplicate scene', async () => { await sceneStore.duplicate(id); });
+    void runVerb(rvT('projects', 'verb.duplicateScene'), async () => { await sceneStore.duplicate(id); });
   }, [sceneStore, runVerb]);
 
   /**
@@ -1102,7 +1113,7 @@ export function ProjectsDashboardHost() {
    */
   const renameDocumentRow = useCallback((id: string, name: string) => {
     if (!sceneStore) return;
-    void runVerb('Rename', async () => {
+    void runVerb(rvT('projects', 'verb.rename'), async () => {
       await sceneStore.rename(id, name);
       await store.rescanDocuments();
       await listLibrarySources()
@@ -1190,11 +1201,11 @@ export function ProjectsDashboardHost() {
     const source = registered?.source;
     if (!registered || !source?.remove) return;
     setConfirmReq({
-      title: 'Remove library',
-      message: `Remove the library "${label}" from this viewer? Its files are not deleted.`,
-      confirmLabel: 'Remove',
+      title: rvT('projects', 'confirm.removeLibraryTitle'),
+      message: rvT('projects', 'confirm.removeLibraryMessage', { name: label }),
+      confirmLabel: rvT('common', 'remove'),
       onConfirm: () => {
-        void runVerb('Remove library', async () => {
+        void runVerb(rvT('projects', 'verb.removeLibrary'), async () => {
           await source.remove!();
           // A selection pointing into the library that just went away would
           // leave the detail pane describing a dead source (plan-702 §2.7/R5).
@@ -1212,7 +1223,7 @@ export function ProjectsDashboardHost() {
   const handleRefreshLibrary = useCallback((rootId: string) => {
     const source = sourceOfRoot(rootId)?.source;
     if (!source?.refresh) return;
-    void runVerb('Refresh library', () => source.refresh!());
+    void runVerb(rvT('projects', 'verb.refreshLibrary'), () => source.refresh!());
   }, [sourceOfRoot, runVerb]);
 
   // ── The document view (plan-413 §3.1) ─────────────────────────────────
@@ -1484,7 +1495,7 @@ export function ProjectsDashboardHost() {
    */
   const handleNewDocument = useCallback(() => {
     const folder = newDocumentFolderFor(project.project?.id, selectedFolderPath);
-    void runVerb('New document', async () => {
+    void runVerb(rvT('projects', 'verb.newDocument'), async () => {
       const created = await createDocument(store, newDocumentNameFor(folder), { folder });
       // Two listings have to learn about the newborn before it can be shown:
       // the document scan (tree rows + folder cards) and the project-library
@@ -1550,7 +1561,7 @@ export function ProjectsDashboardHost() {
           ...(doc?.thumbnail ? { thumbnailUrl: doc.thumbnail } : {}),
         };
         const menuActions: ProjectCardMenuAction[] = [
-          { key: 'open', label: 'Open', onClick: () => handleTreeActivate(node) },
+          { key: 'open', label: t('action.open'), onClick: () => handleTreeActivate(node) },
         ];
         // Rename left the tree with the row it belonged to; the card is where
         // it lives now. Folders keep F2 in the tree — the verb did not move,
@@ -1558,7 +1569,7 @@ export function ProjectsDashboardHost() {
         if (node.writable && node.rootId === project.project?.id) {
           menuActions.push({
             key: 'rename',
-            label: 'Rename…',
+            label: t('action.rename'),
             onClick: () => setAssetDialog({ kind: 'renameNode', relPath: path, value: node.name }),
           });
         }
@@ -1616,7 +1627,7 @@ export function ProjectsDashboardHost() {
           onDragEnd: () => setCardDragPath(null),
         };
       }),
-    [folderRows, documentFilter, sources, selectedTreePath, project.project?.id,
+    [t, folderRows, documentFilter, sources, selectedTreePath, project.project?.id,
       store, handleTreeSelect, handleTreeActivate],
   );
 
@@ -1673,9 +1684,9 @@ export function ProjectsDashboardHost() {
   ) => {
     void runVerb(label, async () => {
       const io = treeMoveIO();
-      if (!io) throw new Error('This project is read-only.');
+      if (!io) throw new Error(rvT('projects', 'error.readOnly'));
       if (node.rootId !== project.project?.id) {
-        throw new Error('A catalog cannot be restructured from here.');
+        throw new Error(rvT('projects', 'error.catalogRestructure'));
       }
       const plan = planTreeMove(treeRoots, node.path!, { ok: true, from: node.relPath, to });
       const outcome = await applyTreeMove(io, plan);
@@ -1698,7 +1709,7 @@ export function ProjectsDashboardHost() {
         .find(s => s.providerId === PROJECT_LIBRARY_PROVIDER_ID)?.source.refresh?.();
       onDone?.(to);
       if (outcome.docsIndexRows > 0) {
-        setMessage(`Moved, and repointed ${outcome.docsIndexRows} document link(s).`);
+        setMessage(rvT('projects', 'status.movedRepointed', { count: outcome.docsIndexRows }));
       }
     });
   }, [runVerb, treeMoveIO, treeRoots, project.project?.id, store]);
@@ -1713,10 +1724,10 @@ export function ProjectsDashboardHost() {
    * same path are ONE folder, and the click would silently do nothing.
    */
   const handleNewFolder = useCallback((parent: ProjectTreeNode) => {
-    void runVerb('New folder', async () => {
-      if (!project.writable) throw new Error('This project is read-only.');
+    void runVerb(rvT('projects', 'verb.newFolder'), async () => {
+      if (!project.writable) throw new Error(rvT('projects', 'error.readOnly'));
       if (parent.rootId !== project.project?.id) {
-        throw new Error('A library cannot hold new folders.');
+        throw new Error(rvT('projects', 'error.libraryNoFolders'));
       }
       // The row's own folder: a folder holds its children, a document sits
       // beside its siblings — so a right-click on either means the same place.
@@ -1790,12 +1801,12 @@ export function ProjectsDashboardHost() {
     const treePath = projId ? `${projId}/${LIBRARY_FOLDER}/${relPath}` : null;
     const node = treePath ? findTreeNode(treeRoots, treePath) : null;
     if (!node || !treePath) {
-      setMessage(`Rename refused: "${relPath}" is not part of this project's tree.`);
+      setMessage(rvT('projects', 'status.renameRefusedPath', { path: relPath }));
       return;
     }
     const verdict = canRenameInTree(treeRoots, treePath, fileName);
     if (!verdict.ok) {
-      if (verdict.reason !== 'unchanged') setMessage(`Rename refused: ${verdict.reason}.`);
+      if (verdict.reason !== 'unchanged') setMessage(rvT('projects', 'status.renameRefused', { reason: verdict.reason }));
       return;
     }
     runTreeEdit('Rename asset', node, verdict.to, (to) => {
@@ -1819,7 +1830,7 @@ export function ProjectsDashboardHost() {
       // The store, not the backend: collections live on the manifest row now
       // (§2.4). `runAssetOp` still wraps it — the writable check and the two
       // listing refreshes afterwards are the same for every asset verb.
-      void runAssetOp('Set collections', () => setAssetCollections(store, relPath, value.split(',')));
+      void runAssetOp(rvT('projects', 'verb.setCollections'), () => setAssetCollections(store, relPath, value.split(',')));
       return;
     }
     renameLibraryAsset(relPath, value);
@@ -1841,7 +1852,7 @@ export function ProjectsDashboardHost() {
     if (!node) return;
     const verdict = canRenameInTree(treeRoots, req.relPath, req.value);
     if (!verdict.ok) {
-      if (verdict.reason !== 'unchanged') setMessage(`Rename refused: ${verdict.reason}.`);
+      if (verdict.reason !== 'unchanged') setMessage(rvT('projects', 'status.renameRefused', { reason: verdict.reason }));
       return;
     }
     handleTreeRename(node, verdict.to);
@@ -1988,7 +1999,7 @@ export function ProjectsDashboardHost() {
     doc: TieredDocumentEntry,
     next: DocumentClassification | null,
   ) => {
-    void runVerb('Classify document', () => store.setDocumentClassification(doc.id, next));
+    void runVerb(rvT('projects', 'verb.classifyDocument'), () => store.setDocumentClassification(doc.id, next));
   }, [runVerb, store]);
 
   /**
@@ -2026,30 +2037,30 @@ export function ProjectsDashboardHost() {
       if (!scene) return { title: null };
       const bundled = scene.tier === 'bundled';
       const fields: DetailField[] = [];
-      if (scene.modifiedAt) fields.push({ label: 'Modified', value: scene.modifiedAt });
-      if (project.project?.name) fields.push({ label: 'Project', value: project.project.name });
+      if (scene.modifiedAt) fields.push({ label: t('detail.modified'), value: scene.modifiedAt });
+      if (project.project?.name) fields.push({ label: t('detail.project'), value: project.project.name });
       const actions: DetailAction[] = [
-        { key: 'open', label: 'Open', primary: true, onClick: () => openScene(scene.id) },
+        { key: 'open', label: t('action.open'), primary: true, onClick: () => openScene(scene.id) },
       ];
       // A bundled scene is offered a duplicate rather than five greyed-out
       // buttons — telling the user the way forward beats disabling (§3.6).
       if (bundled) {
         actions.push({
           key: 'dup',
-          label: 'Duplicate to this project',
+          label: t('action.duplicateToProject'),
           onClick: () => duplicateScene(scene.id),
         });
       } else {
         // No "Rename" action: the title itself edits on click (the pane's
         // inline rename), and a second entry point for the same commit was
         // one more than the verb needed.
-        actions.push({ key: 'dup', label: 'Duplicate', onClick: () => duplicateScene(scene.id) });
+        actions.push({ key: 'dup', label: t('action.duplicate'), onClick: () => duplicateScene(scene.id) });
         // `scene` IS the document row now — the second lookup that used to
         // stand here asked the same array for the same id.
         actions.push(...transferActionsFor(scene));
         actions.push({
           key: 'delete',
-          label: 'Delete',
+          label: t('action.delete'),
           destructive: true,
           onClick: () => deleteScene(scene.id, scene.name),
         });
@@ -2106,11 +2117,11 @@ export function ProjectsDashboardHost() {
           ? { subtitle: 'Example (read-only)' }
           : readOnly ? { subtitle: 'Read-only' } : {}),
         badges: published || !doc ? [] : [documentTypeBadge(doc), documentRoleBadge(doc)],
-        fields: published ? [] : [{ label: 'Source', value: sel.modelId }],
+        fields: published ? [] : [{ label: t('detail.source'), value: sel.modelId }],
         actions: [
           {
             key: 'open',
-            label: 'Open',
+            label: t('action.open'),
             primary: true,
             onClick: () => openModel(sel.modelId, label, published),
           },
@@ -2127,7 +2138,7 @@ export function ProjectsDashboardHost() {
             if (!node) return;
             const verdict = canRenameInTree(treeRoots, selectedTreePath, name);
             if (!verdict.ok) {
-              if (verdict.reason !== 'unchanged') setMessage(`Rename refused: ${verdict.reason}.`);
+              if (verdict.reason !== 'unchanged') setMessage(rvT('projects', 'status.renameRefused', { reason: verdict.reason }));
               return;
             }
             runTreeEdit('Rename', node, verdict.to, (to) => {
@@ -2142,10 +2153,10 @@ export function ProjectsDashboardHost() {
       const src = sources.find(s => s.providerId === sel.providerId && s.source.id === sel.sourceId);
       const entry = src?.source.getEntry(sel.assetId) ?? null;
       if (!entry) return { title: null };
-      const fields: DetailField[] = [{ label: 'Category', value: entry.category }];
-      if (entry.collections?.length) fields.push({ label: 'Collections', value: entry.collections.join(', ') });
-      if (entry.footprintMm) fields.push({ label: 'Footprint', value: `${entry.footprintMm[0]} × ${entry.footprintMm[1]} mm` });
-      if (entry.tags?.length) fields.push({ label: 'Tags', value: entry.tags.join(', ') });
+      const fields: DetailField[] = [{ label: t('detail.category'), value: entry.category }];
+      if (entry.collections?.length) fields.push({ label: t('detail.collections'), value: entry.collections.join(', ') });
+      if (entry.footprintMm) fields.push({ label: t('detail.footprint'), value: `${entry.footprintMm[0]} × ${entry.footprintMm[1]} mm` });
+      if (entry.tags?.length) fields.push({ label: t('detail.tags'), value: entry.tags.join(', ') });
       const writable = src?.source.writable ?? false;
       return {
         title: entry.name,
@@ -2188,7 +2199,7 @@ export function ProjectsDashboardHost() {
     // the dashboard header and its verbs in the header menu; a pane that
     // repeated them here would make "no selection" look like a selection.
     return { title: null };
-  }, [dash.selection, project, sources, store, runVerb,
+  }, [t, dash.selection, project, sources, store, runVerb,
       openScene, duplicateScene, deleteScene, buildAssetActions, openModel,
       sceneSnap?.published, project.models, documentRows, classificationFor,
       transferActionsFor, documentByPath, sourceOfRoot, treeRoots, catalogRoots,
@@ -2217,11 +2228,11 @@ export function ProjectsDashboardHost() {
         sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, ml: 0.5 }}
       >
         {src.refresh && (
-          <Tooltip title="Refresh library">
+          <Tooltip title={t('action.refreshLibrary')}>
             <IconButton
               size="small"
               sx={{ p: 0.25 }}
-              aria-label={`Refresh ${src.label}`}
+              aria-label={t('action.refreshSource', { source: src.label })}
               onClick={() => handleRefreshLibrary(node.rootId)}
             >
               <Refresh sx={{ fontSize: 14 }} />
@@ -2229,11 +2240,11 @@ export function ProjectsDashboardHost() {
           </Tooltip>
         )}
         {src.remove && (
-          <Tooltip title="Remove library">
+          <Tooltip title={t('action.removeLibrary')}>
             <IconButton
               size="small"
               sx={{ p: 0.25 }}
-              aria-label={`Remove ${src.label}`}
+              aria-label={t('action.removeSource', { source: src.label })}
               onClick={() => handleRemoveLibrary(node.rootId, src.label)}
             >
               <DeleteOutline sx={{ fontSize: 14 }} />
@@ -2242,7 +2253,7 @@ export function ProjectsDashboardHost() {
         )}
       </Box>
     );
-  }, [sourceOfRoot, handleRefreshLibrary, handleRemoveLibrary]);
+  }, [t, sourceOfRoot, handleRefreshLibrary, handleRemoveLibrary]);
 
   // ── Header menus (project verbs + folder create) ──────────────────────
   // The project's verbs moved from the detail pane's no-selection fallback
@@ -2279,8 +2290,8 @@ export function ProjectsDashboardHost() {
           `setNameDialog`; this is the missing free-standing entry point. */}
       {sceneSnap?.dirty && (
         <Tooltip title={sceneSnap.transient
-          ? 'This scene came from a link and is not stored anywhere yet — saving keeps it under My scenes.'
-          : 'Save the current edits under a new name.'}
+          ? t('action.saveTransient')
+          : t('action.saveUnderNewName')}
         >
           <Button
             size="small"
@@ -2356,7 +2367,7 @@ export function ProjectsDashboardHost() {
           }}
           sx={{ fontSize: 13 }}
         >
-          New Folder
+          {t('action.newFolder')}
         </MenuItem>
         {/* The discoverable half of F2. The tree can rename in place, but a
             keystroke on an unlabelled row is not something anybody finds — and
@@ -2378,7 +2389,7 @@ export function ProjectsDashboardHost() {
           }}
           sx={{ fontSize: 13 }}
         >
-          Rename…
+          {t('action.rename')}
         </MenuItem>
       </Menu>
       {/* These three were imported and their state managed since Phase 13,
@@ -2477,10 +2488,10 @@ export function ProjectsDashboardHost() {
         hero={<DocumentHeroSection onReveal={handleHeroReveal} />}
         titleActions={
           <>
-            <Tooltip title="Project actions">
+            <Tooltip title={t('action.projectActions')}>
               <IconButton
                 size="small"
-                aria-label="Project actions"
+                aria-label={t('action.projectActions')}
                 onClick={(e) => setProjectMenuAnchor(e.currentTarget)}
               >
                 <MoreVert sx={{ fontSize: 18 }} />
@@ -2495,16 +2506,16 @@ export function ProjectsDashboardHost() {
                 onClick={() => { setProjectMenuAnchor(null); handleCloseProject(); }}
                 sx={{ fontSize: 13 }}
               >
-                Close Project
+                {t('action.closeProject')}
               </MenuItem>
               <MenuItem
                 disabled={project.backendKind !== 'folder'}
                 onClick={() => { setProjectMenuAnchor(null); handleExportProject(); }}
               >
                 <ListItemText
-                  primary="Export .rvproject"
+                  primary={t('action.exportProject')}
                   secondary={project.backendKind !== 'folder'
-                    ? 'Only a project folder can be exported.'
+                    ? t('error.onlyFolderExport')
                     : undefined}
                   primaryTypographyProps={{ fontSize: 13 }}
                   secondaryTypographyProps={{ fontSize: 10 }}
@@ -2514,7 +2525,7 @@ export function ProjectsDashboardHost() {
                 onClick={() => { setProjectMenuAnchor(null); handleImportProject(); }}
                 sx={{ fontSize: 13 }}
               >
-                Import .rvproject…
+                {t('action.importProject')}
               </MenuItem>
             </Menu>
           </>
@@ -2564,7 +2575,7 @@ export function ProjectsDashboardHost() {
             }}
           >
             <Typography sx={{ fontSize: 12, fontWeight: 600, flex: 1 }}>
-              Project
+              {t('nav.project')}
             </Typography>
           </Box>
           {/* The project takes only what it needs, so the Libraries header sits
@@ -2595,12 +2606,12 @@ export function ProjectsDashboardHost() {
             }}
           >
             <Typography sx={{ fontSize: 12, fontWeight: 600, flex: 1 }}>
-              Libraries
+              {t('nav.libraries')}
             </Typography>
-            <Tooltip title="Add library">
+            <Tooltip title={t('action.addLibrary')}>
               <IconButton
                 size="small"
-                aria-label="Add library"
+                aria-label={t('action.addLibrary')}
                 onClick={() => setAddLibraryOpen(true)}
               >
                 <Add sx={{ fontSize: 16 }} />
@@ -2682,13 +2693,15 @@ export function ProjectsDashboardHost() {
             */}
             <Tooltip
               title={project.writable
-                ? `New document in ${newDocumentFolder === '' ? 'the project root' : `${newDocumentFolder}/`}`
-                : 'This project is read-only.'}
+                ? t('action.newDocumentIn', {
+                  target: newDocumentFolder === '' ? t('action.projectRoot') : `${newDocumentFolder}/`,
+                })
+                : t('error.readOnly')}
             >
               <span>
                 <IconButton
                   size="small"
-                  aria-label="New document"
+                  aria-label={t('action.newDocument')}
                   disabled={!project.writable}
                   onClick={handleNewDocument}
                 >
@@ -2717,7 +2730,7 @@ export function ProjectsDashboardHost() {
   const hasWorkspace = workspaceMeta !== null || workspaceProjects.length > 0;
   return (
     <ProjectsDashboard
-      title="Projects"
+      title={t('title')}
       showSearch={projectRows.length > 0}
       headerActions={
         <>
@@ -2731,7 +2744,7 @@ export function ProjectsDashboardHost() {
               onClick={handleOpen}
               sx={{ fontSize: 11, textTransform: 'none', whiteSpace: 'nowrap' }}
             >
-              Open…
+              {t('nav.openEllipsis')}
             </Button>
           )}
           {hasWorkspace && !modeLocked && (
@@ -2741,7 +2754,7 @@ export function ProjectsDashboardHost() {
               onClick={() => setNewProjectName('New Project')}
               sx={{ fontSize: 11, textTransform: 'none', whiteSpace: 'nowrap' }}
             >
-              New project
+              {t('nav.newProject')}
             </Button>
           )}
           {sharedChrome}

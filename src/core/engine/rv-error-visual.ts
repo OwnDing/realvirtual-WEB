@@ -18,6 +18,19 @@
 import { CanvasTexture, type Object3D, type Texture } from 'three';
 import type { GizmoHandle, GizmoOverlayManager } from './rv-gizmo-manager';
 import { computeSubtreeAABB } from './rv-traverse-utils';
+import { onLocaleChange, rvT } from '../i18n';
+
+/**
+ * Font stack for canvas-baked labels (ADR-0001 §12).
+ *
+ * Chinese relies on system fonts — no CJK subset is bundled — but a bare
+ * `sans-serif` leaves the choice to the platform's generic default, which on a
+ * trimmed Linux or kiosk image can be a face with no CJK glyphs at all and
+ * therefore renders tofu. Naming the platform faces first keeps the fallback
+ * controlled instead of accidental.
+ */
+export const BADGE_FONT_STACK =
+  '"Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif';
 
 // ─── Constants (inline, glanceable) ─────────────────────────────────────
 
@@ -75,11 +88,34 @@ export function parseColorToHex(raw: unknown, fallback = ERROR_COLOR): number {
 /** Build a CanvasTexture badge: dark rounded panel, colored border, white text.
  *  Pattern mirrors MeasurementRenderer._createLabelSprite. Returns the texture
  *  plus its canvas aspect (w/h) so the caller can scale the sprite correctly. */
+/**
+ * Live badge textures, so a language switch can repaint them (ADR-0001 §9).
+ *
+ * Text baked into a canvas does not re-render the way a React label does — the
+ * pixels are the state. Held weakly and pruned on each pass, because the caller
+ * owns the sprite's lifetime and must not have to tell us when it dies; a strong
+ * Set here would pin every badge a scene ever showed.
+ */
+const liveBadges = new Set<{ ref: WeakRef<CanvasTexture>; repaint: (texture: CanvasTexture) => void }>();
+
+let localeSubscribed = false;
+
+/** Repaint every surviving badge and drop the collected ones. */
+export function repaintBadgeTextures(): void {
+  for (const entry of [...liveBadges]) {
+    const texture = entry.ref.deref();
+    if (!texture) { liveBadges.delete(entry); continue; }
+    entry.repaint(texture);
+  }
+}
+
 export function buildBadgeTexture(
   text: string,
   borderColor = ERROR_COLOR,
 ): { texture: CanvasTexture; aspect: number } {
-  const label = text && text.trim() ? text : 'Error';
+  // The default is a user-visible word, so it comes from the catalog. Explicit
+  // text — a behaviour's `ErrorText` — is content, not chrome, and is left alone.
+  const label = text && text.trim() ? text : rvT('viewer', 'badgeError');
   const fontSize = 32;
   const border = 3;
   const radius = 8;
@@ -87,7 +123,7 @@ export function buildBadgeTexture(
 
   const measureCanvas = document.createElement('canvas');
   const mctx = measureCanvas.getContext('2d')!;
-  mctx.font = `bold ${fontSize}px sans-serif`;
+  mctx.font = `bold ${fontSize}px ${BADGE_FONT_STACK}`;
   const textWidth = Math.ceil(mctx.measureText(label).width);
 
   const w = textWidth + pad * 2 + border * 2;
@@ -95,6 +131,33 @@ export function buildBadgeTexture(
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, w, h);
+
+  paintBadge(canvas, label, borderColor, fontSize, border, radius);
+
+  const texture = new CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  registerRepaintableBadge(texture, text, borderColor, fontSize, border, radius);
+  return { texture, aspect: w / h };
+}
+
+/**
+ * Paint the badge onto an existing canvas at its CURRENT size.
+ *
+ * Shared by the first draw and by every repaint, so a language switch cannot
+ * drift away from what the badge looked like when it was built.
+ */
+function paintBadge(
+  canvas: HTMLCanvasElement,
+  label: string,
+  borderColor: number,
+  fontSize: number,
+  border: number,
+  radius: number,
+): void {
+  const w = canvas.width;
+  const h = canvas.height;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, w, h);
 
@@ -121,16 +184,50 @@ export function buildBadgeTexture(
   drawRoundedRect(border, border, w - border * 2, h - border * 2, Math.max(0, radius - border));
   ctx.fill();
 
-  // White text
+  // White text. Shrunk to fit rather than clipped: a repaint after a language
+  // switch keeps the ORIGINAL canvas size, because the sprite's world scale was
+  // computed from the first aspect and nobody is watching for a new one.
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  let size = fontSize;
+  const maxWidth = w - (border + 16) * 2;
+  ctx.font = `bold ${size}px ${BADGE_FONT_STACK}`;
+  while (size > 8 && ctx.measureText(label).width > maxWidth) {
+    size -= 1;
+    ctx.font = `bold ${size}px ${BADGE_FONT_STACK}`;
+  }
   ctx.fillText(label, w / 2, h / 2 + 1);
+}
 
-  const texture = new CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return { texture, aspect: w / h };
+/**
+ * Arm a badge for repainting, but only when its text came from the catalog.
+ *
+ * A badge given explicit text carries a behaviour's own `ErrorText`, which is
+ * content rather than chrome; repainting that would silently rewrite the
+ * model's message in the user's language and lose what the model said.
+ */
+function registerRepaintableBadge(
+  texture: CanvasTexture,
+  originalText: string,
+  borderColor: number,
+  fontSize: number,
+  border: number,
+  radius: number,
+): void {
+  if (originalText && originalText.trim()) return;
+  if (!localeSubscribed) {
+    localeSubscribed = true;
+    onLocaleChange(() => repaintBadgeTextures());
+  }
+  liveBadges.add({
+    ref: new WeakRef(texture),
+    repaint: (live) => {
+      paintBadge(live.image as HTMLCanvasElement, rvT('viewer', 'badgeError'),
+        borderColor, fontSize, border, radius);
+      live.needsUpdate = true;
+    },
+  });
 }
 
 // ─── Highlight gizmo (mesh-glow-hull flash or floor-disk ring) ───────────

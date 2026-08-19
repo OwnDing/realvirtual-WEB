@@ -1,0 +1,819 @@
+{
+  "schemaVersion": 2,
+  "generator": "scripts/i18n-inventory.mjs",
+  "command": "node scripts/i18n-inventory.mjs --write",
+  "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
+  "totals": {
+    "react-copy": 1475,
+    "a11y-name": 92,
+    "plugin-registry": 133,
+    "dynamic-text": 161,
+    "canvas-texture": 2,
+    "pre-boot": 16,
+    "dom-text": 10,
+    "ui-state-text": 15
+  },
+  "total": 1904,
+  "fileCount": 231,
+  "files": {
+    "index.html": {
+      "pre-boot": 15
+    },
+    "src/behaviors/Agv.ts": {
+      "plugin-registry": 3
+    },
+    "src/behaviors/ChainTransfer.ts": {
+      "plugin-registry": 2
+    },
+    "src/behaviors/Conveyor.ts": {
+      "plugin-registry": 3
+    },
+    "src/behaviors/OverheadConveyor.ts": {
+      "plugin-registry": 3
+    },
+    "src/behaviors/PickPlaceStationExample.ts": {
+      "plugin-registry": 5
+    },
+    "src/behaviors/Sink.ts": {
+      "plugin-registry": 1
+    },
+    "src/behaviors/Source.ts": {
+      "plugin-registry": 1
+    },
+    "src/behaviors/Turntable.ts": {
+      "plugin-registry": 2
+    },
+    "src/core/editor/rv-asset-library-save.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/editor/rv-save-document.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/engine/rv-gpu-info.ts": {
+      "plugin-registry": 2,
+      "dynamic-text": 1
+    },
+    "src/core/engine/rv-script-host.ts": {
+      "plugin-registry": 2,
+      "dynamic-text": 3
+    },
+    "src/core/engine/rv-script-sandbox.ts": {
+      "plugin-registry": 2
+    },
+    "src/core/hmi/ActivityBar.tsx": {
+      "react-copy": 9,
+      "a11y-name": 1
+    },
+    "src/core/hmi/AiActivityOverlay.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/AiBridgeGate.tsx": {
+      "react-copy": 20
+    },
+    "src/core/hmi/AnnotationEditModal.tsx": {
+      "react-copy": 5
+    },
+    "src/core/hmi/AnnotationPanel.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/App.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/AskAiButton.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/AutoQualityDialog.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/BottomBar.tsx": {
+      "react-copy": 12,
+      "a11y-name": 2,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ButtonPanel.tsx": {
+      "react-copy": 1,
+      "a11y-name": 2
+    },
+    "src/core/hmi/CameraBar.tsx": {
+      "react-copy": 4,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ClippingPanel.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/CommissioningTrustBanner.tsx": {
+      "react-copy": 10,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ConfirmActionDialog.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/ConnectOptionsWindow.tsx": {
+      "react-copy": 28,
+      "dynamic-text": 4,
+      "ui-state-text": 3
+    },
+    "src/core/hmi/ConnectPanel.tsx": {
+      "react-copy": 241,
+      "a11y-name": 6,
+      "dynamic-text": 28,
+      "ui-state-text": 7
+    },
+    "src/core/hmi/ConnectUpdateNotice.tsx": {
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ConnectUpdateSection.tsx": {
+      "react-copy": 10,
+      "dynamic-text": 3
+    },
+    "src/core/hmi/DocViewerOverlay.tsx": {
+      "react-copy": 5
+    },
+    "src/core/hmi/DragNumberField.tsx": {
+      "dynamic-text": 1
+    },
+    "src/core/hmi/FloatingPanel.tsx": {
+      "a11y-name": 2
+    },
+    "src/core/hmi/ForceConfirmDialog.tsx": {
+      "react-copy": 5
+    },
+    "src/core/hmi/GPUWarningBanner.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/GroupsListContent.tsx": {
+      "react-copy": 6,
+      "dynamic-text": 5
+    },
+    "src/core/hmi/GroupsOverlay.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/HierarchyNodeRow.tsx": {
+      "react-copy": 1,
+      "a11y-name": 3,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/HistorianTrendPanel.tsx": {
+      "react-copy": 16,
+      "a11y-name": 6
+    },
+    "src/core/hmi/IKTargetQuickEdit.tsx": {
+      "react-copy": 17
+    },
+    "src/core/hmi/InstructionLayer.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/LazyPanelBoundary.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1
+    },
+    "src/core/hmi/LeftPanel.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/LicenseSection.tsx": {
+      "react-copy": 19,
+      "a11y-name": 4,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/MachineControlPanel.tsx": {
+      "react-copy": 15
+    },
+    "src/core/hmi/MaintenancePanel.tsx": {
+      "react-copy": 12
+    },
+    "src/core/hmi/MeasurementPanel.tsx": {
+      "react-copy": 6
+    },
+    "src/core/hmi/MessagePanel.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/MobileSelectionSheet.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/ModeDropdown.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/MultiuserPanel.tsx": {
+      "react-copy": 8
+    },
+    "src/core/hmi/NewsDialog.tsx": {
+      "react-copy": 2,
+      "a11y-name": 1
+    },
+    "src/core/hmi/ProblemsPanel.tsx": {
+      "a11y-name": 2,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ProjectCodeConsentDialog.tsx": {
+      "react-copy": 7
+    },
+    "src/core/hmi/ReorderableList.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/SearchAiDialog.tsx": {
+      "react-copy": 14,
+      "a11y-name": 3,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/SensorHistoryPanel.tsx": {
+      "react-copy": 3,
+      "a11y-name": 3,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/ServeSessionBadge.tsx": {
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/SetPositionDialog.tsx": {
+      "react-copy": 6
+    },
+    "src/core/hmi/SettingsPanel.tsx": {
+      "react-copy": 13
+    },
+    "src/core/hmi/SharedViewBanner.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/SigWarningBanner.tsx": {
+      "react-copy": 3,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/SignalEditDialog.tsx": {
+      "react-copy": 18,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/SignalSearchOverlay.tsx": {
+      "react-copy": 5,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/StorageNoticeBanner.tsx": {
+      "a11y-name": 1
+    },
+    "src/core/hmi/TopBar.tsx": {
+      "react-copy": 12,
+      "a11y-name": 1
+    },
+    "src/core/hmi/WelcomeModal.tsx": {
+      "react-copy": 22
+    },
+    "src/core/hmi/connect-store.ts": {
+      "plugin-registry": 27
+    },
+    "src/core/hmi/consent-gate.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/hierarchy-badge-components.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/license-store.ts": {
+      "plugin-registry": 2,
+      "dynamic-text": 4
+    },
+    "src/core/hmi/password-gate.tsx": {
+      "react-copy": 5,
+      "a11y-name": 1
+    },
+    "src/core/hmi/pdf-viewer-store.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/problems-store.ts": {
+      "dynamic-text": 2
+    },
+    "src/core/hmi/projects/AssetPromptDialog.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/projects/ClassificationEditor.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/projects/DestructiveConfirmDialog.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/projects/DocumentFilterBar.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1
+    },
+    "src/core/hmi/projects/DocumentHeroSection.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/projects/ProjectFolderContents.tsx": {
+      "react-copy": 1,
+      "a11y-name": 2
+    },
+    "src/core/hmi/projects/ProjectTree.tsx": {
+      "a11y-name": 2
+    },
+    "src/core/hmi/projects/ProjectsDashboard.tsx": {
+      "react-copy": 3,
+      "a11y-name": 3
+    },
+    "src/core/hmi/projects/ProjectsDetailPane.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/projects/ProjectsList.tsx": {
+      "react-copy": 14,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/projects/SceneNameDialog.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/projects/TransferTargetDialog.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/projects/document-filter.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/hmi/rv-add-component-section.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/rv-component-section.tsx": {
+      "react-copy": 5,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/rv-connections-section.tsx": {
+      "react-copy": 11,
+      "a11y-name": 4,
+      "dynamic-text": 8
+    },
+    "src/core/hmi/rv-custom-runtime-instruction-field-renderer.tsx": {
+      "react-copy": 2,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/rv-extras-editor.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/rv-field-row.tsx": {
+      "react-copy": 2,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/rv-hierarchy-browser.tsx": {
+      "react-copy": 14,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/rv-ik-path-field-renderer.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/rv-property-inspector.tsx": {
+      "react-copy": 26,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/rv-reference-display.tsx": {
+      "dynamic-text": 5
+    },
+    "src/core/hmi/rv-signal-badge.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/rv-signal-slot-row.tsx": {
+      "react-copy": 10,
+      "dynamic-text": 4
+    },
+    "src/core/hmi/scene/DocumentCard.tsx": {
+      "react-copy": 13,
+      "a11y-name": 3,
+      "dynamic-text": 4
+    },
+    "src/core/hmi/scene/DocumentCrumbs.tsx": {
+      "dynamic-text": 1
+    },
+    "src/core/hmi/scene/rv-scene-confirm-dialog.tsx": {
+      "react-copy": 6,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/scene/rv-scene-edits.ts": {
+      "dynamic-text": 1
+    },
+    "src/core/hmi/scene/rv-scene-live-sync.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/hmi/scene/scene-document-view.ts": {
+      "plugin-registry": 9
+    },
+    "src/core/hmi/scene/scene-store.ts": {
+      "plugin-registry": 2,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/script/ScriptEditorPanel.tsx": {
+      "react-copy": 10,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/script/ScriptToolbarButton.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/script/rv-script-save-pipeline.ts": {
+      "plugin-registry": 2,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/settings/CameraStartTab.tsx": {
+      "react-copy": 4,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/settings/DevToolsTab.tsx": {
+      "react-copy": 64
+    },
+    "src/core/hmi/settings/GroupsTab.tsx": {
+      "react-copy": 5
+    },
+    "src/core/hmi/settings/InterfacesTab.tsx": {
+      "react-copy": 38
+    },
+    "src/core/hmi/settings/McpTab.tsx": {
+      "react-copy": 32,
+      "dynamic-text": 2
+    },
+    "src/core/hmi/settings/ModelTab.tsx": {
+      "react-copy": 20,
+      "ui-state-text": 1
+    },
+    "src/core/hmi/settings/MouseTab.tsx": {
+      "react-copy": 7
+    },
+    "src/core/hmi/settings/MultiuserTab.tsx": {
+      "react-copy": 18
+    },
+    "src/core/hmi/settings/RagStatusSection.tsx": {
+      "react-copy": 13,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/settings/SimulationTab.tsx": {
+      "react-copy": 4
+    },
+    "src/core/hmi/settings/TestsTab.tsx": {
+      "react-copy": 2
+    },
+    "src/core/hmi/settings/VisualTab.tsx": {
+      "react-copy": 86
+    },
+    "src/core/hmi/settings/WorkfolderMigrationSection.tsx": {
+      "react-copy": 8
+    },
+    "src/core/hmi/tooltip/DriveTooltipContent.tsx": {
+      "react-copy": 4
+    },
+    "src/core/hmi/tooltip/LampTooltipContent.tsx": {
+      "react-copy": 3
+    },
+    "src/core/hmi/tooltip/MetadataTooltipContent.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/tooltip/PdfTooltipSection.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/tooltip/PipeTooltipContent.tsx": {
+      "react-copy": 5,
+      "dynamic-text": 1
+    },
+    "src/core/hmi/tooltip/ProcessingUnitTooltipContent.tsx": {
+      "react-copy": 16
+    },
+    "src/core/hmi/tooltip/PumpTooltipContent.tsx": {
+      "react-copy": 12
+    },
+    "src/core/hmi/tooltip/SignalBadgeTooltipContent.tsx": {
+      "react-copy": 1
+    },
+    "src/core/hmi/tooltip/TankTooltipContent.tsx": {
+      "react-copy": 9
+    },
+    "src/core/hmi/tooltip/WebSensorTooltipContent.tsx": {
+      "react-copy": 1,
+      "dynamic-text": 1
+    },
+    "src/core/i18n/catalogs/en-US.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/library/AddLibraryDialog.tsx": {
+      "react-copy": 19
+    },
+    "src/core/library/AssetCard.tsx": {
+      "react-copy": 4
+    },
+    "src/core/library/library-asset-ops.ts": {
+      "plugin-registry": 4,
+      "dynamic-text": 5
+    },
+    "src/core/ops/rv-document-projection.ts": {
+      "plugin-registry": 3
+    },
+    "src/core/ops/rv-document-recompose.ts": {
+      "dynamic-text": 2
+    },
+    "src/core/ops/rv-reference-guard.ts": {
+      "dynamic-text": 1
+    },
+    "src/core/overlay-visibility-store.ts": {
+      "plugin-registry": 7
+    },
+    "src/core/project/ProjectCreateDialogs.tsx": {
+      "react-copy": 21
+    },
+    "src/core/project/rv-project-conflict-dialog.tsx": {
+      "react-copy": 8,
+      "dynamic-text": 1
+    },
+    "src/core/project/rv-project-create.ts": {
+      "dynamic-text": 1
+    },
+    "src/core/project/rv-project-transport.ts": {
+      "dynamic-text": 5
+    },
+    "src/core/rv-render-modes.ts": {
+      "plugin-registry": 6
+    },
+    "src/core/rv-viewer.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/sdk/rv-component-sdk.ts": {
+      "plugin-registry": 1
+    },
+    "src/core/sdk/rv-des-lint.ts": {
+      "dynamic-text": 4
+    },
+    "src/core/share/MySharesPanel.tsx": {
+      "react-copy": 3,
+      "dynamic-text": 1
+    },
+    "src/core/share/ShareDialog.tsx": {
+      "react-copy": 31,
+      "dynamic-text": 1,
+      "ui-state-text": 1
+    },
+    "src/core/share/SharedGlbInfoCard.tsx": {
+      "react-copy": 4,
+      "a11y-name": 1
+    },
+    "src/core/storage/rv-opfs-blobs.ts": {
+      "plugin-registry": 3,
+      "dynamic-text": 1
+    },
+    "src/embed/rv-embed-element.ts": {
+      "dom-text": 1
+    },
+    "src/main.ts": {
+      "plugin-registry": 5,
+      "dynamic-text": 1,
+      "pre-boot": 1
+    },
+    "src/plugins/aas-link-plugin.tsx": {
+      "react-copy": 12,
+      "ui-state-text": 1
+    },
+    "src/plugins/agents/AgentManagerPanel.tsx": {
+      "react-copy": 36,
+      "dynamic-text": 1
+    },
+    "src/plugins/agents/AgentReportView.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1
+    },
+    "src/plugins/agents/AgentRunPanel.tsx": {
+      "react-copy": 10,
+      "a11y-name": 3
+    },
+    "src/plugins/annotation-plugin.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/camera-startpos-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/collision-alert-plugin.tsx": {
+      "react-copy": 1,
+      "dynamic-text": 1
+    },
+    "src/plugins/connect-embed/ConnectEmbedGate.tsx": {
+      "react-copy": 13,
+      "a11y-name": 1
+    },
+    "src/plugins/custom-runtime-instruction-plugin.tsx": {
+      "react-copy": 12
+    },
+    "src/plugins/demo/CycleTimeChart.tsx": {
+      "react-copy": 3
+    },
+    "src/plugins/demo/DriveChartOverlay.tsx": {
+      "react-copy": 5
+    },
+    "src/plugins/demo/EnergyChart.tsx": {
+      "react-copy": 3
+    },
+    "src/plugins/demo/OeeChart.tsx": {
+      "react-copy": 3
+    },
+    "src/plugins/demo/PartsChart.tsx": {
+      "react-copy": 3
+    },
+    "src/plugins/demo/SensorChartOverlay.tsx": {
+      "react-copy": 2
+    },
+    "src/plugins/demo/demo-hmi-plugin.tsx": {
+      "react-copy": 23
+    },
+    "src/plugins/demo/perf-test-plugin.ts": {
+      "dom-text": 1
+    },
+    "src/plugins/demo/robot-alarm/AlarmHistoryDialog.tsx": {
+      "react-copy": 6,
+      "a11y-name": 1
+    },
+    "src/plugins/demo/robot-alarm/AskAiDialog.tsx": {
+      "react-copy": 14,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/plugins/demo/robot-alarm/RobotContactForceAlarm.tsx": {
+      "react-copy": 2,
+      "a11y-name": 1
+    },
+    "src/plugins/demo/robot-alarm/alarm-seed-data.ts": {
+      "plugin-registry": 3
+    },
+    "src/plugins/demo/test-axes-plugin.tsx": {
+      "react-copy": 2
+    },
+    "src/plugins/des/des-workspace-plugin.tsx": {
+      "react-copy": 2
+    },
+    "src/plugins/docs-browser-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/fpv-plugin.tsx": {
+      "dom-text": 1
+    },
+    "src/plugins/gaussian-splat-plugin.tsx": {
+      "dom-text": 1
+    },
+    "src/plugins/historian-trend-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/kiosk-plugin.tsx": {
+      "react-copy": 5,
+      "a11y-name": 1
+    },
+    "src/plugins/kiosk-tour-api.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/layout-planner/CatalogBrowser.tsx": {
+      "dynamic-text": 1
+    },
+    "src/plugins/layout-planner/LayoutLibraryPanel.tsx": {
+      "react-copy": 6,
+      "a11y-name": 2,
+      "ui-state-text": 1
+    },
+    "src/plugins/layout-planner/LayoutLibraryPanelHost.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/layout-planner/LibrarySelector.tsx": {
+      "react-copy": 3,
+      "a11y-name": 1
+    },
+    "src/plugins/layout-planner/MobileLibraryTab.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/layout-planner/PendingLoadMessage.tsx": {
+      "react-copy": 3,
+      "dynamic-text": 2
+    },
+    "src/plugins/layout-planner/PlannerToolbarButtons.tsx": {
+      "react-copy": 14,
+      "a11y-name": 9,
+      "dynamic-text": 2
+    },
+    "src/plugins/layout-planner/index.ts": {
+      "plugin-registry": 3
+    },
+    "src/plugins/login-gate-plugin.tsx": {
+      "react-copy": 5
+    },
+    "src/plugins/mcp-bridge/rv-mcp-editor-tools.ts": {
+      "plugin-registry": 1,
+      "dynamic-text": 1
+    },
+    "src/plugins/mcp-bridge/rv-mcp-help-tool.ts": {
+      "plugin-registry": 6
+    },
+    "src/plugins/mcp-bridge/rv-object-analyzer-math.ts": {
+      "plugin-registry": 4
+    },
+    "src/plugins/measurement-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/models/DemoRealvirtualWeb/demo-kiosk-tour.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/models/DemoRealvirtualWeb/model-options.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/opener-message-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/order-manager-plugin.tsx": {
+      "react-copy": 14,
+      "dynamic-text": 1
+    },
+    "src/plugins/pipe-coloring-plugin.tsx": {
+      "react-copy": 2
+    },
+    "src/plugins/processing-unit-mode-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/rv-clipping-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/signal-bind/BindingsOverviewButton.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1
+    },
+    "src/plugins/signal-bind/BindingsOverviewPanel.tsx": {
+      "react-copy": 7,
+      "a11y-name": 1,
+      "dynamic-text": 4
+    },
+    "src/plugins/signal-bind/InlineSignalSlots.tsx": {
+      "react-copy": 2,
+      "dynamic-text": 1
+    },
+    "src/plugins/signal-bind/SignalBindPopover.tsx": {
+      "react-copy": 4,
+      "dynamic-text": 1
+    },
+    "src/plugins/signal-bind/SignalLinkModeButton.tsx": {
+      "react-copy": 1,
+      "a11y-name": 1
+    },
+    "src/plugins/signal-bind/component-bulk-actions.ts": {
+      "plugin-registry": 2
+    },
+    "src/plugins/signal-bind/first-link-notice.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/signal-bind/plc-signal-context-menu.ts": {
+      "dynamic-text": 1
+    },
+    "src/plugins/sim-controller/DESControllerToolbar.tsx": {
+      "react-copy": 14
+    },
+    "src/plugins/sim-controller/DESExperimentMatrixPanel.tsx": {
+      "react-copy": 30,
+      "dynamic-text": 5,
+      "ui-state-text": 1
+    },
+    "src/plugins/sim-controller/ModeSwitchNotice.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/sim-controller/SimControllerToolbar.tsx": {
+      "react-copy": 3
+    },
+    "src/plugins/sim-controller/SimModeToggle.tsx": {
+      "react-copy": 6,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/plugins/sim-controller/des-experiments-helpers.ts": {
+      "dynamic-text": 1
+    },
+    "src/plugins/sim-controller/des-matrix-helpers.ts": {
+      "plugin-registry": 2
+    },
+    "src/plugins/snap-point/index.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/tank-fill-history-plugin.tsx": {
+      "react-copy": 3,
+      "dynamic-text": 1
+    },
+    "src/plugins/unified-import/ImportProgressTile.tsx": {
+      "react-copy": 1,
+      "a11y-name": 2,
+      "dynamic-text": 1
+    },
+    "src/plugins/unified-import/UnifiedImportButton.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/unified-import/UnifiedImportDialog.tsx": {
+      "react-copy": 6,
+      "a11y-name": 1,
+      "dynamic-text": 1
+    },
+    "src/plugins/unified-import/glb-file-provider.tsx": {
+      "react-copy": 4
+    },
+    "src/plugins/unified-import/import-job-store.ts": {
+      "plugin-registry": 1
+    },
+    "src/plugins/unified-import/import-ui.tsx": {
+      "react-copy": 7
+    },
+    "src/plugins/web-component-plugin.ts": {
+      "plugin-registry": 2
+    },
+    "src/plugins/web-sensor-plugin.tsx": {
+      "react-copy": 1
+    },
+    "src/plugins/webxr-plugin.ts": {
+      "canvas-texture": 2,
+      "dom-text": 6
+    }
+  }
+}

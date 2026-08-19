@@ -1,0 +1,35 @@
+{
+  "$comment": "False positives and deliberate non-translatables for scripts/i18n-inventory.mjs. Every entry needs a reason; tests/i18n-inventory.node.test.ts rejects a missing reason and an entry that matches nothing. Match is substring on the finding text, exact on file and (when present) category.",
+  "exceptions": [
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "ControlLogix / CompactLogix",
+      "reason": "Allen-Bradley controller family name — an industrial product identifier. PS-I18N-001 §2 and ADR-0001 §6 keep industrial units, signal names and stable IDs untranslated."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "PLC-5",
+      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "SLC 500",
+      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "MicroLogix",
+      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
+    },
+    {
+      "file": "src/behaviors/_shared/aas-link.ts",
+      "category": "plugin-registry",
+      "match": "SEW KA47-DRN90M4",
+      "reason": "SEW gearmotor type designation from the bundled AASX digital nameplate — a device model number that must match the asset, so translating it would break the link to the datasheet."
+    }
+  ]
+}

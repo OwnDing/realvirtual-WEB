@@ -1,0 +1,36 @@
+// Positive cases for the non-React surfaces. Scanned as a virtual .ts path.
+export const TOOL = {
+  id: 'measure-tool',
+  icon: 'straighten',
+  label: 'Measure distance',
+  tooltip: 'Pick two points',
+  description: 'Measures between snap points.',
+};
+
+export function draw(ctx: CanvasRenderingContext2D, mode: string, value: number) {
+  ctx.fillText('AR Navigation', 10, 20);
+  ctx.fillText(mode === 'ar' ? 'Start AR' : 'Start VR', 10, 40);
+  ctx.fillText(String(value), 10, 60);
+}
+
+export function status(el: HTMLElement, count: number) {
+  el.textContent = 'Connection lost';
+  el.textContent = `Loaded ${count} drives`;
+}
+
+export function fail(): never {
+  throw new Error('Snap point is already occupied');
+}
+
+export function report(setMessage: (v: string) => void, setBusyFlag: (v: string) => void) {
+  setMessage('Close the project before deleting it.');
+  setBusyFlag('running');
+}
+
+export function fmt(value: number, locale: string) {
+  return [
+    value.toLocaleString(),
+    value.toLocaleString(locale),
+    new Intl.NumberFormat(locale).format(value),
+  ].join(' ');
+}

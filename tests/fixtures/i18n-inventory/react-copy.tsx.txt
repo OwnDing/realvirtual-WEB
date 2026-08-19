@@ -1,0 +1,16 @@
+// Positive cases for the React surfaces. Scanned as a virtual .tsx path.
+export function Panel({ speed }: { speed: number }) {
+  return (
+    <Stack>
+      <Typography>Model signals</Typography>
+      <Tooltip title="Reset the view">
+        <button title="Close panel" aria-label="Close">
+          Close
+        </button>
+      </Tooltip>
+      <TextField label="Signal name" placeholder="Enter a name" helperText="Shown in the hierarchy" />
+      <Chip label={`Speed ${speed} m/s`} />
+      <Typography>{`Loaded ${speed} drives`}</Typography>
+    </Stack>
+  );
+}

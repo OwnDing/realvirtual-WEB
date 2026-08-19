@@ -34,7 +34,12 @@ export const rvDarkTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Arial", sans-serif',
+    // Inter, Roboto and Arial all lack CJK glyphs, and Chinese is the DEFAULT
+    // language — so without the faces below the browser falls back per glyph to
+    // whatever generic `sans-serif` resolves to, which on a trimmed Linux or
+    // kiosk image can have no CJK coverage at all. No subset is bundled
+    // (ADR-0001 §12); the stack just makes the fallback controlled.
+    fontFamily: '"Inter", "Roboto", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Arial", sans-serif',
     fontSize: 13,
   },
   shape: {

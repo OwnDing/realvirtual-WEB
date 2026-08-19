@@ -41,6 +41,19 @@ export const PROJECTS_CARD_SIZE_KEY = 'rv-projects-card-size';
  */
 export const EDITOR_LAST_ASSET_KEY = 'rv-editor-last-asset';
 
+/**
+ * The UI language the user picked (ADR-0001 §5).
+ *
+ * Holds a versioned `{ v, locale }` record, not a bare tag: raising
+ * `LANGUAGE_PREFERENCE_VERSION` (core/i18n/rv-i18n-preference.ts) must read as
+ * "no preference" rather than as a locale this build no longer understands.
+ *
+ * User/browser state, never project state — it must not reach a manifest, a
+ * project document or a GLB, which is exactly why it belongs in this registry
+ * and why "Reset all" clears it.
+ */
+export const LANGUAGE_PREFERENCE_KEY = 'rv-language';
+
 export const ALL_RV_STORAGE_KEYS = [
   'rv-visual-settings',
   'rv-visual-presets',
@@ -105,6 +118,7 @@ export const ALL_RV_STORAGE_KEYS = [
   AI_BRIDGE_CONSENT_KEY,
   ASSETS_SECTIONS_COLLAPSED_KEY,
   EDITOR_LAST_ASSET_KEY,
+  LANGUAGE_PREFERENCE_KEY,
 ] as const;
 
 /** Read the CONNECT standalone hint flag without failing when storage is unavailable. */

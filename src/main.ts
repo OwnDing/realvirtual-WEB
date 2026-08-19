@@ -12,6 +12,7 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
+import { initI18n, rvT } from './core/i18n';
 import { RVViewer, type RendererKind } from './core/rv-viewer';
 import type { RVExtrasOverlay } from './core/engine/rv-extras-overlay-store';
 import { debug, logInfo } from './core/engine/rv-debug';
@@ -181,6 +182,17 @@ const rendererKind: RendererKind =
     ? rendererParam
     : 'webgl';
 
+/**
+ * i18n comes up FIRST, synchronously (ADR-0001 §10, §11).
+ *
+ * Everything below this line can put text on screen — the loading overlay is
+ * already painted by the time this module runs — so the catalog has to be
+ * available before the first `rvT` call, not after an await. `initI18n` reads
+ * the stored preference and resolves from bundled resources; nothing here
+ * touches the network.
+ */
+initI18n();
+
 // --- Loading overlay ---
 const loadingOverlay = document.getElementById('loading-overlay')!;
 const loadingStatus = document.getElementById('loading-status')!;
@@ -194,8 +206,29 @@ const loadingErrorDetail = document.getElementById('loading-error-detail')!;
 const loadingRetryBtn = document.getElementById('loading-retry-btn') as HTMLButtonElement;
 const loadingReloadBtn = document.getElementById('loading-reload-btn') as HTMLButtonElement;
 
+/**
+ * Translate the markup `index.html` ships (ADR-0001 §11).
+ *
+ * The shell has to carry SOME text or a slow module load shows an empty card,
+ * and it carries the English source strings. Rewriting them here is what stops a
+ * Chinese-default product from starting in English; `tests/i18n-preboot.node.test.ts`
+ * is what stops the two copies from drifting apart.
+ */
+function applyPrebootText(): void {
+  const set = (selector: string, value: string) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  };
+  set('.loader-slogan', rvT('preboot', 'slogan'));
+  set('.loader-error-title', rvT('preboot', 'errorTitle'));
+  set('#loading-retry-btn', rvT('preboot', 'retry'));
+  set('#loading-reload-btn', rvT('preboot', 'reloadPage'));
+  loadingLabel.textContent = rvT('preboot', 'loading');
+}
+applyPrebootText();
+
 function showLoadingOverlay(modelName: string) {
-  loadingLabel.textContent = 'Loading ';
+  loadingLabel.textContent = rvT('preboot', 'loading');
   loadingModelName.textContent = modelName;
   loadingProgressBar.classList.add('indeterminate');
   loadingProgressBar.style.width = '';
@@ -224,7 +257,7 @@ function hideLoadingError() {
 
 // Indeterminate "Retrying (n/total)…" status between failed download attempts.
 function setLoadingRetrying(attempt: number, total: number) {
-  loadingLabel.textContent = `Connection problem — retrying (${attempt}/${total})…`;
+  loadingLabel.textContent = rvT('preboot', 'retrying', { attempt, total });
   loadingModelName.textContent = '';
   loadingProgressBar.classList.add('indeterminate');
   loadingProgressBar.style.width = '';
@@ -252,7 +285,7 @@ function setLoadingProgress(loaded: number, total: number) {
 function setLoadingPreparing() {
   loadingProgressBar.classList.add('indeterminate');
   loadingProgressBar.style.width = '';
-  loadingProgressPct.textContent = 'Preparing scene…';
+  loadingProgressPct.textContent = rvT('preboot', 'preparingScene');
 }
 
 function hideLoadingOverlay() {
@@ -282,7 +315,7 @@ function askRestoreChoice(sceneName: string, sizeMB: number): Promise<'open' | '
       'box-shadow:0 8px 32px rgba(0,0,0,0.5);';
     const title = document.createElement('div');
     title.style.cssText = 'font-size:15px;font-weight:600;margin-bottom:8px;';
-    title.textContent = 'Restore last scene?';
+    title.textContent = rvT('preboot', 'restoreTitle');
     const body = document.createElement('div');
     body.style.cssText = 'font-size:13px;line-height:1.5;color:#bbb;margin-bottom:20px;';
     const nameEl = document.createElement('b');
