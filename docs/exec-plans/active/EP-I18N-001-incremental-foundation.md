@@ -1,11 +1,11 @@
 ---
 doc_id: EP-I18N-001
 title: 建立多语言增量治理与黄金切片
-status: draft
-plan_status: proposed
+status: approved
+plan_status: active
 owner: product
 last_reviewed: 2026-08-19
-authority: proposed
+authority: normative-process
 ---
 
 # EP-I18N-001：建立多语言增量治理与黄金切片
@@ -24,7 +24,7 @@ authority: proposed
 
 ## Non-goals
 
-- 本 Proposed 计划通过 ADR 评审 i18n 框架，在 ADR 接受和计划激活前不授权安装依赖或批量替换 UI 字符串；
+- 本计划只在 Accepted `ADR-0001` 划定的边界内按里程碑推进，不授权在可重复盘点与增量门禁建立前批量替换 UI 字符串；
 - 不本地化设备、节点、信号、端口或项目稳定 ID；
 - 不在浏览器运行时调用 AI；AI 直接翻译的静态目录仍必须通过机器门禁和黄金切片；
 - 不在黄金切片验证前覆盖全部 Viewer/HMI/Planner/DES。
@@ -34,7 +34,7 @@ authority: proposed
 - `GOV-CONSTITUTION` UI-1/UI-2、`GOV-CHANGE`、`GOV-DOD`；
 - KD-001；
 - OD-002 已关闭，Approved `PS-I18N-001` 是产品行为依据；
-- 新的长期框架需要 Accepted `ADR-0001`；改变用户偏好状态所有权需要另行 Accepted ADR。
+- 新的长期框架需要 Accepted `ADR-0001`（已于 2026-08-19 接受）；改变用户偏好状态所有权需要另行 Accepted ADR。
 
 ## Current Repository Facts
 
@@ -68,8 +68,11 @@ authority: proposed
 
 - [x] 产品确认首批语言为中文、英文，默认语言为中文。
 - [x] 产品确认 `zh-CN`/`en-US`、中文最终回退、AI 直接翻译和 locale 格式范围，关闭 OD-002。
-- [ ] 架构 Owner 评审并接受 `ADR-0001`。
-- [ ] Owner 评审并决定是否激活计划。
+- [x] 架构 Owner 评审并接受 `ADR-0001`（2026-08-19）。
+- [x] Owner 评审并激活计划（2026-08-19）；计划移入 `active/`，状态改为 `approved`/`active`。
+- [ ] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁设计。
+- [ ] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片。
+- [ ] Milestone 4：保存恢复、缺失 key、布局/可访问性验证，再按风险分批迁移。
 
 ## Surprises & Discoveries
 
@@ -81,6 +84,7 @@ authority: proposed
 - 2026-08-19：用户当前明确指令确认首批语言为中文、英文，默认语言为中文；计划仍保持 Proposed，未选择 locale 标识、回退链、翻译责任或 i18n 框架。
 - 2026-08-19：用户明确由 AI 直接完成翻译并确认进入下一步；采用 `zh-CN`/`en-US`、中文最终回退和 locale 格式化方案，OD-002 关闭，建立 Proposed `ADR-0001` 评审运行时框架。
 - 2026-08-19：吸收外部评审中关于首次目录迁移、非 React/Canvas 传播、pre-boot、多个 Root、测试 locale、包体积和 CJK 字体的候选设计；修正异步分包与同步启动冲突，保留公开插件 `label` 契约兼容，并把全量盘点移到后续增量里程碑。该评审不构成 ADR 接受或计划激活。
+- 2026-08-19：Owner 接受 `ADR-0001` 并激活本计划，批准来源为用户当前明确指令。计划移入 `active/`，frontmatter 改为 `status: approved, plan_status: active, authority: normative-process`。执行范围限于 ADR 划定的黄金切片边界：非启动 namespace 的异步分包、全仓 Root、`Intl`/MUI、CanvasTexture 与其余用户可见文本仍属后续增量里程碑，扩大范围需要 ADR 修订或新的里程碑决定。依赖安装与锁文件变更放在 Milestone 1 的盘点和门禁设计之后，并按 Validation 逐项留证。
 
 ## Reproducible Inventory
 
@@ -105,4 +109,4 @@ Milestone 1 必须再建立版本化盘点脚本和 fixture，按 React 文案�
 
 ## Outcomes & Retrospective
 
-仅在计划激活并交付后填写；Proposed 状态不代表实现承诺或能力完成。
+仅在交付后填写；激活不代表实现承诺或能力完成。

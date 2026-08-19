@@ -1,11 +1,11 @@
 ---
 doc_id: ADR-0001
 title: 选择 i18next 多语言运行时与静态目录架构
-status: draft
-adr_status: proposed
+status: approved
+adr_status: accepted
 owner: architecture
 last_reviewed: 2026-08-19
-authority: proposed
+authority: normative
 ---
 
 # ADR-0001：选择 i18next 多语言运行时与静态目录架构
@@ -25,7 +25,7 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 
 ## Decision
 
-若本 ADR 被接受：
+2026-08-19 接受，批准来源为用户当前明确指令；下列条款自接受起具有规范效力：
 
 1. 使用 `i18next` 作为框架无关核心，使用 `react-i18next` 连接 React；非 React 插件和管理器通过窄封装调用同一实例，不直接依赖 React Context。
 2. `zh-CN`、`en-US` 以及黄金切片使用的 namespace 随公共构建静态、同步打包；黄金切片不引入 HTTP backend、浏览器语言探测插件、运行时远程目录或语言切换时的异步资源加载。未来全量迁移如需对非启动 namespace 分包，必须先用 ADR 修订明确加载状态、失败回退、离线行为和包体积预算；本 ADR 当前不授权该异步边界。

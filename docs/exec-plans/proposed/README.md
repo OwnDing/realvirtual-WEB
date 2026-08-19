@@ -9,6 +9,6 @@ authority: normative-registry
 
 # 待批准 ExecPlan 索引
 
-- [`EP-I18N-001-incremental-foundation.md`](EP-I18N-001-incremental-foundation.md)：OD-002 已关闭、产品规格已批准；待接受 `ADR-0001` 并由 Owner 激活后盘点、冻结多语言债务并交付语言切换黄金切片。
+当前没有待批准的 ExecPlan。`EP-I18N-001` 已于 2026-08-19 接受 `ADR-0001` 后激活，移至 [`EP-I18N-001-incremental-foundation.md`](../active/EP-I18N-001-incremental-foundation.md)。
 
 本目录中的计划必须使用 `status: draft, plan_status: proposed, authority: proposed`。计划被移动到 `active/` 不等于获得批准；批准来源必须写入计划的 Decision Log。

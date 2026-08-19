@@ -13,6 +13,6 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 
 `adr_status` 使用 `proposed`、`accepted`、`rejected`、`superseded`。提议阶段文档为 `status: draft`；接受后改为 `status: approved, adr_status: accepted`。只有 Accepted ADR 具有规范效力。
 
-- [`ADR-0001-i18n-runtime.md`](ADR-0001-i18n-runtime.md)：Proposed，选择多语言运行时、静态目录、偏好存储与回退边界。
+- [`ADR-0001-i18n-runtime.md`](ADR-0001-i18n-runtime.md)：Accepted（2026-08-19），选择多语言运行时、静态目录、偏好存储与回退边界。
 
-当前没有 Accepted ADR。创建场景见 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)，模板见 [`TEMPLATE.md`](TEMPLATE.md)。
+`ADR-0001` 是当前唯一 Accepted ADR；实施授权来自 Active [`EP-I18N-001`](../exec-plans/active/EP-I18N-001-incremental-foundation.md)，ADR 本身不单独授权全仓迁移。创建场景见 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)，模板见 [`TEMPLATE.md`](TEMPLATE.md)。
