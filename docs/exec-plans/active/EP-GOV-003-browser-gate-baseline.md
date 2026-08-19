@@ -50,6 +50,7 @@ authority: normative-process
 - `bundle-splitting.test.ts` 明确要求 `dist/`，但独立 Browser job 没有构建且不会继承 Build job 的磁盘产物；
 - 本地排除死循环后的失败基线为 9 个文件、14 个测试，包含包体积、项目根目录语义和若干夹具/API 漂移。
 - 修订后的远程 run `32205345590` 在 20 分钟 job timeout 被取消：前置构建约 1 分 42 秒、Playwright/Chromium 安装 10 分 08 秒，Browser Harness 仅获得 8 分 22 秒；取消前已有 753/944 个测试文件通过且未出现测试失败。
+- 35/20 分层超时后的远程 run `32210852983` 在 9 分 26 秒完成 Browser Harness 调度，942/949 个文件通过；真实失败收敛为 `embed-rehydrate` 清理 Hook 超时，以及一个没有断言失败的 Vitest runner 上下文错误。
 
 ## State Ownership and Compatibility
 
@@ -69,6 +70,7 @@ authority: normative-process
 - `src/plugins/mcp-bridge/**`
 - `src/plugins/layout-planner/**`
 - `tests/bundle-splitting.test.ts`
+- `tests/embed-rehydrate.test.ts`
 - `tests/embed-manager.test.ts`
 - `tests/layout-planner-preview-commit.test.ts`
 - `tests/mcp-editor-doc-mutations.test.ts`
@@ -112,6 +114,7 @@ authority: normative-process
 - 独立 job 提升了证据可见性，也使 Build 产物和 LFS 内容不能再依赖另一个 job 或开发机工作区的隐式状态。
 - 完整并发 Browser 基线还暴露了两个夹具隔离问题：共享 IndexedDB 的 10 条 recent-project 上限会挤掉本用例句柄；`embed-manager` 的纯管理器断言不应重复进入真实 GLB 加载队列。两者均收窄夹具，没有改变产品上限或隐藏真实上下文恢复测试。
 - GitHub-hosted Runner 的 Playwright `--with-deps` 冷安装可能单独消耗约 10 分钟；job 级 20 分钟预算把环境准备时间计入测试保护，导致正常测试在约 80% 进度时被取消。
+- `embed-rehydrate` 首个用例只断言仿真 Tick，却默认渲染了 60 帧；`RVEmbedViewer.step()` 已明确记录 SwiftShader 会把渲染工作延迟到 context 销毁阶段，远程 `afterEach → viewer.dispose()` 因而超过 30 秒。同期 `mcp-editor-doc-mutations` 的 23 个断言本地通过，远程错误发生在文件导入阶段，先作为可能的 runner 连带错误观察，不通过改写测试掩盖。
 
 ## Decision Log
 
@@ -121,6 +124,7 @@ authority: normative-process
 - 2026-08-19：公共 MCP transform/delete 直接使用公共文档数据，不再依赖私有 UI helper；机构测试通过显式 authoring adapter double 验证编排，不修改公共 inert stub。
 - 2026-08-19：本地完整 Browser Gate 已通过，但未经用户授权不提交/推送，因此远程 Gate 证据保持 pending，本计划继续留在 active。
 - 2026-08-19：用户同意将 Browser job 总预算调整为 35 分钟，并为 Browser Harness 步骤单独设置 20 分钟上限；环境准备获得独立余量，测试本身仍保持失败关闭且不会无限运行。
+- 2026-08-19：用户同意让仿真专用的 60 次 `step()` 显式使用 `render: false`，直接消除无关 GPU 清理负担；不提高 Hook timeout，不修改本地已通过的 MCP 测试。
 
 ## Validation
 
@@ -129,6 +133,7 @@ authority: normative-process
 - `./scripts/verify.sh node`
 - `./scripts/verify.sh browser`
 - `./scripts/verify.sh build`
+- `npm test -- tests/embed-rehydrate.test.ts tests/mcp-editor-doc-mutations.test.ts`
 - 死循环、名称探测上限、LFS pointer 和缺失 `dist/` 的 focused 正反例
 - GitHub Actions 远程 Browser Gate（需要后续提交/推送，本任务不执行）
 
@@ -143,8 +148,9 @@ authority: normative-process
 - plan-716/717 后仍期待 `scenes/` 默认目录的测试已对齐项目根目录契约；发布示例测试改为验证 first-class project document。
 - MCP bridge 默认端口移入无依赖模块，生产入口为 3,287,254 bytes，低于未改变的 3,520,000 bytes 预算；bridge 保持独立 lazy chunk。
 - 验证：governance 通过（34 governed documents）；static 通过；Node 50 files 通过、2 skipped（460 tests 通过、7 skipped）；Build 通过；focused Browser 11 files / 130 tests 通过；最终完整 Browser 944 files 通过、5 skipped（10,366 tests 通过、12 skipped、2 todo），耗时 123.57 秒。
-- 远程 run `32205345590` 已证明 LFS、build、Chromium 安装和 Browser Harness 能进入执行，但 20 分钟 job 总预算不足；35/20 分层超时修订后的 GitHub Actions run 仍待提交后验证。
-- 未验证：35/20 分层超时修订后的 GitHub Actions run、branch protection/ruleset、E2E、真实设备/PLC、人工 UX；这些不由本次本地门禁替代。
+- 远程 run `32205345590` 已证明 LFS、build、Chromium 安装和 Browser Harness 能进入执行，但 20 分钟 job 总预算不足；run `32210852983` 证明 35/20 分层预算足以让完整 Browser Harness 在受控时间内结束并报告真实失败。
+- 本次 render-free 修订后，governance、ESLint、TypeScript 和独立 `mcp-editor-doc-mutations` 23/23 通过；本机 Playwright Chromium 145 在进入 `embed-rehydrate` 修改行前即无法创建 WebGL context，因此该文件和完整 Browser Gate 不能由本机结果替代 Linux Actions 验证。
+- 未验证：仿真 Tick 改为 render-free 后的 GitHub Actions run、MCP runner 上下文错误是否随 GPU 阻塞消失、branch protection/ruleset、E2E、真实设备/PLC、人工 UX；这些不由本次本地门禁替代。
 - 回滚仍为同一变更集反向回退，无 Schema、项目数据或外部状态迁移；回滚会重新引入 6 小时挂起和 CI 输入缺口。
 
 修订后的远程 Browser Gate 通过前，本计划不得移入 `completed/`。

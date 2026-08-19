@@ -64,11 +64,14 @@ describe('rv-embed spike (plan-326 AP1)', () => {
     expect(viewer.signalStore).toBe(result.signalStore);
 
     // Tick the fixed-step pipeline manually (no RAF): a jogging drive moves.
+    // This assertion is simulation-only. Rendering every tick leaves deferred
+    // SwiftShader work for dispose(), which can make the cleanup hook exceed
+    // its 30-second guard on a shared CI runner.
     const drive = result.drives.find((d) => !d.isTransportSurface) ?? result.drives[0];
     const before = drive.currentPosition;
     if (drive.targetSpeed <= 0) drive.targetSpeed = 100; // guard: authored TargetSpeed may be 0
     drive.jogForward = true;
-    for (let i = 0; i < 60; i++) viewer.step(1 / 60);
+    for (let i = 0; i < 60; i++) viewer.step(1 / 60, { render: false });
     drive.jogForward = false;
     expect(drive.currentPosition).not.toBe(before);
   }, 240_000);
