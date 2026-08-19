@@ -17,7 +17,7 @@ authority: proposed
 | rv-ODT 一致性 | `schema/v1` | schema/spec/conformance 现有测试 | `npm run test:node` / focused tests | existing-needs-formal-mapping |
 | MCP 文档漂移 | MCP decorators/generated fences | 现有 MCP docs drift tests | `npm run gen:mcp-docs` + focused tests | existing-automated |
 | rv-embed 依赖隔离 | `GOV-CONSTITUTION` AR-5/AR-6、KD-003 | `embed-spike.node.test.ts`（仅已有 `dist-embed/` 时运行） | 正式 embed build 当前会触发 React/MUI forbidden marker | known-deviation-not-ci-enforced |
-| 多语言 | OD-002，待建产品规格和契约 | 待定 | 待定 | blocked-by-decision |
+| 多语言 | Closed OD-002、Approved `PS-I18N-001`；`zh-CN`/`en-US`、默认中文、AI 直接翻译 | 待 `ADR-0001` 接受和 `EP-I18N-001` 激活后定义目录与黄金切片测试 | 产品规格已批准；当前没有全局运行时或语言切换证据 | product-approved-architecture-pending |
 | 分层配置 | OD-003，待建配置契约 | 待定 | 待定 | blocked-by-decision |
 | 稳定装配端口 | OD-004，待建 ADR/Schema | 现有 Snap 测试仅覆盖当前约定 | 待定 | current-behavior-only |
 | Quality Gates | `GOV-HARNESS`、`EP-GOV-003` | GitHub Actions workflow；名称探测终止、包体积与完整 Browser 回归 | 本地 governance/static/node/build 通过；Browser 944 files、10,366 tests 通过；远程 run 32222458677 的五个 Gate 全部通过，Chromium 安装 8 秒、Browser Harness 7 分 17 秒；`main`/`develop` 无 branch protection/ruleset | automated-local-and-remote-not-enforced |
