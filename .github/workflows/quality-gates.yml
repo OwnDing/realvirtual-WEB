@@ -49,7 +49,7 @@ jobs:
 
   browser:
     name: Browser Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +62,9 @@ jobs:
       - run: npm ci
       - name: Build browser test artifacts
         run: ./scripts/verify.sh build
-      - run: npx playwright install --with-deps chromium
+      - name: Install Playwright Chromium
+        run: ./node_modules/.bin/playwright install chromium
+        timeout-minutes: 10
       - name: Run browser tests
         run: ./scripts/verify.sh browser
         timeout-minutes: 20
