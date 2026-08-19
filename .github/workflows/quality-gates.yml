@@ -50,7 +50,7 @@ jobs:
   browser:
     name: Browser Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,7 +63,9 @@ jobs:
       - name: Build browser test artifacts
         run: ./scripts/verify.sh build
       - run: npx playwright install --with-deps chromium
-      - run: ./scripts/verify.sh browser
+      - name: Run browser tests
+        run: ./scripts/verify.sh browser
+        timeout-minutes: 20
 
   build:
     name: Build Gate
