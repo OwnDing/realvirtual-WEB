@@ -77,9 +77,9 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 1. 无依赖 Governance Gate；
 2. 安装锁定依赖后的 Static Gate；
 3. 独立的 Node Gate、Browser Gate 和 Build Gate，使一个失败不会遮蔽其他证据；
-4. Browser Gate 显式拉取 Git LFS、先生成 `dist/`，再安装 Chromium 并运行浏览器套件；job 以 20 分钟失败关闭，避免测试进程永久占用 Runner。
+4. Browser Gate 固定使用 Ubuntu 24.04，显式拉取 Git LFS、先生成 `dist/`，再安装与锁定 Playwright 版本匹配的 Chromium 并运行浏览器套件；安装、测试和 job 分别以 10、20、35 分钟上限失败关闭，且安装关键路径不执行 APT。
 
-2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败。拆分后的远程 run `32157736678` 中 Governance、Static、Node、Build 通过，旧 Browser job 因 LFS/`dist` 输入缺口和无界名称探测在 GitHub 6 小时上限被取消。EP-GOV-003 的本地证据为 Browser `944 files / 10,366 tests` 通过，耗时约 124 秒；修订后的远程 run 仍待提交后验证。
+2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败。拆分后的远程 run `32157736678` 中 Governance、Static、Node、Build 通过，旧 Browser job 因 LFS/`dist` 输入缺口和无界名称探测在 GitHub 6 小时上限被取消。EP-GOV-003 完成后，远程 run `32222458677` 在提交 `47f9807` 上五个 Gate 全部通过；Chromium 安装耗时 8 秒，Browser Harness 用时 7 分 17 秒，944 个文件、10,366 个测试通过。
 
 当时 `main`、`develop` 均没有 branch protection/ruleset。分支保护是否强制仍由 OD-005 决定，在 required checks 启用前不得使用 `enforced`。CI 不能替代 E2E、真实设备和人工 UX 验收。
 

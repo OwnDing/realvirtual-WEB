@@ -20,6 +20,6 @@ authority: proposed
 | 多语言 | OD-002，待建产品规格和契约 | 待定 | 待定 | blocked-by-decision |
 | 分层配置 | OD-003，待建配置契约 | 待定 | 待定 | blocked-by-decision |
 | 稳定装配端口 | OD-004，待建 ADR/Schema | 现有 Snap 测试仅覆盖当前约定 | 待定 | current-behavior-only |
-| Quality Gates | `GOV-HARNESS`、`EP-GOV-003` | GitHub Actions workflow；名称探测终止、包体积与完整 Browser 回归 | 本地 governance/static/node/build 通过；Browser 944 files、10,366 tests 通过；远程 run 32157736678 的旧 Browser job 超时，修订 workflow 尚待提交后验证；`main`/`develop` 无 branch protection/ruleset | automated-local-remote-pending-not-enforced |
+| Quality Gates | `GOV-HARNESS`、`EP-GOV-003` | GitHub Actions workflow；名称探测终止、包体积与完整 Browser 回归 | 本地 governance/static/node/build 通过；Browser 944 files、10,366 tests 通过；远程 run 32222458677 的五个 Gate 全部通过，Chromium 安装 8 秒、Browser Harness 7 分 17 秒；`main`/`develop` 无 branch protection/ruleset | automated-local-and-remote-not-enforced |
 
 本矩阵在产品规格建立后继续细化；`draft` 表示当前仅是治理基线，不得据此声称多语言或平台化能力已经完成。

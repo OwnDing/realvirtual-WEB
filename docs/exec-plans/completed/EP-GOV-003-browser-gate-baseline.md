@@ -2,7 +2,7 @@
 doc_id: EP-GOV-003
 title: 修复 Browser Gate 超时并建立可信浏览器基线
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-19
 authority: normative-process
@@ -52,6 +52,7 @@ authority: normative-process
 - 修订后的远程 run `32205345590` 在 20 分钟 job timeout 被取消：前置构建约 1 分 42 秒、Playwright/Chromium 安装 10 分 08 秒，Browser Harness 仅获得 8 分 22 秒；取消前已有 753/944 个测试文件通过且未出现测试失败。
 - 35/20 分层超时后的远程 run `32210852983` 在 9 分 26 秒完成 Browser Harness 调度，942/949 个文件通过；真实失败收敛为 `embed-rehydrate` 清理 Hook 超时，以及一个没有断言失败的 Vitest runner 上下文错误。
 - render-free 修订后的远程 run `32216043450` 未进入 Browser Harness：`playwright install --with-deps` 在 Ubuntu APT 索引刷新阶段运行 33 分 32 秒无进展，最终由 35 分钟 job 上限取消；Chromium 下载和测试均未开始。
+- 最终远程 run `32222458677` 在提交 `47f9807` 上五个 Gate 全部通过；Chromium 安装耗时 8 秒，Browser Harness 用时 7 分 17 秒，944 个文件、10,366 个测试通过，未再出现 Embed Hook 超时或 MCP runner 上下文错误。
 
 ## State Ownership and Compatibility
 
@@ -98,7 +99,7 @@ authority: normative-process
 1. 黄金切片：单文件死循环变成可结束的通过/明确失败，并为异常后端增加有界反例。
 2. CI 输入闭环：Browser job 拉取 LFS、构建 `dist/`、安装 Chromium，并在合理外部超时内运行同一 Harness 入口。
 3. 基线闭环：逐项修复 14 个本地失败；不改变 Approved 行为、不提高包体积预算。
-4. 全量闭环：focused Browser、完整 Browser、governance、static、node、build 通过，更新远程待验证事实。
+4. 全量闭环：focused Browser、完整 Browser、governance、static、node、build 通过，并补齐远程验证事实。
 
 ## Progress
 
@@ -107,7 +108,7 @@ authority: normative-process
 - [x] 修复死循环与 CI 输入/超时。
 - [x] 修复本地 Browser 失败基线。
 - [x] 运行完整本地门禁并同步交付证据。
-- [ ] 提交后验证修订的远程 GitHub Actions Browser Gate。
+- [x] 提交后验证修订的远程 GitHub Actions Browser Gate。
 
 ## Surprises & Discoveries
 
@@ -128,6 +129,7 @@ authority: normative-process
 - 2026-08-19：用户同意将 Browser job 总预算调整为 35 分钟，并为 Browser Harness 步骤单独设置 20 分钟上限；环境准备获得独立余量，测试本身仍保持失败关闭且不会无限运行。
 - 2026-08-19：用户同意让仿真专用的 60 次 `step()` 显式使用 `render: false`，直接消除无关 GPU 清理负担；不提高 Hook timeout，不修改本地已通过的 MCP 测试。
 - 2026-08-19：用户确认 Browser job 固定到 `ubuntu-24.04`，通过仓库内 CLI 只安装 Chromium，并为安装步骤设置 10 分钟上限；不缓存浏览器、不延长 job、不再执行 APT 依赖安装。
+- 2026-08-19：远程 run `32222458677` 五个 Gate 全部通过，满足本计划关闭条件；用户确认进入下一步，将计划移入 `completed/`。OD-005 仍保持 open，不把 Actions 绿色等同于分支保护已 enforced。
 
 ## Validation
 
@@ -138,7 +140,7 @@ authority: normative-process
 - `./scripts/verify.sh build`
 - `npm test -- tests/embed-rehydrate.test.ts tests/mcp-editor-doc-mutations.test.ts`
 - 死循环、名称探测上限、LFS pointer 和缺失 `dist/` 的 focused 正反例
-- GitHub Actions 远程 Browser Gate（需要后续提交/推送，本任务不执行）
+- GitHub Actions run `32222458677`：Governance、Static、Node、Browser、Build 五个 Gate 全部通过；Browser job 中 Chromium 安装 8 秒、Browser Harness 7 分 17 秒，944 files / 10,366 tests 通过。
 
 ## Rollback
 
@@ -151,9 +153,9 @@ authority: normative-process
 - plan-716/717 后仍期待 `scenes/` 默认目录的测试已对齐项目根目录契约；发布示例测试改为验证 first-class project document。
 - MCP bridge 默认端口移入无依赖模块，生产入口为 3,287,254 bytes，低于未改变的 3,520,000 bytes 预算；bridge 保持独立 lazy chunk。
 - 验证：governance 通过（34 governed documents）；static 通过；Node 50 files 通过、2 skipped（460 tests 通过、7 skipped）；Build 通过；focused Browser 11 files / 130 tests 通过；最终完整 Browser 944 files 通过、5 skipped（10,366 tests 通过、12 skipped、2 todo），耗时 123.57 秒。
-- 远程 run `32205345590` 已证明 LFS、build、Chromium 安装和 Browser Harness 能进入执行，但 20 分钟 job 总预算不足；run `32210852983` 证明 35/20 分层预算足以让完整 Browser Harness 在受控时间内结束并报告真实失败。
-- 本次 render-free 修订后，governance、ESLint、TypeScript 和独立 `mcp-editor-doc-mutations` 23/23 通过；本机 Playwright Chromium 145 在进入 `embed-rehydrate` 修改行前即无法创建 WebGL context，因此该文件和完整 Browser Gate 不能由本机结果替代 Linux Actions 验证。
-- 未验证：无 APT 的 Chromium 安装能否在 GitHub Actions 完成、仿真 Tick 改为 render-free 后的完整 Browser Harness、MCP runner 上下文错误是否随 GPU 阻塞消失、branch protection/ruleset、E2E、真实设备/PLC、人工 UX；这些不由本次本地门禁替代。
+- 远程 run `32205345590`、`32210852983`、`32216043450` 分别暴露总预算不足、真实测试失败和 APT 外部依赖阻塞；最终 run `32222458677` 证明 LFS、build、无 APT Chromium 安装和完整 Browser Harness 能在分层预算内稳定完成，五个 Gate 全部通过。
+- 最终远程 Browser 结果为 944 files 通过、5 skipped；10,366 tests 通过、12 skipped、2 todo，总耗时 435.66 秒。之前的 Embed Hook 超时和 MCP runner 上下文错误均未复现。
+- 未验证：branch protection/ruleset、E2E、真实设备/PLC、人工 UX；这些不由本次 Actions 绿色替代，OD-005 继续保持 open。
 - 回滚仍为同一变更集反向回退，无 Schema、项目数据或外部状态迁移；回滚会重新引入 6 小时挂起和 CI 输入缺口。
 
-修订后的远程 Browser Gate 通过前，本计划不得移入 `completed/`。
+远程 Browser Gate 已满足关闭条件，本计划于 2026-08-19 移入 `completed/`。
