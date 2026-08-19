@@ -30,6 +30,8 @@ import { useState } from 'react';
 import { Box, Button, ButtonBase, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { ChevronRight, Close, FolderOpen, MoreVert } from '@mui/icons-material';
 import { RV_SCROLL_CLASS } from '../shared-sx';
+import { Trans } from 'react-i18next';
+import { useRvTranslation } from '../../i18n';
 
 /** Where a row came from — recents are forgettable, workspace entries are not. */
 export type ProjectOrigin = 'workspace' | 'recent';
@@ -80,13 +82,14 @@ export function ProjectsList({
   onRenameProject,
   onDeleteProject,
 }: ProjectsListProps) {
+  const { t } = useRvTranslation('projects');
   // Kiosk builds get neither the picker nor the rows — the project they were
   // given is already open, and this screen would only offer ways to leave it.
   if (modeLocked) {
     return (
       <Centered>
         <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
-          This deployment opens a single fixed project.
+          {t('list.fixedProject')}
         </Typography>
       </Centered>
     );
@@ -113,11 +116,13 @@ export function ProjectsList({
         >
           <FolderOpen sx={{ fontSize: 28, color: 'text.disabled', mb: 1 }} />
           <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-            No workspace selected
+            {t('list.noWorkspaceTitle')}
           </Typography>
           <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.75, lineHeight: 1.5 }}>
-            A workspace is one folder that holds your projects. Every direct
-            subfolder with a <code>project.json</code> shows up here.
+            {/* One key, not three JSX fragments: `<0>` marks the `project.json`
+                code span, so a translator can move it inside the sentence
+                instead of being frozen into English word order. */}
+            <Trans ns="projects" i18nKey="list.noWorkspaceHelp" components={[<code key="file" />]} />
           </Typography>
           <Button
             variant="contained"
@@ -125,7 +130,7 @@ export function ProjectsList({
             onClick={onOpenWorkspace}
             sx={{ mt: 2, fontSize: 12, textTransform: 'none' }}
           >
-            Open workspace…
+            {t('list.openWorkspace')}
           </Button>
         </Box>
 
@@ -136,7 +141,7 @@ export function ProjectsList({
           onClick={onOpenFolder}
           sx={{ mt: 1.5, fontSize: 11, textTransform: 'none', color: 'text.secondary' }}
         >
-          or open a single project folder…
+          {t('list.openSingleFolder')}
         </Button>
       </Centered>
     );
@@ -147,28 +152,28 @@ export function ProjectsList({
       <Box sx={{ maxWidth: ROW_MAX_WIDTH, mx: 'auto' }}>
         {workspaceName ? (
           <Typography sx={{ fontSize: 11, color: 'text.disabled', mb: 1 }}>
-            Workspace: {workspaceName}
+            {t('list.workspacePrefix', { name: workspaceName })}
           </Typography>
         ) : (
           // Rows without a workspace: say so, and keep the picker one click
           // away rather than making the user find it in the header.
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
-              No workspace selected.
+              {t('list.noWorkspaceShort')}
             </Typography>
             <Button
               size="small"
               onClick={onOpenWorkspace}
               sx={{ fontSize: 11, textTransform: 'none', minWidth: 0, p: 0 }}
             >
-              Open workspace…
+              {t('list.openWorkspace')}
             </Button>
           </Box>
         )}
 
         {rows.length === 0 ? (
           <Typography sx={{ fontSize: 12, color: 'text.disabled', py: 4, textAlign: 'center' }}>
-            This workspace has no projects yet.
+            {t('list.empty')}
           </Typography>
         ) : (
           <Stack spacing={1}>
@@ -205,6 +210,7 @@ function ProjectRow({
   onRename: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useRvTranslation('projects');
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   return (
     <Box sx={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
@@ -258,10 +264,10 @@ function ProjectRow({
       {/* Only a recent can be forgotten: a workspace subfolder would simply be
           rediscovered by the next scan, so the button would do nothing. */}
       {row.origin === 'recent' && (
-        <Tooltip title="Remove from Recent">
+        <Tooltip title={t('list.removeFromRecent')}>
           <IconButton
             size="small"
-            aria-label={`Remove ${row.name} from Recent`}
+            aria-label={t('list.removeNamedFromRecent', { name: row.name })}
             onClick={onForget}
             sx={{ alignSelf: 'center', ml: 0.5 }}
           >
@@ -276,7 +282,7 @@ function ProjectRow({
         <>
           <IconButton
             size="small"
-            aria-label={`Project actions for ${row.name}`}
+            aria-label={t('list.actionsFor', { name: row.name })}
             onClick={(e) => setMenuAnchor(e.currentTarget)}
             sx={{ alignSelf: 'center', ml: 0.5 }}
           >
@@ -287,13 +293,13 @@ function ProjectRow({
               onClick={() => { setMenuAnchor(null); onRename(); }}
               sx={{ fontSize: 13 }}
             >
-              Rename…
+              {t('list.rename')}
             </MenuItem>
             <MenuItem
               onClick={() => { setMenuAnchor(null); onDelete(); }}
               sx={{ fontSize: 13, color: 'error.main' }}
             >
-              Delete…
+              {t('list.delete')}
             </MenuItem>
           </Menu>
         </>

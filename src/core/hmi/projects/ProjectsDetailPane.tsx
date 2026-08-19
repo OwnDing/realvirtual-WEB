@@ -25,6 +25,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
 import { RV_SCROLL_CLASS } from '../shared-sx';
 import { SectionHeader } from '../shared-components';
+import { useRvTranslation } from '../../i18n';
 
 /** One row of the metadata table. */
 export interface DetailField {
@@ -104,6 +105,7 @@ export function ProjectsDetailPane({
   extra,
   onRename,
 }: ProjectsDetailPaneProps) {
+  const { t } = useRvTranslation('projects');
   const [editValue, setEditValue] = useState<string | null>(null);
   // A different selection means a different name — never carry a half-typed
   // rename from one asset onto the next.
@@ -128,7 +130,7 @@ export function ProjectsDetailPane({
     >
       {!title ? (
         <Typography data-testid="projects-detail-empty" sx={{ fontSize: 12, color: 'text.disabled' }}>
-          Nothing selected
+          {t('detail.nothingSelected')}
         </Typography>
       ) : (
         <>
@@ -242,7 +244,7 @@ export function ProjectsDetailPane({
           {actions.length > 0 && (
             <>
               <Divider sx={{ my: 1.25, borderColor: 'rgba(255,255,255,0.06)' }} />
-              <SectionHeader>Actions</SectionHeader>
+              <SectionHeader>{t('detail.actions')}</SectionHeader>
               <Stack spacing={0.5} sx={{ mt: 0.5 }}>
                 {actions.map(a => (
                   <Box key={a.key}>

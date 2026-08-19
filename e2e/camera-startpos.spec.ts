@@ -2,8 +2,12 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { test, expect } from '@playwright/test';
+import { pinLocale } from './helpers/pin-locale';
 
 test('save and restore camera start position across reload', async ({ page }) => {
+  // English is pinned rather than inherited: this spec asserts on English UI
+  // text that has not been migrated yet, while the product default is Chinese.
+  await pinLocale(page, 'en-US');
   await page.goto('/?model=DemoRealvirtualWeb.glb');
   await page.waitForSelector('canvas');
   await page.waitForLoadState('networkidle');
@@ -30,6 +34,9 @@ test('save and restore camera start position across reload', async ({ page }) =>
 });
 
 test('Start View tab appears in Settings (EDIT 3)', async ({ page }) => {
+  // English is pinned rather than inherited: this spec asserts on English UI
+  // text that has not been migrated yet, while the product default is Chinese.
+  await pinLocale(page, 'en-US');
   await page.goto('/?model=DemoRealvirtualWeb.glb');
   await page.waitForSelector('canvas');
   await page.getByRole('button', { name: /Settings/i }).click();

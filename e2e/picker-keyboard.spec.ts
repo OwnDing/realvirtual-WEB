@@ -19,6 +19,7 @@
  */
 
 import { expect, test, type Page } from 'playwright/test';
+import { pinLocale } from './helpers/pin-locale';
 
 async function waitForViewerReady(page: Page): Promise<void> {
   // On a cold Vite start the first module graph plus the demo GLB can exceed the
@@ -84,6 +85,9 @@ const SEARCH_PLACEHOLDER = 'Search name, address, comment…';
 test.describe('signal picker — keyboard operation (plan-353 F13)', () => {
   test('navigates, binds with Enter and cancels with Escape', async ({ page }) => {
     test.setTimeout(180_000);
+    // English is pinned rather than inherited: this spec asserts on English UI
+    // text that has not been migrated yet, while the product default is Chinese.
+    await pinLocale(page, 'en-US');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForViewerReady(page);
 
@@ -162,6 +166,9 @@ test.describe('signal picker — keyboard operation (plan-353 F13)', () => {
 
   test('announces the keyboard binding exactly once', async ({ page }) => {
     test.setTimeout(180_000);
+    // English is pinned rather than inherited: this spec asserts on English UI
+    // text that has not been migrated yet, while the product default is Chinese.
+    await pinLocale(page, 'en-US');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForViewerReady(page);
 

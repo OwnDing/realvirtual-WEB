@@ -34,6 +34,7 @@ import {
   type DocumentClassification,
   type DocumentLevel,
 } from '../../project/rv-document-classification';
+import { useRvTranslation } from '../../i18n';
 
 export interface ClassificationEditorProps {
   classification?: DocumentClassification | null;
@@ -58,6 +59,7 @@ function blockOf(
 export function ClassificationEditor({
   classification, knownTags, onChange, busy = false,
 }: ClassificationEditorProps) {
+  const { t } = useRvTranslation('projects');
   const level = classification?.level;
   const tags = classification?.tags ?? [];
   // Only the half-typed tag is local state. The committed value lives in the
@@ -67,7 +69,7 @@ export function ClassificationEditor({
   if (!onChange) {
     return (
       <Box sx={{ mt: 1.25 }}>
-        <SectionHeader>Classification</SectionHeader>
+        <SectionHeader>{t('classification.title')}</SectionHeader>
         <Typography sx={{ fontSize: 11, mt: 0.5 }}>
           {documentLevelLabel(level)}
         </Typography>
@@ -99,7 +101,7 @@ export function ClassificationEditor({
 
   return (
     <Box sx={{ mt: 1.25 }}>
-      <SectionHeader>Classification</SectionHeader>
+      <SectionHeader>{t('classification.title')}</SectionHeader>
       <TextField
         select
         fullWidth
@@ -154,7 +156,7 @@ export function ClassificationEditor({
         renderInput={params => (
           <TextField
             {...params}
-            placeholder="Add tag…"
+            placeholder={t('classification.addTag')}
             onKeyDown={e => {
               if (e.key === 'Enter') {
                 e.preventDefault();

@@ -2,6 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { expect, test, type Locator, type Page } from 'playwright/test';
+import { pinLocale } from './helpers/pin-locale';
 
 const embedSettings = {
   defaultModel: '',
@@ -13,6 +14,10 @@ const SIGNAL_HINT_SEEN_KEY = 'rv-connect-embed-signal-hint-seen';
 const PERSISTENCE_TEST_NAME = 'signal hint stays dismissed after reloading and restarting the demo';
 
 test.beforeEach(async ({ page }, testInfo) => {
+  // English is pinned rather than inherited: this suite asserts on English text,
+  // and the product default is Chinese. Without the pin the retry-button case
+  // below asserts against whatever the default happens to be that week.
+  await pinLocale(page, 'en-US');
   await page.addInitScript(({ clearSignalHintSeenKey, signalHintSeenKey }) => {
     localStorage.setItem('rv-welcome-dismissed', '1');
     if (clearSignalHintSeenKey) localStorage.removeItem(signalHintSeenKey);

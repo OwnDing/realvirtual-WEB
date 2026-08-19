@@ -39,7 +39,7 @@ const BASELINE_PATH = join(ROOT, 'tests', 'i18n-inventory-baseline.json');
 const EXCEPTIONS_PATH = join(ROOT, 'scripts', 'i18n-inventory-exceptions.json');
 
 /** Bump when a classification rule changes; the baseline carries it so a stale one is obvious. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /**
  * The categories, in migration-planning order.
@@ -136,6 +136,10 @@ const SKIP_FILE = [
   /\.d\.ts$/,
   /^src\/rv-test-runner\.ts$/,           // in-app test harness, never shipped UI chrome
   /^src\/plugins\/snap-point\/strings\.ts$/, // already an extracted table (ADR-0001 adapter path)
+  // The catalogs ARE the extraction target. Counting them would make every
+  // migration look like it moved debt sideways instead of removing it, and
+  // would grow the "debt" number every time a translation is added.
+  /^src\/core\/i18n\/catalogs\//,
 ];
 
 // ---------------------------------------------------------------------------

@@ -70,6 +70,7 @@ import {
   type ProjectTreeNode,
   type ProjectTreeRow,
 } from '../../project/rv-project-tree';
+import { useRvTranslation } from '../../i18n';
 
 /** Row height, matching the scene hierarchy's fine-pointer density. */
 export const PROJECT_TREE_ROW_HEIGHT = 22;
@@ -151,6 +152,7 @@ export interface ProjectTreeProps {
 // ─── Row ────────────────────────────────────────────────────────────────
 
 function KindIcon({ node }: { node: ProjectTreeNode }) {
+  const { t } = useRvTranslation('projects');
   const sx = { fontSize: 14, flexShrink: 0, mr: 0.5, color: 'rgba(255,255,255,0.5)' };
   // `hasContent` where the projection recorded it, `children` otherwise. The
   // rendered tree is folders-only, so counting its children would call a folder
@@ -209,6 +211,7 @@ const ProjectTreeRowView = memo(function ProjectTreeRowView({
   onToggleExpand, onSelect, onActivate, onContextMenu, onStartRename, onCommitRename, onCancelRename,
   onDragStart, onDragOver, onDrop, onDragEnd, renderRootActions,
 }: RowProps) {
+  const { t } = useRvTranslation('projects');
   const node = row.node;
   const path = node.path!;
   const hasChildren = node.children.length > 0;
@@ -321,7 +324,7 @@ const ProjectTreeRowView = memo(function ProjectTreeRowView({
       {hasChildren ? (
         <IconButton
           size="small"
-          aria-label={expanded ? 'Collapse' : 'Expand'}
+          aria-label={expanded ? t('tree.collapse') : t('tree.expand')}
           onClick={(e) => { e.stopPropagation(); onToggleExpand(path); }}
           sx={{ p: 0, mr: 0.25, color: 'rgba(255,255,255,0.7)' }}
         >
@@ -409,6 +412,7 @@ export function ProjectTree({
   externalDragPath = null,
   renderRootActions,
 }: ProjectTreeProps) {
+  const { t } = useRvTranslation('projects');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => defaultExpandedPaths(roots));
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
@@ -538,7 +542,7 @@ export function ProjectTree({
     <Box
       ref={scrollRef}
       role="tree"
-      aria-label="Project tree"
+      aria-label={t('tree.label')}
       tabIndex={0}
       // F2 belongs HERE, not on the row. Rows are `tabIndex={-1}` and nothing
       // focuses them, so a keydown handler on a row can never fire — clicking a

@@ -39,11 +39,27 @@ export const MIGRATION_BASE_REF = 'd1949a5';
 
 /** Files the golden slice took its English from. */
 export const MIGRATED_SOURCES = [
+  // Golden slice (Milestone 3)
   'src/core/hmi/projects/ProjectsDashboardHost.tsx',
   'src/core/engine/rv-error-visual.ts',
   'src/plugins/annotation-plugin.ts',
   'src/main.ts',
   'index.html',
+  // Rest of the Projects flow (Milestone 4, batch 1)
+  'src/core/hmi/projects/ProjectsList.tsx',
+  'src/core/hmi/projects/ProjectsDashboard.tsx',
+  'src/core/hmi/projects/ProjectsDetailPane.tsx',
+  'src/core/hmi/projects/DocumentHeroSection.tsx',
+  'src/core/hmi/projects/DocumentFilterBar.tsx',
+  'src/core/hmi/projects/ProjectTree.tsx',
+  'src/core/hmi/projects/ProjectFolderContents.tsx',
+  'src/core/hmi/projects/ClassificationEditor.tsx',
+  'src/core/hmi/projects/AssetPromptDialog.tsx',
+  'src/core/hmi/projects/SceneNameDialog.tsx',
+  'src/core/hmi/projects/TransferTargetDialog.tsx',
+  'src/core/hmi/projects/DestructiveConfirmDialog.tsx',
+  'src/core/hmi/projects/document-filter.ts',
+  'src/core/hmi/ConfirmActionDialog.tsx',
 ];
 
 /**
@@ -85,12 +101,27 @@ export function readBaseSources(ref = MIGRATION_BASE_REF, root = ROOT) {
 /**
  * A matcher for one catalog value.
  *
- * `{{name}}` becomes `[\s\S]*?` so it can span the `${…}` expression it replaced;
- * everything else is escaped, so no other difference passes.
+ * Three, and only three, differences are tolerated — each one a mechanical
+ * consequence of moving a string out of JSX rather than a change of wording:
+ *
+ *   - `{{name}}` spans the `${…}` expression it replaced;
+ *   - `<0>`/`</0>` span the JSX element they replaced (a `<code>` span, say),
+ *     since a `<Trans>` key numbers its children instead of naming them;
+ *   - a run of spaces matches any whitespace OR a JavaScript concatenation seam
+ *     (`' + '` or a backtick seam), because long messages were wrapped across
+ *     source lines and the
+ *     catalog holds them flat.
+ *
+ * Everything else is escaped, so no rewording slips through.
  */
 export function verbatimPattern(value) {
   const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(escaped.replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?'));
+  return new RegExp(
+    escaped
+      .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
+      .replace(/<\/?\d>/g, '<[^>]*>')
+      .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`])+'),
+  );
 }
 
 export function checkVerbatim(ref = MIGRATION_BASE_REF, root = ROOT) {

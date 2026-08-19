@@ -14,7 +14,7 @@
  * with the real hero section in its slot, so no project store is needed.
  */
 
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi, beforeAll } from 'vitest';
 
 vi.mock('../src/hooks/use-viewport-insets', () => ({
   useViewportInsets: () => ({ left: 0, right: 0, top: 0 }),
@@ -32,6 +32,19 @@ import {
   type ActiveDocumentView,
 } from '../src/core/editor/active-document-view';
 import { setOpenDocumentBase } from '../src/core/editor/active-asset-store';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the accessible names and empty-state copy
+ * asserted below render in Chinese unless this test says which language it is
+ * testing. Pinning keeps the assertions about STRUCTURE — a labelled region, a
+ * back arrow, an empty state — instead of quietly becoming assertions about
+ * whatever the default happens to be.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 function makeView(name = 'Conveyor'): ActiveDocumentView {
   return {

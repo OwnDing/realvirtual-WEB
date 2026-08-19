@@ -34,6 +34,7 @@ import {
   subscribeProjectsDashboard,
 } from './projects-dashboard-store';
 import { DocumentCard } from '../scene/DocumentCard';
+import { useRvTranslation } from '../../i18n';
 
 export interface DocumentHeroSectionProps {
   /**
@@ -45,6 +46,7 @@ export interface DocumentHeroSectionProps {
 }
 
 export function DocumentHeroSection({ onReveal }: DocumentHeroSectionProps) {
+  const { t } = useRvTranslation('projects');
   useSyncExternalStore(subscribeActiveDocumentView, getActiveDocumentViewVersion);
   // `null` — the dashboard is a place, not a mode, so the band shows whatever
   // document is open rather than only the one belonging to the mode behind the
@@ -79,7 +81,7 @@ export function DocumentHeroSection({ onReveal }: DocumentHeroSectionProps) {
         ? <DocumentCard variant="hero" onReveal={onReveal} previewVisible={dashboard.open} />
         : (
           <Typography data-testid="document-hero-empty" sx={{ fontSize: 12, color: 'text.disabled' }}>
-            Nothing open — double-click an asset to start.
+            {t('detail.nothingOpen')}
           </Typography>
         )}
     </Box>

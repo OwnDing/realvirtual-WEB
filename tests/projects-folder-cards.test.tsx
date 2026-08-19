@@ -20,7 +20,7 @@
  * every rule below comes from `rv-project-tree.ts` unchanged.
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest';
 import { useMemo, useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ProjectTree } from '../src/core/hmi/projects/ProjectTree';
@@ -40,6 +40,19 @@ import {
   matchesDocumentFilter,
   type DocumentFilterState,
 } from '../src/core/hmi/projects/document-filter';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the accessible names and empty-state copy
+ * asserted below render in Chinese unless this test says which language it is
+ * testing. Pinning keeps the assertions about STRUCTURE — a labelled region, a
+ * back arrow, an empty state — instead of quietly becoming assertions about
+ * whatever the default happens to be.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
 

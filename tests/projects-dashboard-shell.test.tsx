@@ -11,7 +11,7 @@
  * reachable — a focus trap would leave a phone user with no way out.
  */
 
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi, beforeAll } from 'vitest';
 
 // The shell reads viewport insets, which needs a live viewer context. The
 // insets are layout, not behaviour, so a fixed stub keeps these tests about
@@ -26,6 +26,19 @@ import {
   openProjectsDashboard,
   resetProjectsDashboardForTests,
 } from '../src/core/hmi/projects/projects-dashboard-store';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the accessible names and empty-state copy
+ * asserted below render in Chinese unless this test says which language it is
+ * testing. Pinning keeps the assertions about STRUCTURE — a labelled region, a
+ * back arrow, an empty state — instead of quietly becoming assertions about
+ * whatever the default happens to be.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 beforeEach(() => resetProjectsDashboardForTests());
 afterEach(() => cleanup());

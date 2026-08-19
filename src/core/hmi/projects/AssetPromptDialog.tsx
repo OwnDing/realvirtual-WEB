@@ -22,6 +22,7 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
+import { useRvTranslation } from '../../i18n';
 
 export interface AssetPromptState {
   /**
@@ -41,6 +42,7 @@ export interface AssetPromptDialogProps {
 }
 
 export function AssetPromptDialog({ state, onChange, onSubmit }: AssetPromptDialogProps) {
+  const { t } = useRvTranslation('projects');
   const isRename = state?.kind === 'renameAsset' || state?.kind === 'renameNode';
   // Clearing collections is meaningful; clearing a file name is not.
   const canSubmit = !isRename || (state?.value.trim().length ?? 0) > 0;
@@ -53,14 +55,14 @@ export function AssetPromptDialog({ state, onChange, onSubmit }: AssetPromptDial
       <DialogContent>
         {!isRename && (
           <DialogContentText sx={{ fontSize: 12 }}>
-            Comma-separated. Leave empty to remove this asset from all collections.
+            {t('assetPrompt.collectionsHint')}
           </DialogContentText>
         )}
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label={isRename ? 'File name' : 'Collections'}
+          label={isRename ? t('assetPrompt.fileName') : t('assetPrompt.collections')}
           value={state?.value ?? ''}
           onChange={(e) => onChange(state ? { ...state, value: e.target.value } : state)}
           onKeyDown={(e) => { if (e.key === 'Enter' && canSubmit) onSubmit(); }}
@@ -69,7 +71,7 @@ export function AssetPromptDialog({ state, onChange, onSubmit }: AssetPromptDial
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={() => onChange(null)} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('action.cancel')}
         </Button>
         <Button
           size="small"

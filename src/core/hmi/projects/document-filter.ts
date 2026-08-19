@@ -34,6 +34,7 @@ import {
   type DocumentClassification,
   type DocumentLevel,
 } from '../../project/rv-document-classification';
+import { rvT } from '../../i18n';
 
 /** The "no classification filter" chip. Also what `chip === null` means. */
 export const DOCUMENT_CHIP_ALL = 'all';
@@ -138,7 +139,7 @@ export function documentChipOptions(
   }
 
   const out: DocumentChipOption[] = [
-    { key: DOCUMENT_CHIP_ALL, label: 'All', count: rows.length },
+    { key: DOCUMENT_CHIP_ALL, label: rvT('projects', 'filter.all'), count: rows.length },
   ];
   for (const level of DOCUMENT_LEVELS) {
     const count = counts.get(level) ?? 0;

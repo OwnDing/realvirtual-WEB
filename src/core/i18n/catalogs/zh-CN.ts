@@ -20,6 +20,7 @@
 export const zhCN = {
   common: {
     open: '打开',
+    cancel: '取消',
     delete: '删除',
     duplicate: '创建副本',
     rename: '重命名…',
@@ -44,6 +45,55 @@ export const zhCN = {
   },
   projects: {
     title: '项目',
+    shell: {
+      backToProjects: '返回项目列表',
+      closeEsc: '关闭（Esc）',
+      closeProjects: '关闭项目面板',
+      search: '搜索…',
+    },
+    tree: {
+      label: '项目树',
+      collapse: '折叠',
+      expand: '展开',
+      folderContents: '文件夹内容',
+      cardSize: '卡片尺寸',
+    },
+    filter: {
+      groupLabel: '筛选文档',
+      tagPlaceholder: '# 标签',
+      all: '全部',
+    },
+    classification: {
+      title: '分类',
+      addTag: '添加标签…',
+    },
+    assetPrompt: {
+      collectionsHint: '以逗号分隔。留空表示把该资产从所有集合中移除。',
+      fileName: '文件名',
+      collections: '集合',
+      sceneName: '场景名称',
+    },
+    transfer: {
+      targetsLabel: '传输目标',
+      noTargets: '没有其他可写项目处于打开状态。请添加工作区文件夹，或打开一个项目文件夹，才能把它发送过去。',
+      moveNote: '“{{name}}”将移入目标项目的库；原文件进入源项目的回收站。',
+      copyNote: '“{{name}}”将作为新文档复制到目标项目的库中。',
+    },
+    list: {
+      fixedProject: '本部署只打开一个固定项目。',
+      noWorkspaceTitle: '未选择工作区',
+      noWorkspaceHelp: '工作区是一个存放你所有项目的文件夹。其中每个直接子文件夹只要含有 <0>project.json</0> 就会出现在这里。',
+      openWorkspace: '打开工作区…',
+      openSingleFolder: '或打开单个项目文件夹…',
+      workspacePrefix: '工作区：{{name}}',
+      noWorkspaceShort: '未选择工作区。',
+      empty: '该工作区中还没有项目。',
+      removeFromRecent: '从最近列表移除',
+      removeNamedFromRecent: '把 {{name}} 从最近列表移除',
+      actionsFor: '{{name}} 的项目操作',
+      rename: '重命名…',
+      delete: '删除…',
+    },
     demoCaption: 'realvirtual 演示场景与库',
     nav: {
       project: '项目',
@@ -53,6 +103,9 @@ export const zhCN = {
     },
     detail: {
       modified: '修改时间',
+      nothingSelected: '未选择任何项',
+      actions: '操作',
+      nothingOpen: '尚未打开任何内容 — 双击一个资产开始。',
       project: '项目',
       source: '来源',
       category: '类别',
@@ -73,6 +126,7 @@ export const zhCN = {
       rename: '重命名…',
       newFolder: '新建文件夹',
       closeProject: '关闭项目',
+      cancel: '取消',
       exportProject: '导出 .rvproject',
       importProject: '导入 .rvproject…',
       addLibrary: '添加库',

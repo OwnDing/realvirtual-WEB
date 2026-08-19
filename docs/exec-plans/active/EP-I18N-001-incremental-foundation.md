@@ -72,7 +72,8 @@ authority: normative-process
 - [x] Owner 评审并激活计划（2026-08-19）；计划移入 `active/`，状态改为 `approved`/`active`。
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
-- [ ] Milestone 4：保存恢复、缺失 key、布局/可访问性验证，再按风险分批迁移。
+- [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
+- [ ] Milestone 4b：按风险分批迁移其余 1858 处受门禁文案（批次 1 已交付：Projects 流程）。
 
 ## Surprises & Discoveries
 
@@ -85,6 +86,15 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### Milestone 4a/4b 批次 1（2026-08-19）
+
+- 补齐验证：项目清单序列化在中英文下逐字节相同（`modifiedAt` 需固定，否则时间戳会伪装成语言差异）、语言偏好不写入除自身 key 外的任何存储、中英文下头部按钮不被裁切且图标按钮仍有可访问名。
+- **测试 locale 固定策略落地**：`e2e/helpers/pin-locale.ts` + `tests/i18n-test-locale-pin.node.test.ts` 强制「断言文本的 e2e spec 必须显式 pin locale」。发现 `connect-embed-e2e.spec.ts` 断言的 `Retry` 正是已迁移的 pre-boot 按钮——默认中文下会渲染成「重试」，属于真实断裂而非预防性改动。另有 3 个 spec 补 pin。
+- 迁移批次 1 覆盖 Projects 流程剩余部分（`src/core/hmi/projects/**` 全部 + `ConfirmActionDialog`），受门禁债务 1904 → **1858**。5 个既有浏览器测试因默认语言变化而失败，按 ADR 要求**显式 pin `en-US`**（不放宽、不删除断言），123 例恢复通过。
+- 被内联元素切碎的文案（`A workspace is one folder … <code>project.json</code> shows up here.`）用 `<Trans>` 的编号占位 `<0>` 合并成**一个** key。拆成三段 JSX 会把英文语序冻结进目录，翻译无法调整。
+- 扫描器发现自己把 `src/core/i18n/catalogs/**` 当成散落债务（目录里的 `title:`/`message:` 命中注册属性规则）。目录是提取产物，已显式跳过——否则每加一条翻译，"债务"反而增加。
+- 逐字迁入门禁补了两类机械差异：`<Trans>` 的 `<0>` 标记，以及源码里跨行的字符串拼接缝（`' + '` 与反引号缝）。措辞改写仍会失败——反例验证过。
 
 ### Milestone 3（2026-08-19）
 
@@ -146,6 +156,8 @@ Milestone 3 已验证（2026-08-19，本地）：
 | 严格 key 反例 | `rvT('projects', 'nav.doesNotExist')` 编译失败（TS2345），符合 `ADR-0001` 第 4 条失败关闭 |
 | 漂移反例 | 把一条英文改写成回译腔后 `i18n-verbatim-check` 失败并指名该 key |
 | 纹理反例 | 带模型自有 `ErrorText` 的徽标在切换语言后像素不变；目录来源徽标重绘且 `texture.version` 递增 |
+
+Milestone 4 已验证（2026-08-19，本地）：`./scripts/verify.sh static` 通过；`npm run test:node` 55 文件 **500** 例通过；Projects 相关浏览器测试 23 文件 **483** 例通过；`tests/i18n-golden-slice.test.tsx` **13** 例通过；`npm run build` 通过，入口 chunk 3_287_254 → **3_351_984 B**（净增 **64.7 KB**，预算余 **168.0 KB**）；`node scripts/i18n-verbatim-check.mjs` **123** 条值全部逐字追溯。
 
 **未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 950 文件中 25 文件 / 80 用例失败，全部为 `THREE.WebGLRenderer: Error creating WebGL context.`（本机 SwiftShader 无法创建 WebGL 上下文，隔离运行同样失败），**没有一条失败涉及译文**（失败信息中中文出现次数为 0）。受本次改动影响的 UI 测试单独运行 7 文件 64 例全部通过。完整浏览器门禁需要在可用 GPU 的环境重跑后才能声称通过。
 

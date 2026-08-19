@@ -9,6 +9,7 @@
  * CONNECT provider → unlink restores "not linked".
  */
 import { expect, test, type Page } from 'playwright/test';
+import { pinLocale } from './helpers/pin-locale';
 
 async function waitForViewerReady(page: Page): Promise<void> {
   // On a cold Vite start the first module graph plus the demo GLB can take
@@ -75,6 +76,9 @@ async function internalBoolOutputName(page: Page): Promise<string | null> {
 
 test('inline slot rows: always visible, bindable to an internal signal, unlinkable', async ({ page }) => {
   test.setTimeout(180_000);
+  // English is pinned rather than inherited: this spec asserts on English UI
+  // text that has not been migrated yet, while the product default is Chinese.
+  await pinLocale(page, 'en-US');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await waitForViewerReady(page);
 

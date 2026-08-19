@@ -33,6 +33,7 @@ import {
   Radio,
 } from '@mui/material';
 import { useState } from 'react';
+import { useRvTranslation } from '../../i18n';
 
 /** One project a document can be sent to. */
 export interface TransferTargetOption {
@@ -64,6 +65,7 @@ export function TransferTargetDialog({
   onClose,
   onConfirm,
 }: TransferTargetDialogProps) {
+  const { t } = useRvTranslation('projects');
   const [selected, setSelected] = useState<string | null>(null);
   // The selection is per-opening: a target picked for the last document must
   // not be pre-armed for the next one, which could be a move.
@@ -80,15 +82,11 @@ export function TransferTargetDialog({
       <DialogContent sx={{ pt: 0 }}>
         <DialogContentText sx={{ fontSize: 12 }}>
           {targets.length === 0
-            ? 'No other writable project is open. Add a workspace folder, or open a project '
-              + 'folder, to have somewhere to send this to.'
-            : isMove
-              ? `"${request?.documentName}" moves into the target's library; the original goes `
-                + 'to the source project’s trash.'
-              : `"${request?.documentName}" is copied into the target's library as a new document.`}
+            ? t('transfer.noTargets')
+            : t(isMove ? 'transfer.moveNote' : 'transfer.copyNote', { name: request?.documentName })}
         </DialogContentText>
         {targets.length > 0 && (
-          <List dense sx={{ mt: 1 }} aria-label="Transfer targets">
+          <List dense sx={{ mt: 1 }} aria-label={t('transfer.targetsLabel')}>
             {targets.map(t => (
               <ListItemButton
                 key={t.id}
@@ -112,7 +110,7 @@ export function TransferTargetDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button size="small" onClick={close} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button size="small" onClick={close} sx={{ textTransform: 'none' }}>{t('action.cancel')}</Button>
         <Button
           size="small"
           variant="contained"

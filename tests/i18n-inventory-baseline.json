@@ -1,20 +1,20 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "generator": "scripts/i18n-inventory.mjs",
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 1475,
-    "a11y-name": 92,
-    "plugin-registry": 133,
-    "dynamic-text": 161,
+    "react-copy": 1443,
+    "a11y-name": 83,
+    "plugin-registry": 131,
+    "dynamic-text": 158,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
     "ui-state-text": 15
   },
-  "total": 1904,
-  "fileCount": 231,
+  "total": 1858,
+  "fileCount": 217,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -279,51 +279,6 @@
     "src/core/hmi/problems-store.ts": {
       "dynamic-text": 2
     },
-    "src/core/hmi/projects/AssetPromptDialog.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/projects/ClassificationEditor.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/projects/DestructiveConfirmDialog.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/projects/DocumentFilterBar.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1
-    },
-    "src/core/hmi/projects/DocumentHeroSection.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/projects/ProjectFolderContents.tsx": {
-      "react-copy": 1,
-      "a11y-name": 2
-    },
-    "src/core/hmi/projects/ProjectTree.tsx": {
-      "a11y-name": 2
-    },
-    "src/core/hmi/projects/ProjectsDashboard.tsx": {
-      "react-copy": 3,
-      "a11y-name": 3
-    },
-    "src/core/hmi/projects/ProjectsDetailPane.tsx": {
-      "react-copy": 2
-    },
-    "src/core/hmi/projects/ProjectsList.tsx": {
-      "react-copy": 14,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/projects/SceneNameDialog.tsx": {
-      "react-copy": 2
-    },
-    "src/core/hmi/projects/TransferTargetDialog.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/projects/document-filter.ts": {
-      "plugin-registry": 1
-    },
     "src/core/hmi/rv-add-component-section.tsx": {
       "react-copy": 3
     },
@@ -479,9 +434,6 @@
     "src/core/hmi/tooltip/WebSensorTooltipContent.tsx": {
       "react-copy": 1,
       "dynamic-text": 1
-    },
-    "src/core/i18n/catalogs/en-US.ts": {
-      "plugin-registry": 1
     },
     "src/core/library/AddLibraryDialog.tsx": {
       "react-copy": 19

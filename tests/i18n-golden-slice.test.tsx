@@ -184,6 +184,73 @@ describe('canvas-baked labels (ADR-0001 §9)', () => {
   });
 });
 
+describe('project data is untouched by the language (PS-I18N-001 §7)', () => {
+  it('serialises a manifest identically in both languages', async () => {
+    // Stable IDs and business content are not display text. If a language could
+    // change what gets written, a project saved in Chinese and one saved in
+    // English would stop being the same document.
+    const { mergeManifest } = await import('../src/core/project/rv-project-storage');
+    const original = {
+      schemaVersion: 1,
+      id: 'proj-7f3a',
+      name: 'Welding Cell',
+      documents: [{ id: 'doc-1', path: 'scenes/Cell.glb', name: 'Cell' }],
+    } as never;
+
+    // `modifiedAt` is pinned: `mergeManifest` stamps `new Date()` when it is
+    // absent, and a millisecond of drift would make this test look like a
+    // language difference that is not there.
+    const update = { name: 'Welding Cell', modifiedAt: '2026-08-19T00:00:00.000Z' } as never;
+    await act(async () => { await setLocale('zh-CN'); });
+    const inChinese = JSON.stringify(mergeManifest(original, update));
+    await act(async () => { await setLocale('en-US'); });
+    const inEnglish = JSON.stringify(mergeManifest(original, update));
+
+    expect(inEnglish).toBe(inChinese);
+    expect(inEnglish).toContain('proj-7f3a');
+    expect(inEnglish).not.toMatch(/zh-CN|en-US/);
+  });
+});
+
+describe('layout survives both languages (PS-I18N-001 §4.6)', () => {
+  /** The header buttons are `whiteSpace: 'nowrap'`, so a long label clips rather than wraps. */
+  function Header() {
+    const { t } = useRvTranslation('projects');
+    return (
+      <div style={{ width: 260, display: 'flex', gap: 8 }} data-testid="header">
+        <button type="button" data-testid="btn-open" style={{ whiteSpace: 'nowrap', fontSize: 11 }}>
+          {t('nav.openEllipsis')}
+        </button>
+        <button type="button" data-testid="btn-new" style={{ whiteSpace: 'nowrap', fontSize: 11 }}>
+          {t('nav.newProject')}
+        </button>
+        <button type="button" data-testid="btn-actions" aria-label={t('action.projectActions')} style={{ fontSize: 11 }}>
+          ⋯
+        </button>
+      </div>
+    );
+  }
+
+  it('keeps the header actions readable and un-clipped in both languages', async () => {
+    render(<Header />);
+    for (const locale of ['zh-CN', 'en-US'] as const) {
+      await act(async () => { await setLocale(locale); });
+      for (const id of ['btn-open', 'btn-new']) {
+        const el = screen.getByTestId(id);
+        expect(el.textContent?.trim(), `${id} @ ${locale}`).not.toBe('');
+        // A nowrap button whose content is wider than its box is a clipped label.
+        expect(el.scrollWidth, `${id} clipped @ ${locale}`).toBeLessThanOrEqual(el.clientWidth + 1);
+        expect(el.getBoundingClientRect().height, `${id} collapsed @ ${locale}`).toBeGreaterThan(0);
+      }
+      // The row itself must not overflow its 260px container in either language.
+      const header = screen.getByTestId('header');
+      expect(header.scrollWidth, `row overflows @ ${locale}`).toBeLessThanOrEqual(header.clientWidth + 1);
+      // Icon-only controls stay reachable by name in both languages.
+      expect(screen.getByTestId('btn-actions').getAttribute('aria-label')).toBeTruthy();
+    }
+  });
+});
+
 describe('missing translations (PS-I18N-001 §7)', () => {
   it('falls back to Chinese and records locatable evidence', async () => {
     await act(async () => { await setLocale('en-US'); });

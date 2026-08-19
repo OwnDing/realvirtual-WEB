@@ -27,7 +27,7 @@
  * Renderer-free throughout.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 
 vi.mock('../src/hooks/use-viewer', () => ({
   // The classification editor and the filter bar pull nothing off the viewer,
@@ -78,6 +78,19 @@ import {
   resetProblemsForTests,
 } from '../src/core/hmi/problems-store';
 import type { DocumentClassification, DocumentLevel } from '../src/core/project/rv-document-classification';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the accessible names and empty-state copy
+ * asserted below render in Chinese unless this test says which language it is
+ * testing. Pinning keeps the assertions about STRUCTURE — a labelled region, a
+ * back arrow, an empty state — instead of quietly becoming assertions about
+ * whatever the default happens to be.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 // ─── fixtures ────────────────────────────────────────────────────────────
 

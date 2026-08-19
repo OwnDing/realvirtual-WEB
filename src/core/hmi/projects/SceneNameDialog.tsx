@@ -22,6 +22,7 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
+import { useRvTranslation } from '../../i18n';
 
 export interface SceneNameDialogState {
   kind: 'rename' | 'saveAs';
@@ -37,6 +38,7 @@ export interface SceneNameDialogProps {
 }
 
 export function SceneNameDialog({ state, onChange, onSubmit }: SceneNameDialogProps) {
+  const { t } = useRvTranslation('projects');
   const isRename = state?.kind === 'rename';
   const canSubmit = (state?.name.trim().length ?? 0) > 0;
 
@@ -50,7 +52,7 @@ export function SceneNameDialog({ state, onChange, onSubmit }: SceneNameDialogPr
           autoFocus
           fullWidth
           size="small"
-          label="Scene name"
+          label={t('assetPrompt.sceneName')}
           value={state?.name ?? ''}
           onChange={(e) => onChange(state ? { ...state, name: e.target.value } : state)}
           // Enter is the expected way out of a single-field dialog.
@@ -60,7 +62,7 @@ export function SceneNameDialog({ state, onChange, onSubmit }: SceneNameDialogPr
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={() => onChange(null)} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('action.cancel')}
         </Button>
         <Button
           size="small"

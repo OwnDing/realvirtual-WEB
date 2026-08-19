@@ -48,6 +48,7 @@ import {
   setProjectsSearch,
   subscribeProjectsDashboard,
 } from './projects-dashboard-store';
+import { useRvTranslation } from '../../i18n';
 
 export interface ProjectsDashboardProps {
   /** Header headline — "Projects", or the open project's name. */
@@ -94,6 +95,7 @@ export function ProjectsDashboard({
   headerActions,
   children,
 }: ProjectsDashboardProps) {
+  const { t } = useRvTranslation('projects');
   const snap = useSyncExternalStore(subscribeProjectsDashboard, getProjectsDashboardSnapshot);
   const insets = useViewportInsets();
 
@@ -117,7 +119,7 @@ export function ProjectsDashboard({
   const content = (
     <Box
       role="region"
-      aria-label="Projects"
+      aria-label={t('title')}
       // Hidden, not unmounted, while closed (the host gates the very first
       // mount): reopening must be instant and must resume the exact view —
       // tree expansion, scroll, selection — which unmounting threw away.
@@ -150,8 +152,8 @@ export function ProjectsDashboard({
         }}
       >
         {onBack && (
-          <Tooltip title="Back to projects">
-            <IconButton size="small" onClick={onBack} aria-label="Back to projects">
+          <Tooltip title={t('shell.backToProjects')}>
+            <IconButton size="small" onClick={onBack} aria-label={t('shell.backToProjects')}>
               <ArrowBack sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
@@ -168,8 +170,8 @@ export function ProjectsDashboard({
         {headerTabs}
         <Box sx={{ flex: 1 }} />
         {titleActions}
-        <Tooltip title="Close (Esc)">
-          <IconButton size="small" onClick={closeProjectsDashboard} aria-label="Close Projects">
+        <Tooltip title={t('shell.closeEsc')}>
+          <IconButton size="small" onClick={closeProjectsDashboard} aria-label={t('shell.closeProjects')}>
             <Close sx={{ fontSize: 18 }} />
           </IconButton>
         </Tooltip>
@@ -202,7 +204,7 @@ export function ProjectsDashboard({
           {showSearch && (
             <TextField
               size="small"
-              placeholder="Search…"
+              placeholder={t('shell.search')}
               value={snap.search}
               onChange={(e) => setProjectsSearch(e.target.value)}
               slotProps={{

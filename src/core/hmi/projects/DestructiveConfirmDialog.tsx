@@ -23,6 +23,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { useRvTranslation } from '../../i18n';
 
 export interface DestructiveConfirmRequest {
   /** Dialog title naming the verb and object kind, e.g. "Delete asset". */
@@ -41,6 +42,7 @@ export interface DestructiveConfirmDialogProps {
 }
 
 export function DestructiveConfirmDialog({ request, onClose }: DestructiveConfirmDialogProps) {
+  const { t } = useRvTranslation('projects');
   return (
     <Dialog open={request !== null} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>
@@ -53,7 +55,7 @@ export function DestructiveConfirmDialog({ request, onClose }: DestructiveConfir
       </DialogContent>
       <DialogActions>
         <Button size="small" autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('action.cancel')}
         </Button>
         <Button
           size="small"

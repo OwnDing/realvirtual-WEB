@@ -28,6 +28,7 @@ import { Box, Slider, Tooltip, Typography } from '@mui/material';
 import { GridViewOutlined, ViewModuleOutlined } from '@mui/icons-material';
 import { ProjectCard, type ProjectCardModel } from './ProjectCard';
 import { PROJECTS_CARD_SIZE_KEY } from '../rv-storage-keys';
+import { useRvTranslation } from '../../i18n';
 
 /** Card edge length in pixels: the grid's `minmax` floor. */
 const MIN_CARD = 72;
@@ -67,6 +68,7 @@ export function ProjectFolderContents({
   cards,
   emptyMessage = 'This folder is empty.',
 }: ProjectFolderContentsProps) {
+  const { t } = useRvTranslation('projects');
   const [cardSize, setCardSize] = useState(readCardSize);
 
   // Written on every drag step. The value is one small number and the grid
@@ -100,7 +102,7 @@ export function ProjectFolderContents({
         <Box
           data-folder-contents
           role="list"
-          aria-label="Folder contents"
+          aria-label={t('tree.folderContents')}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -146,14 +148,14 @@ export function ProjectFolderContents({
         }}
       >
         <GridViewOutlined sx={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }} />
-        <Tooltip title="Card size" placement="top">
+        <Tooltip title={t('tree.cardSize')} placement="top">
           <Slider
             size="small"
             min={MIN_CARD}
             max={MAX_CARD}
             step={8}
             value={cardSize}
-            aria-label="Card size"
+            aria-label={t('tree.cardSize')}
             onChange={(_, v) => changeSize(Array.isArray(v) ? v[0]! : v)}
             sx={{
               width: 120,

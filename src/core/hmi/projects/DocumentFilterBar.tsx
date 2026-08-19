@@ -27,6 +27,7 @@
 
 import { Autocomplete, Box, Chip, TextField } from '@mui/material';
 import { DOCUMENT_CHIP_ALL, type DocumentChipOption } from './document-filter';
+import { useRvTranslation } from '../../i18n';
 
 export interface DocumentFilterBarProps {
   chips: DocumentChipOption[];
@@ -42,10 +43,11 @@ export interface DocumentFilterBarProps {
 export function DocumentFilterBar({
   chips, chip, onChipChange, tags, tag, onTagChange,
 }: DocumentFilterBarProps) {
+  const { t } = useRvTranslation('projects');
   return (
     <Box
       role="group"
-      aria-label="Filter documents"
+      aria-label={t('filter.groupLabel')}
       sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}
     >
       {chips.map(option => {
@@ -80,7 +82,7 @@ export function DocumentFilterBar({
           renderInput={params => (
             <TextField
               {...params}
-              placeholder="# tag"
+              placeholder={t('filter.tagPlaceholder')}
               slotProps={{
                 input: { ...params.InputProps, sx: { fontSize: 12, height: 28, py: 0 } },
                 // On the input itself — a label on the wrapper names an element

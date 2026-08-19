@@ -21,6 +21,7 @@
 export const enUS = {
   common: {
     open: 'Open',
+    cancel: 'Cancel',
     delete: 'Delete',
     duplicate: 'Duplicate',
     rename: 'Rename…',
@@ -45,6 +46,58 @@ export const enUS = {
   },
   projects: {
     title: 'Projects',
+    shell: {
+      backToProjects: 'Back to projects',
+      closeEsc: 'Close (Esc)',
+      closeProjects: 'Close Projects',
+      search: 'Search…',
+    },
+    tree: {
+      label: 'Project tree',
+      collapse: 'Collapse',
+      expand: 'Expand',
+      folderContents: 'Folder contents',
+      cardSize: 'Card size',
+    },
+    filter: {
+      groupLabel: 'Filter documents',
+      tagPlaceholder: '# tag',
+      all: 'All',
+    },
+    classification: {
+      title: 'Classification',
+      addTag: 'Add tag…',
+    },
+    assetPrompt: {
+      collectionsHint: 'Comma-separated. Leave empty to remove this asset from all collections.',
+      fileName: 'File name',
+      collections: 'Collections',
+      sceneName: 'Scene name',
+    },
+    transfer: {
+      targetsLabel: 'Transfer targets',
+      noTargets: 'No other writable project is open. Add a workspace folder, or open a project folder, to have somewhere to send this to.',
+      moveNote: '"{{name}}" moves into the target\'s library; the original goes to the source project’s trash.',
+      copyNote: '"{{name}}" is copied into the target\'s library as a new document.',
+    },
+    list: {
+      fixedProject: 'This deployment opens a single fixed project.',
+      noWorkspaceTitle: 'No workspace selected',
+      // `<0>` is the `project.json` code span. Keeping it inside ONE key rather
+      // than three JSX fragments is what lets a translator move it in the
+      // sentence; three fragments would freeze English word order.
+      noWorkspaceHelp: 'A workspace is one folder that holds your projects. Every direct subfolder with a <0>project.json</0> shows up here.',
+      openWorkspace: 'Open workspace…',
+      openSingleFolder: 'or open a single project folder…',
+      workspacePrefix: 'Workspace: {{name}}',
+      noWorkspaceShort: 'No workspace selected.',
+      empty: 'This workspace has no projects yet.',
+      removeFromRecent: 'Remove from Recent',
+      removeNamedFromRecent: 'Remove {{name}} from Recent',
+      actionsFor: 'Project actions for {{name}}',
+      rename: 'Rename…',
+      delete: 'Delete…',
+    },
     demoCaption: 'realvirtual demo scenes & library',
     nav: {
       project: 'Project',
@@ -54,6 +107,9 @@ export const enUS = {
     },
     detail: {
       modified: 'Modified',
+      nothingSelected: 'Nothing selected',
+      actions: 'Actions',
+      nothingOpen: 'Nothing open — double-click an asset to start.',
       project: 'Project',
       source: 'Source',
       category: 'Category',
@@ -74,6 +130,7 @@ export const enUS = {
       rename: 'Rename…',
       newFolder: 'New Folder',
       closeProject: 'Close Project',
+      cancel: 'Cancel',
       exportProject: 'Export .rvproject',
       importProject: 'Import .rvproject…',
       addLibrary: 'Add library',
