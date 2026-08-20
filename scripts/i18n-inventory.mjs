@@ -165,7 +165,7 @@ const NON_PROSE = [
   /^[a-z]+([A-Z][a-z0-9]*)+$/,     // camelCase identifiers
   /^[A-Z0-9_]{2,}$/,               // SCREAMING_CASE constants
   /^\w+\/\w+/,                     // mime types, paths
-  /^[^a-zA-Z]*$/,                  // no letters at all
+  /^[^a-zA-Z\u4e00-\u9fff]*$/,     // no letters at all — CJK counts as letters
 ];
 
 /**
@@ -175,6 +175,13 @@ const NON_PROSE = [
  * `'none'`, `'dense'` and friends are enum values, and they outnumbered real
  * copy on the first pass. A real one-word label in this UI is capitalised
  * ("Retry", "Settings"), which is exactly what survives here.
+ *
+ * The letter test counts CJK, and so does the "no letters at all" rejection
+ * above — they used to disagree, which made an ALL-CHINESE string invisible to
+ * the gate. That was harmless while `src/` had no Chinese in it and stopped
+ * being harmless the moment `zh-CN` became the source language: hardcoded
+ * Chinese copy is the same debt as hardcoded English, and a gate that cannot
+ * see the product's own source language is not a gate.
  */
 export function hasProse(raw) {
   const value = String(raw ?? '').trim();

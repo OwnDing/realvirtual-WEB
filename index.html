@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- SPDX-License-Identifier: AGPL-3.0-only
      Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io> -->
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
@@ -318,8 +318,8 @@
       <img class="loader-logo" src="/logo.png" alt="realvirtual" />
     </div>
     <h1 class="loader-brand">realvirtual WEB</h1>
-    <div class="loader-slogan">Open. Light. Industrial. Anywhere.</div>
-    <div class="loader-status" id="loading-status"><span id="loading-label">Loading </span><span class="model-name" id="loading-model-name"></span></div>
+    <div class="loader-slogan">开放、轻量、工业级、随处可用。</div>
+    <div class="loader-status" id="loading-status"><span id="loading-label">正在加载 </span><span class="model-name" id="loading-model-name"></span></div>
     <div class="loader-progress-wrap">
       <div class="loader-progress-track"><div class="loader-progress-bar indeterminate" id="loading-progress-bar"></div></div>
       <div class="loader-progress-pct" id="loading-progress-pct"></div>
@@ -327,14 +327,56 @@
     </div>
     <!-- Error state (hidden until a load fails after all retries) -->
     <div class="loader-error hidden" id="loading-error">
-      <div class="loader-error-title">Could not load the model</div>
+      <div class="loader-error-title">无法加载模型</div>
       <div class="loader-error-detail" id="loading-error-detail"></div>
       <div class="loader-error-actions">
-        <button type="button" class="loader-btn loader-btn-primary" id="loading-retry-btn">Retry</button>
-        <button type="button" class="loader-btn" id="loading-reload-btn">Reload page</button>
+        <button type="button" class="loader-btn loader-btn-primary" id="loading-retry-btn">重试</button>
+        <button type="button" class="loader-btn" id="loading-reload-btn">重新加载页面</button>
       </div>
     </div>
   </div>
+
+
+  <!--
+    Pre-boot language (ADR-0001 §11).
+
+    The overlay above is Chinese because `zh-CN` IS the product default: the
+    common case needs no script at all and its very first paint is already
+    right. This block only runs for someone who chose English.
+
+    It has to be an inline, classic script. `/src/main.ts` is a module, and a
+    module is deferred by definition — it cannot run until parsing is done, by
+    which time the overlay has been on screen for however long the 3 MB entry
+    chunk took to arrive. That gap is exactly the "flash of the wrong language"
+    the ADR rules out, and no amount of rewriting inside main.ts closes it.
+
+    The five strings and the storage contract are duplicated from the catalog
+    on purpose — a script that imports cannot run this early. The duplication is
+    CHECKED rather than trusted: see tests/i18n-preboot.node.test.ts.
+  -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('rv-language');
+        if (!raw) return;
+        var rec = JSON.parse(raw);
+        if (!rec || rec.v !== 1 || typeof rec.locale !== 'string') return;
+        if (rec.locale.trim().toLowerCase().split(/[-_]/)[0] !== 'en') return;
+      } catch (err) {
+        return; // storage refused, or the value is junk — keep the default
+      }
+      document.documentElement.lang = 'en-US';
+      var set = function (selector, text) {
+        var el = document.querySelector(selector);
+        if (el) el.textContent = text;
+      };
+      set('.loader-slogan', 'Open. Light. Industrial. Anywhere.');
+      set('#loading-label', 'Loading ');
+      set('.loader-error-title', 'Could not load the model');
+      set('#loading-retry-btn', 'Retry');
+      set('#loading-reload-btn', 'Reload page');
+    })();
+  </script>
 
   <div id="react-root"></div>
 

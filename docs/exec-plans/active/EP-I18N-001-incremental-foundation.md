@@ -38,10 +38,19 @@ authority: normative-process
 
 ## Current Repository Facts
 
-- `PS-I18N-001` 已批准，OD-002 已关闭；当前仍没有正式 i18n 契约、运行时目录或语言切换实现；
-- 现有文本盘点数字必须在计划激活时由脚本重新产生，不从外部评审复制为当前事实。
-- `src/plugins/snap-point/strings.ts` 存在仅含英文的轻量字符串表，但不是正式全局 i18n 运行时或 Approved 契约。
-- 2026-08-19 现场查询：项目使用 React 19.2、TypeScript 5.7；仓库没有 i18next、React Intl 或 Lingui 依赖。
+本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
+
+截至 2026-08-20（批次 4 之后）：
+
+- `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
+- i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 1267 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程。
+- 受门禁债务 **948 处 / 164 文件**（`node scripts/i18n-inventory.mjs`）；建议项 `error-message` 311、`intl-format` 22（其中 16 处未显式传 locale）。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_455_142 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 63.3 KB**。
+- `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
 
 ## State Ownership and Compatibility
 
@@ -86,6 +95,15 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### 修正：pre-boot 首屏契约（2026-08-20，外部评审发现）
+
+- **Milestone 3 曾声称 pre-boot 与 `<html lang>` 已满足 `ADR-0001` 第 11 条。该结论是错的，现已更正并修复。**
+- 当时的机制是：`index.html` 出英文，`src/main.ts` 在第一个同步 tick 用目录改写。问题在于 `/src/main.ts` 是 **module**，而 module 天生 `defer` —— 它要等 HTML 解析完、3.4 MB 入口 chunk 下载并解析完才会执行。在那之前遮罩已经画在屏幕上了。也就是说：**一个默认中文的产品，每次冷启动都先显示英文再自己改回来**，正是第 11 条点名要避免的那种闪烁。`tests/i18n-preboot.node.test.ts` 当时只守「两份拷贝不漂移」，守不到闪烁本身；它的注释里甚至写着这个症状「在评审和 CI 截图里都看不见」——确实看不见。
+- 修复方式是把默认语言放进 shell 本身：`index.html` 的遮罩文案与 `<html lang>` 改为 `zh-CN`，**默认用户在零 JavaScript 的情况下第一帧就是对的**；紧随遮罩之后有一段**内联 classic script**，只在存储偏好为英文时把这五条文案和 `lang` 换成英文。内联同步脚本能在解析期跑到，module 入口不行——这是这次改动的全部要点。
+- `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
+- 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
+- **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
 
 ### Milestone 4b 批次 4：CONNECT 工业连接流程（2026-08-20）
 
@@ -258,6 +276,8 @@ Milestone 4b 批次 4 已验证（2026-08-20，本地）：
 | `node scripts/i18n-inventory.mjs` | 受门禁 1342 → **948**（164 文件）；`plugin-registry` 129 → 102 |
 | `node scripts/i18n-verbatim-check.mjs` | **1267** 条值全部逐字追溯 |
 | 完整 `npm test` | 953 文件 **10,305** 例通过；失败 22 文件 / 82 例，与批次 4 之前的本机基线**逐文件一致** |
+
+**关于失败数字**：该计数**每次运行都会变**。失败根因是无头 Chromium 的 WebGL 上下文耗尽，能创建多少个上下文取决于机器负载和用例执行顺序，因此同一份代码在不同机器/不同次运行会得到不同的文件数与用例数（本机 22/82，外部评审同期跑出 27/87）。稳定的不是数字，而是三条不变量：**失败文件全部集中在需要 WebGL 上下文的那一组**、**失败信息中中文出现次数为 0**、**i18n 专项套件单独运行全绿**。引用本行时请引用这三条，不要把某一次的数字当成事实。
 
 反例：把 `AMS NetId` 译成中文 → spec 全量比对失败；把 `label` 加回类型定义 → 注册表守卫失败；把 `VRC symbols` 改写成 `VRC tokens` → 逐字门禁指名失败。
 

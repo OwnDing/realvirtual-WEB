@@ -207,12 +207,18 @@ const loadingRetryBtn = document.getElementById('loading-retry-btn') as HTMLButt
 const loadingReloadBtn = document.getElementById('loading-reload-btn') as HTMLButtonElement;
 
 /**
- * Translate the markup `index.html` ships (ADR-0001 §11).
+ * Re-assert the overlay text from the catalog (ADR-0001 §11).
  *
- * The shell has to carry SOME text or a slow module load shows an empty card,
- * and it carries the English source strings. Rewriting them here is what stops a
- * Chinese-default product from starting in English; `tests/i18n-preboot.node.test.ts`
- * is what stops the two copies from drifting apart.
+ * NOT the thing that gets the first paint right — this module is deferred, so
+ * by the time it runs the overlay has been on screen for as long as the entry
+ * chunk took to arrive. `index.html` ships the default language in its markup
+ * and swaps it inline for an English user; that is what makes the first frame
+ * correct.
+ *
+ * This pass stays because it is the one place that reads the real catalog: it
+ * covers a browser that refused the inline script, and it keeps the overlay
+ * right after `setLocale` is called later in the session.
+ * `tests/i18n-preboot.node.test.ts` stops the copies from drifting apart.
  */
 function applyPrebootText(): void {
   const set = (selector: string, value: string) => {
