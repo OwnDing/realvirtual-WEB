@@ -36,6 +36,7 @@ import type { UISlotProps } from '../../core/rv-ui-plugin';
 import type {
   SimulationMode, SimSubMode, SimDesControl,
 } from '../../core/material-flow/simulation-kernel';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Hybrid multiplier presets offered in the dropdown (Plan 194 §4.1). */
 const HYBRID_MULTIPLIERS = [1, 5, 10, 50] as const;
@@ -57,6 +58,7 @@ interface KernelSnapshot {
 }
 
 export function SimModeToggle({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const { subscribe, getSnapshot } = useMemo(() => makeStore(viewer), [viewer]);
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
@@ -115,7 +117,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
         exclusive
         value={snap.mode}
         onChange={handleModeChange}
-        aria-label="simulation mode"
+        aria-label={t('des.modeAria')}
         data-testid="sim-mode-toggle"
         sx={{
           height: 26,
@@ -126,9 +128,9 @@ export function SimModeToggle({ viewer }: UISlotProps) {
           },
         }}
       >
-        <ToggleButton value="continuous" data-testid="sim-mode-realtime">Realtime</ToggleButton>
+        <ToggleButton value="continuous" data-testid="sim-mode-realtime">{t('des.realtime')}</ToggleButton>
         <Tooltip
-          title={snap.hasDes ? 'Discrete-event simulation' : 'DES not available in this build'}
+          title={t(snap.hasDes ? 'des.desTooltip' : 'des.desUnavailable')}
           placement="bottom"
         >
           {/* span wrapper so the Tooltip works on a disabled button */}
@@ -147,7 +149,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
       {/* ── Sub-mode row (DES only) ── */}
       {desActive && (
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }} data-testid="sim-submode-row">
-          <Tooltip title="Animated (1×)" placement="bottom">
+          <Tooltip title={t('des.animated')} placement="bottom">
             <IconButton
               size="small"
               onClick={() => handleSubMode('animated')}
@@ -159,7 +161,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={`Hybrid (${snap.multiplier}× time-lapse)`} placement="bottom">
+          <Tooltip title={t('des.hybrid', { factor: snap.multiplier })} placement="bottom">
             <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
               <IconButton
                 size="small"
@@ -181,7 +183,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
             </Box>
           </Tooltip>
 
-          <Tooltip title="Fast Forward (analysis)" placement="bottom">
+          <Tooltip title={t('des.fastForwardAnalysis')} placement="bottom">
             <IconButton
               size="small"
               onClick={() => handleSubMode('fastforward')}
@@ -193,7 +195,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Step (one event)" placement="bottom">
+          <Tooltip title={t('des.stepOne')} placement="bottom">
             <IconButton
               size="small"
               onClick={handleStep}
@@ -231,7 +233,7 @@ export function SimModeToggle({ viewer }: UISlotProps) {
                 value={Math.round(snap.ffProgress * 100)}
                 sx={{ flex: 1, height: 4, borderRadius: 2, minWidth: 48 }}
               />
-              <Tooltip title="Cancel Fast Forward" placement="bottom">
+              <Tooltip title={t('des.cancelFf')} placement="bottom">
                 <IconButton size="small" onClick={handleCancelFf} sx={{ p: 0.25 }} data-testid="sim-ff-cancel">
                   <Close fontSize="small" />
                 </IconButton>

@@ -38,6 +38,7 @@ import { ensureDesManagerNode } from '../../core/material-flow/des-manager-node'
 // The Event Queue window is a PRIVATE feature (filter/category/footer). Imported
 // via @rv-private — the public build resolves the no-op stub in src/private-stubs.
 import { EventQueueOverlay } from '@rv-private/plugins/des/hmi/event-queue-overlay';
+import { useRvTranslation } from '../../core/i18n';
 
 /**
  * Honest stub shown only when the private DES runner is absent (public build).
@@ -45,6 +46,7 @@ import { EventQueueOverlay } from '@rv-private/plugins/des/hmi/event-queue-overl
  * overlay is rendered.
  */
 function DESWorkspacePanel({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const hasRunner = viewer.simulationKernel?.hasDesRunner() ?? false;
   if (hasRunner) return null;
   return (
@@ -69,10 +71,10 @@ function DESWorkspacePanel({ viewer }: UISlotProps) {
       <AccountTree fontSize="small" />
       <Box>
         <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>
-          Discrete Event Simulation
+          {t('des.workspaceTitle')}
         </Typography>
         <Typography sx={{ fontSize: 12, opacity: 0.75, lineHeight: 1.3 }}>
-          DES runner not available in this build.
+          {t('des.runnerUnavailable')}
         </Typography>
       </Box>
     </Paper>

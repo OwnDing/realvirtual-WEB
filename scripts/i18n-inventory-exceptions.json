@@ -120,6 +120,12 @@
       "category": "react-copy",
       "match": "TraceParts",
       "reason": "Same as 3Dfindit — a third-party catalogue's own product name, used as the link text to its site."
+    },
+    {
+      "file": "src/plugins/sim-controller/DESExperimentMatrixPanel.tsx",
+      "category": "react-copy",
+      "match": "self.setField('Src','DESSource','InterArrivalTime', 3)",
+      "reason": "A runnable line of the parameter script, shown in a <code> block as the example the user copies. Every token in it is API surface — the method name, the component type, the field name — so a translated version would be a script that throws. The sentence introducing it IS translated (sim:matrix.setterOnly)."
     }
   ]
 }

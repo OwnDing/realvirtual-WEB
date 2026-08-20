@@ -13,11 +13,13 @@
 import { useEffect, useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import type { UISlotProps } from '../../core/rv-ui-plugin';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Workspaces between which a switch clears MUs (no cross-mode continuity yet). */
 const SWITCH_MODES = new Set(['planner', 'hmi', 'des']);
 
 export function ModeSwitchNotice({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const off = viewer.on('mode-changed', ({ from, to }) => {
@@ -41,7 +43,7 @@ export function ModeSwitchNotice({ viewer }: UISlotProps) {
         onClose={() => setOpen(false)}
         sx={{ fontSize: 12, alignItems: 'center' }}
       >
-        Switching workspace clears all moving parts (MUs) — the modes are not yet continuous.
+        {t('des.modeSwitchNotice')}
       </Alert>
     </Snackbar>
   );

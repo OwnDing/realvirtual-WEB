@@ -26,7 +26,7 @@
  */
 
 import React, { Suspense, lazy, useState } from 'react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { cleanup, render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { LazyPanelBoundary } from '../src/core/hmi/LazyPanelBoundary';
@@ -41,6 +41,12 @@ import type { RVViewer } from '../src/core/rv-viewer';
 import desToolbarSource from '../src/plugins/sim-controller/DESControllerToolbar.tsx?raw';
 import settingsPanelSource from '../src/core/hmi/SettingsPanel.tsx?raw';
 import plannerIndexSource from '../src/plugins/layout-planner/index.ts?raw';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const LAYOUT_PANEL_ID = 'layout-planner';
 

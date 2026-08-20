@@ -192,6 +192,16 @@ export const MIGRATED_SOURCES = [
   'src/plugins/unified-import/glb-file-provider.tsx',
   'src/plugins/unified-import/import-job-store.ts',
   'src/plugins/unified-import/import-ui.tsx',
+  // Discrete-event simulation and material flow (Milestone 4b, batch 8)
+  'src/plugins/des/des-workspace-plugin.tsx',
+  'src/plugins/order-manager-plugin.tsx',
+  'src/plugins/sim-controller/DESControllerToolbar.tsx',
+  'src/plugins/sim-controller/DESExperimentMatrixPanel.tsx',
+  'src/plugins/sim-controller/ModeSwitchNotice.tsx',
+  'src/plugins/sim-controller/SimControllerToolbar.tsx',
+  'src/plugins/sim-controller/SimModeToggle.tsx',
+  'src/plugins/sim-controller/des-experiments-helpers.ts',
+  'src/plugins/sim-controller/des-matrix-helpers.ts',
 ];
 
 /**

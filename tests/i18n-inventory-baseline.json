@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 273,
-    "a11y-name": 24,
-    "plugin-registry": 85,
-    "dynamic-text": 39,
+    "react-copy": 203,
+    "a11y-name": 23,
+    "plugin-registry": 83,
+    "dynamic-text": 31,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
-    "ui-state-text": 3
+    "ui-state-text": 2
   },
-  "total": 452,
-  "fileCount": 93,
+  "total": 370,
+  "fileCount": 84,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -169,9 +169,6 @@
     "src/plugins/demo/test-axes-plugin.tsx": {
       "react-copy": 2
     },
-    "src/plugins/des/des-workspace-plugin.tsx": {
-      "react-copy": 2
-    },
     "src/plugins/docs-browser-plugin.tsx": {
       "react-copy": 1
     },
@@ -246,10 +243,6 @@
     "src/plugins/opener-message-plugin.tsx": {
       "react-copy": 1
     },
-    "src/plugins/order-manager-plugin.tsx": {
-      "react-copy": 14,
-      "dynamic-text": 1
-    },
     "src/plugins/pipe-coloring-plugin.tsx": {
       "react-copy": 2
     },
@@ -288,31 +281,6 @@
     },
     "src/plugins/signal-bind/plc-signal-context-menu.ts": {
       "dynamic-text": 1
-    },
-    "src/plugins/sim-controller/DESControllerToolbar.tsx": {
-      "react-copy": 14
-    },
-    "src/plugins/sim-controller/DESExperimentMatrixPanel.tsx": {
-      "react-copy": 30,
-      "dynamic-text": 5,
-      "ui-state-text": 1
-    },
-    "src/plugins/sim-controller/ModeSwitchNotice.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/sim-controller/SimControllerToolbar.tsx": {
-      "react-copy": 3
-    },
-    "src/plugins/sim-controller/SimModeToggle.tsx": {
-      "react-copy": 6,
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
-    "src/plugins/sim-controller/des-experiments-helpers.ts": {
-      "dynamic-text": 1
-    },
-    "src/plugins/sim-controller/des-matrix-helpers.ts": {
-      "plugin-registry": 2
     },
     "src/plugins/snap-point/index.ts": {
       "plugin-registry": 1

@@ -10,6 +10,7 @@
 
 import type { ExperimentInfo, RunInfo } from '../../core/material-flow/rv-run-history-store';
 import type { CompareRunRef } from './des-run-compare-store';
+import { rvT } from '../../core/i18n';
 
 /** Stable selection key of a run — unique across the whole project tree. */
 export function runKey(experiment: string, runIndex: number): string {
@@ -54,7 +55,7 @@ export function collectCompareRefs(
         exp: exp.experiment,
         repl: run.index,
         seed: run.seed,
-        label: `${exp.experiment} · #${run.index} (seed ${run.seed})`,
+        label: rvT('sim', 'des.runRef', { exp: exp.experiment, index: run.index, seed: run.seed }),
       });
     }
   }

@@ -9,7 +9,7 @@
  * the menu), so if the reason did not render here it would be invisible.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Object3D, Scene } from 'three';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
@@ -21,6 +21,12 @@ import { resetSlotAuthority } from '../src/core/engine/rv-slot-authority';
 import { PLCSignalSlot } from '../src/plugins/signal-bind/InlineSignalSlots';
 import { setActiveEditTarget } from '../src/core/hmi/rv-edit-target';
 import type { RVViewer } from '../src/core/rv-viewer';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const ROOT = 'DemoCell';
 

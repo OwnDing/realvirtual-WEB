@@ -15,6 +15,7 @@
 import type { ExperimentInfo, ParamOverrideInfo, RunInfo } from '../../core/material-flow/rv-run-history-store';
 import { aggregateRuns } from '../../core/material-flow/rv-run-aggregation';
 import type { SimDesStatistics } from '../../core/material-flow/simulation-kernel';
+import { rvT, type RVTranslationKey } from '../../core/i18n';
 
 /** Cell value type for a matrix parameter cell. */
 export type MatrixValue = boolean | number | string | null;
@@ -137,16 +138,18 @@ export interface MatrixKpiRow {
 
 /** A numeric KPI extractor over a run's archived statistics. */
 interface KpiDef {
-  key: string; label: string; unit?: string;
+  key: string; labelKey: RVTranslationKey<'sim'>; unit?: string;
   higherIsBetter?: boolean;
   pick: (s: SimDesStatistics) => number;
 }
 
+// `labelKey`, not `label`: this table is built at module load — before any
+// language preference exists — so a resolved string here would be frozen.
 const KPI_DEFS: ReadonlyArray<KpiDef> = [
-  { key: 'throughput', label: 'Throughput', unit: '/h', higherIsBetter: true, pick: (s) => s.throughputPerHour },
+  { key: 'throughput', labelKey: 'des.kpiThroughput', unit: '/h', higherIsBetter: true, pick: (s) => s.throughputPerHour },
   // Utilization has no universal "better" direction (higher can mean efficient
   // OR overloaded) — no polarity, the Δ renders neutral.
-  { key: 'utilization', label: 'Mean utilization', unit: '%', pick: (s) => s.meanUtilization },
+  { key: 'utilization', labelKey: 'des.kpiUtilization', unit: '%', pick: (s) => s.meanUtilization },
 ];
 
 /**
@@ -185,7 +188,7 @@ export function buildKpiRows(experiments: readonly ExperimentInfo[]): MatrixKpiR
       cells.set(exp.experiment, { n: agg.n, mean: agg.mean, ci95: agg.ci95, deltaFromBaseline, empty });
     }
     return {
-      key: def.key, label: def.label,
+      key: def.key, label: rvT('sim', def.labelKey),
       ...(def.unit ? { unit: def.unit } : {}),
       ...(def.higherIsBetter !== undefined ? { higherIsBetter: def.higherIsBetter } : {}),
       cells,

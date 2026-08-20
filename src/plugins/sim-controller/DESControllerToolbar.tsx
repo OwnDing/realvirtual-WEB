@@ -42,6 +42,7 @@ import { LazyPanelBoundary } from '../../core/hmi/LazyPanelBoundary';
 import {
   desMatrixWindowStore, closeDesMatrixWindow, toggleDesMatrixWindow,
 } from './des-matrix-window-store';
+import { useRvTranslation } from '../../core/i18n';
 
 /**
  * The Experiment Matrix is a 46 KB panel that most sessions never open, so it is
@@ -81,6 +82,7 @@ function TimeField({ defaultValue, onChange, helper }: {
 }
 
 export function DESControllerToolbar({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const snap = useKernelSnapshot(viewer);
   const [hybridAnchor, setHybridAnchor] = useState<HTMLElement | null>(null);
 
@@ -213,7 +215,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
           {/* ONE speed selector (1× real-time … N× time-lapse) — Play runs the DES
               at this factor. Replaces the redundant Animated + Hybrid buttons. */}
           <ActionSegment
-            title="Play speed — 1× real-time up to N× time-lapse (click to pick)"
+            title={t('des.playSpeed')}
             active={snap.subMode === 'animated' || snap.subMode === 'hybrid'}
             icon={<Speed />}
             label={snap.subMode === 'animated' ? '1×' : `${snap.multiplier}×`}
@@ -223,14 +225,14 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
             }}
           />
           <ActionSegment
-            title="Fast Forward (max throughput, no animation) — click again to return to the previous speed"
+            title={t('des.fastForward')}
             onClick={handleFastForwardToggle}
             active={snap.subMode === 'fastforward'}
             icon={<FastForward />}
             buttonProps={{ 'data-testid': 'des-submode-fastforward' }}
           />
           <ActionSegment
-            title="Step (process one event)"
+            title={t('des.step')}
             onClick={handleStep}
             active={snap.subMode === 'step'}
             icon={<SkipNext />}
@@ -249,7 +251,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
               '&:hover': { bgcolor: clockOpen ? 'action.selected' : 'action.hover' },
             }}
             data-testid="des-clock"
-            title="Simulation end + statistics reset (toggle)"
+            title={t('des.clockToggle')}
           >
             <Schedule sx={{ fontSize: 18, color: clockOpen ? '#4fc3f7' : 'text.secondary' }} />
             <Box component="span" sx={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, fontWeight: 600, color: '#4fc3f7', letterSpacing: 0.3 }}>
@@ -262,7 +264,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
               window (plan-265). Same icon as the private side-tool toggle so
               both paths read as the same feature. */}
           <ActionSegment
-            title="Experiments — run matrix (experiments × parameters × KPIs)"
+            title={t('des.experiments')}
             onClick={toggleDesMatrixWindow}
             active={runsOpen}
             icon={<Science />}
@@ -299,7 +301,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
           <FloatingPanel
             open={clockOpen}
             onClose={() => setClockOpen(false)}
-            title="Simulation clock"
+            title={t('des.clockTitle')}
             titleColor="#4fc3f7"
             panelId="des-clock-settings"
             defaultWidth={258}
@@ -311,11 +313,11 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
             <Box sx={{ p: 1.25, display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1, minHeight: 0, overflowY: 'auto' }}>
               {/* Simulation end */}
               <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: 'text.secondary' }}>
-                Simulation end
+                {t('des.simEnd')}
               </Typography>
               <FormControlLabel
                 control={<Checkbox size="small" sx={{ p: 0.5 }} checked={endInfinite} onChange={(e) => setEndInfinite(e.target.checked)} />}
-                label={<Typography sx={{ fontSize: 12.5 }}>Run indefinitely (∞)</Typography>}
+                label={<Typography sx={{ fontSize: 12.5 }}>{t('des.runIndefinitely')}</Typography>}
                 sx={{ m: 0, ml: -0.5 }}
               />
               {!endInfinite && (
@@ -323,7 +325,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
                   key={`end-${clockOpen ? 'o' : 'c'}`}
                   defaultValue={formatDesDuration(snap.endTime)}
                   onChange={setEndValue}
-                  helper="DD:HH:MM:SS — e.g. 01:00:00:00 = 1 day"
+                  helper={t('des.endHelper')}
                 />
               )}
 
@@ -331,20 +333,20 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
 
               {/* Statistics reset */}
               <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: 'text.secondary' }}>
-                Statistics reset (warmup)
+                {t('des.statReset')}
               </Typography>
               <TimeField
                 key={`stat-${clockOpen ? 'o' : 'c'}`}
                 defaultValue={formatDesDuration(snap.statResetTime)}
                 onChange={setStatResetValue}
-                helper="DD:HH:MM:SS — empty = off"
+                helper={t('des.statResetHelper')}
               />
 
               <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mt: 0.25 }} />
 
               {/* Seed (plan-260 F1/F12) — fixed reproduces, auto rolls per run. */}
               <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: 'text.secondary' }}>
-                Random seed
+                {t('des.randomSeed')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
                 <TextField
@@ -364,8 +366,8 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
                   onChange={(_, v: SeedMode | null) => setSeedMode(v)}
                   sx={{ height: 28, '& .MuiToggleButton-root': { fontSize: 10, px: 0.75, py: 0 } }}
                 >
-                  <ToggleButton value="fixed" data-testid="des-seed-fixed">fixed</ToggleButton>
-                  <ToggleButton value="auto" data-testid="des-seed-auto">auto</ToggleButton>
+                  <ToggleButton value="fixed" data-testid="des-seed-fixed">{t('des.seedFixed')}</ToggleButton>
+                  <ToggleButton value="auto" data-testid="des-seed-auto">{t('des.seedAuto')}</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
 
@@ -373,16 +375,16 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
 
               {/* Checkpoint auto-save (plan-260 F15/F17). */}
               <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: 'text.secondary' }}>
-                Auto-save checkpoints
+                {t('des.autoSave')}
               </Typography>
               <TimeField
                 key={`autosave-${clockOpen ? 'o' : 'c'}`}
                 defaultValue={formatDesDuration(runSettings.autoSaveInterval)}
                 onChange={setAutoSave}
-                helper="sim-time interval DD:HH:MM:SS — empty = off"
+                helper={t('des.autoSaveHelper')}
               />
               <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
-                <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flex: 1 }}>keep newest</Typography>
+                <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flex: 1 }}>{t('des.keepNewest')}</Typography>
                 <TextField
                   key={`keep-${clockOpen ? 'o' : 'c'}`}
                   size="small"
@@ -398,7 +400,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
           {/* THE single DES Experiment Matrix window (plan-265), code-split and
               gated so its chunk is fetched on the first open only. */}
           {(matrixEverOpened || runsOpen) && (
-            <LazyPanelBoundary label="Experiment Matrix">
+            <LazyPanelBoundary label={t('des.matrixLabel')}>
               <DESExperimentMatrixPanel viewer={viewer} open={runsOpen} onClose={closeDesMatrixWindow} />
             </LazyPanelBoundary>
           )}
@@ -418,7 +420,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
                 />
               </Box>
               <ActionSegment
-                title="Cancel Fast Forward"
+                title={t('des.cancelFf')}
                 onClick={handleCancelFf}
                 icon={<Close />}
                 buttonProps={{ 'data-testid': 'des-ff-cancel' }}

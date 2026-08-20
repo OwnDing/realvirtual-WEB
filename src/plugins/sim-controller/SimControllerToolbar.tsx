@@ -19,6 +19,7 @@ import { ActionSegment, ActionDivider } from '../../core/hmi/action-group';
 import { SIM_CONTROLLER_PAUSE_REASON } from './index';
 import { getDriveSpeedOverride, setDriveSpeedOverride, subscribeDriveSpeedOverride } from '../../core/engine/rv-speed-override';
 import { formatSimClock } from './format-sim-time';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Snapshot shape returned by `getPauseSnapshot`. Compared by reference so
  *  `useSyncExternalStore` re-renders only when the underlying state changes. */
@@ -82,13 +83,14 @@ export function PlayPauseSegment({ viewer }: UISlotProps) {
  * reuse by the DES controller toolbar.
  */
 export function ResetSegment({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const handleReset = useCallback(() => {
     viewer.resetSimulation();
   }, [viewer]);
 
   return (
     <ActionSegment
-      title="Reset MUs and LogicSteps (Shift+R)"
+      title={t('des.resetMus')}
       onClick={handleReset}
       icon={<Replay />}
       buttonProps={{ 'data-testid': 'sim-controller-reset' }}
@@ -106,20 +108,22 @@ export function ResetSegment({ viewer }: UISlotProps) {
  * toolbar shows the identical clock while a run is live.
  */
 export function SimClockSegment({ viewer }: UISlotProps) {
-  const [t, setT] = useState(0);
+  const { t } = useRvTranslation('sim');
+  // Renamed from `t`: that name now belongs to the translator in every file.
+  const [simTime, setSimTime] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setT(viewer.simTime ?? 0), 200);
+    const id = setInterval(() => setSimTime(viewer.simTime ?? 0), 200);
     return () => clearInterval(id);
   }, [viewer]);
   return (
     <Box
       sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 0.75, height: '100%', whiteSpace: 'nowrap' }}
       data-testid="sim-clock"
-      title="Elapsed simulation time"
+      title={t('des.elapsed')}
     >
       <Schedule sx={{ fontSize: 18, color: 'text.secondary' }} />
       <Box component="span" sx={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, fontWeight: 600, color: '#4fc3f7', letterSpacing: 0.3 }}>
-        {formatSimClock(t)}
+        {formatSimClock(simTime)}
       </Box>
     </Box>
   );
@@ -151,12 +155,13 @@ const SPEED_OPTIONS = [0.25, 0.5, 1, 2, 5, 10, 25, 50, 100];
 
 /** Exported for reuse by the editor's test-run toolbar (same override store). */
 export function SpeedSelector() {
+  const { t } = useRvTranslation('sim');
   const factor = useSyncExternalStore(subscribeDriveSpeedOverride, getDriveSpeedOverride, getDriveSpeedOverride);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   return (
     <>
       <ActionSegment
-        title="Drive speed override — scales all drive speeds (1× = normal)"
+        title={t('des.driveSpeed')}
         icon={<Speed />}
         label={`${factor}×`}
         buttonProps={{

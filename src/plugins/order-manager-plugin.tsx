@@ -395,7 +395,7 @@ export class OrderManagerPlugin implements RVViewerPlugin, OrderManagerPluginAPI
       items: [
         {
           id: 'order-manager.add-to-cart',
-          label: 'Add to Cart',
+          label: () => rvT('sim', 'order.addToCart'),
           order: 55,
           dividerBefore: true,
           condition: (target) => {
@@ -481,6 +481,7 @@ export class OrderManagerPlugin implements RVViewerPlugin, OrderManagerPluginAPI
 // ── NavButton Component ──────────────────────────────────────────────
 
 function OrderManagerButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('sim');
   const snap = useSyncExternalStore(subscribeOrderStore, getOrderSnapshot);
   const lpm = viewer.leftPanelManager;
   const panelSnap = useSyncExternalStore(lpm.subscribe, lpm.getSnapshot);
@@ -493,7 +494,7 @@ function OrderManagerButton({ viewer }: UISlotProps) {
   return (
     <NavButton
       icon={<ShoppingCart />}
-      label="Order Cart"
+      label={t('order.cart')}
       badge={snap.totalPositions > 0 ? snap.totalPositions : undefined}
       active={isActive}
       onClick={handleClick}
@@ -504,6 +505,7 @@ function OrderManagerButton({ viewer }: UISlotProps) {
 // ── OrderPanel Component ─────────────────────────────────────────────
 
 export function OrderPanel() {
+  const { t } = useRvTranslation('sim');
   const viewer = useViewer();
   const branding = useCustomBranding();
   const accentColor = branding?.primaryColor ?? undefined;
@@ -659,7 +661,7 @@ export function OrderPanel() {
           ...(accentColor ? { bgcolor: accentColor, '&:hover': { bgcolor: accentColor, filter: 'brightness(1.15)' } } : {}),
         }}
       >
-        Order Online
+        {t('order.orderOnline')}
       </Button>
       <Box sx={{ display: 'flex', gap: 0.5 }}>
         <Button
@@ -682,7 +684,7 @@ export function OrderPanel() {
             ...(accentColor ? { color: accentColor, borderColor: `${accentColor}80` } : {}),
           }}
         >
-          Email
+          {t('order.email')}
         </Button>
       </Box>
       <Button
@@ -692,7 +694,7 @@ export function OrderPanel() {
         onClick={handleClear}
         sx={{ fontSize: 10, textTransform: 'none', color: 'text.secondary' }}
       >
-        Clear Cart
+        {t('order.clearCart')}
       </Button>
     </Box>
   ) : undefined;
@@ -704,7 +706,7 @@ export function OrderPanel() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <ShoppingCart sx={{ fontSize: 16, color: accentColor ?? 'primary.main' }} />
             <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.primary' }}>
-              Order Cart
+              {t('order.cart')}
             </Typography>
           </Box>
         }
@@ -742,7 +744,7 @@ export function OrderPanel() {
                   px: 0.75,
                 }}
               >
-                Show All
+                {t('order.showAll')}
               </Button>
             </Box>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
@@ -755,10 +757,10 @@ export function OrderPanel() {
             <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
               <ShoppingCart sx={{ fontSize: 32, color: 'rgba(255,255,255,0.15)', mb: 1 }} />
               <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', mb: 1 }}>
-                Cart is empty
+                {t('order.cartEmpty')}
               </Typography>
               <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', lineHeight: 1.5 }}>
-                Click the cart icon in the tooltip of a component with AAS data to add it.
+                {t('order.cartEmptyHint')}
               </Typography>
             </Box>
           )}
@@ -790,10 +792,10 @@ export function OrderPanel() {
         open={showUndo}
         autoHideDuration={UNDO_TIMEOUT_MS}
         onClose={handleUndoClose}
-        message={undoItem ? `Removed "${undoItem.displayName}"` : ''}
+        message={undoItem ? t('order.removed', { name: undoItem.displayName }) : ''}
         action={
           <Button color="primary" size="small" onClick={handleUndo}>
-            Undo
+            {t('order.undo')}
           </Button>
         }
         sx={{ '& .MuiSnackbarContent-root': { fontSize: 11 } }}
@@ -819,6 +821,7 @@ export function OrderPanel() {
 import { useViewer } from '../hooks/use-viewer';
 import { useCustomBranding } from '../core/hmi/branding-store';
 import { useDropOrphanedPanelSlot } from '../hooks/use-drop-orphaned-panel-slot';
+import { rvT, useRvTranslation } from '../core/i18n';
 
 // ── OrderItemCard Component ──────────────────────────────────────────
 
@@ -837,6 +840,7 @@ function OrderItemCard({
   onHoverEnd: () => void;
   onClick: () => void;
 }) {
+  const { t } = useRvTranslation('sim');
   return (
     <Box
       onMouseEnter={onHover}
@@ -864,7 +868,7 @@ function OrderItemCard({
       {/* Article number */}
       {item.articleNumber && (
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', lineHeight: 1.3 }}>
-          Art: {item.articleNumber}
+          {t('order.articleNumber', { number: item.articleNumber })}
         </Typography>
       )}
 
@@ -908,18 +912,19 @@ function OrderItemCard({
 // ── Demo Dialog ──────────────────────────────────────────────────────
 
 function OrderDemoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('sim');
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <ShoppingCart sx={{ color: 'primary.main' }} />
-        Demo Mode
+        {t('order.demoTitle')}
       </DialogTitle>
       <DialogContent>
         <Typography sx={{ mb: 2, fontSize: 13 }}>
-          Online ordering is not configured.
+          {t('order.demoBody')}
         </Typography>
         <Typography sx={{ mb: 2, fontSize: 13 }}>
-          To enable, add an orderUrl to your Order Manager plugin configuration:
+          {t('order.demoHowTo')}
         </Typography>
         <Box
           component="pre"

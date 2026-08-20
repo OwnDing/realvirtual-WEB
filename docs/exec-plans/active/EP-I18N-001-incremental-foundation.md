@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 7 之后）：
+截至 2026-08-20（批次 8 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1856** 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）。
-- 受门禁债务 **452 处 / 93 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 273、`a11y-name` 24、`plugin-registry` 85、`dynamic-text` 39、`pre-boot` 16、`dom-text` 10、`ui-state-text` 3、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 12 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_440_120 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 78.0 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring`/`assets` 移入独立 chunk，构建产物 61.0 KB；`zh-CN` 全量仍在入口）。**余量按每批 6–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0），剩余 452 处大约还要吃掉 30–40 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1959** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）。
+- 受门禁债务 **370 处 / 84 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 203、`a11y-name` 23、`plugin-registry` 83、`dynamic-text` 31、`pre-boot` 16、`dom-text` 10、`ui-state-text` 2、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 12 处未显式传 locale）。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_444_400 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 73.8 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring`/`assets`/`sim` 移入独立 chunk，构建产物 65.4 KB；`zh-CN` 全量仍在入口）。**余量按每批 4–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0 → 73.8），剩余 370 处大约还要吃掉 20–30 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 452 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面；批次 7：资产生命周期）。
+- [ ] Milestone 4b：按风险分批迁移其余 370 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面；批次 7：资产生命周期；批次 8：离散事件仿真与物料流）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,16 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 8：离散事件仿真与物料流（2026-08-20）
+
+- 覆盖 9 个文件、82 处（3378 行）：DES 实验矩阵窗口、DES 工具栏与仿真时钟设置、实时/DES 模式切换、模式切换提示、订单清单插件。该面归零，全仓 452 → **370**；`sim` namespace 共 **103** 个 key。
+- **写进磁盘的名字不是文案，因此故意不进目录。** `Baseline` 和 `Experiment N` 由 `createExperiment()` 生成后写入项目清单，并作为运行、检查点、快照的键。把它们翻译，等于让同一个项目在两种语言下产生两套互相看不见的实验——保存在中文界面下的实验，在英文界面里就找不到了。扫描器看不见它们（模板字面量），所以这条只能靠人判断；`tests/i18n-sim.test.tsx` 用一条**否定用例**把它钉住：`sim` namespace 里不允许出现取值为 `Baseline` 或「基线」的 key。反例验证过：加一条 `baselineName` 立刻失败。
+- 参数脚本示例 `self.setField('Src','DESSource','InterArrivalTime', 3)` 按例外登记——它是用户要复制进编辑器的**可执行**代码，每个 token 都是 API 表面，译出来就是一段会抛异常的脚本；引出它的那句话则是翻译的，并有用例保证这句话里不会混进 `setField`。
+- 领域缩写保持英文（`DES`、`MU`、`LogicSteps`、`KPI`、`CRN`、`DD:HH:MM:SS`），但**成句的技术名翻译**：`Common Random Numbers` → 公共随机数、`Throughput` → 吞吐量。两组用例互为配重。
+- `KPI_DEFS`（模块级 KPI 表）改为持 `labelKey`，在构建矩阵行时解析——与批次 6/7 的三张表同型。
+- `SimClockSegment` 里的局部状态 `t`（仿真时间）与译函数 `t` 撞名，改名为 `simTime`。这是批次 4 之后第二次遇到：`t` 这个名字现在属于译函数。
+- 3 个既有浏览器测试按 ADR pin `en-US`。**普查这次只捞到 1 个**（`ui-lazy-panels`），完整套件又捞到 2 个——其中 `plc-inspector-slot` 断言的是 `signal for {{name}}` 这种**带插值**的 aria-label，而普查按构造就看不见带 `{{}}` 的值。这是该普查的已知边界，记在这里以免下次误以为它是完备的。
 
 ### Milestone 4b 批次 7：资产生命周期（2026-08-20）
 

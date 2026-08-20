@@ -42,6 +42,7 @@ import {
   type MatrixValue, type MatrixParamRow, type MatrixKpiRow,
 } from './des-matrix-helpers';
 import { lintParamScript } from './des-param-script-lint';
+import { rvT, useRvTranslation } from '../../core/i18n';
 
 const REFRESH_MS = 2000;
 const NAME_COL = 190;
@@ -89,9 +90,9 @@ function fmtKpi(mean: number, ci95: number, empty: boolean): string {
 
 /** Status label for a run row. */
 function runStatusLabel(r: RunInfo): string {
-  if (r.status === 'completed') return 'completed';
-  if (r.status === 'aborted') return 'aborted';
-  return r.status ? 'running' : 'snapshot';
+  if (r.status === 'completed') return rvT('sim', 'matrix.statusCompleted');
+  if (r.status === 'aborted') return rvT('sim', 'matrix.statusAborted');
+  return rvT('sim', r.status ? 'matrix.statusRunning' : 'matrix.statusSnapshot');
 }
 
 /** One selectable parameter from the scene's rv_extras (the "+" picker). */
@@ -146,6 +147,7 @@ function DurationCell({ value, onCommit, testId }: {
   onCommit: (seconds: number) => void;
   testId?: string;
 }) {
+  const { t } = useRvTranslation('sim');
   const commit = (text: string) => {
     const t = text.trim();
     const seconds = t === '' ? 0 : parseDesDuration(t);
@@ -154,7 +156,7 @@ function DurationCell({ value, onCommit, testId }: {
   };
   return (
     <TextField key={value} size="small" fullWidth defaultValue={formatDesDuration(value)}
-      placeholder="DD:HH:MM:SS"
+      placeholder={t('matrix.durationPlaceholder')}
       onBlur={(e) => commit(e.target.value)}
       onKeyDown={(e) => { if (e.key === 'Enter') commit((e.target as HTMLInputElement).value); }}
       inputProps={{
@@ -213,6 +215,7 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
   onAction: () => void;
   onClose: () => void;
 }) {
+  const { t } = useRvTranslation('sim');
   const runs = [...exp.runs].sort((a, b) => a.index - b.index);
   const act = (fn: (c: SimDesControl) => Promise<void> | void) => {
     const c = ctl(); if (!c) return;
@@ -226,17 +229,17 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
   });
 
   return (
-    <FloatingPanel open onClose={onClose} title={`Runs — ${exp.experiment}`}
+    <FloatingPanel open onClose={onClose} title={t('matrix.runsTitle', { exp: exp.experiment })}
       panelId="des-matrix-runs" defaultWidth={340} defaultHeight={360} minWidth={280}
       toolbar={
-        <Tooltip title="Snapshot the current state now">
+        <Tooltip title={t('matrix.snapshotNow')}>
           <IconButton size="small" onClick={snapshotNow} data-testid="des-matrix-snapshot-now"><AddAPhoto sx={{ fontSize: 16 }} /></IconButton>
         </Tooltip>
       }>
       <Box sx={{ height: '100%', overflow: 'auto', px: 0.5, py: 0.5 }} data-testid="des-matrix-runs-panel">
         {runs.length === 0 && (
           <Typography sx={{ fontSize: 11, color: 'text.secondary', p: 1, textAlign: 'center' }}>
-            No runs yet — run this experiment or take a snapshot.
+            {t('matrix.noRuns')}
           </Typography>
         )}
         {runs.map((r) => (
@@ -244,12 +247,12 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 0.5, py: 0.25,
               bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 0.5 }}>
               <Typography sx={{ fontSize: 11, fontWeight: 600, flex: 1 }}>
-                #{r.index} · seed {r.seed} · {runStatusLabel(r)}
+                {t('matrix.runLine', { index: r.index, seed: r.seed, status: runStatusLabel(r) })}
               </Typography>
-              <Tooltip title="Delete run">
+              <Tooltip title={t('matrix.deleteRun')}>
                 <IconButton size="small" sx={{ p: 0.25 }} data-testid={`des-matrix-del-run-${r.index}`}
                   onClick={() => {
-                    if (!window.confirm(`Delete run #${r.index} with all its checkpoints?`)) return;
+                    if (!window.confirm(t('matrix.confirmDeleteRun', { index: r.index }))) return;
                     act((c) => c.deleteReplication?.({ model: exp.model, exp: exp.experiment, repl: r.index }));
                   }}>
                   <Delete sx={{ fontSize: 14 }} />
@@ -258,7 +261,7 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
             </Box>
             {r.checkpoints.map((cp) => (
               <Box key={cp.simTime} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pl: 2, py: 0.15 }}>
-                <Tooltip title="Load this checkpoint (step mode)">
+                <Tooltip title={t('matrix.loadCheckpoint')}>
                   <IconButton size="small" sx={{ p: 0.2 }} data-testid={`des-matrix-load-cp-${r.index}-${cp.simTime}`}
                     onClick={() => loadCheckpoint(r, cp.simTime)}>
                     <PlayArrow sx={{ fontSize: 14, color: '#4fc3f7' }} />
@@ -267,10 +270,10 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
                 <Typography sx={{ fontSize: 10.5, flex: 1, fontFamily: 'monospace' }}>
                   {formatSimClock(cp.simTime)} · {fmtBytes(cp.bytes)}
                 </Typography>
-                <Tooltip title="Delete checkpoint">
+                <Tooltip title={t('matrix.deleteCheckpoint')}>
                   <IconButton size="small" sx={{ p: 0.2 }}
                     onClick={() => {
-                      if (!window.confirm(`Delete checkpoint ${formatSimClock(cp.simTime)} of run #${r.index}?`)) return;
+                      if (!window.confirm(t('matrix.confirmDeleteCheckpoint', { time: formatSimClock(cp.simTime), index: r.index }))) return;
                       act((c) => c.deleteSnapshot?.({ model: exp.model, exp: exp.experiment, repl: r.index, t: cp.simTime }));
                     }}>
                     <Delete sx={{ fontSize: 13 }} />
@@ -297,19 +300,20 @@ function ParamScriptEditor({ exp, onSave, onClose }: {
   onSave: (source: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useRvTranslation('sim');
   const [src, setSrc] = useState(exp.paramScript ?? '');
   const errors = useMemo(() => lintParamScript(src), [src]);
   return (
-    <FloatingPanel open onClose={onClose} title={`Param script — ${exp.experiment}`}
+    <FloatingPanel open onClose={onClose} title={t('matrix.scriptTitle', { exp: exp.experiment })}
       panelId="des-matrix-script" defaultWidth={420} defaultHeight={300} minWidth={320}
       toolbar={
         <Button size="small" variant="contained" disabled={errors.length > 0}
           data-testid="des-matrix-script-save"
-          onClick={() => { onSave(src); onClose(); }} sx={{ fontSize: 11 }}>Save</Button>
+          onClick={() => { onSave(src); onClose(); }} sx={{ fontSize: 11 }}>{t('matrix.save')}</Button>
       }>
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 0.75, gap: 0.5 }}>
         <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
-          Setter-only — configure the model before each run, e.g.
+          {t('matrix.setterOnly')}
           <code> self.setField('Src','DESSource','InterArrivalTime', 3)</code>
         </Typography>
         {/* Field fill is the shared white-alpha wash, not a black one: the panel
@@ -342,6 +346,7 @@ export interface DESExperimentMatrixPanelProps extends UISlotProps {
 }
 
 export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimentMatrixPanelProps) {
+  const { t } = useRvTranslation('sim');
   const [experiments, setExperiments] = useState<ExperimentInfo[]>([]);
   const [progress, setProgress] = useState<BatchProgress | null>(null);
   const [crn, setCrn] = useState(true);
@@ -445,7 +450,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
       setBusy(true);
       try {
         const c = ctl();
-        if (!c?.patchExperimentMetaJson) { setError('Experiment store is not available in this build.'); return; }
+        if (!c?.patchExperimentMetaJson) { setError(t('matrix.storeUnavailable')); return; }
         const project = await ensureActiveProject();
         const model = modelKeyOf(viewer);
         const glbHash = await computeGlbFingerprint(viewer);
@@ -536,12 +541,12 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
   const runAllTitle = busy || batchRunning
     ? 'A batch is running'
     : columns.length === 0
-      ? 'Create an experiment first'
-      : `Run all active experiments (${enabledCols.length} × N runs)`;
+      ? t('matrix.createFirst')
+      : t('matrix.runAllTip', { count: enabledCols.length });
 
   const toolbar = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <Tooltip title="Common Random Numbers — same seed stream per slot for a fair comparison">
+      <Tooltip title={t('matrix.crnTip')}>
         <FormControlLabel
           control={<Checkbox size="small" sx={{ p: 0.5 }} checked={crn} onChange={(e) => setCrn(e.target.checked)} data-testid="des-matrix-crn" />}
           label={<Typography sx={{ fontSize: 11 }}>CRN</Typography>}
@@ -552,12 +557,12 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
         <>
           <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: '#4fc3f7', whiteSpace: 'nowrap' }}
             data-testid="des-matrix-batch-progress">
-            {batchExpIndex >= 0 && enabledCols.length > 1 ? `exp ${batchExpIndex + 1}/${enabledCols.length} · ` : ''}
-            run {progress!.replIndex}/{progress!.total}
+            {batchExpIndex >= 0 && enabledCols.length > 1 ? t('matrix.batchProgress', { index: batchExpIndex + 1, total: enabledCols.length }) : ''}
+            {t('matrix.runProgress', { index: progress!.replIndex, total: progress!.total })}
           </Typography>
           <Button size="small" variant="outlined" color="inherit" startIcon={<Stop />}
             onClick={cancelBatch} data-testid="des-matrix-cancel" sx={{ fontSize: 11 }}>
-            Cancel
+            {t('matrix.cancel')}
           </Button>
         </>
       ) : (
@@ -565,12 +570,12 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
           <span>
             <Button size="small" variant="outlined" startIcon={<PlaylistPlay />} disabled={busy || columns.length === 0}
               onClick={runAll} data-testid="des-matrix-run-all" sx={{ fontSize: 11 }}>
-              Run all
+              {t('matrix.runAll')}
             </Button>
           </span>
         </Tooltip>
       )}
-      <Tooltip title="Refresh">
+      <Tooltip title={t('matrix.refresh')}>
         <IconButton size="small" onClick={() => void refresh()}><Refresh sx={{ fontSize: 16 }} /></IconButton>
       </Tooltip>
     </Box>
@@ -607,22 +612,21 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
 
   return (
     <>
-    <FloatingPanel open={open} onClose={onClose} title="DES Experiment Matrix"
+    <FloatingPanel open={open} onClose={onClose} title={t('matrix.title')}
       panelId="des-experiment-matrix" defaultWidth={560} defaultHeight={400} toolbar={toolbar}>
       <Box sx={{ height: '100%', overflow: 'auto' }} data-testid="des-matrix-panel">
-        {error && <Typography sx={{ color: '#ef5350', fontSize: 11, px: 1, py: 0.5 }}>Error: {error}</Typography>}
+        {error && <Typography sx={{ color: '#ef5350', fontSize: 11, px: 1, py: 0.5 }}>{t('matrix.error', { message: error })}</Typography>}
         {columns.length === 0 ? (
           <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25 }}>
             <Typography sx={{ fontSize: 12.5, color: 'text.secondary', textAlign: 'center', maxWidth: 420 }}>
-              Experiments compare simulation runs side by side — the first one becomes the
-              fixed baseline, every further column varies parameters against it.
+              {t('matrix.intro')}
             </Typography>
             <Button size="small" variant="contained" startIcon={<Add />} disabled={busy}
               onClick={createExperiment} data-testid="des-matrix-new-empty">
-              New experiment
+              {t('matrix.newExperiment')}
             </Button>
             <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-              Snapshots the current model state as the baseline.
+              {t('matrix.newExperimentHint')}
             </Typography>
           </Box>
         ) : (
@@ -638,7 +642,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                     borderBottom: exp === baseline ? '2px solid #4fc3f7' : '1px solid rgba(255,255,255,0.08)',
                     borderLeft: exp === baseline ? '2px solid #4fc3f7' : 'none' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
-                    <Tooltip title={exp.enabled ? 'Active (runs on "Run all")' : 'Skipped by "Run all"'}>
+                    <Tooltip title={t(exp.enabled ? 'matrix.active' : 'matrix.skipped')}>
                       <Checkbox size="small" sx={{ p: 0.25 }} checked={exp.enabled}
                         data-testid={`des-matrix-active-${exp.experiment}`}
                         onChange={(e) => patchExp(exp.model, exp.experiment, { enabled: e.target.checked })} />
@@ -648,7 +652,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                     {running
                       ? <CircularProgress size={13} data-testid={`des-matrix-running-${exp.experiment}`} />
                       : (
-                        <Tooltip title="Delete experiment (all runs + snapshots)">
+                        <Tooltip title={t('matrix.deleteExperiment')}>
                           <IconButton size="small" sx={{ p: 0.2, color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#ef5350' } }}
                             data-testid={`des-matrix-delete-${exp.experiment}`}
                             onClick={() => deleteExperiment(exp)}>
@@ -674,7 +678,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                     if (n !== exp.replicationCount) patchExp(exp.model, exp.experiment, { replicationCount: n });
                   }}
                   inputProps={{ inputMode: 'numeric', style: { padding: '2px 4px', fontSize: 11, width: 40, fontFamily: 'ui-monospace, monospace', textAlign: 'center' } }} />
-                <Tooltip title="Show runs & checkpoints">
+                <Tooltip title={t('matrix.showRuns')}>
                   <IconButton size="small" sx={{ p: 0.15 }} data-testid={`des-matrix-drilldown-${exp.experiment}`}
                     onClick={() => setRunsExp(exp.experiment)}>
                     <ChevronRight sx={{ fontSize: 15 }} />
@@ -682,7 +686,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                 </Tooltip>
               </Box>
             ))}
-            {nameCell('Sim end (DD:HH:MM:SS)')}
+            {nameCell(t('matrix.simEndRow'))}
             {columns.map((exp) => (
               <Box key={exp.experiment} sx={{ px: 0.5, py: 0.25, bgcolor: colTint(exp), display: 'flex', alignItems: 'center' }}>
                 <DurationCell value={exp.endTime} testId={`des-matrix-end-${exp.experiment}`}
@@ -709,11 +713,11 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
             })}
 
             {/* ── PARAMETERS block ── */}
-            {sectionHeader('Parameters')}
+            {sectionHeader(t('matrix.parameters'))}
             {paramRows.length === 0 && (
               <Box sx={{ gridColumn: '1 / -1', px: 1, py: 0.5 }}>
                 <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
-                  No parameter overrides yet — edit a cell to make an experiment deviate from the baseline.
+                  {t('matrix.noParams')}
                 </Typography>
               </Box>
             )}
@@ -750,12 +754,12 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
               px: 0.5, py: 0.25, borderRight: '1px solid rgba(255,255,255,0.06)',
               display: 'flex', alignItems: 'center', gap: 0.25 }}>
               <TextField size="small" fullWidth value={newParam}
-                placeholder="Component.Field"
+                placeholder={t('matrix.paramPlaceholder')}
                 onChange={(e) => { setNewParam(e.target.value); if (paramError) setParamError(null); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') addParam(); }}
                 inputProps={{ 'data-testid': 'des-matrix-add-param',
                   style: { fontFamily: 'ui-monospace, monospace', fontSize: 11, padding: '2px 6px' } }} />
-              <Tooltip title="Pick a parameter from the model">
+              <Tooltip title={t('matrix.pickParam')}>
                 <span>
                   <IconButton size="small" sx={{ p: 0.25 }} disabled={busy}
                     onClick={(e) => openParamMenu(e.currentTarget)} data-testid="des-matrix-add-param-pick">
@@ -775,7 +779,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
               onClose={() => setParamMenuAnchor(null)}
               MenuListProps={{ dense: true }} sx={{ zIndex: 2000 }}>
               {suggestions.length === 0 && (
-                <MenuItem disabled sx={{ fontSize: 11.5 }}>No parameters found in the model</MenuItem>
+                <MenuItem disabled sx={{ fontSize: 11.5 }}>{t('matrix.noParamsFound')}</MenuItem>
               )}
               {suggestions.map((s) => (
                 <MenuItem key={s.label} sx={{ fontSize: 11.5, fontFamily: 'ui-monospace, monospace', gap: 1 }}
@@ -790,12 +794,12 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
             </Menu>
 
             {/* Param script row (F4). */}
-            {nameCell('Param script')}
+            {nameCell(t('matrix.paramScriptRow'))}
             {columns.map((exp) => {
               const has = !!(exp.paramScript && exp.paramScript.trim());
               return (
                 <Box key={exp.experiment} sx={{ px: 0.5, py: 0.25, bgcolor: colTint(exp), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Tooltip title={has ? 'Edit the parameter script (runs before each run)' : 'Add a parameter script (JS, setter-only)'}>
+                  <Tooltip title={t(has ? 'matrix.editScript' : 'matrix.addScript')}>
                     <Button size="small" variant={has ? 'contained' : 'outlined'}
                       data-testid={`des-matrix-script-${exp.experiment}`}
                       onClick={() => setScriptExp(exp.experiment)}
@@ -853,7 +857,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                     <Box key={`${s.repl}-${s.t}`} component="button" type="button"
                       onClick={() => loadSnapshotAt(exp, s.repl, s.t)}
                       data-testid={`des-matrix-snap-${exp.experiment}-${s.repl}-${s.t}`}
-                      title={`Load this snapshot into the live sim (run #${s.repl}, step mode)`}
+                      title={t('matrix.loadSnapshot', { repl: s.repl })}
                       sx={{ all: 'unset', cursor: 'pointer', fontSize: 10.5, fontFamily: 'ui-monospace, monospace',
                         color: '#4fc3f7', '&:hover': { textDecoration: 'underline' } }}>
                       ⏱ {formatSimClock(s.t)}
@@ -863,7 +867,7 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                     <Box component="button" type="button" onClick={() => setRunsExp(exp.experiment)}
                       sx={{ all: 'unset', cursor: 'pointer', fontSize: 10.5, color: 'text.secondary',
                         '&:hover': { textDecoration: 'underline' } }}>
-                      all {cps.length}…
+                      {t('matrix.allCheckpoints', { count: cps.length })}
                     </Box>
                   )}
                 </Box>
@@ -880,17 +884,17 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
                 <Box key={exp.experiment} sx={{ px: 0.5, py: 0.6, bgcolor: colTint(exp), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {running ? (
                     <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: '#4fc3f7' }}>
-                      running {progress!.replIndex}/{progress!.total}
+                      {t('matrix.running', { index: progress!.replIndex, total: progress!.total })}
                     </Typography>
                   ) : (
-                    <Tooltip title={noEnd ? 'Set "Sim end" first — a run needs a finite end time'
-                      : `Run ${exp.replicationCount} replication${exp.replicationCount > 1 ? 's' : ''}`}>
+                    <Tooltip title={noEnd ? t('matrix.needSimEnd')
+                      : t('matrix.runReplications', { count: exp.replicationCount })}>
                       <span>
                         <Button size="small" variant="outlined" startIcon={<PlayArrow sx={{ fontSize: 14 }} />}
                           disabled={busy || noEnd}
                           data-testid={`des-matrix-run-${exp.experiment}`} onClick={() => runOne(exp)}
                           sx={{ fontSize: 10.5, py: 0, minWidth: 84, px: 1, height: 24 }}>
-                          Run{exp.replicationCount > 1 ? ` ${exp.replicationCount}×` : ''}
+                          {exp.replicationCount > 1 ? t('matrix.runTimes', { count: exp.replicationCount }) : t('matrix.run')}
                         </Button>
                       </span>
                     </Tooltip>
@@ -902,14 +906,14 @@ export function DESExperimentMatrixPanel({ viewer, open, onClose }: DESExperimen
 
           {/* "New experiment" — the LAST column is the add affordance. */}
           <Box sx={{ px: 0.75, py: 0.5, position: 'sticky', top: 0 }}>
-            <Tooltip title="New experiment — snapshots the current model state as a new column">
+            <Tooltip title={t('matrix.newExperimentTip')}>
               <span>
                 <Button size="small" disabled={busy} onClick={createExperiment} data-testid="des-matrix-new"
                   startIcon={<Add sx={{ fontSize: 14 }} />}
                   sx={{ fontSize: 10.5, whiteSpace: 'nowrap', color: 'text.secondary',
                     border: '1px dashed rgba(255,255,255,0.25)', px: 1, py: 0.25,
                     '&:hover': { color: '#4fc3f7', borderColor: '#4fc3f7' } }}>
-                  New experiment
+                  {t('matrix.newExperiment')}
                 </Button>
               </span>
             </Tooltip>
