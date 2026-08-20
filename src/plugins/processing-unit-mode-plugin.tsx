@@ -21,6 +21,7 @@ import type { RVViewer } from '../core/rv-viewer';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
 import { NavButton } from '../core/hmi/NavButton';
 import { ProcessIndustryPlugin } from './processindustry-plugin';
+import { useRvTranslation } from '../core/i18n';
 
 /** localStorage key for the toggle state (survives reload). */
 const LS_KEY = 'rv-pu-mode-enabled';
@@ -42,6 +43,7 @@ export function saveProcessingUnitModeEnabled(enabled: boolean): void {
 }
 
 function ProcessingUnitModeButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const [enabled, setEnabled] = useState(false);
 
   // On mount: sync toggle + plugin with persisted preference.
@@ -61,7 +63,7 @@ function ProcessingUnitModeButton({ viewer }: UISlotProps) {
   return (
     <NavButton
       icon={<Factory />}
-      label={enabled ? 'PU Info: ON' : 'PU Info: OFF'}
+      label={enabled ? t('process.puInfoOn') : t('process.puInfoOff')}
       active={enabled}
       onClick={handleClick}
     />

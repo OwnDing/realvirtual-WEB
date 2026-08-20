@@ -5,6 +5,8 @@ import { describe, test, expect, afterEach, vi } from 'vitest';
 import { mockNavigatorXR, clearNavigatorXR } from './mocks/webxr-mock';
 import { WebXRPlugin } from '../src/plugins/webxr-plugin';
 import { Box3, Vector3 } from 'three';
+import type { Mesh, MeshBasicMaterial } from 'three';
+import { initI18n, setLocale } from '../src/core/i18n';
 
 // Minimal stubs for LoadResult and RVViewer used by the plugin
 function makeStubViewer() {
@@ -62,6 +64,48 @@ describe('WebXRPlugin', () => {
   afterEach(() => {
     clearNavigatorXR();
     document.querySelectorAll('button').forEach((b) => b.remove());
+  });
+
+  test('updates the headset AR button and an open CanvasTexture panel in place', async () => {
+    initI18n();
+    await setLocale('zh-CN');
+    mockNavigatorXR({ vr: true, ar: true });
+    const origUA = navigator.userAgent;
+    Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 (Quest 3)', configurable: true });
+
+    const plugin = new WebXRPlugin();
+    try {
+      const viewer = makeStubViewer();
+      plugin.onModelLoaded(stubLoadResult, viewer as any);
+      await new Promise((r) => setTimeout(r, 50));
+
+      const arButton = Array.from(document.querySelectorAll('button'))
+        .find((button) => button.textContent === '进入 AR');
+      const vrButton = Array.from(document.querySelectorAll('button'))
+        .find((button) => button.textContent === '进入 VR');
+      expect(arButton).toBeTruthy();
+      expect(vrButton).toBeTruthy();
+
+      const access = plugin as unknown as {
+        createInfoPanel(mode: 'ar'): Mesh;
+        infoPanel: Mesh;
+        sessionMode: 'ar';
+      };
+      const panel = access.createInfoPanel('ar');
+      access.infoPanel = panel;
+      access.sessionMode = 'ar';
+      const map = (panel.material as MeshBasicMaterial).map!;
+      const version = map.version;
+
+      await setLocale('en-US');
+      expect(arButton?.textContent).toBe('ENTER AR');
+      expect(vrButton?.textContent).toBe('ENTER VR');
+      expect(map.version).toBeGreaterThan(version);
+    } finally {
+      plugin.dispose();
+      Object.defineProperty(navigator, 'userAgent', { value: origUA, configurable: true });
+      await setLocale('zh-CN');
+    }
   });
 
   test('creates VR button when VR is supported on headset browser', async () => {

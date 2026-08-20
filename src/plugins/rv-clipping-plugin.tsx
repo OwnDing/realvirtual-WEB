@@ -155,8 +155,10 @@ import { useSyncExternalStore, useCallback } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import { ContentCut } from '@mui/icons-material';
 import { useViewer } from '../hooks/use-viewer';
+import { useRvTranslation } from '../core/i18n';
 
 function ClipButton(_props: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeClipping, getClippingSnapshot);
   const plugin = viewer.getPlugin('clipping') as ClippingPlugin | undefined;
@@ -166,7 +168,7 @@ function ClipButton(_props: UISlotProps) {
   }, [plugin]);
 
   return (
-    <Tooltip title="Section / Clip" placement="right">
+    <Tooltip title={t('clip.title')} placement="right">
       <IconButton
         size="small"
         onClick={handleClick}

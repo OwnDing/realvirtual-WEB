@@ -339,6 +339,14 @@ export const enUS = {
     connectUpdate: {
       download: '{{versions}} - download',
     },
+    login: {
+      username: 'Username',
+      password: 'Password',
+      invalidCredentials: 'Invalid username or password',
+      signIn: 'Sign In',
+      loadDifferentModel: 'Load a different model',
+      poweredBy: 'powered by realvirtual WEB',
+    },
     confirm: {
       cancel: 'Cancel',
     },

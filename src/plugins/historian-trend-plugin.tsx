@@ -11,6 +11,7 @@ import { NavButton } from '../core/hmi/NavButton';
 import { HistorianTrendPanel } from '../core/hmi/HistorianTrendPanel';
 import { historianStore, type HistorianStatus } from '../core/hmi/historian-store';
 import { getConnectSnapshot, subscribeConnectStore } from '../core/hmi/connect-store';
+import { useRvTranslation } from '../core/i18n';
 
 const STATUS_POLL_MS = 10_000;
 
@@ -28,6 +29,7 @@ export class HistorianTrendPlugin implements RVViewerPlugin {
 }
 
 function HistorianTrendButton(_props: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const connect = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot, getConnectSnapshot);
   const historian = useSyncExternalStore(
     historianStore.subscribe,
@@ -58,7 +60,7 @@ function HistorianTrendButton(_props: UISlotProps) {
       {allowed && (
         <NavButton
           icon={<Timeline />}
-          label="Historian"
+          label={t('historian.nav')}
           active={open}
           onClick={() => historianStore.setPanelOpen(!open)}
         />

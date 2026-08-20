@@ -30,6 +30,7 @@ import type { LoadResult } from '../core/engine/rv-scene-loader';
 import { getAppConfig } from '../core/rv-app-config';
 import { RVAssetBlobCache } from '../core/engine/rv-asset-blob-cache';
 import type { SplatRaycastHit } from './layout-planner/gaussian-splat-plugin-type';
+import { rvT } from '../core/i18n';
 
 /**
  * Shared blob cache for Gaussian Splats / Point Clouds.
@@ -74,10 +75,12 @@ function showDomOverlay(message: string): void {
       <div style="width:22px;height:22px;border:3px solid rgba(255,255,255,0.2);
                   border-top-color:#fff;border-radius:50%;
                   animation:rv-splat-spin 0.8s linear infinite;"></div>
-      <span class="rv-splat-overlay-label">${message}</span>
+      <span class="rv-splat-overlay-label"></span>
     </div>
     <style>@keyframes rv-splat-spin{to{transform:rotate(360deg)}}</style>
   `;
+  const label = el.querySelector('.rv-splat-overlay-label');
+  if (label) label.textContent = message;
   document.body.appendChild(el);
   _domOverlay = el;
 }
@@ -360,11 +363,13 @@ export class GaussianSplatPlugin implements RVViewerPlugin {
     const ext = (fileExt ?? fileName.split('.').pop() ?? '').toLowerCase();
     const isPC = ext === 'pcd' || (ext === 'ply' && this._config?.mode === 'pointcloud');
     showDomOverlay(
-      isPC ? `Loading point cloud (${fileName})…` : `Loading gaussian splat (${fileName})…`,
+      isPC
+        ? rvT('operator', 'loading.pointCloud', { file: fileName })
+        : rvT('operator', 'loading.gaussianSplat', { file: fileName }),
     );
 
     this._loading = true;
-    this._loadedInfo = 'Loading gaussian splat...';
+    this._loadedInfo = rvT('operator', 'loading.gaussianSplatShort');
     this._notifyState();
 
     // Yield two animation frames so the browser paints our overlay before
@@ -437,7 +442,9 @@ export class GaussianSplatPlugin implements RVViewerPlugin {
     this._instances.push(instance);
 
     this._loading = false;
-    this._loadedInfo = isPointCloud ? 'Point cloud loaded' : 'Gaussian splat loaded';
+    this._loadedInfo = isPointCloud
+      ? rvT('operator', 'loading.pointCloudLoaded')
+      : rvT('operator', 'loading.gaussianSplatLoaded');
     this._notifyState();
     this._viewer.markRenderDirty();
     hideDomOverlay();
@@ -728,7 +735,7 @@ export class GaussianSplatPlugin implements RVViewerPlugin {
     container.add(pointCloud);
 
     const count = geometry.attributes.position.count;
-    this._loadedInfo = `${(count / 1000).toFixed(0)}K points`;
+    this._loadedInfo = rvT('operator', 'loading.pointCount', { count: (count / 1000).toFixed(0) });
     console.log(`[gaussian-splat] Point cloud loaded: ${count.toLocaleString()} points`);
 
     return pointCloud;

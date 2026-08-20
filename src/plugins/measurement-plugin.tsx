@@ -77,8 +77,10 @@ import { Straighten } from '@mui/icons-material';
 import { useViewer } from '../hooks/use-viewer';
 import { useMobileLayout } from '../hooks/use-mobile-layout';
 import type { RVViewer as RVViewerType } from '../core/rv-viewer';
+import { useRvTranslation } from '../core/i18n';
 
 function MeasureButton({ viewer: _v }: { viewer: RVViewerType }) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeMeasurements, getMeasurementSnapshot);
   const plugin = viewer.getPlugin('measurements') as MeasurementPlugin | undefined;
@@ -99,7 +101,7 @@ function MeasureButton({ viewer: _v }: { viewer: RVViewerType }) {
   }, [plugin, viewer, isMobile]);
 
   return (
-    <Tooltip title="Measure distance" placement="right">
+    <Tooltip title={t('measure.tooltip')} placement="right">
       <IconButton
         size="small"
         onClick={handleClick}

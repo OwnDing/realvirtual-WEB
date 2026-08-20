@@ -21,6 +21,7 @@ import { NavButton } from '../core/hmi/NavButton';
 import type { PdfLink } from '../core/hmi/pdf-viewer-store';
 import { activateContext, deactivateContext } from '../core/hmi/ui-context-store';
 import { withInfoOverlay } from '../core/hmi/info-overlay-store';
+import { useRvTranslation } from '../core/i18n';
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ function findDocAncestor(node: Object3D): Object3D | null {
 // ─── Button ─────────────────────────────────────────────────────────────
 
 function DocsButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const [active, setActive] = useState(false);
   const [count, setCount] = useState(0);
   const overrideRef = useRef<((node: Object3D) => Object3D | null) | null>(null);
@@ -120,10 +122,10 @@ function DocsButton({ viewer }: UISlotProps) {
       deactivate();
       return;
     }
-    withInfoOverlay('Entering document mode…', () => {
+    withInfoOverlay(t('doc.entering'), () => {
       activate();
     });
-  }, [active, deactivate, activate]);
+  }, [active, deactivate, activate, t]);
 
   useEffect(() => {
     return () => { deactivate(); };
@@ -134,7 +136,7 @@ function DocsButton({ viewer }: UISlotProps) {
   return (
     <NavButton
       icon={<PictureAsPdf />}
-      label="Documents"
+      label={t('doc.documents')}
       badge={count || undefined}
       active={active}
       onClick={handleClick}

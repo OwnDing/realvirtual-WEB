@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 23,
-    "a11y-name": 1,
+    "react-copy": 0,
+    "a11y-name": 0,
     "plugin-registry": 62,
-    "dynamic-text": 16,
-    "canvas-texture": 2,
+    "dynamic-text": 14,
+    "canvas-texture": 0,
     "pre-boot": 16,
-    "dom-text": 9,
+    "dom-text": 0,
     "ui-state-text": 0
   },
-  "total": 129,
-  "fileCount": 46,
+  "total": 92,
+  "fileCount": 30,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -85,9 +85,6 @@
     "src/core/sdk/rv-des-lint.ts": {
       "dynamic-text": 4
     },
-    "src/embed/rv-embed-element.ts": {
-      "dom-text": 1
-    },
     "src/main.ts": {
       "plugin-registry": 5,
       "dynamic-text": 1,
@@ -96,31 +93,8 @@
     "src/plugins/annotation-plugin.ts": {
       "plugin-registry": 1
     },
-    "src/plugins/collision-alert-plugin.tsx": {
-      "react-copy": 1,
-      "dynamic-text": 1
-    },
-    "src/plugins/docs-browser-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/fpv-plugin.tsx": {
-      "dom-text": 1
-    },
-    "src/plugins/gaussian-splat-plugin.tsx": {
-      "dom-text": 1
-    },
-    "src/plugins/historian-trend-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/kiosk-plugin.tsx": {
-      "react-copy": 5,
-      "a11y-name": 1
-    },
     "src/plugins/kiosk-tour-api.ts": {
       "plugin-registry": 1
-    },
-    "src/plugins/login-gate-plugin.tsx": {
-      "react-copy": 5
     },
     "src/plugins/mcp-bridge/rv-mcp-editor-tools.ts": {
       "plugin-registry": 1,
@@ -132,37 +106,11 @@
     "src/plugins/mcp-bridge/rv-object-analyzer-math.ts": {
       "plugin-registry": 4
     },
-    "src/plugins/measurement-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/opener-message-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/pipe-coloring-plugin.tsx": {
-      "react-copy": 2
-    },
-    "src/plugins/processing-unit-mode-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/rv-clipping-plugin.tsx": {
-      "react-copy": 1
-    },
     "src/plugins/snap-point/index.ts": {
       "plugin-registry": 1
     },
-    "src/plugins/tank-fill-history-plugin.tsx": {
-      "react-copy": 3,
-      "dynamic-text": 1
-    },
     "src/plugins/web-component-plugin.ts": {
       "plugin-registry": 2
-    },
-    "src/plugins/web-sensor-plugin.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/webxr-plugin.ts": {
-      "canvas-texture": 2,
-      "dom-text": 6
     }
   }
 }

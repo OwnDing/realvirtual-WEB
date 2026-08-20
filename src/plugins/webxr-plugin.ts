@@ -41,6 +41,7 @@ import type { LoadResult } from '../core/engine/rv-scene-loader';
 import { RVXRManager, type XRSupport } from '../core/engine/rv-xr-manager';
 import { disposeSubtree } from '../core/engine/rv-traverse-utils';
 import { tooltipStore } from '../core/hmi/tooltip/tooltip-store';
+import { onLocaleChange, rvT } from '../core/i18n';
 
 const DEAD_ZONE = 0.15;
 const SNAP_DEAD_ZONE = 0.5;
@@ -81,6 +82,8 @@ export class WebXRPlugin implements RVViewerPlugin {
 
   private vrButton: HTMLElement | null = null;
   private arButton: HTMLElement | null = null;
+  private exitArButton: HTMLButtonElement | null = null;
+  private localeOff: (() => void) | null = null;
   private viewer: RVViewer | null = null;
   /** Cached WebGLRenderer cast — only set when XR is supported (not WebGPU). */
   private glRenderer: WebGLRenderer | null = null;
@@ -218,6 +221,7 @@ export class WebXRPlugin implements RVViewerPlugin {
     }
     const glRenderer = viewer.renderer as unknown as WebGLRenderer;
     this.glRenderer = glRenderer;
+    this.localeOff ??= onLocaleChange(() => this.refreshLocalizedSurfaces());
 
     // Create camera rig (dolly group for locomotion)
     this.dolly = new Group();
@@ -273,13 +277,20 @@ export class WebXRPlugin implements RVViewerPlugin {
         boxShadow: '0 4px 20px rgba(79, 195, 247, 0.3)',
       });
       this.vrButton = button;
+      this.refreshLocalizedSurfaces();
       document.body.appendChild(button);
+      // VRButton performs its own async support probe and writes its English
+      // label after createButton() returns. Resolve a later probe before
+      // applying our initial locale so that upstream's late write cannot win.
+      void navigator.xr?.isSessionSupported('immersive-vr').then(() => {
+        if (this.vrButton === button) this.refreshLocalizedSurfaces();
+      }).catch(() => { /* RVXRManager already owns support diagnostics */ });
     }
 
     // AR button (headset only — e.g. Quest passthrough)
     if (this.arSupported) {
       const arBtn = document.createElement('button');
-      arBtn.textContent = 'ENTER AR';
+      arBtn.textContent = rvT('operator', 'xr.enterAr');
       Object.assign(arBtn.style, {
         ...buttonStyle,
         left: this.vrSupported ? 'calc(50% + 90px)' : '50%',
@@ -380,7 +391,20 @@ export class WebXRPlugin implements RVViewerPlugin {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 380;
+    this.drawInfoPanelCanvas(canvas, mode);
+
+    const texture = new CanvasTexture(canvas);
+    const geo = new PlaneGeometry(0.8, 0.6);
+    const mat = new MeshBasicMaterial({ map: texture, transparent: true, side: DoubleSide, depthTest: false });
+    const mesh = new Mesh(geo, mat);
+    mesh.renderOrder = 9999;
+    return mesh;
+  }
+
+  /** Draw localized controller instructions into an existing CanvasTexture source. */
+  private drawInfoPanelCanvas(canvas: HTMLCanvasElement, mode: SessionMode): void {
     const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = 'rgba(18, 18, 18, 0.92)';
     roundRect(ctx, 0, 0, 512, 380, 16);
@@ -396,18 +420,24 @@ export class WebXRPlugin implements RVViewerPlugin {
     ctx.fillStyle = accent;
     ctx.font = 'bold 28px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(mode === 'ar' ? 'AR Navigation' : 'VR Navigation', 256, 48);
+    ctx.fillText(
+      mode === 'ar'
+        ? rvT('operator', 'xr.arNavigation')
+        : rvT('operator', 'xr.vrNavigation'),
+      256,
+      48,
+    );
 
     ctx.textAlign = 'left';
     const lines: [string, string][] = mode === 'ar' ? [
-      ['L stick', 'Walk (follows head direction)'],
-      ['R stick X', 'Turn left / right'],
-      ['R stick Y', 'Scale model up / down'],
-      ['Trigger', 'Hold to aim, release to teleport'],
+      ['L stick', rvT('operator', 'xr.walk')],
+      ['R stick X', rvT('operator', 'xr.turn')],
+      ['R stick Y', rvT('operator', 'xr.scale')],
+      ['Trigger', rvT('operator', 'xr.aimTeleport')],
     ] : [
-      ['L stick', 'Walk (follows head direction)'],
-      ['R stick', 'Turn left / right'],
-      ['Trigger', 'Hold to aim arc, release to jump'],
+      ['L stick', rvT('operator', 'xr.walk')],
+      ['R stick', rvT('operator', 'xr.turn')],
+      ['Trigger', rvT('operator', 'xr.aimJump')],
       ['', ''],
     ];
 
@@ -426,25 +456,41 @@ export class WebXRPlugin implements RVViewerPlugin {
     ctx.fillStyle = accent;
     ctx.font = 'bold 20px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Press any trigger to start', 256, 345);
+    ctx.fillText(rvT('operator', 'xr.triggerToStart'), 256, 345);
+  }
 
-    const texture = new CanvasTexture(canvas);
-    const geo = new PlaneGeometry(0.8, 0.6);
-    const mat = new MeshBasicMaterial({ map: texture, transparent: true, side: DoubleSide, depthTest: false });
-    const mesh = new Mesh(geo, mat);
-    mesh.renderOrder = 9999;
-    return mesh;
+  /** Keep imperative DOM and CanvasTexture surfaces in place across locale switches. */
+  private refreshLocalizedSurfaces(): void {
+    if (this.vrButton) {
+      this.vrButton.textContent = this.presenting && this.sessionMode === 'vr'
+        ? rvT('operator', 'xr.exitVr')
+        : rvT('operator', 'xr.enterVr');
+    }
+    if (this.arButton) this.arButton.textContent = rvT('operator', 'xr.enterAr');
+    if (this.exitArButton) this.exitArButton.textContent = rvT('operator', 'xr.exitAr');
+    if (this.instructionEl) this.instructionEl.textContent = rvT('operator', 'xr.pointAndPlace');
+    if (this.replaceBtn) this.replaceBtn.textContent = rvT('operator', 'xr.replace');
+    this.updatePlacementButton(this.placementMode);
+
+    if (this.infoPanel) {
+      const map = (this.infoPanel.material as MeshBasicMaterial).map;
+      const canvas = map?.image;
+      if (map && canvas instanceof HTMLCanvasElement) {
+        this.drawInfoPanelCanvas(canvas, this.sessionMode);
+        map.needsUpdate = true;
+      }
+    }
   }
 
   /** Called when any XR session starts (VR or AR). */
   private onSessionStart(): void {
     this.presenting = true;
-    if (!this.dolly || !this.modelBoundingBox || !this.viewer) return;
-
     // Detect session mode if not already set (VRButton sets it automatically)
     if (this.sessionMode === 'none') {
       this.sessionMode = 'vr';
     }
+    this.refreshLocalizedSurfaces();
+    if (!this.dolly || !this.modelBoundingBox || !this.viewer) return;
 
     const center = new Vector3();
     const size = new Vector3();
@@ -610,6 +656,7 @@ export class WebXRPlugin implements RVViewerPlugin {
 
     this.sessionMode = 'none';
     this.arScale = 1.0;
+    this.refreshLocalizedSurfaces();
   }
 
   /** Keep info panel in front of user, dismiss on trigger. */
@@ -1056,17 +1103,18 @@ export class WebXRPlugin implements RVViewerPlugin {
 
     // Exit AR button (top-left) — always visible
     const exitBtn = document.createElement('button');
-    exitBtn.textContent = 'Exit AR';
+    exitBtn.textContent = rvT('operator', 'xr.exitAr');
     exitBtn.style.cssText = `${btnStyle}position:fixed;top:16px;left:16px;z-index:10001;`
       + 'padding:10px 20px;font-size:14px;background:rgba(239,83,80,0.85);color:#fff;';
     exitBtn.addEventListener('click', () => {
       this.glRenderer?.xr.getSession()?.end();
     });
     overlay.appendChild(exitBtn);
+    this.exitArButton = exitBtn;
 
     // Instruction text (shown during hit-test mode)
     this.instructionEl = document.createElement('div');
-    this.instructionEl.textContent = 'Point at a surface \u00b7 Tap to place';
+    this.instructionEl.textContent = rvT('operator', 'xr.pointAndPlace');
     this.instructionEl.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);'
       + 'z-index:10001;padding:12px 24px;border-radius:16px;background:rgba(0,0,0,0.7);'
       + 'color:#81c784;font:bold 15px system-ui,sans-serif;white-space:nowrap;pointer-events:none;';
@@ -1107,7 +1155,7 @@ export class WebXRPlugin implements RVViewerPlugin {
 
     // Re-place button (top-right) — hidden until model is placed
     this.replaceBtn = document.createElement('button');
-    this.replaceBtn.textContent = '\u21BB Re-place';
+    this.replaceBtn.textContent = rvT('operator', 'xr.replace');
     this.replaceBtn.style.cssText = `${btnStyle}position:fixed;top:16px;right:16px;z-index:10001;`
       + 'padding:10px 18px;font-size:13px;background:rgba(129,199,132,0.85);color:#000;display:none;';
     this.replaceBtn.addEventListener('click', () => this.reenterHitTest());
@@ -1248,7 +1296,9 @@ export class WebXRPlugin implements RVViewerPlugin {
 
   private updatePlacementButton(active: boolean): void {
     if (!this.placementBtn) return;
-    this.placementBtn.textContent = active ? 'Done' : 'Place';
+    this.placementBtn.textContent = active
+      ? rvT('operator', 'xr.done')
+      : rvT('operator', 'xr.place');
     this.placementBtn.style.background = active
       ? 'rgba(79, 195, 247, 0.9)' : 'rgba(129, 199, 132, 0.9)';
     this.placementBtn.style.color = '#000';
@@ -1282,6 +1332,7 @@ export class WebXRPlugin implements RVViewerPlugin {
       this.arStyleEl = null;
     }
     this.placementBtn = null;
+    this.exitArButton = null;
     this.scaleBadge = null;
     this.replaceBtn = null;
     this.instructionEl = null;
@@ -1403,6 +1454,8 @@ export class WebXRPlugin implements RVViewerPlugin {
     // Release any held simulation pause — plugin teardown must never leave
     // the simulation frozen for the next model/plugin instance.
     this.viewer?.setSimulationPaused('ar-placement', false);
+    this.localeOff?.();
+    this.localeOff = null;
 
     if (this.vrButton) { this.vrButton.remove(); this.vrButton = null; }
     if (this.arButton) { this.arButton.remove(); this.arButton = null; }

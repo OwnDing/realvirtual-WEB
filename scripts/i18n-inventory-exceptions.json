@@ -132,6 +132,36 @@
       "category": "dom-text",
       "match": "font-size:15px;font-weight:bold",
       "reason": "A developer benchmark overlay: PASS/FAIL, FPS min/avg/max, frame time, triangle and draw-call counts. It is engineering telemetry printed for whoever is running the perf harness, not product UI — the labels are the metric names a profiler uses, and translating them would make a benchmark result harder to compare against any other tool's output."
+    },
+    {
+      "file": "src/embed/rv-embed-element.ts",
+      "category": "dom-text",
+      "match": ":host { display",
+      "reason": "CSS text inside the embed element's style tag. It controls host layout and contains no user-facing copy."
+    },
+    {
+      "file": "src/plugins/opener-message-plugin.tsx",
+      "category": "react-copy",
+      "match": "&mdash;",
+      "reason": "A typographic em dash between the model-provided highlight label and description. Both sides are deployment data; the separator is punctuation, not copy."
+    },
+    {
+      "file": "src/plugins/webxr-plugin.ts",
+      "category": "dom-text",
+      "match": "#react-root > * > *",
+      "reason": "CSS selectors and declarations injected for the mobile AR DOM overlay. They control HMI visibility and contain no user-facing copy."
+    },
+    {
+      "file": "src/plugins/fpv-plugin.tsx",
+      "category": "dom-text",
+      "match": "<div style=\"text-align: center; max-width: 400px;\">",
+      "reason": "Markup skeleton for the imperative FPV overlay. Every visible phrase inside it is supplied by rvT(operator:fpv.*); the remaining hardcoded tokens are control identifiers (WASD, Shift, F) and punctuation."
+    },
+    {
+      "file": "src/plugins/gaussian-splat-plugin.tsx",
+      "category": "dom-text",
+      "match": "<div style=\"display:flex;align-items:center;gap:14px",
+      "reason": "Copy-free markup and CSS for the blocking-load spinner. The label is assigned separately with textContent from rvT(operator:loading.*), which also avoids interpolating a filename into HTML."
     }
   ]
 }

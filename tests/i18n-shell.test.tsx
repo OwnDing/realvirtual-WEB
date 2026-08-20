@@ -38,6 +38,9 @@ import { SharedViewBanner } from '../src/core/hmi/SharedViewBanner';
 import { deriveLicensePresentation } from '../src/core/hmi/license-store';
 import type { LicenseStatus } from '../src/core/hmi/license-store';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
+import { LoginGatePlugin } from '../src/plugins/login-gate-plugin';
+import type { ComponentType } from 'react';
+import type { UISlotProps } from '../src/core/rv-ui-plugin';
 
 const shared = vi.hoisted(() => ({
   snap: { following: false, operatorName: '', onUnfollow: () => {} } as {
@@ -132,6 +135,36 @@ describe('an independent React root', () => {
     await act(async () => { root.unmount(); });
     host.remove();
   });
+
+  it('keeps the pre-load login gate reactive without translating deployment data', async () => {
+    const sessionKey = 'rv-i18n-login-gate-test';
+    localStorage.removeItem(sessionKey);
+    const plugin = new LoginGatePlugin({
+      title: 'ACME Line 7',
+      subtitle: 'Customer Preview',
+      userB64: btoa('operator'),
+      passB64: btoa('secret'),
+      sessionKey,
+      footer: 'ACME Confidential',
+      showModelPicker: false,
+    });
+    const Gate = plugin.slots[0].component as ComponentType<UISlotProps>;
+    const viewer = { availableModels: [], currentModelUrl: null, pendingModelUrl: null };
+
+    render(<Gate viewer={viewer as never} />);
+    expect(screen.getByLabelText('用户名')).toBeTruthy();
+    expect(screen.getByLabelText('密码')).toBeTruthy();
+    expect(screen.getByRole('button', { name: '登录' })).toBeTruthy();
+    expect(screen.getByText('ACME Line 7')).toBeTruthy();
+    expect(screen.getByText('ACME Confidential')).toBeTruthy();
+
+    await act(async () => { await setLocale('en-US'); });
+    expect(screen.getByLabelText('Username')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sign In' })).toBeTruthy();
+    expect(screen.getByText('ACME Line 7')).toBeTruthy();
+    expect(screen.getByText('ACME Confidential')).toBeTruthy();
+    localStorage.removeItem(sessionKey);
+  });
 });
 
 describe('the shell catalog', () => {
@@ -170,4 +203,3 @@ function flatten(node: Record<string, unknown>, prefix = ''): Record<string, str
   }
   return out;
 }
-

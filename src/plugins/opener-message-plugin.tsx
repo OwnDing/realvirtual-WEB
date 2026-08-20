@@ -40,6 +40,7 @@ import {
   useStartupModalRegistration,
 } from '../core/hmi/startup-modal-coordinator';
 import { getAppConfig } from '../core/rv-app-config';
+import { useRvTranslation } from '../core/i18n';
 
 /** One "what to try" bullet in the opener dialog. */
 export interface OpenerHighlight {
@@ -103,6 +104,7 @@ function isSuppressed(): boolean {
 
 /** The dialog itself — driven by the plugin's open-state store. */
 function OpenerMessageModal({ store, config }: { store: Store<boolean>; config: OpenerMessageConfig }) {
+  const { t } = useRvTranslation('operator');
   const open = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const enabled = useSyncExternalStore(_enabled.subscribe, _enabled.getSnapshot, _enabled.getSnapshot);
   const close = useCallback(() => store.set(() => false), [store]);
@@ -160,7 +162,7 @@ function OpenerMessageModal({ store, config }: { store: Store<boolean>; config: 
         {config.highlights && config.highlights.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
-              {config.highlightsTitle ?? 'Things to explore'}
+              {config.highlightsTitle ?? t('opener.highlights')}
             </Typography>
             <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
               {config.highlights.map((h) => (
@@ -186,7 +188,7 @@ function OpenerMessageModal({ store, config }: { store: Store<boolean>; config: 
             data-testid="opener-message-close"
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {config.buttonLabel ?? 'Start exploring'}
+            {config.buttonLabel ?? t('opener.start')}
           </Button>
         </Box>
       </Paper>

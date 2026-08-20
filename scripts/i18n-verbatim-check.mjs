@@ -245,6 +245,22 @@ export const MIGRATED_SOURCES = [
   'src/plugins/signal-bind/first-link-notice.ts',
   'src/plugins/signal-bind/plc-signal-context-menu.ts',
   'src/plugins/signal-bind/signal-bind-target.ts',
+  // Remaining plugin, loading and WebXR surfaces (Milestone 4b, batch 12)
+  'src/plugins/collision-alert-plugin.tsx',
+  'src/plugins/docs-browser-plugin.tsx',
+  'src/plugins/fpv-plugin.tsx',
+  'src/plugins/gaussian-splat-plugin.tsx',
+  'src/plugins/historian-trend-plugin.tsx',
+  'src/plugins/kiosk-plugin.tsx',
+  'src/plugins/login-gate-plugin.tsx',
+  'src/plugins/measurement-plugin.tsx',
+  'src/plugins/opener-message-plugin.tsx',
+  'src/plugins/pipe-coloring-plugin.tsx',
+  'src/plugins/processing-unit-mode-plugin.tsx',
+  'src/plugins/rv-clipping-plugin.tsx',
+  'src/plugins/tank-fill-history-plugin.tsx',
+  'src/plugins/web-sensor-plugin.tsx',
+  'src/plugins/webxr-plugin.ts',
 ];
 
 /**
@@ -331,6 +347,10 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['settings.visual.toneMapping.option.cineon', CAPITALISED_AT_RENDER],
   ['settings.visual.toneMapping.option.neutral', CAPITALISED_AT_RENDER],
   ['settings.visual.lighting.quality.medium', CAPITALISED_AT_RENDER],
+  ['operator.xr.pointAndPlace', 'The English wording is unchanged, but the source encoded the middle dot as the JavaScript escape `\\u00b7`; the catalog contains its decoded display character so translators see the punctuation users see.'],
+  ['operator.xr.replace', 'The English wording is unchanged, but the source encoded the leading circular arrow as the JavaScript escape `\\u21BB`; the catalog contains its decoded display character so translators see the glyph users see.'],
+  ['operator.xr.enterVr', 'This label was previously owned by Three.js VRButton inside the installed dependency, not by a tracked repository source. The plugin now overrides that upstream English label so it can switch languages in place.'],
+  ['operator.xr.exitVr', 'The session-active counterpart of operator.xr.enterVr; it was likewise generated inside Three.js VRButton and had no tracked repository source to move from.'],
 ]);
 
 function flatten(node, prefix = '') {

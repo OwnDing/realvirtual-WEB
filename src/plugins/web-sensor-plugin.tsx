@@ -23,6 +23,7 @@ import {
   saveGroupVisibilitySettings,
 } from '../core/hmi/group-visibility-store';
 import type { RVWebSensor } from '../core/engine/rv-web-sensor';
+import { useRvTranslation } from '../core/i18n';
 
 const FILTER_TYPE = 'WebSensor';
 
@@ -39,6 +40,7 @@ function setAllSensorLabelsVisible(viewer: RVViewer, visible: boolean): void {
 }
 
 function SensorToolButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   // Track local isolate state so the button reflects current mode.
   const [isolated, setIsolated] = useState(false);
 
@@ -83,7 +85,7 @@ function SensorToolButton({ viewer }: UISlotProps) {
   return (
     <NavButton
       icon={<Sensors />}
-      label="Isolate Sensors"
+      label={t('sensors.isolate')}
       active={isolated}
       onClick={handleClick}
     />

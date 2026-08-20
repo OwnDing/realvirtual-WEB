@@ -22,6 +22,7 @@ import type { UISlotEntry } from '../core/rv-ui-plugin';
 import { loadVisualSettings } from '../core/hmi/visual-settings-store';
 import { activateContext, deactivateContext } from '../core/hmi/ui-context-store';
 import type { WebXRPlugin } from './webxr-plugin';
+import { onLocaleChange, rvT } from '../core/i18n';
 
 // ─── Constants ──────────────────────────────────────────────────────────
 
@@ -150,6 +151,7 @@ export class FpvPlugin extends BaseViewerPlugin {
     this.sub(viewer.on('xr-session-start', () => {
       if (this._active) this.exit();
     }));
+    this.sub(onLocaleChange(() => this._renderOverlayCopy()));
   }
 
   override onModelCleared(viewer: RVViewer): void {
@@ -401,20 +403,7 @@ export class FpvPlugin extends BaseViewerPlugin {
       'font-family: sans-serif',
     ].join('; ');
 
-    this._overlay.innerHTML = `
-      <div style="text-align: center; max-width: 400px;">
-        <div style="font-size: 36px; margin-bottom: 16px;">&#127918;</div>
-        <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Click to Enter</div>
-        <div style="font-size: 16px; margin-bottom: 24px;">First-Person View</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 14px; color: rgba(255,255,255,0.8);">
-          <div><b>WASD</b> &mdash; Move</div>
-          <div><b>Right-drag</b> &mdash; Look</div>
-          <div><b>Shift</b> &mdash; Sprint</div>
-          <div><b>F</b> &mdash; Exit</div>
-        </div>
-        <div style="margin-top: 24px; font-size: 13px; color: rgba(255,255,255,0.5);">Click anywhere to start</div>
-      </div>
-    `;
+    this._renderOverlayCopy();
 
     this._overlayClickHandler = () => {
       this._removeOverlay();
@@ -423,6 +412,25 @@ export class FpvPlugin extends BaseViewerPlugin {
     this._overlay.addEventListener('click', this._overlayClickHandler);
 
     document.body.appendChild(this._overlay);
+  }
+
+  /** Rebuild the short-lived overlay so an open prompt follows locale changes. */
+  private _renderOverlayCopy(): void {
+    if (!this._overlay) return;
+    this._overlay.innerHTML = `
+      <div style="text-align: center; max-width: 400px;">
+        <div style="font-size: 36px; margin-bottom: 16px;">&#127918;</div>
+        <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">${rvT('operator', 'fpv.enter')}</div>
+        <div style="font-size: 16px; margin-bottom: 24px;">${rvT('operator', 'fpv.title')}</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 14px; color: rgba(255,255,255,0.8);">
+          <div><b>WASD</b> &mdash; ${rvT('operator', 'fpv.move')}</div>
+          <div><b>Right-drag</b> &mdash; ${rvT('operator', 'fpv.look')}</div>
+          <div><b>Shift</b> &mdash; ${rvT('operator', 'fpv.sprint')}</div>
+          <div><b>F</b> &mdash; ${rvT('operator', 'fpv.exit')}</div>
+        </div>
+        <div style="margin-top: 24px; font-size: 13px; color: rgba(255,255,255,0.5);">${rvT('operator', 'fpv.start')}</div>
+      </div>
+    `;
   }
 
   private _removeOverlay(): void {

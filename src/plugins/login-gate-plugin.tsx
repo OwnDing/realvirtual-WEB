@@ -31,6 +31,7 @@ import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
 import type { UISlotEntry, UISlotProps } from '../core/rv-ui-plugin';
 import { subscribeModelCatalog, getModelCatalogVersion } from '../core/rv-model-catalog';
+import { useRvTranslation } from '../core/i18n';
 
 export interface LoginGateConfig {
   /** Display title on the login dialog. */
@@ -87,6 +88,7 @@ function isAuthed(key: string): boolean {
 }
 
 function LoginGateOverlay({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('shell');
   const cfg = _config;
   if (!cfg) return null;
 
@@ -201,7 +203,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
         )}
 
         <TextField
-          label="Username"
+          label={t('login.username')}
           size="small"
           fullWidth
           autoFocus
@@ -211,7 +213,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
           sx={fieldSx}
         />
         <TextField
-          label="Password"
+          label={t('login.password')}
           type="password"
           size="small"
           fullWidth
@@ -223,7 +225,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
 
         {error && (
           <Typography sx={{ fontSize: 11, color: '#ef5350', fontWeight: 600 }}>
-            Invalid username or password
+            {t('login.invalidCredentials')}
           </Typography>
         )}
 
@@ -237,7 +239,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
             '&:hover': { bgcolor: `${accent}cc` },
           }}
         >
-          Sign In
+          {t('login.signIn')}
         </Button>
 
         {(cfg.showModelPicker ?? true) && otherModels.length > 0 && (
@@ -252,7 +254,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
                 '&:hover': { color: accent, bgcolor: 'transparent' },
               }}
             >
-              Load a different model
+              {t('login.loadDifferentModel')}
             </Button>
             <Menu
               anchorEl={pickerAnchor}
@@ -281,7 +283,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
         )}
 
         <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', mt: 1 }}>
-          {cfg.footer ?? 'powered by realvirtual WEB'}
+          {cfg.footer ?? t('login.poweredBy')}
         </Typography>
       </Paper>
     </Box>

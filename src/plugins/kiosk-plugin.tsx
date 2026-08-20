@@ -68,6 +68,7 @@ import { PartsChart } from './demo/PartsChart';
 import { CycleTimeChart } from './demo/CycleTimeChart';
 import { EnergyChart } from './demo/EnergyChart';
 import { createStore, type Store } from '../core/hmi/create-store';
+import { rvT, useRvTranslation } from '../core/i18n';
 
 // ─── Chart state store (module-level pub/sub) ───────────────────────────
 
@@ -302,7 +303,7 @@ export class KioskPlugin implements RVViewerPlugin {
     if (isContextActive('fpv') || isContextActive('maintenance')) {
       showInstruction({
         id: 'kiosk-conflict',
-        text: 'Cannot start demo while in another mode',
+        text: rvT('demo', 'kiosk.conflict'),
         anchor: { kind: 'edge', edge: 'bottom' },
         style: 'warning',
         autoClearAfterMs: 3000,
@@ -560,6 +561,7 @@ function deriveModelNameFromUrl(url: string | null): string | null {
 // ─── UI: DemoButton (left toolbar) ──────────────────────────────────────
 
 function DemoButton(_props: UISlotProps): ReactNode {
+  const { t } = useRvTranslation('demo');
   const snap = useSyncExternalStore(
     _globalSubscribe,
     () => _pluginInstance?.getSnapshot() ?? { hasTour: false, hasCurrentModelTour: false, isActive: false, tourName: null },
@@ -567,10 +569,10 @@ function DemoButton(_props: UISlotProps): ReactNode {
   // Toolbar demo button: only for the currently loaded model's tour
   if (!snap.hasCurrentModelTour) return null;
   return (
-    <Tooltip title={snap.isActive ? 'Stop demo' : 'Start demo'}>
+    <Tooltip title={snap.isActive ? t('kiosk.stop') : t('kiosk.start')}>
       <IconButton
         data-testid="demo-button"
-        aria-label={snap.isActive ? 'Stop demo' : 'Start demo'}
+        aria-label={snap.isActive ? t('kiosk.stop') : t('kiosk.start')}
         size="small"
         color={snap.isActive ? 'primary' : 'default'}
         onClick={() => (snap.isActive ? _pluginInstance?.stopKiosk() : _pluginInstance?.startKiosk())}
@@ -584,6 +586,7 @@ function DemoButton(_props: UISlotProps): ReactNode {
 // ─── UI: KioskChrome (overlay — exit chip + touch hint + aria-live + charts) ──
 
 const KioskChrome = memo(function KioskChrome(_props: UISlotProps): ReactNode {
+  const { t } = useRvTranslation('demo');
   const snap = useSyncExternalStore(
     _globalSubscribe,
     () => _pluginInstance?.getSnapshot() ?? { hasTour: false, hasCurrentModelTour: false, isActive: false, tourName: null },
@@ -626,14 +629,14 @@ const KioskChrome = memo(function KioskChrome(_props: UISlotProps): ReactNode {
             aria-live="polite"
             sx={{ position: 'fixed', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', width: '1px', height: '1px', overflow: 'hidden' }}
           >
-            Demo mode active
+            {t('kiosk.active')}
           </Box>
 
           {/* Exit chip — always clickable (zIndex 9999 > InstructionLayer 8600 > PDF 9000) */}
           <Chip
             data-kiosk-exit-chip
             data-testid="kiosk-exit-chip"
-            label="Exit Demo"
+            label={t('kiosk.exit')}
             icon={<CloseIcon />}
             color="default"
             onClick={() => _pluginInstance?.stopKiosk()}
@@ -674,7 +677,7 @@ const KioskChrome = memo(function KioskChrome(_props: UISlotProps): ReactNode {
             >
               <TouchAppIcon fontSize="small" />
               <Box component="span" sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                Touch to interact
+                {t('kiosk.touch')}
               </Box>
             </Box>
           )}

@@ -24,8 +24,9 @@ import type { RVViewer } from '../core/rv-viewer';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
 import { NavButton } from '../core/hmi/NavButton';
 import { BOTTOM_BAR_HEIGHT } from '../core/hmi/layout-constants';
-import { RESOURCE_COLORS } from './tank-fill-history-plugin';
+import { RESOURCE_COLORS, RESOURCE_LABEL_KEYS } from './tank-fill-history-plugin';
 import { ProcessIndustryPlugin } from './processindustry-plugin';
+import { useRvTranslation } from '../core/i18n';
 
 /** localStorage key for the toggle state (survives reload). Name kept from
  *  the original pipe-only version so existing user preferences don't reset. */
@@ -48,6 +49,7 @@ export function savePipeColoringEnabled(enabled: boolean): void {
 }
 
 function PipeColoringButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const [enabled, setEnabled] = useState(false);
 
   // On mount: sync the toggle and the plugin with the persisted preference.
@@ -68,7 +70,7 @@ function PipeColoringButton({ viewer }: UISlotProps) {
     <>
       <NavButton
         icon={<ColorLens />}
-        label={enabled ? 'Coloring: ON' : 'Coloring: OFF'}
+        label={enabled ? t('process.coloringOn') : t('process.coloringOff')}
         active={enabled}
         onClick={handleClick}
       />
@@ -82,6 +84,7 @@ function PipeColoringButton({ viewer }: UISlotProps) {
  *  at bottom-left just above the BottomBar, offset past the left button
  *  column so it doesn't obscure the nav. */
 function MediaLegend() {
+  const { t } = useRvTranslation('operator');
   const entries = Object.entries(RESOURCE_COLORS);
   return (
     <Paper
@@ -105,7 +108,7 @@ function MediaLegend() {
         fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase',
         color: 'rgba(255,255,255,0.45)', mb: 0.5,
       }}>
-        Media
+        {t('process.media')}
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
         {entries.map(([name, color]) => (
@@ -114,7 +117,9 @@ function MediaLegend() {
               width: 14, height: 3, borderRadius: 0.5, flexShrink: 0, bgcolor: color,
             }} />
             <Typography sx={{ fontSize: 11, color: '#fff', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-              {name}
+              {RESOURCE_LABEL_KEYS[name as keyof typeof RESOURCE_LABEL_KEYS]
+                ? t(RESOURCE_LABEL_KEYS[name as keyof typeof RESOURCE_LABEL_KEYS])
+                : name}
             </Typography>
           </Box>
         ))}

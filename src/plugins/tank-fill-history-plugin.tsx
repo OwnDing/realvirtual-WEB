@@ -35,6 +35,7 @@ import { NavButton } from '../core/hmi/NavButton';
 import { useEChart } from '../hooks/use-echart';
 import { DARK_AXIS_LABEL, DARK_AXIS_LINE, DARK_SPLIT_LINE, DARK_TEXT_STYLE, DARK_TOOLTIP_BASE } from '../core/hmi/chart-theme';
 import { ProcessIndustryPlugin } from './processindustry-plugin';
+import { useRvTranslation } from '../core/i18n';
 
 // ─── Config ─────────────────────────────────────────────────────────────
 
@@ -52,6 +53,16 @@ export const RESOURCE_COLORS: Record<string, string> = {
   'Wood Varnish':      '#A1887F', // dusty taupe
   'Recovered Solvent': '#4DB6AC', // dusty teal
 };
+/** Display-only localization map. Resource names remain stable model/palette keys. */
+export const RESOURCE_LABEL_KEYS = {
+  Xylene: 'process.resource.xylene',
+  MEK: 'process.resource.mek',
+  'Epoxy Resin': 'process.resource.epoxyResin',
+  'Pigment Paste': 'process.resource.pigmentPaste',
+  'Automotive Paint': 'process.resource.automotivePaint',
+  'Wood Varnish': 'process.resource.woodVarnish',
+  'Recovered Solvent': 'process.resource.recoveredSolvent',
+} as const;
 export const UNKNOWN_COLOR = '#90A4AE'; // blue-grey 400 — muted neutral
 
 export const SAMPLE_INTERVAL_MS = 1000;
@@ -137,13 +148,14 @@ export class TankFillHistoryPlugin implements RVViewerPlugin {
 // ─── Left-sidebar button ────────────────────────────────────────────────
 
 function TankFillHistoryButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('operator');
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <NavButton
         icon={<Timeline />}
-        label="Tank History"
+        label={t('process.tankHistory')}
         active={open}
         onClick={() => setOpen((o) => !o)}
       />
@@ -157,6 +169,7 @@ function TankFillHistoryButton({ viewer }: UISlotProps) {
 interface LiveReading { pct: number; liters: number; capacity: number; resource: string; color: string; }
 
 function TankFillHistoryPanel({ viewer, open, onClose }: { viewer: RVViewer; open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('operator');
   const plugin = useMemo(
     () => viewer.getPlugin<TankFillHistoryPlugin>('tank-fill-history') ?? null,
     [viewer],
@@ -197,7 +210,7 @@ function TankFillHistoryPanel({ viewer, open, onClose }: { viewer: RVViewer; ope
           pct: sample.pct,
           liters: sample.liters,
           capacity: tank.capacity,
-          resource: tank.resourceName || 'Unknown',
+          resource: tank.resourceName,
           color: pickColor(tank.resourceName),
         });
       }
@@ -329,9 +342,9 @@ function TankFillHistoryPanel({ viewer, open, onClose }: { viewer: RVViewer; ope
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Tank Fill History"
+      title={t('process.tankFillHistory')}
       titleColor="#4fc3f7"
-      subtitle={`Last ${HISTORY_WINDOW_S / 60} min · ${SAMPLE_INTERVAL_MS} ms`}
+      subtitle={t('process.historyWindow', { minutes: HISTORY_WINDOW_S / 60, interval: SAMPLE_INTERVAL_MS })}
       defaultWidth={DEFAULT_WIDTH}
       defaultHeight={DEFAULT_HEIGHT}
       defaultPosition={defaultPos}
@@ -340,7 +353,7 @@ function TankFillHistoryPanel({ viewer, open, onClose }: { viewer: RVViewer; ope
       {!hasTanks ? (
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-            No tanks in the current scene.
+            {t('process.noTanks')}
           </Typography>
         </Box>
       ) : (
@@ -384,7 +397,11 @@ function TankFillHistoryPanel({ viewer, open, onClose }: { viewer: RVViewer; ope
                       {tank.node.name}
                     </Typography>
                     <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', lineHeight: 1.2 }}>
-                      {r?.resource ?? '—'}
+                      {r
+                        ? (RESOURCE_LABEL_KEYS[r.resource as keyof typeof RESOURCE_LABEL_KEYS]
+                            ? t(RESOURCE_LABEL_KEYS[r.resource as keyof typeof RESOURCE_LABEL_KEYS])
+                            : r.resource || t('process.unknown'))
+                        : '—'}
                     </Typography>
                   </Box>
                   <Typography sx={{
