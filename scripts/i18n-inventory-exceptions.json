@@ -126,6 +126,12 @@
       "category": "react-copy",
       "match": "self.setField('Src','DESSource','InterArrivalTime', 3)",
       "reason": "A runnable line of the parameter script, shown in a <code> block as the example the user copies. Every token in it is API surface — the method name, the component type, the field name — so a translated version would be a script that throws. The sentence introducing it IS translated (sim:matrix.setterOnly)."
+    },
+    {
+      "file": "src/plugins/demo/perf-test-plugin.ts",
+      "category": "dom-text",
+      "match": "font-size:15px;font-weight:bold",
+      "reason": "A developer benchmark overlay: PASS/FAIL, FPS min/avg/max, frame time, triangle and draw-call counts. It is engineering telemetry printed for whoever is running the perf harness, not product UI — the labels are the metric names a profiler uses, and translating them would make a benchmark result harder to compare against any other tool's output."
     }
   ]
 }

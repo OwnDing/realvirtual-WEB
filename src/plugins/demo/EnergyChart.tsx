@@ -14,6 +14,7 @@ import { FloatingPanel } from '../../core/hmi/FloatingPanel';
 import { useKpiData } from '../../hooks/use-kpi-data';
 import { useEChart } from '../../hooks/use-echart';
 import { createBaseChartOption, DARK_TOOLTIP_BASE } from '../../core/hmi/chart-theme';
+import { useRvTranslation } from '../../core/i18n';
 
 const COMPONENTS = [
   { key: 'spindle', name: 'Spindle', color: '#ef4444' },
@@ -31,6 +32,7 @@ interface EnergyChartProps {
 }
 
 export function EnergyChart({ open, onClose }: EnergyChartProps) {
+  const { t } = useRvTranslation('demo');
   const kpi = useKpiData();
   const { containerRef: chartRef, chartInstance, isReady } = useEChart({ open });
 
@@ -58,7 +60,7 @@ export function EnergyChart({ open, onClose }: EnergyChartProps) {
       }));
 
       const base = createBaseChartOption({
-        title: 'Power Consumption \u2014 Last 24h',
+        title: t('chart.powerTitle'),
         legendData: COMPONENTS.map((c) => c.name),
         animate: true,
       });
@@ -113,9 +115,9 @@ export function EnergyChart({ open, onClose }: EnergyChartProps) {
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Power Consumption"
+      title={t('chart.powerName')}
       titleColor="#ef5350"
-      subtitle="Last 24h"
+      subtitle={t('chart.last24h')}
       defaultWidth={750}
       defaultHeight={360}
       zIndex={1400}

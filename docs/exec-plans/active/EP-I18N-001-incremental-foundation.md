@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 8 之后）：
+截至 2026-08-20（批次 9 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1959** 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）。
-- 受门禁债务 **370 处 / 84 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 203、`a11y-name` 23、`plugin-registry` 83、`dynamic-text` 31、`pre-boot` 16、`dom-text` 10、`ui-state-text` 2、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 12 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_444_400 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 73.8 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring`/`assets`/`sim` 移入独立 chunk，构建产物 65.4 KB；`zh-CN` 全量仍在入口）。**余量按每批 4–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0 → 73.8），剩余 370 处大约还要吃掉 20–30 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`demo`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **2068** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）、演示 HMI 与存储通知（KPI 条/消息卡片/机器人报警与 AI 助手/图表浮层/浏览器存储横幅/展台导览）。
+- 受门禁债务 **283 处 / 67 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 137、`plugin-registry` 68、其余为 `a11y-name`/`dynamic-text`/`pre-boot`/`dom-text`/`ui-state-text`/`canvas-texture`；建议项 `error-message` 311、`intl-format` 22。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_449_610 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 68.7 KB**（`ADR-0001` R1 已把 `en-US` 的 7 个非启动 namespace 移入独立 chunk，构建产物 70.7 KB；`zh-CN` 全量仍在入口）。**余量按每批 4–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0 → 73.8 → 68.7），剩余 283 处大约还要吃掉 15–25 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 370 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面；批次 7：资产生命周期；批次 8：离散事件仿真与物料流）。
+- [ ] Milestone 4b：按风险分批迁移其余 283 处受门禁文案（批次 1–9 见下方各节）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,19 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 9：演示 HMI、机器人报警与存储通知（2026-08-20）
+
+- **这一批由用户的实机截图发起**：其余界面已基本中文化，但顶部那条琥珀色横幅仍是英文。定位到 `src/core/storage/rv-opfs-blobs.ts` — 它是**非 React 模块**发出的通知，前八批都在动组件，所以它一直没被碰到。同一张截图里右侧那叠 HMI 卡片也是英文，来自 `src/plugins/demo/**`。批次范围就按截图上看得见的这两层划定。
+- 覆盖 17 个文件、87 处：KPI 条与消息卡片、四个图表浮层、驱动/传感器监视、机器人接触力报警与 AI 助手对话框、报警历史、浏览器存储横幅、展台导览。该面归零，全仓 370 → **283**；`demo` namespace 共 **102** 个 key。
+- **`SYST_320_SCENARIO` 是这一批最要紧的对象**：一条诊断、五条建议步骤、三条操作员手记，全都是模块加载时构建的散文，而它们正是用户点「ASK AI」后看到的全部内容。改成 getter，所有调用点（`alarm.title`、`alarm.diagnosis`、`alarm.recommendedSteps`…）一行不用改。
+- 同一对象里有**必须不动**的三类东西，都写进了用例：报警码 `SYST-320`；`searchTerms` / `excerptSearchTerms` — 它们是拿去检索**英文手册 PDF** 的，译过去就是在一份不含这些词的文档里搜索；以及手册标题 `FANUC CRX Cell Manual — …` — 查不到的引用比读不懂的引用更糟。
+- 厂商故障码同理：`F8060`、`MS2N`、`KA47-DRN90M4` 保留，紧挨着的故障描述是散文，翻译。
+- `OVERLAY_CATEGORIES` 一开始被我放进了 `demo` namespace，这是**放错了** —— 它是核心「显示」面板的固定目录，不是演示内容。已移到 `operator.groups.cat*`，与该面板其余的 key 待在一起。
+- `perf-test-plugin.ts` 的 DOM 覆盖层按例外登记：PASS/FAIL、FPS、三角面数、draw call —— 这是给跑性能基准的人看的工程遥测，不是产品界面，译了反而没法和别的工具对齐。
+- **非空洞门禁换了形状，不再是一个每批都要下调的数字。** 上批我把下限从 500 调到 300 时说过绝对下限是错的形状；这批 283 < 300 又撞上了。现在断言的是 `filesScanned > 500` —— 也就是「遍历确实发生了」。这句话在债务归零那天依然成立，而 finding 数下限到那天必须整个删掉，等于**代码库最干净的时候门禁最弱**。反例验证过：把遍历改成空列表，`expected 1 to be greater than 500` 立刻失败。
+- 逐字迁入检查补了第五个盲点：拼接片段可能是**双引号**的（`"…external " + 'contact force…'`，句子里有撇号时就会这么写），而空白匹配器的引号类只有 `'` 和 `` ` ``。已加上 `"`。
+- 3 个既有浏览器测试按 ADR pin `en-US`。**这次没有做「未 pin」普查**：上批已经记过它看不见带插值的值；这批我试着把阈值放宽到 8 字符并加上 `toBe(`/`toContain(`，结果是 249 条命中、几乎全是数据值而非界面文本。结论写在这里：那个普查只在「DOM 查询 API + 不含插值 + ≥10 字符」这个窄口径下有用，超出就变成噪音，完整套件才是权威。
 
 ### Milestone 4b 批次 8：离散事件仿真与物料流（2026-08-20）
 

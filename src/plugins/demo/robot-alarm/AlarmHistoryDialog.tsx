@@ -17,6 +17,7 @@ import {
 import { Close, PushPin, Add, History } from '@mui/icons-material';
 import type { AlarmScenario, AlarmNote } from './alarm-seed-data';
 import { loadNotes, addNote, notesArePersistable } from './alarm-notes-store';
+import { useRvTranslation } from '../../../core/i18n';
 
 /** localStorage key remembering the operator name across sessions (plan-253). */
 export const OPERATOR_NAME_KEY = 'rv-operator-name';
@@ -62,6 +63,7 @@ function NoteRow({ note }: { note: AlarmNote }) {
 }
 
 export function AlarmHistoryDialog({ alarm, open, onClose, onNotesChanged }: AlarmHistoryDialogProps) {
+  const { t } = useRvTranslation('demo');
   const [notes, setNotes] = useState<AlarmNote[]>([]);
   const [draft, setDraft] = useState('');
   const [author, setAuthor] = useState(() => loadOperatorName());
@@ -101,8 +103,8 @@ export function AlarmHistoryDialog({ alarm, open, onClose, onNotesChanged }: Ala
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 6 }}>
         <History sx={{ color: '#4fc3f7' }} />
-        <span>History — {alarm.code} ({notes.length} {notes.length === 1 ? 'note' : 'notes'})</span>
-        <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label="Close">
+        <span>{t('alarm.historyTitle', { code: alarm.code, count: notes.length })}</span>
+        <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label={t('alarm.close')}>
           <Close />
         </IconButton>
       </DialogTitle>
@@ -114,7 +116,7 @@ export function AlarmHistoryDialog({ alarm, open, onClose, onNotesChanged }: Ala
         <TextField
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          placeholder="Your name"
+          placeholder={t('alarm.yourName')}
           size="small"
           disabled={!persistable || saving}
           sx={{ mb: 1, maxWidth: 220 }}
@@ -123,14 +125,14 @@ export function AlarmHistoryDialog({ alarm, open, onClose, onNotesChanged }: Ala
           <TextField
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={persistable ? 'Add your own note…' : 'Kiosk mode — not saved'}
+            placeholder={t(persistable ? 'alarm.addNote' : 'alarm.kioskNotSaved')}
             multiline
             minRows={1}
             maxRows={4}
             fullWidth
             size="small"
             disabled={!persistable || saving}
-            helperText={persistable ? undefined : 'Kiosk mode — notes are not saved.'}
+            helperText={persistable ? undefined : t('alarm.kioskHelper')}
           />
           <Button
             variant="contained"
@@ -139,12 +141,12 @@ export function AlarmHistoryDialog({ alarm, open, onClose, onNotesChanged }: Ala
             disabled={!persistable || saving || draft.trim().length === 0}
             sx={{ mt: 0.25, whiteSpace: 'nowrap' }}
           >
-            Add
+            {t('alarm.add')}
           </Button>
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('alarm.close')}</Button>
       </DialogActions>
     </Dialog>
   );

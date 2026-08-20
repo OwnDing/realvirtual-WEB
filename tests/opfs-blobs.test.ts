@@ -22,7 +22,7 @@
  *  - `getBlobUrl` hands over a `ResolvedBlob` whose `revokeUrl()` is idempotent
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import {
   BLOB_ROOT,
   blobStoreSize,
@@ -42,6 +42,12 @@ import {
   _resetBlobStoreForTests,
   type BlobStoreNotice,
 } from '../src/core/storage/rv-opfs-blobs';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 

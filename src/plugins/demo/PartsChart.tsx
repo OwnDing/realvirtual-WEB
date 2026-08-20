@@ -15,6 +15,7 @@ import { useKpiData } from '../../hooks/use-kpi-data';
 import { movingAverage } from '../../core/hmi/kpi-utils';
 import { useEChart } from '../../hooks/use-echart';
 import { createBaseChartOption } from '../../core/hmi/chart-theme';
+import { useRvTranslation } from '../../core/i18n';
 
 interface PartsChartProps {
   open: boolean;
@@ -29,6 +30,7 @@ function barColor(value: number, target: number): string {
 }
 
 export function PartsChart({ open, onClose }: PartsChartProps) {
+  const { t } = useRvTranslation('demo');
   const kpi = useKpiData();
   const { containerRef: chartRef, chartInstance, isReady } = useEChart({ open });
 
@@ -44,7 +46,7 @@ export function PartsChart({ open, onClose }: PartsChartProps) {
       const ma = movingAverage(values, 3);
 
       const base = createBaseChartOption({
-        title: 'Parts per Hour \u2014 Last 24h',
+        title: t('chart.partsTitle'),
         legendData: ['Parts/h', '3h Average'],
         grid: { left: 45, right: 12, top: 24, bottom: 42 },
         animate: true,
@@ -99,9 +101,9 @@ export function PartsChart({ open, onClose }: PartsChartProps) {
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Parts per Hour"
+      title={t('chart.partsName')}
       titleColor="#4fc3f7"
-      subtitle="Last 24h"
+      subtitle={t('chart.last24h')}
       defaultWidth={700}
       defaultHeight={340}
       zIndex={1400}

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { rvT } from '../i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -165,7 +166,7 @@ function degrade(reason: string, cause?: unknown): void {
   notify(
     {
       kind: 'no-opfs',
-      message: `Authored assets cannot be stored in this browser (${reason}). Scenes are still saved; imported models and thumbnails are not.`,
+      message: rvT('demo', 'notice.noOpfs', { reason }),
       cause,
     },
     { replay: true },
@@ -220,8 +221,7 @@ export async function requestPersistence(): Promise<boolean> {
       notify(
         {
           kind: 'not-persisted',
-          message:
-            'This browser did not grant persistent storage. Saved scenes and imported models remain available, but may be cleared when the device runs low on space.',
+          message: rvT('demo', 'notice.notPersisted'),
         },
         { replay: true },
       );
@@ -230,7 +230,7 @@ export async function requestPersistence(): Promise<boolean> {
   } catch (e) {
     // An exception here means "no answer", not "refused" — do not claim either.
     _status = { ..._status, persisted: null };
-    notify({ kind: 'not-persisted', message: 'Persistent storage could not be requested.', cause: e });
+    notify({ kind: 'not-persisted', message: rvT('demo', 'notice.persistFailed'), cause: e });
     return false;
   }
 }
@@ -296,7 +296,7 @@ export async function putBlob(sha256: string, blob: Blob): Promise<void> {
     }
   } catch (e) {
     notify(
-      { kind: 'write-failed', message: 'An imported asset could not be stored.', cause: e },
+      { kind: 'write-failed', message: rvT('demo', 'notice.writeFailed'), cause: e },
       { once: false },
     );
     throw e;

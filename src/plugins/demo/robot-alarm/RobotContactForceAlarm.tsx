@@ -22,6 +22,7 @@ import { SYST_320_SCENARIO } from './alarm-seed-data';
 import { loadNotes } from './alarm-notes-store';
 import { AskAiDialog } from './AskAiDialog';
 import { AlarmHistoryDialog } from './AlarmHistoryDialog';
+import { useRvTranslation } from '../../../core/i18n';
 
 /**
  * Frame the robot in 3D and flash it red for a few seconds. Delegates to the
@@ -33,6 +34,7 @@ function pulseRobotAlarm(viewer: UISlotProps['viewer'], path: string): void {
 }
 
 export function RobotContactForceAlarm({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const alarm = SYST_320_SCENARIO;
   const [askOpen, setAskOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -73,7 +75,7 @@ export function RobotContactForceAlarm({ viewer }: UISlotProps) {
         onClick={openManual}
         style={{ color: '#4fc3f7', textDecoration: 'underline', cursor: 'pointer' }}
       >
-        see manual
+        {t('alarm.seeManual')}
       </a>
     </>
   );
@@ -97,12 +99,12 @@ export function RobotContactForceAlarm({ viewer }: UISlotProps) {
               disabled={askOpen}
               onClick={(e) => { e.stopPropagation(); setAskOpen(true); }}
             >
-              Ask AI
+              {t('alarm.askAi')}
             </Button>
             <span style={{ flex: 1 }} />
             <IconButton
               size="small"
-              aria-label="View alarm history"
+              aria-label={t('alarm.viewHistory')}
               onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
             >
               <Badge badgeContent={noteCount} color="primary">

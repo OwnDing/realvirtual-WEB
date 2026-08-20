@@ -446,7 +446,7 @@ export function GroupsListContent({
                   }}
                 >
                   <ListItemText
-                    primary={cat.label}
+                    primary={t(cat.labelKey)}
                     primaryTypographyProps={{
                       variant: 'body2', noWrap: true,
                       sx: { cursor: 'default', userSelect: 'none', fontSize: 13 },
@@ -456,7 +456,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={() => handleOverlayToggle(cat.id, !visible)}
-                    title={t(visible ? 'groups.hideNamed' : 'groups.showNamed', { name: cat.label })}
+                    title={t(visible ? 'groups.hideNamed' : 'groups.showNamed', { name: t(cat.labelKey) })}
                     sx={{
                       p: 0.3,
                       color: visible ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)',

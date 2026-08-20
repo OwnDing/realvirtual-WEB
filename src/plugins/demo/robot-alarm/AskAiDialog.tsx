@@ -24,6 +24,7 @@ import { openPdfViewer } from '../../../core/hmi/pdf-viewer-store';
 import type { AlarmScenario, AlarmNote, AlarmDocRef } from './alarm-seed-data';
 import { loadNotes } from './alarm-notes-store';
 import { getAlarmAssistantProvider, type AssistantResult } from './alarm-assistant-provider';
+import { useRvTranslation } from '../../../core/i18n';
 
 export interface AskAiDialogProps {
   alarm: AlarmScenario;
@@ -81,6 +82,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialogProps) {
+  const { t } = useRvTranslation('demo');
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AssistantResult | null>(null);
   const [error, setError] = useState('');
@@ -167,8 +169,8 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 6 }}>
         <AutoAwesome sx={{ color: '#ce93d8' }} />
-        <span>AI Assistant · Alarm {alarm.code}</span>
-        <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label="Close">
+        <span>{t('alarm.aiTitle', { code: alarm.code })}</span>
+        <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label={t('alarm.close')}>
           <Close />
         </IconButton>
       </DialogTitle>
@@ -178,27 +180,27 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 3 }}>
             <CircularProgress size={22} />
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Analyzing alarm {alarm.code}… reading the FANUC CRX manual and {alarm.seedNotes.length} operator notes.
+              {t('alarm.analyzing', { code: alarm.code, count: alarm.seedNotes.length })}
             </Typography>
           </Box>
         )}
 
         {error && (
           <Typography variant="body2" sx={{ color: '#f44336', py: 2 }}>
-            Analysis failed: {error}
+            {t('alarm.analysisFailed', { error })}
           </Typography>
         )}
 
         {result && !error && (
           <Box>
             {diagnosisShown && (
-              <Section title="Diagnosis">
+              <Section title={t('alarm.diagnosis')}>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>{result.diagnosis}</Typography>
               </Section>
             )}
 
             {stepsShownUpTo > 0 && (
-              <Section title="Recommended steps">
+              <Section title={t('alarm.recommendedSteps')}>
                 <Box component="ol" sx={{ pl: 2.5, m: 0 }}>
                   {result.steps.slice(0, Math.max(0, stepsShownUpTo)).map((s, i) => (
                     <Typography component="li" variant="body2" key={i} sx={{ color: 'text.secondary', mb: 0.5 }}>
@@ -210,7 +212,7 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
             )}
 
             {result.excerpt && excerptShown && (
-              <Section title={`From the manual (p.${result.excerpt.page})`}>
+              <Section title={t('alarm.fromManual', { page: result.excerpt.page })}>
                 <Box sx={{ borderLeft: '3px solid #4fc3f7', pl: 1.5, py: 0.5 }}>
                   <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
                     “{result.excerpt.text}”
@@ -221,14 +223,14 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
                     onClick={() => openManualAt(alarm, result.excerpt!.page)}
                     sx={{ mt: 0.5 }}
                   >
-                    Open p.{result.excerpt.page}
+                    {t('alarm.openPage', { page: result.excerpt.page })}
                   </Button>
                 </Box>
               </Section>
             )}
 
             {summaryShownUpTo > 0 && operatorSummary.length > 0 && (
-              <Section title="What previous operators did">
+              <Section title={t('alarm.previousOperators')}>
                 {operatorSummary.slice(0, Math.max(0, summaryShownUpTo)).map((line, i) => (
                   <Typography variant="body2" key={i} sx={{ color: 'text.secondary', mb: 0.5 }}>
                     {line}
@@ -238,7 +240,7 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
             )}
 
             {sourcesShown && (
-              <Section title="Sources">
+              <Section title={t('alarm.sources')}>
                 {result.sources.map((ref: AlarmDocRef, i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
                     <Description sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -248,14 +250,14 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
                       onClick={() => openManualAt(alarm, ref.page)}
                       sx={{ textAlign: 'left' }}
                     >
-                      {ref.label} (p.{ref.page})
+                      {t('alarm.docRef', { label: ref.label, page: ref.page })}
                     </Link>
                   </Box>
                 ))}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <StickyNote2 sx={{ fontSize: 16, color: 'text.secondary' }} />
                   <Link component="button" variant="body2" onClick={onOpenHistory} sx={{ textAlign: 'left' }}>
-                    Operator notes ({result.notesConsidered.length})
+                    {t('alarm.operatorNotes', { count: result.notesConsidered.length })}
                   </Link>
                 </Box>
               </Section>
@@ -269,11 +271,11 @@ export function AskAiDialog({ alarm, open, onClose, onOpenHistory }: AskAiDialog
           startIcon={<MenuBook />}
           onClick={() => openManualAt(alarm, alarm.docRefs[0]?.page ?? 1)}
         >
-          Open manual
+          {t('alarm.openManual')}
         </Button>
         <Box sx={{ flex: 1 }} />
-        <Button onClick={onOpenHistory}>View history</Button>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onOpenHistory}>{t('alarm.viewHistoryBtn')}</Button>
+        <Button onClick={onClose}>{t('alarm.close')}</Button>
       </DialogActions>
     </Dialog>
   );

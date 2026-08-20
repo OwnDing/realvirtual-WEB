@@ -11,6 +11,7 @@
  */
 
 import type { ModelOptionDef } from '../model-option-plugin';
+import { rvT } from '../../../core/i18n';
 
 /** Base GLB (filename without .glb) these options apply to. */
 export const baseModel = 'DemoRealvirtualWeb';
@@ -33,6 +34,7 @@ export const modelOptions: ModelOptionDef[] = [];
  * leaking on to the next model).
  */
 export const deepLinkOptions: ModelOptionDef[] = [
-  { id: 'bosch', label: 'Bosch' },
-  { id: 'sew', label: 'SEW' },
+  // Supplier brand names: identical in both languages (see demo.spec).
+  { id: 'bosch', get label() { return rvT('demo', 'spec.bosch'); } },
+  { id: 'sew', get label() { return rvT('demo', 'spec.sew'); } },
 ];

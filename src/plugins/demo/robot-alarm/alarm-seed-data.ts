@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { rvT } from '../../../core/i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -84,71 +85,60 @@ const FANUC_MANUAL_URL = `${import.meta.env.BASE_URL}pdf/fanuc-crx-educational-c
 export const SYST_320_SCENARIO: AlarmScenario = {
   id: 'SYST-320',
   code: 'SYST-320',
-  title: 'SYST-320 — Contact Force Exceeds Limit',
-  subtitle: 'FANUC CRX cobot · DCS contact stop triggered on wrist',
+  // Getters, not strings: this object is built at module load — long before a
+  // language preference exists — and every field below is rendered prose. A
+  // resolved string here would be frozen at whatever the first import saw.
+  get title() { return rvT('demo', 'alarm.syst320Title'); },
+  get subtitle() { return rvT('demo', 'alarm.syst320Sub'); },
   severity: 'error',
   icon: 'warning',
   timestamp: '08:42',
   componentPath: ROBOT_COMPONENT_PATH,
   manualUrl: FANUC_MANUAL_URL,
-  diagnosis:
-    "SYST-320 means the cobot's Dual Check Safety (DCS) system measured an external " +
-    'contact force above the configured limit and triggered a protective stop. On a CRX ' +
-    'this is usually a payload/setup issue rather than a hardware fault — the most common ' +
-    'trigger is an incorrect payload setting, followed by cable drag or unintended contact ' +
-    'with a fixture or part edge.',
-  recommendedSteps: [
-    'Clear the contact — remove any object, fixture or part touching the arm; the stop often self-clears once the force is gone.',
-    'Verify payload mass and center of gravity, then re-run Payload Estimation. Make sure the PAYLOAD instruction runs AFTER grip confirmation, not before. (most common cause)',
-    'Check cable routing / dress-out. A loose or dragging cable is read as external contact — secure and re-route the bundle.',
-    'Review the DCS contact-force limit / force threshold for this motion; if the path grazes a part edge, raise the approach height slightly.',
-    'Press RESET and watch the next 2–3 cycles for recurrence.',
-  ],
-  docRefs: [
-    {
-      label: 'FANUC CRX Cell Manual — Payload / Load setting',
-      page: 25,
-      searchTerms: ['payload', 'load setting'],
-    },
-    {
-      label: 'FANUC CRX Cell Manual — Contact Stop / DCS',
-      page: 11,
-      searchTerms: ['contact stop', 'dual check safety', 'dcs'],
-    },
-  ],
+  get diagnosis() { return rvT('demo', 'alarm.diagnosisText'); },
+  get recommendedSteps() {
+    return [
+      rvT('demo', 'alarm.step1'),
+      rvT('demo', 'alarm.step2'),
+      rvT('demo', 'alarm.step3'),
+      rvT('demo', 'alarm.step4'),
+      rvT('demo', 'alarm.step5'),
+    ];
+  },
+  // Search terms hit the ENGLISH manual PDF, so they are not copy and must not
+  // move — a translated term finds nothing in the document being searched.
+  get docRefs() {
+    return [
+      { label: rvT('demo', 'spec.fanucPayloadDoc'), page: 25, searchTerms: ['payload', 'load setting'] },
+      { label: rvT('demo', 'spec.fanucDcsDoc'), page: 11, searchTerms: ['contact stop', 'dual check safety', 'dcs'] },
+    ];
+  },
   excerptSearchTerms: ['contact stop', 'dual check safety', 'payload', 'dcs'],
-  seedNotes: [
-    {
-      author: 'Roberto M.',
-      dateLabel: '17 Jun',
-      shift: 'Day shift',
-      seed: true,
-      text:
-        'Swapped from the suction cup to the magnetic gripper but forgot to update the ' +
-        'payload. SYST-320 fired on the very first cycle. Ran Payload Estimation (~5 min) ' +
-        'and it cleared. Set the PAYLOAD instruction to run AFTER grip confirmation now.',
-    },
-    {
-      author: 'Anja K.',
-      dateLabel: '20 Jun',
-      shift: 'Day shift',
-      seed: true,
-      text:
-        'Payload was correct this time. A loose power cable was dragging across the gripper ' +
-        'on extension — the cobot read the cable tension as contact. Clipped and re-routed ' +
-        'the bundle, no more trips.',
-    },
-    {
-      author: 'Yuki N.',
-      dateLabel: '11 Jun',
-      shift: 'Night shift',
-      seed: true,
-      text:
-        'Kept tripping during the assembly move. Turned out a part edge (manufacturing ' +
-        'tolerance) caused light continuous contact. Raised the approach height by 5 mm and ' +
-        'it stopped. No parts damaged.',
-    },
-  ],
+  get seedNotes() {
+    return [
+      {
+        author: 'Roberto M.',
+        dateLabel: rvT('demo', 'alarm.note1Date'),
+        shift: rvT('demo', 'alarm.dayShift'),
+        seed: true,
+        text: rvT('demo', 'alarm.note1'),
+      },
+      {
+        author: 'Anja K.',
+        dateLabel: rvT('demo', 'alarm.note2Date'),
+        shift: rvT('demo', 'alarm.dayShift'),
+        seed: true,
+        text: rvT('demo', 'alarm.note2'),
+      },
+      {
+        author: 'Yuki N.',
+        dateLabel: rvT('demo', 'alarm.note3Date'),
+        shift: rvT('demo', 'alarm.nightShift'),
+        seed: true,
+        text: rvT('demo', 'alarm.note3'),
+      },
+    ];
+  },
 };
 
 /** All scenarios keyed by id (single entry today). */

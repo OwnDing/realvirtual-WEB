@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import type { RVTranslationKey } from './i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -42,18 +43,23 @@ export type OverlayCategory =
 
 export interface OverlayCategoryMeta {
   id: OverlayCategory;
-  label: string;
+  /**
+   * A KEY, not text. This catalog is built at module load — before any language
+   * preference exists — so a resolved string here would be frozen at whatever
+   * the first import saw. The panel resolves it at render.
+   */
+  labelKey: RVTranslationKey<'operator'>;
 }
 
 /** Fixed catalog — order = display order in the panel. */
 export const OVERLAY_CATEGORIES: readonly OverlayCategoryMeta[] = [
-  { id: 'tooltips', label: 'Tooltips' },
-  { id: 'gizmos', label: 'Gizmos' },
-  { id: 'status', label: 'Status & Alarms' },
-  { id: 'signals', label: 'Signal chips' },
-  { id: 'highlights', label: 'Highlights' },
-  { id: 'markers', label: 'Markers' },
-  { id: 'connections', label: 'Connections' },
+  { id: 'tooltips', labelKey: 'groups.catTooltips' },
+  { id: 'gizmos', labelKey: 'groups.catGizmos' },
+  { id: 'status', labelKey: 'groups.catStatus' },
+  { id: 'signals', labelKey: 'groups.catSignals' },
+  { id: 'highlights', labelKey: 'groups.catHighlights' },
+  { id: 'markers', labelKey: 'groups.catMarkers' },
+  { id: 'connections', labelKey: 'groups.catConnections' },
 ];
 
 const VALID_IDS = new Set<OverlayCategory>(OVERLAY_CATEGORIES.map((c) => c.id));

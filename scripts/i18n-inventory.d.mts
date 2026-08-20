@@ -50,6 +50,8 @@ export function loadExceptions(root?: string): I18nException[];
 export function matchesException(finding: I18nFinding, exception: I18nException): boolean;
 export function computeInventory(root?: string): {
   findings: I18nFinding[];
+  /** Files the walk opened — not files with findings. See the script for why. */
+  filesScanned: number;
   advisory: I18nAdvisory;
   baseline: I18nBaseline;
   unusedExceptions: I18nException[];

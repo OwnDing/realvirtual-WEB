@@ -202,6 +202,24 @@ export const MIGRATED_SOURCES = [
   'src/plugins/sim-controller/SimModeToggle.tsx',
   'src/plugins/sim-controller/des-experiments-helpers.ts',
   'src/plugins/sim-controller/des-matrix-helpers.ts',
+  // Demo HMI, alarms and storage notices (Milestone 4b, batch 9)
+  'src/core/overlay-visibility-store.ts',
+  'src/core/storage/rv-opfs-blobs.ts',
+  'src/plugins/demo/CycleTimeChart.tsx',
+  'src/plugins/demo/DriveChartOverlay.tsx',
+  'src/plugins/demo/EnergyChart.tsx',
+  'src/plugins/demo/OeeChart.tsx',
+  'src/plugins/demo/PartsChart.tsx',
+  'src/plugins/demo/SensorChartOverlay.tsx',
+  'src/plugins/demo/demo-hmi-plugin.tsx',
+  'src/plugins/demo/perf-test-plugin.ts',
+  'src/plugins/demo/robot-alarm/AlarmHistoryDialog.tsx',
+  'src/plugins/demo/robot-alarm/AskAiDialog.tsx',
+  'src/plugins/demo/robot-alarm/RobotContactForceAlarm.tsx',
+  'src/plugins/demo/robot-alarm/alarm-seed-data.ts',
+  'src/plugins/demo/test-axes-plugin.tsx',
+  'src/plugins/models/DemoRealvirtualWeb/demo-kiosk-tour.ts',
+  'src/plugins/models/DemoRealvirtualWeb/model-options.ts',
 ];
 
 /**
@@ -257,6 +275,8 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['assets.share.embedded_other', PLURAL_SPLICE],
   ['assets.import.rejected_one', PLURAL_SPLICE],
   ['assets.import.rejected_other', PLURAL_SPLICE],
+  ['demo.alarm.historyTitle_one', PLURAL_SPLICE],
+  ['demo.alarm.historyTitle_other', PLURAL_SPLICE],
   ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
     + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
     + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '
@@ -353,7 +373,9 @@ export function verbatimPattern(value) {
   // outcome anyone would ever observe is a pass. Atomic groups take the longest
   // run and never give it back, which is the only behaviour these alternatives
   // were ever meant to have. (No alternative can swallow a following literal:
-  // each one consumes whitespace, or a quote-PLUS-quote splice.)
+  // each one consumes whitespace, or a quote-PLUS-quote splice. The quote
+  // class covers ' " and ` — a fragment ending in a double quote is the
+  // shape a sentence containing an apostrophe takes.)
   //
   // The backreference is wrapped in `(?:…)` because the next character is
   // often a digit: bare `\\2` before `3D` reads as backreference 23, which
@@ -373,7 +395,7 @@ export function verbatimPattern(value) {
       return `(?:${forms.join('|')})`;
     })
     .split(SLOT).join('\\s*<[^>]*>\\s*')
-    .replace(/ +/g, () => `(?=((?:\\s|['\`]\\s*\\+\\s*['\`]|\\{' '\\}|&nbsp;)+))(?:\\${++group})`);
+    .replace(/ +/g, () => `(?=((?:\\s|['\`"]\\s*\\+\\s*['\`"]|\\{' '\\}|&nbsp;)+))(?:\\${++group})`);
   // `\n` in a template literal is two SOURCE characters, so `\nBranch:` has no
   // word boundary before `Branch` in the text this check reads — even though the
   // rendered string does. An escape sequence counts as a boundary.

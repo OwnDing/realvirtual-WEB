@@ -74,44 +74,49 @@ import { useMaintenanceMode } from '../../hooks/use-maintenance-mode';
 // Layout constants
 import { MACHINE_PANEL_WIDTH } from '../../core/hmi/layout-constants';
 import { useMessagePanelOpen, toggleMessagePanel } from '../../core/hmi/message-panel-store';
+import { useRvTranslation } from '../../core/i18n';
 
 // ─── KPI Bar Entries ────────────────────────────────────────────────────
 
 function OeeKpi(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const [open, setOpen] = useState(false);
   return (
     <>
-      <KpiCard label="OEE" value="87" unit="%" color="#66bb6a" secondary="Target: 90%" onClick={() => setOpen((o) => !o)} />
+      <KpiCard label="OEE" value="87" unit="%" color="#66bb6a" secondary={t('hmi.oeeTarget')} onClick={() => setOpen((o) => !o)} />
       <OeeChart open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
 function PartsKpi(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const [open, setOpen] = useState(false);
   return (
     <>
-      <KpiCard label="Parts/h" value="28" unit="p/h" color="#4fc3f7" secondary="Shift total: 186" onClick={() => setOpen((o) => !o)} />
+      <KpiCard label="Parts/h" value="28" unit="p/h" color="#4fc3f7" secondary={t('hmi.partsShiftTotal')} onClick={() => setOpen((o) => !o)} />
       <PartsChart open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
 function CycleTimeKpi(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const [open, setOpen] = useState(false);
   return (
     <>
-      <KpiCard label="Cycle Time" value="129" unit="s" color="#ffa726" secondary="Avg last hour" onClick={() => setOpen((o) => !o)} />
+      <KpiCard label={t('hmi.cycleTime')} value="129" unit="s" color="#ffa726" secondary={t('hmi.cycleAvgHour')} onClick={() => setOpen((o) => !o)} />
       <CycleTimeChart open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
 function PowerKpi(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const [open, setOpen] = useState(false);
   return (
     <>
-      <KpiCard label="Power" value="23.4" unit="kW" color="#ef5350" secondary="Avg: 18.7 kW" onClick={() => setOpen((o) => !o)} />
+      <KpiCard label={t('hmi.power')} value="23.4" unit="kW" color="#ef5350" secondary={t('hmi.powerAvg')} onClick={() => setOpen((o) => !o)} />
       <EnergyChart open={open} onClose={() => setOpen(false)} />
     </>
   );
@@ -120,37 +125,41 @@ function PowerKpi(_props: UISlotProps) {
 // ─── Button Group Entries ───────────────────────────────────────────────
 
 function DrivesButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const open = useDriveChartOpen();
   return (
     <>
-      <NavButton icon={<Speed />} label="Drives" active={open} onClick={() => viewer.toggleDriveChart()} />
+      <NavButton icon={<Speed />} label={t('hmi.drives')} active={open} onClick={() => viewer.toggleDriveChart()} />
       <DriveChartOverlay />
     </>
   );
 }
 
 function SensorsButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const open = useSensorChartOpen();
   return (
     <>
-      <NavButton icon={<Sensors />} label="Sensors" active={open} onClick={() => viewer.toggleSensorChart()} />
+      <NavButton icon={<Sensors />} label={t('hmi.sensors')} active={open} onClick={() => viewer.toggleSensorChart()} />
       <SensorChartOverlay />
     </>
   );
 }
 
 function AlarmsButton(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const messagesOpen = useMessagePanelOpen();
-  return <NavButton icon={<Warning />} label="Alarms" badge={3} active={messagesOpen} onClick={() => toggleMessagePanel()} />;
+  return <NavButton icon={<Warning />} label={t('hmi.alarms')} badge={3} active={messagesOpen} onClick={() => toggleMessagePanel()} />;
 }
 
 function MaintenanceButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const maintenanceState = useMaintenanceMode();
   const isActive = maintenanceState.mode !== 'idle';
   return (
     <NavButton
       icon={<Build />}
-      label="Maintenance"
+      label={t('hmi.maintenance')}
       badge={isActive ? undefined : 1}
       active={isActive}
       onClick={() => viewer.emit('enter-maintenance' as string, undefined)}
@@ -159,13 +168,14 @@ function MaintenanceButton({ viewer }: UISlotProps) {
 }
 
 function MachineControlButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const lpm = viewer.leftPanelManager;
   const panelSnapshot = useSyncExternalStore(lpm.subscribe, lpm.getSnapshot);
   const isActive = panelSnapshot.activePanel === 'machine-control';
   return (
     <NavButton
       icon={<PrecisionManufacturing />}
-      label="Machine"
+      label={t('hmi.machine')}
       active={isActive}
       onClick={() => lpm.toggle('machine-control', MACHINE_PANEL_WIDTH)}
     />
@@ -175,10 +185,11 @@ function MachineControlButton({ viewer }: UISlotProps) {
 // ─── Message Panel Entries ──────────────────────────────────────────────
 
 function DriveOverloadMessage(_props: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   return (
     <TileCard
-      title="Drive Overload"
-      subtitle="Axis3 — Current: 142%"
+      title={t('hmi.driveOverload')}
+      subtitle={t('hmi.driveOverloadSub')}
       severity="error"
       icon="warning"
       timestamp="12:34:05"
@@ -188,10 +199,11 @@ function DriveOverloadMessage(_props: UISlotProps) {
 }
 
 function MaintenanceDueMessage({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   return (
     <TileCard
-      title="Maintenance Due"
-      subtitle="Belt Conveyor 2 — 4800h / 5000h"
+      title={t('hmi.maintenanceDue')}
+      subtitle={t('hmi.maintenanceDueSub')}
       severity="warning"
       icon="build"
       timestamp="Today"
@@ -202,6 +214,7 @@ function MaintenanceDueMessage({ viewer }: UISlotProps) {
 }
 
 function DriveInfoMessage({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   if (isBoschModel(viewer)) {
     return <BoschMotorOvertempMessage viewer={viewer} />;
   }
@@ -210,8 +223,8 @@ function DriveInfoMessage({ viewer }: UISlotProps) {
   }
   return (
     <TileCard
-      title="Drive 1 — Entry Conveyor"
-      subtitle="Position: 234.5 mm | Speed: 120 mm/s"
+      title={t('hmi.drive1')}
+      subtitle={t('hmi.drive1Sub')}
       severity="info"
       icon="speed"
       timestamp="Live"
@@ -240,6 +253,7 @@ function pulseMotorAlarm(viewer: UISlotProps['viewer'], path: string): void {
  * inside the Bosch AASX (zero duplication — single source of truth).
  */
 function BoschMotorOvertempMessage({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const openManual = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -252,16 +266,16 @@ function BoschMotorOvertempMessage({ viewer }: UISlotProps) {
 
   return (
     <TileCard
-      title="F8060 — Motor overtemperature"
+      title={t('hmi.boschFault')}
       subtitle={
         <>
-          MS2N servomotor (Drive 1) —{' '}
+          {t('hmi.boschSub')}
           <a
             href="#"
             onClick={openManual}
             style={{ color: '#4fc3f7', textDecoration: 'underline', cursor: 'pointer' }}
           >
-            see manual p.22
+            {t('hmi.boschManual')}
           </a>
         </>
       }
@@ -283,6 +297,7 @@ function BoschMotorOvertempMessage({ viewer }: UISlotProps) {
  * page covers "Severe speed loss under load" (slip) and excessive motor temperature.
  */
 function SewMotorSlipMessage({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const openManual = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -295,16 +310,16 @@ function SewMotorSlipMessage({ viewer }: UISlotProps) {
 
   return (
     <TileCard
-      title="Slip fault — speed deviation"
+      title={t('hmi.sewFault')}
       subtitle={
         <>
-          KA47-DRN90M4 gearmotor (Drive 1) —{' '}
+          {t('hmi.sewSub')}
           <a
             href="#"
             onClick={openManual}
             style={{ color: '#4fc3f7', textDecoration: 'underline', cursor: 'pointer' }}
           >
-            see manual p.265
+            {t('hmi.sewManual')}
           </a>
         </>
       }

@@ -39,6 +39,7 @@ import {
   DARK_SPLIT_LINE,
   DARK_TOOLTIP_BASE,
 } from '../../core/hmi/chart-theme';
+import { useRvTranslation } from '../../core/i18n';
 
 type ChartMode = 'position' | 'speed' | 'both';
 
@@ -57,6 +58,7 @@ function ensureDriveRecorder(viewer: ReturnType<typeof useViewer>) {
 }
 
 export function DriveChartOverlay() {
+  const { t } = useRvTranslation('demo');
   const viewer = useViewer();
   const open = useDriveChartOpen();
   const drives = useDrives();
@@ -253,7 +255,7 @@ export function DriveChartOverlay() {
       {/* Clear filter chip */}
       {filter && (
         <Chip
-          label="Clear Filter"
+          label={t('chart.clearFilter')}
           size="small"
           icon={<FilterAltOff sx={{ fontSize: 12 }} />}
           onClick={() => setFilter('')}
@@ -293,9 +295,9 @@ export function DriveChartOverlay() {
         size="small"
         sx={compactToggleGroupSx('#4fc3f7', '79,195,247')}
       >
-        <ToggleButton value="position">Position</ToggleButton>
-        <ToggleButton value="speed">Speed</ToggleButton>
-        <ToggleButton value="both">Both</ToggleButton>
+        <ToggleButton value="position">{t('chart.position')}</ToggleButton>
+        <ToggleButton value="speed">{t('chart.speed')}</ToggleButton>
+        <ToggleButton value="both">{t('chart.both')}</ToggleButton>
       </ToggleButtonGroup>
     </>
   );
@@ -304,7 +306,7 @@ export function DriveChartOverlay() {
     <FloatingPanel
       open={open && !suppressed}
       onClose={() => viewer.toggleDriveChart(false)}
-      title="Drive Monitor"
+      title={t('chart.driveMonitor')}
       titleColor="#4fc3f7"
       subtitle={driveCount}
       defaultWidth={CHART_DEFAULT_WIDTH}

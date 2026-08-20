@@ -50,7 +50,8 @@ function scanFixture(name: string, virtualPath: string): I18nFinding[] {
 }
 
 describe('i18n inventory — incremental hardcoded-text gate', () => {
-  const { baseline } = computeInventory(ROOT);
+  const inventory = computeInventory(ROOT);
+  const { baseline } = inventory;
   const committed = JSON.parse(readFileSync(resolve(ROOT, 'tests/i18n-inventory-baseline.json'), 'utf8'));
 
   it('the committed baseline matches the current scan', () => {
@@ -66,19 +67,18 @@ describe('i18n inventory — incremental hardcoded-text gate', () => {
   });
 
   it('is non-vacuous — the scan still finds the debt it is meant to track', () => {
-    // A gate whose scan silently returns nothing is a green tick over an unchecked
-    // repository. These are floors, not targets: they may only be lowered by a
-    // migration that also refreshes the baseline.
+    // A gate whose scan silently returns nothing is a green tick over an
+    // unchecked repository. The thing to assert is that the WALK happened —
+    // not how much debt it found.
     //
-    // They are also a SECONDARY belt, and deliberately so — the classification
-    // fixtures above are what actually prove the scanner still works, and they
-    // keep proving it at zero debt. These floors only catch a collapse while
-    // real debt is still large, so lowering them as the migration lands is the
-    // intended motion rather than a weakening of the gate. 300 was set in batch
-    // 7 (real total 452, down from 1944 at Milestone 1).
-    expect(baseline.total).toBeGreaterThan(300);
-    expect(baseline.totals['react-copy']).toBeGreaterThan(100);
-    expect(baseline.fileCount).toBeGreaterThan(50);
+    // A finding-count floor was the original guard and it was the wrong shape:
+    // it had to be ratcheted down every batch (1944 → 500 → 300 → …) and on the
+    // last batch, when the debt legitimately reaches zero, it would have to be
+    // deleted outright — so the guard would be weakest exactly when the codebase
+    // is quietest. `filesScanned` says the same thing and keeps saying it.
+    expect(inventory.filesScanned).toBeGreaterThan(500);
+    // Classification is proven by the fixtures below, which also survive zero.
+    expect(baseline.fileCount).toBeLessThanOrEqual(inventory.filesScanned);
   });
 
   it('covers every gated category in the baseline shape', () => {

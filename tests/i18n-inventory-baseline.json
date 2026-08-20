@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 203,
-    "a11y-name": 23,
-    "plugin-registry": 83,
-    "dynamic-text": 31,
+    "react-copy": 137,
+    "a11y-name": 20,
+    "plugin-registry": 68,
+    "dynamic-text": 29,
     "canvas-texture": 2,
     "pre-boot": 16,
-    "dom-text": 10,
+    "dom-text": 9,
     "ui-state-text": 2
   },
-  "total": 370,
-  "fileCount": 84,
+  "total": 283,
+  "fileCount": 67,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -73,9 +73,6 @@
     "src/core/ops/rv-reference-guard.ts": {
       "dynamic-text": 1
     },
-    "src/core/overlay-visibility-store.ts": {
-      "plugin-registry": 7
-    },
     "src/core/rv-render-modes.ts": {
       "plugin-registry": 6
     },
@@ -87,10 +84,6 @@
     },
     "src/core/sdk/rv-des-lint.ts": {
       "dynamic-text": 4
-    },
-    "src/core/storage/rv-opfs-blobs.ts": {
-      "plugin-registry": 3,
-      "dynamic-text": 1
     },
     "src/embed/rv-embed-element.ts": {
       "dom-text": 1
@@ -125,49 +118,6 @@
     },
     "src/plugins/custom-runtime-instruction-plugin.tsx": {
       "react-copy": 12
-    },
-    "src/plugins/demo/CycleTimeChart.tsx": {
-      "react-copy": 3
-    },
-    "src/plugins/demo/DriveChartOverlay.tsx": {
-      "react-copy": 5
-    },
-    "src/plugins/demo/EnergyChart.tsx": {
-      "react-copy": 3
-    },
-    "src/plugins/demo/OeeChart.tsx": {
-      "react-copy": 3
-    },
-    "src/plugins/demo/PartsChart.tsx": {
-      "react-copy": 3
-    },
-    "src/plugins/demo/SensorChartOverlay.tsx": {
-      "react-copy": 2
-    },
-    "src/plugins/demo/demo-hmi-plugin.tsx": {
-      "react-copy": 23
-    },
-    "src/plugins/demo/perf-test-plugin.ts": {
-      "dom-text": 1
-    },
-    "src/plugins/demo/robot-alarm/AlarmHistoryDialog.tsx": {
-      "react-copy": 6,
-      "a11y-name": 1
-    },
-    "src/plugins/demo/robot-alarm/AskAiDialog.tsx": {
-      "react-copy": 14,
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
-    "src/plugins/demo/robot-alarm/RobotContactForceAlarm.tsx": {
-      "react-copy": 2,
-      "a11y-name": 1
-    },
-    "src/plugins/demo/robot-alarm/alarm-seed-data.ts": {
-      "plugin-registry": 3
-    },
-    "src/plugins/demo/test-axes-plugin.tsx": {
-      "react-copy": 2
     },
     "src/plugins/docs-browser-plugin.tsx": {
       "react-copy": 1
@@ -233,12 +183,6 @@
     },
     "src/plugins/measurement-plugin.tsx": {
       "react-copy": 1
-    },
-    "src/plugins/models/DemoRealvirtualWeb/demo-kiosk-tour.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/models/DemoRealvirtualWeb/model-options.ts": {
-      "plugin-registry": 1
     },
     "src/plugins/opener-message-plugin.tsx": {
       "react-copy": 1

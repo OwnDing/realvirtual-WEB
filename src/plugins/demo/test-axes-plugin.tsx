@@ -19,10 +19,12 @@ import { RVBehavior } from '../../core/rv-behavior';
 import { modeContext } from '../../core/rv-mode-manager';
 import { NavButton } from '../../core/hmi/NavButton';
 import { debug } from '../../core/engine/rv-debug';
+import { useRvTranslation } from '../../core/i18n';
 
 // ─── Slider Window ──────────────────────────────────────────────────────
 
 function TestAxesWindow({ plugin, onClose }: { plugin: TestAxesPlugin; onClose: () => void }) {
+  const { t } = useRvTranslation('demo');
   const [positions, setPositions] = useState<number[]>(() => plugin.axes.map(d => d.currentPosition));
 
   const handleSlider = useCallback((index: number, value: number) => {
@@ -46,7 +48,7 @@ function TestAxesWindow({ plugin, onClose }: { plugin: TestAxesPlugin; onClose: 
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle2">Test Axes</Typography>
+        <Typography variant="subtitle2">{t('hmi.testAxes')}</Typography>
         <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
       </Box>
       {plugin.axes.map((drive, i) => (
@@ -77,6 +79,7 @@ function TestAxesWindow({ plugin, onClose }: { plugin: TestAxesPlugin; onClose: 
 // ─── Button ─────────────────────────────────────────────────────────────
 
 function TestAxesButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const plugin = viewer.getPlugin<TestAxesPlugin>('test-axes');
   const open = useSyncExternalStore(
     plugin?.subscribe ?? (() => () => {}),
@@ -91,7 +94,7 @@ function TestAxesButton({ viewer }: UISlotProps) {
 
   return (
     <>
-      <NavButton icon={<Science />} label="Test Axes" active={open} onClick={handleToggle} />
+      <NavButton icon={<Science />} label={t('hmi.testAxes')} active={open} onClick={handleToggle} />
       {open && plugin && <TestAxesWindow plugin={plugin} onClose={() => plugin.close()} />}
     </>
   );

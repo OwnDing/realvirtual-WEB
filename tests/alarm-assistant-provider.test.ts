@@ -8,7 +8,7 @@
  * test is deterministic and does not depend on the bundled PDF.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 
 // Mock the PDF retrieval layer so the provider gets a stable excerpt/page.
 vi.mock('../src/core/hmi/pdf-text', () => ({
@@ -21,6 +21,12 @@ import {
   getAlarmAssistantProvider,
 } from '../src/plugins/demo/robot-alarm/alarm-assistant-provider';
 import { SYST_320_SCENARIO, type AlarmNote } from '../src/plugins/demo/robot-alarm/alarm-seed-data';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const provider = new FakeAlarmAssistantProvider();
 

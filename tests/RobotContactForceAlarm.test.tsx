@@ -7,7 +7,7 @@
  * seeded note count.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import type { ReactNode } from 'react';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
@@ -16,6 +16,12 @@ import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { RobotContactForceAlarm } from '../src/plugins/demo/robot-alarm/RobotContactForceAlarm';
 import { SYST_320_SCENARIO } from '../src/plugins/demo/robot-alarm/alarm-seed-data';
 import type { RVViewer } from '../src/core/rv-viewer';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 function mockViewer(): RVViewer {
   return {

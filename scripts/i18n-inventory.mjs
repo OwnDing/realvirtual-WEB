@@ -412,11 +412,16 @@ export function computeInventory(root = ROOT) {
   const used = new Set();
   const findings = [];
 
+  let filesScanned = 0;
   for (const repoPath of collectSources(join(root, 'src'), root).sort()) {
     findings.push(...scanSource(repoPath, readFileSync(join(root, repoPath), 'utf8')));
+    filesScanned += 1;
   }
   const htmlPath = join(root, 'index.html');
-  if (existsSync(htmlPath)) findings.push(...scanHtml('index.html', readFileSync(htmlPath, 'utf8')));
+  if (existsSync(htmlPath)) {
+    findings.push(...scanHtml('index.html', readFileSync(htmlPath, 'utf8')));
+    filesScanned += 1;
+  }
 
   const kept = findings.filter((finding) => {
     const hit = exceptions.findIndex((exception) => matchesException(finding, exception));
@@ -443,6 +448,15 @@ export function computeInventory(root = ROOT) {
 
   return {
     findings: kept,
+    /**
+     * How many files the walk actually opened — NOT how many had findings.
+     *
+     * This is what the non-vacuity guard hangs on. A finding count is the wrong
+     * invariant for a migration whose whole point is to reach zero: it has to be
+     * ratcheted down every batch, and on the last batch it would have to be
+     * deleted. "The walk visited the tree" stays true and stays meaningful.
+     */
+    filesScanned,
     advisory: {
       ...Object.fromEntries(ADVISORY_CATEGORIES.map((c) => [c, totals[c]])),
       intlWithoutExplicitLocale: kept.filter((f) => f.category === 'intl-format' && f.localeExplicit === false).length,

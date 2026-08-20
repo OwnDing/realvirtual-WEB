@@ -15,6 +15,7 @@ import { useKpiData } from '../../hooks/use-kpi-data';
 import { movingAverage } from '../../core/hmi/kpi-utils';
 import { useEChart } from '../../hooks/use-echart';
 import { createBaseChartOption, DARK_TOOLTIP_BASE } from '../../core/hmi/chart-theme';
+import { useRvTranslation } from '../../core/i18n';
 
 interface CycleTimeChartProps {
   open: boolean;
@@ -30,6 +31,7 @@ function dotColor(ms: number, takt: number): string {
 }
 
 export function CycleTimeChart({ open, onClose }: CycleTimeChartProps) {
+  const { t } = useRvTranslation('demo');
   const kpi = useKpiData();
   const { containerRef: chartRef, chartInstance, isReady } = useEChart({ open });
 
@@ -50,8 +52,8 @@ export function CycleTimeChart({ open, onClose }: CycleTimeChartProps) {
       const amberUpper = taktS * 1.20;  // 144s at 120s takt
 
       const base = createBaseChartOption({
-        title: 'Cycle Time \u2014 Last 100 Cycles',
-        legendData: ['Cycle Time', '10-Cycle Avg'],
+        title: t('chart.cycleTitle'),
+        legendData: [t('chart.cycleName'), '10-Cycle Avg'],
         animate: true,
       });
 
@@ -154,9 +156,9 @@ export function CycleTimeChart({ open, onClose }: CycleTimeChartProps) {
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Cycle Time"
+      title={t('chart.cycleName')}
       titleColor="#ffa726"
-      subtitle="Last 100 Cycles"
+      subtitle={t('chart.cycleSub')}
       defaultWidth={700}
       defaultHeight={340}
       zIndex={1400}

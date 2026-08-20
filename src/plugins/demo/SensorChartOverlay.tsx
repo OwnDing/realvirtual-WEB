@@ -36,6 +36,7 @@ import {
   DARK_AXIS_LABEL,
   DARK_TOOLTIP_BASE,
 } from '../../core/hmi/chart-theme';
+import { useRvTranslation } from '../../core/i18n';
 
 const DEFAULT_H = 340;
 const BOTTOM_MARGIN = BOTTOM_BAR_HEIGHT + 12;
@@ -55,6 +56,7 @@ function ensureSensorRecorder(viewer: ReturnType<typeof useViewer>) {
 }
 
 export function SensorChartOverlay() {
+  const { t } = useRvTranslation('demo');
   const viewer = useViewer();
   const open = useSensorChartOpen();
   const maintenanceState = useMaintenanceMode();
@@ -172,7 +174,7 @@ export function SensorChartOverlay() {
           backgroundColor: 'transparent',
           textStyle: DARK_TEXT_STYLE,
           title: {
-            text: 'Sensor Timeline',
+            text: t('chart.sensorTimeline'),
             left: 8,
             top: 2,
             textStyle: DARK_TITLE_STYLE,
@@ -247,7 +249,7 @@ export function SensorChartOverlay() {
     <FloatingPanel
       open={open && !suppressed}
       onClose={() => viewer.toggleSensorChart(false)}
-      title="Sensor Monitor"
+      title={t('chart.sensorMonitor')}
       titleColor="#66bb6a"
       subtitle={`${sensorCount} sensors`}
       defaultWidth={CHART_DEFAULT_WIDTH}

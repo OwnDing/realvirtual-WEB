@@ -39,9 +39,9 @@ import { zhCN } from './catalogs/zh-CN';
  * never arrives, an offline first visit — degrades to readable Chinese via the
  * fallback chain §3 already defines, rather than to raw keys.
  */
-const DEFERRED_EN_NAMESPACES = ['projects', 'settings', 'connect', 'operator', 'authoring', 'assets', 'sim'] as const;
+const DEFERRED_EN_NAMESPACES = ['projects', 'settings', 'connect', 'operator', 'authoring', 'assets', 'sim', 'demo'] as const;
 
-export const RV_NAMESPACES = ['common', 'projects', 'settings', 'shell', 'connect', 'operator', 'authoring', 'assets', 'sim', 'preboot', 'plugins', 'viewer'] as const;
+export const RV_NAMESPACES = ['common', 'projects', 'settings', 'shell', 'connect', 'operator', 'authoring', 'assets', 'sim', 'demo', 'preboot', 'plugins', 'viewer'] as const;
 export type RVNamespace = (typeof RV_NAMESPACES)[number];
 
 /**
