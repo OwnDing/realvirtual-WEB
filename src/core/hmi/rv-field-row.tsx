@@ -28,6 +28,7 @@ import {
 import { FieldEditor } from './rv-field-editors';
 import { ReferenceDisplay, ScriptableObjectDisplay } from './rv-reference-display';
 import { InspectorRow } from './rv-inspector-row';
+import { useRvTranslation } from '../i18n';
 
 const INK_LOW = 'rgba(255,255,255,0.5)';
 const HIT_MIN = 24;
@@ -76,6 +77,7 @@ export interface FieldRowProps {
 }
 
 export function FieldRow({ fieldName, value, status, isOverridden, onEdit, onReset, viewer, signalStore, descriptor, unit }: FieldRowProps) {
+  const { t } = useRvTranslation('authoring');
   const fieldType = inferFieldType(fieldName, value);
   const isReference = fieldType === 'reference' || fieldType === 'scriptableobject';
   // References are always read-only (structural links, not user-editable values);
@@ -107,7 +109,7 @@ export function FieldRow({ fieldName, value, status, isOverridden, onEdit, onRes
           component="span"
           sx={{ ml: 0.5, fontSize: 11, color: INK_LOW, fontStyle: 'italic' }}
         >
-          (DES)
+          {t('component.des')}
         </Box>
       )}
     </>
@@ -116,7 +118,7 @@ export function FieldRow({ fieldName, value, status, isOverridden, onEdit, onRes
   return (
     <InspectorRow
       label={labelNode}
-      labelTitle={isDes ? `${fieldName} — DES-only config (read-only in live view)` : fieldName}
+      labelTitle={isDes ? t('component.desOnly', { name: fieldName }) : fieldName}
       labelColor={isEditable || isReference ? 'text.primary' : INK_LOW}
       fullWidthField={fullWidthField}
       alignField={isReference ? 'end' : 'stretch'}
@@ -127,8 +129,8 @@ export function FieldRow({ fieldName, value, status, isOverridden, onEdit, onRes
           size="small"
           onClick={(e) => { e.stopPropagation(); onReset(); }}
           sx={{ width: HIT_MIN, height: HIT_MIN, p: 0, color: '#4fc3f7' }}
-          title="Reset to default"
-          aria-label={`reset ${fieldName} to default`}
+          title={t('component.resetToDefault')}
+          aria-label={t('component.resetToDefaultFor', { name: fieldName })}
         >
           <Circle sx={{ fontSize: 7 }} />
         </IconButton>

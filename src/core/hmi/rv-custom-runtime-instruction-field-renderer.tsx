@@ -22,15 +22,17 @@ import { fieldRendererRegistry, type FieldRendererProps } from './rv-field-rende
 import { useViewer } from '../../hooks/use-viewer';
 import { parseSteps } from '../engine/rv-custom-runtime-instruction';
 import { openPdfViewer } from './pdf-viewer-store';
+import { useRvTranslation } from '../i18n';
 
 function InstructionStepsRenderer({ value }: FieldRendererProps) {
+  const { t } = useRvTranslation('authoring');
   const viewer = useViewer();
   const steps = useMemo(() => parseSteps(value), [value]);
 
   if (steps.length === 0) {
     return (
       <Typography sx={{ fontSize: 11, color: 'text.disabled', px: 1, py: 0.5 }}>
-        (no steps)
+        {t('component.noSteps')}
       </Typography>
     );
   }
@@ -67,14 +69,14 @@ function InstructionStepsRenderer({ value }: FieldRendererProps) {
               {i + 1}.
             </Typography>
             <Typography sx={{ fontSize: 11, color: 'text.primary', lineHeight: 1.4, whiteSpace: 'pre-wrap', flex: 1, minWidth: 0 }}>
-              {step.instruction || '(empty)'}
+              {step.instruction || t('component.emptyStep')}
             </Typography>
             {step.url && (
-              <Tooltip title={`Open document: ${step.url}`}>
+              <Tooltip title={t('component.openDocument', { name: step.url })}>
                 <IconButton
                   size="small"
                   sx={{ p: 0.25 }}
-                  onClick={() => openPdfViewer(step.instruction || 'Document', { type: 'url', url: step.url! })}
+                  onClick={() => openPdfViewer(step.instruction || t('component.documentFallback'), { type: 'url', url: step.url! })}
                 >
                   <Description sx={{ fontSize: 14 }} />
                 </IconButton>
@@ -87,7 +89,7 @@ function InstructionStepsRenderer({ value }: FieldRendererProps) {
               {step.targetPaths.map((p) => {
                 const ok = exists(p);
                 return (
-                  <Tooltip key={p} title={ok ? p : `${p} — not found in model`}>
+                  <Tooltip key={p} title={ok ? p : t('component.notFoundInModel', { name: p })}>
                     <Chip
                       size="small"
                       variant="outlined"
@@ -111,7 +113,7 @@ function InstructionStepsRenderer({ value }: FieldRendererProps) {
                 <Chip
                   size="small"
                   variant="outlined"
-                  label="Focus all"
+                  label={t('component.focusAll')}
                   onClick={() => focus(step.targetPaths)}
                   sx={{ height: 20, fontSize: 10, cursor: 'pointer', color: 'text.secondary' }}
                 />

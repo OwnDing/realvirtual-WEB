@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 5 之后）：
+截至 2026-08-20（批次 6 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1468** 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）。
-- 受门禁债务 **788 处 / 138 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 533、`a11y-name` 35、`plugin-registry` 102、`dynamic-text` 86、`pre-boot` 16、`dom-text` 10、`ui-state-text` 4、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 13 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_422_380 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 95.3 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator` 移入独立 chunk，构建产物 45.5 KB；`zh-CN` 全量仍在入口）。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1715** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）。
+- 受门禁债务 **587 处 / 109 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 382、`a11y-name` 28、`plugin-registry` 90、`dynamic-text` 55、`pre-boot` 16、`dom-text` 10、`ui-state-text` 4、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 13 处未显式传 locale）。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_433_510 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 84.5 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring` 移入独立 chunk，构建产物 54.7 KB；`zh-CN` 全量仍在入口）。**余量按每批约 10 KB 递减**，剩余 587 处大约还要吃掉 40–50 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 788 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面）。
+- [ ] Milestone 4b：按风险分批迁移其余 587 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,23 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 6：创作与检查器工作面（2026-08-20）
+
+- 覆盖 30 个文件、201 处（13207 行）：层级浏览器与节点行、属性检查器、信号编辑对话框 / 搜索浮层 / 插槽行 / 徽标、组件区与字段行、IK 目标快编、变换对话框、场景文档卡与确认对话框、脚本编辑器与保存流水线。该面归零，全仓 788 → **587**；`authoring` namespace 共 **247** 个 key。这一批是产品的另一半：批次 5 是操作员运行时，这一批是工程师搭建孪生时天天用的那一面。
+- **`signal-vocabulary.ts` 不在扫描结果里，但它是这一批最要紧的一个文件。** 它是一张模块级字符串表，存在的理由就是让同一个事实在四个界面上措辞完全一致——所以其中一条被冻住，就是四处同时出错。而我要迁移的 slot-row tooltip 恰恰把它的句子拼进自己的句子里，不一起迁移只会得到半中半英的提示。扫描器看不见元组和模块级常量（批次 3 的 `USE_CASES` 是同一类），因此仍然按「它是不是用户看得见的文案」而不是「扫描器有没有指出来」来决定。
+- **`const` 换成 getter，是因为这个模块几乎总是在 `initI18n()` 之前被 import。** 它被信号徽标渲染器传递性引入，一个模块级 `const string` 在那一刻就把当时的语言定死了。`BINDING_STATE_LABEL` / `AUTHORITY_SENTENCE` / `AUTHORITY_CONSEQUENCE` 改成属性 getter，**46 个调用点一个都不用改**（`AUTHORITY_SENTENCE.remote`、`BINDING_STATE_LABEL[state]` 照常工作）；两个裸字符串 `NOT_LINKED_LABEL` / `NOT_LINKED_CELL` 只能改成函数，共 2 个生产调用点。
+- 两类「注册表把标签交给稍后渲染的代码」用了**两种不同的解法**，因为它们的重建时机不同：
+  1. `TYPE_FILTERS`（层级类型筛选片）在模块加载时构建、此后不再重建 → `label` 改为 `labelKey`，由 chip 在渲染时解析（与批次 2 的 `RENDER_MODE_KEY` 同型）。
+  2. `sceneDocumentView()` 的动作菜单每次 publish 都重建 → **不需要**把 `ActiveDocumentVerb.label` 加宽成 `() => string`，只需要给它一个重新 publish 的理由。`installSceneDocumentView` 订阅了 `onLocaleChange`，三行，零契约变更。
+- 标识符规则在这一批到处出现，且这次落在编译器上而不只是手册上：`import`/`export`/`exports`、`setup(self)`、`ApiVersion`、`WebComponent`、`Ctrl-S`、`DES`、`IK`、`PLC`、`CONNECT`、`.glb` 全部保持原样，围绕它们的句子翻译。脚本诊断如果把 `setup(self)` 译了，那不是别扭，是**直接错的**——用户照着译文敲出来的东西不会运行。
+- 3 处纯标点（`&middot;` 分隔符、`&nbsp;·&nbsp;` 限定符连接）按例外登记而不是塞进目录：它们两边的东西要么是已翻译的计数、要么是节点名这类数据，分隔符本身没有可译内容，放进目录只会诱导后来者把它翻成一个词。
+- **一处自己造的缺陷，由完整套件抓到**：批量重命名 `NOT_LINKED_LABEL` → `notLinkedLabel` 的正则为了避开 import 说明符，写了「后面不是 `,` 或 `}` 才补 `()`」——而 `${NOT_LINKED_LABEL} — …` 后面正好是 `}`，于是模板里插进去的是**函数本身**，渲染出 `function notLinkedLabel() {…`。tsc 完全静默（模板插值接受任何类型），只有 `drag-announcer.test.ts` 会响。已修正，并逐个复核了全部 4 个符号的每一个调用点。
+- 另一处自己造的、由类型系统当场抓到的：`t('component.signalCount', { count: signalTypeLabel(...) })` 里 `count` 是一个**类型名字符串**而不是数字，i18next 会拿它去选复数分支。已改名为 `{{type}}`。
+- 17 个既有浏览器测试按 ADR pin `en-US`（信号插槽、检查器、文档卡、层级、拖拽播报等），125 例恢复通过。
+- 受检 `en-US` 值 1468 → **1715**；`operator` 之后新增的 `authoring` 同样进 deferred chunk（`ADR-0001` R1）。
+- **两个既有 Node 门禁开始超时，不是断言失败。** 逐字迁入检查 5038 ms、例外注册表扫描 1526 ms，都是「每条目录值 × 每个已迁移文件」的活，每批都更慢。默认 5 秒超时下，一次真实的回归和一次超时长得一模一样——这正是门禁最不该含糊的地方。两处都改成显式 60 s 并写明理由。
+- 顺带修了逐字迁入检查的第四个盲点：源码里非 ASCII 字符有**三种写法**——字符本身、HTML 实体、`\uXXXX` 转义。第三种是作者在字符本身不可见时会用的（`\u2014` 表示破折号），于是一条原样搬运的值看起来像是被改写了。反例验证过这不是放水：把 `Showing active fields only` 改成 `Showing consumed fields only` 仍会被指名。
 
 ### Milestone 4b 批次 5：操作员运行时面（2026-08-20）
 

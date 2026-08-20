@@ -22,6 +22,7 @@ import type { ReactNode } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { MathUtils } from 'three';
+import { useRvTranslation } from '../i18n';
 
 export interface DragNumberFieldProps {
   /** Drag handle content — usually a small MUI icon. Ignored in `compact` mode,
@@ -90,6 +91,7 @@ export function DragNumberField({
   label,
   inputWidth = 92,
 }: DragNumberFieldProps) {
+  const { t } = useRvTranslation('authoring');
   const inline = label != null;
   const dragRef = useRef<{ startX: number; startValue: number } | null>(null);
 
@@ -146,7 +148,7 @@ export function DragNumberField({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        aria-label={ariaLabel ? `${ariaLabel} drag handle` : 'drag to change value'}
+        aria-label={ariaLabel ? `${ariaLabel} ${t('component.dragHandle')}` : t('component.dragToChange')}
         sx={inline ? {
           // Plain (boxless) draggable icon so the row matches one-line toggles.
           display: 'flex',

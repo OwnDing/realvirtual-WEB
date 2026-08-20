@@ -16,8 +16,8 @@ import {
   AUTHORITY_CONSEQUENCE,
   AUTHORITY_SENTENCE,
   BINDING_STATE_LABEL,
-  NOT_LINKED_CELL,
-  NOT_LINKED_LABEL,
+  notLinkedCell,
+  notLinkedLabel,
   authorityExplanation,
 } from '../src/core/hmi/signal-vocabulary';
 import { SIGNAL_BADGE_STATE_LABEL } from '../src/plugins/signal-bind/SignalBadgeController';
@@ -33,9 +33,9 @@ describe('signal vocabulary — one source per fact', () => {
     for (const state of ['unbound', 'live', 'pending', 'disconnected', 'conflict'] as const) {
       expect(BINDING_STATE_LABEL[state].length).toBeGreaterThan(0);
     }
-    expect(BINDING_STATE_LABEL.unbound).toBe(NOT_LINKED_LABEL);
+    expect(BINDING_STATE_LABEL.unbound).toBe(notLinkedLabel());
     // Same words, different sentence position — the cell is not a sentence.
-    expect(NOT_LINKED_CELL.toLowerCase()).toContain(NOT_LINKED_LABEL.toLowerCase());
+    expect(notLinkedCell().toLowerCase()).toContain(notLinkedLabel().toLowerCase());
   });
 
   it('the slot-row tooltip is the authority sentence plus its consequence', () => {

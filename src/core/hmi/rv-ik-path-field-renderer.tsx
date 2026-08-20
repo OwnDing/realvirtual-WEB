@@ -18,6 +18,7 @@ import { fieldRendererRegistry, type FieldRendererProps } from './rv-field-rende
 import { persistFieldOp } from './scene/scene-field-ops';
 import type { ComponentRef } from '../engine/rv-node-registry';
 import type { RVIKPath } from '../engine/rv-ik-path';
+import { useRvTranslation } from '../i18n';
 
 function lastSeg(p: string): string {
   const i = p.lastIndexOf('/');
@@ -31,6 +32,7 @@ function isRef(v: unknown): v is ComponentRef {
 }
 
 function IKPathTargetsRenderer({ value, fieldName, nodePath, viewer }: FieldRendererProps) {
+  const { t } = useRvTranslation('authoring');
   const initial = Array.isArray(value) ? (value as unknown[]).filter(isRef) : [];
   const [order, setOrder] = useState<ComponentRef[]>(initial);
 
@@ -90,7 +92,7 @@ function IKPathTargetsRenderer({ value, fieldName, nodePath, viewer }: FieldRend
       onSelect={handleSelect}
       onRemove={(i) => handleRemove(i)}
       selectedId={primaryPath}
-      emptyText="No targets"
+      emptyText={t('component.noTargets')}
     />
   );
 }

@@ -25,7 +25,7 @@
  * when there is none.
  */
 
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { Object3D } from 'three';
 import { ComponentSection } from '../src/core/hmi/rv-component-section';
@@ -33,6 +33,12 @@ import { SignalStore } from '../src/core/engine/rv-signal-store';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
 import { registerSignal } from '../src/core/engine/rv-signal-construction';
 import { collectInternalSignals } from '../src/plugins/signal-bind/slot-row-models';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(() => cleanup());
 

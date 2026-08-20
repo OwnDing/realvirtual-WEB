@@ -24,8 +24,8 @@ import { navigateToRef } from './rv-reference-display';
 import { requestForceConfirm } from './force-confirm-store';
 import {
   AUTHORITY_SENTENCE,
-  PROVENANCE_DRIVES_TITLE,
-  PROVENANCE_REFERENCED_TITLE,
+  provenanceDrivesTitle,
+  provenanceReferencedTitle,
 } from './signal-vocabulary';
 import { useThrottledSignalValue } from '../../hooks/use-throttled-signal';
 import { useSignalDisplaySettings, type SignalTooltipFields, type SignalChipVariant } from './signal-display-store';
@@ -44,6 +44,7 @@ import {
 import { CHIP_RADIUS } from './shared-sx';
 import { signalValueColor, signalValueColorForValue } from './signal-colors';
 import { omitUndefined } from './rv-omit-undefined';
+import { useRvTranslation } from '../i18n';
 
 const REFRESH_MS = 200;
 /**
@@ -618,6 +619,7 @@ function TooltipBindingBlock({
  *  tooltip is interactive (plan-246 F7): every binding row is clickable and
  *  navigates to the bound component via navigateToRef. */
 function SignalTooltipContent({ model, viewer, fields }: { model: SignalTooltipModel; viewer?: RVViewer; fields: SignalTooltipFields }) {
+  const { t } = useRvTranslation('authoring');
   const valueLine = model.typePhrase
     ? `${model.typePhrase} · ${model.value}${model.forced ? ' (forced)' : ''}`
     : `${model.value}${model.forced ? ' (forced)' : ''}`;
@@ -694,12 +696,12 @@ function SignalTooltipContent({ model, viewer, fields }: { model: SignalTooltipM
           by the address toggle; shown whenever it is resolvable. */}
       {model.interfaceOrigin && (
         <Typography component="div" sx={{ fontSize: 10, opacity: 0.7 }}>
-          Interface · {model.interfaceOrigin}
+          {t('signal.interfacePrefix')} {model.interfaceOrigin}
         </Typography>
       )}
       {model.topic && (
         <Typography component="div" sx={{ fontSize: 10, opacity: 0.7, fontFamily: 'monospace' }}>
-          Topic · {model.topic}
+          {t('signal.topicPrefix')} {model.topic}
         </Typography>
       )}
       {/* Manual SignalMapping provenance is structural and therefore intentionally
@@ -707,12 +709,12 @@ function SignalTooltipContent({ model, viewer, fields }: { model: SignalTooltipM
           Title (plan-353 F4): "Drives these slots" says WHAT the rows are —
           slots this signal writes — and can no longer be read as the reverse
           direction of the "Referenced by" block right below it. */}
-      <TooltipBindingBlock title={PROVENANCE_DRIVES_TITLE} rows={driveRows} viewer={viewer} />
+      <TooltipBindingBlock title={provenanceDrivesTitle()} rows={driveRows} viewer={viewer} />
       {/* "Referenced by" is the SAME concept as the property inspector's footer
           (components pointing AT this object), so it deliberately keeps the same
           word — one term per thing. Both read it from the vocabulary module. */}
       {fields.binding && (
-        <TooltipBindingBlock title={PROVENANCE_REFERENCED_TITLE} rows={referencedRows} viewer={viewer} />
+        <TooltipBindingBlock title={provenanceReferencedTitle()} rows={referencedRows} viewer={viewer} />
       )}
       {/* Write-authority note (plan-320): who dominates this slot right now.
           Amber matches the force palette — the note most often concerns forces. */}
@@ -1160,6 +1162,7 @@ function ForceValuePopover({ anchorEl, onClose, current, intOnly, onForce }: {
   intOnly: boolean;
   onForce: (value: number) => void;
 }) {
+  const { t } = useRvTranslation('authoring');
   const open = anchorEl !== null;
   const [text, setText] = useState<string>('');
 
@@ -1219,7 +1222,7 @@ function ForceValuePopover({ anchorEl, onClose, current, intOnly, onForce }: {
           onClick={submit}
           sx={{ textTransform: 'none', minWidth: 0 }}
         >
-          Force
+          {t('signal.force')}
         </Button>
       </Box>
     </Popover>

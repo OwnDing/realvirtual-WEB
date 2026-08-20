@@ -63,9 +63,10 @@ import { omitUndefined } from './rv-omit-undefined';
 import { dropRejectText, slotRejectReason } from '../../plugins/signal-bind/drop-accept';
 import {
   AUTHORITY_SENTENCE,
-  NOT_LINKED_CELL,
+  notLinkedCell,
   authorityExplanation,
 } from './signal-vocabulary';
+import { rvT, useRvTranslation } from '../i18n';
 
 // ── Shared row/picker data shapes (moved here from SignalBindPopover) ────────
 
@@ -313,8 +314,8 @@ export function resolveSlotStatusToken(row: SlotRow, bound: boolean): SlotStatus
     return {
       level: 1, label: 'conflict', color: STATUS_AMBER, icon: ErrorOutlineIcon,
       tooltip: row.authorityReason
-        ? `Conflicting writers on this slot — ${authorityTip}`
-        : 'Conflicting writers on this slot',
+        ? rvT('authoring', 'signal.conflictWritersWhy', { reason: authorityTip })
+        : rvT('authoring', 'signal.conflictWriters'),
     };
   }
   if (row.remoteOwned) {
@@ -334,13 +335,13 @@ export function resolveSlotStatusToken(row: SlotRow, bound: boolean): SlotStatus
   if (row.liveness === 'disconnected') {
     return {
       level: 4, label: 'disconnected', color: STATUS_AMBER, icon: LinkOffIcon,
-      tooltip: 'The signal provider was lost — the last value is held',
+      tooltip: rvT('authoring', 'signal.providerLost'),
     };
   }
   if (row.liveness === 'pending') {
     return {
       level: 5, label: 'pending', color: INK_HIGH, icon: HourglassEmptyIcon,
-      tooltip: 'Waiting for CONNECT',
+      tooltip: rvT('authoring', 'signal.waitingConnect'),
     };
   }
   // `authority` may be absent (callers that never resolved it). Absent is not a
@@ -353,19 +354,19 @@ export function resolveSlotStatusToken(row: SlotRow, bound: boolean): SlotStatus
     // "the value you see is frozen" is precisely what the chips cannot say.
     if (row.liveness === 'live') return null;
     return {
-      level: 6, label: 'live · hold', color: INK_HIGH, icon: BoltIcon,
-      tooltip: `${AUTHORITY_SENTENCE.bound} — the current value is held`,
+      level: 6, label: rvT('authoring', 'signal.liveHold'), color: INK_HIGH, icon: BoltIcon,
+      tooltip: rvT('authoring', 'signal.heldSuffix', { sentence: AUTHORITY_SENTENCE.bound }),
     };
   }
   if (row.liveness === 'live' && row.authority === 'component') {
     return {
-      level: 7, label: 'live · local', color: INK_HIGH, icon: BoltIcon,
-      tooltip: 'The binding is live, but the local simulation writes this slot',
+      level: 7, label: rvT('authoring', 'signal.liveLocal'), color: INK_HIGH, icon: BoltIcon,
+      tooltip: rvT('authoring', 'signal.liveLocalTip'),
     };
   }
   return {
     level: 8, label: 'bound', color: INK_HIGH, icon: LinkIcon,
-    tooltip: authorityTip || 'This slot is linked to a signal',
+    tooltip: authorityTip || rvT('authoring', 'vocab.slotLinked'),
   };
 }
 
@@ -419,6 +420,7 @@ export function SignalSlotRow({
   row, viewer, signals, readOnly, disabledReason, onOpenPicker, onUnbind, onDropSignal, qualifier,
   targetId,
 }: SignalSlotRowProps) {
+  const { t } = useRvTranslation('authoring');
   const interactive = !readOnly && !disabledReason;
   // One short flash when THIS slot was just linked. The subscription is keyed by
   // the slot's full identity, so a second target that happens to share a
@@ -489,7 +491,7 @@ export function SignalSlotRow({
             dot={rejectReason ? <LinkOffIcon data-testid={`slot-reject-${row.slot}`} sx={{ fontSize: 12, color: INK_LOW }} /> : undefined}
           >
             <Typography sx={{ fontSize: ROW_FONT, color: INK_LOW, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Unavailable — {row.reason}
+              {t('signal.unavailable', { reason: row.reason })}
             </Typography>
           </InspectorRow>
         </Box>
@@ -583,14 +585,14 @@ export function SignalSlotRow({
     assignment = (
       <>
         <Typography className="rv-slot-empty-text" sx={{ fontSize: ROW_FONT, color: INK_LOW, whiteSpace: 'nowrap' }}>
-          {NOT_LINKED_CELL}
+          {notLinkedCell()}
         </Typography>
         <Typography
           className="rv-slot-drop-hint"
           aria-hidden
           sx={{ fontSize: ROW_FONT, fontWeight: 600, color: '#4fc3f7', whiteSpace: 'nowrap' }}
         >
-          Drop here
+          {t('signal.dropHere')}
         </Typography>
       </>
     );
@@ -643,7 +645,7 @@ export function SignalSlotRow({
           <Box
             role="button"
             tabIndex={0}
-            aria-label={`change signal for ${displayLabel}`}
+            aria-label={t('signal.changeSignalFor', { name: displayLabel })}
             onClick={(e) => openPicker(e.currentTarget)}
             onKeyDown={activateOnKey(() => {
               const el = document.activeElement as HTMLElement | null;
@@ -687,7 +689,7 @@ export function SignalSlotRow({
           </Tooltip>
         )}
         {interactive && (bound ? (
-          <Tooltip title="Unlink" placement="top">
+          <Tooltip title={t('signal.unlink')} placement="top">
             <IconButton
               size="small"
               aria-label={`unbind ${displayLabel}`}
@@ -698,10 +700,10 @@ export function SignalSlotRow({
             </IconButton>
           </Tooltip>
         ) : (
-          <Tooltip title="Link signal" placement="top">
+          <Tooltip title={t('signal.linkSignal')} placement="top">
             <IconButton
               size="small"
-              aria-label={`signal for ${displayLabel}`}
+              aria-label={t('signal.signalFor', { name: displayLabel })}
               onClick={(e) => openPicker(e.currentTarget)}
               sx={{ width: HIT_MIN, height: HIT_MIN, p: 0.5, color: INK_LOW, '&:hover': { color: '#4fc3f7' } }}
             >

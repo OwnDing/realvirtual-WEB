@@ -76,7 +76,7 @@ import {
   type SignalDragPayload,
 } from './signal-drag-store';
 import type { SignalDirection } from './rv-signal-badge';
-import { NOT_LINKED_LABEL } from './signal-vocabulary';
+import { notLinkedLabel } from './signal-vocabulary';
 
 /** Id of the single live region (one per document). */
 export const DRAG_ANNOUNCER_ELEMENT_ID = 'rv-drag-announcer';
@@ -149,7 +149,7 @@ function linkedText(signalName: string | null, slot: string): string {
  * user would hear nothing at all about why the link did not happen.
  */
 function rejectedText(reason: DropRejectReason): string {
-  return `${NOT_LINKED_LABEL} — ${dropRejectText(reason)}`;
+  return `${notLinkedLabel()} — ${dropRejectText(reason)}`;
 }
 
 function cancelledText(): string {

@@ -14,12 +14,14 @@ import { IconButton, Tooltip } from '@mui/material';
 import { Code } from '@mui/icons-material';
 import type { UISlotProps } from '../../rv-ui-plugin';
 import { getScriptEditorState, subscribeScriptEditor, toggleScriptEditor } from './script-editor-store';
+import { useRvTranslation } from '../../i18n';
 
 /** Toggles the WebComponent script editor panel. */
 export function ScriptToolbarButton(_props: UISlotProps) {
+  const { t } = useRvTranslation('authoring');
   const state = useSyncExternalStore(subscribeScriptEditor, getScriptEditorState);
   return (
-    <Tooltip title="Script Editor (component scripts)" placement="right">
+    <Tooltip title={t('script.toolbarTip')} placement="right">
       <IconButton
         size="small"
         onClick={toggleScriptEditor}

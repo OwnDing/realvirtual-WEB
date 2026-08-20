@@ -37,6 +37,7 @@
  */
 
 import type { ElementBindingState } from '../engine/rv-signal-binding-manager';
+import { rvT } from '../i18n';
 
 // ── "not linked" — one lexeme, two registers ────────────────────────────────
 //
@@ -45,11 +46,22 @@ import type { ElementBindingState } from '../engine/rv-signal-binding-manager';
 // dash is not. Both live here so the casing is ONE decision rather than three
 // independent literals.
 
-/** Standalone status label / sentence start ("Not linked — <reason>"). */
-export const NOT_LINKED_LABEL = 'Not linked';
+/**
+  * Standalone status label / sentence start ("Not linked — <reason>").
+  *
+  * A function, not a `const`: a module-level string is read once at import and
+  * would freeze whatever language happened to be active then — for this module
+  * that is usually BEFORE `initI18n()`, since it is imported transitively by the
+  * badge renderer. Everything else here is a getter for the same reason.
+  */
+export function notLinkedLabel(): string {
+  return rvT('authoring', 'vocab.notLinked');
+}
 
 /** The assignment cell of an unbound slot row (a value, not a sentence). */
-export const NOT_LINKED_CELL = '– not linked';
+export function notLinkedCell(): string {
+  return rvT('authoring', 'vocab.notLinkedCell');
+}
 
 // ── Element level: ElementBindingState ─────────────────────────────────────
 
@@ -60,11 +72,11 @@ export const NOT_LINKED_CELL = '– not linked';
  * disagree about the element they describe.
  */
 export const BINDING_STATE_LABEL: Record<ElementBindingState, string> = {
-  unbound: NOT_LINKED_LABEL,
-  live: 'Live controlled',
-  pending: 'Pending — waiting for CONNECT',
-  disconnected: 'Source disconnected',
-  conflict: 'Conflict',
+  get unbound() { return notLinkedLabel(); },
+  get live() { return rvT('authoring', 'vocab.stateLive'); },
+  get pending() { return rvT('authoring', 'vocab.statePending'); },
+  get disconnected() { return rvT('authoring', 'vocab.stateDisconnected'); },
+  get conflict() { return rvT('authoring', 'vocab.stateConflict'); },
 };
 
 // ── Slot level: who writes this slot ───────────────────────────────────────
@@ -77,27 +89,30 @@ export const BINDING_STATE_LABEL: Record<ElementBindingState, string> = {
 /** The bare fact, per `canWriteSlot()` reason. */
 export const AUTHORITY_SENTENCE = {
   /** No claim: the component simulates the missing PLC. */
-  ok: 'Component simulation writes this slot',
+  get ok() { return rvT('authoring', 'vocab.authorityOk'); },
   /**
    * A live binding writes the slot. Deliberately NOT "a live CONNECT binding":
    * an `internal` mapping relaying a model signal claims `bound` just the same
    * and never involves CONNECT.
    */
-  bound: 'A live binding writes this slot',
-  forced: 'An operator force pins this slot',
-  remote: 'A remote session owner writes this slot',
-} as const;
+  get bound() { return rvT('authoring', 'vocab.authorityBound'); },
+  get forced() { return rvT('authoring', 'vocab.authorityForced'); },
+  get remote() { return rvT('authoring', 'vocab.authorityRemote'); },
+};
 
 /** The consequence clause the slot-row tooltip appends after an em dash. */
 export const AUTHORITY_CONSEQUENCE = {
-  bound: 'local simulation is displaced',
-  forced: 'incoming writes are held',
-  remote: 'local writers are pre-empted',
-} as const;
+  get bound() { return rvT('authoring', 'vocab.consequenceBound'); },
+  get forced() { return rvT('authoring', 'vocab.consequenceForced'); },
+  get remote() { return rvT('authoring', 'vocab.consequenceRemote'); },
+};
 
 /** `<sentence> — <consequence>`, the long form used in slot-row tooltips. */
 export function authorityExplanation(key: keyof typeof AUTHORITY_CONSEQUENCE): string {
-  return `${AUTHORITY_SENTENCE[key]} — ${AUTHORITY_CONSEQUENCE[key]}`;
+  return rvT('authoring', 'vocab.explanation', {
+    sentence: AUTHORITY_SENTENCE[key],
+    consequence: AUTHORITY_CONSEQUENCE[key],
+  });
 }
 
 // ── Provenance block titles: which DIRECTION is being listed ────────────────
@@ -119,10 +134,14 @@ export function authorityExplanation(key: keyof typeof AUTHORITY_CONSEQUENCE): s
 //    be the drift this module exists to prevent.
 
 /** Title of the outgoing block: slots this signal drives. */
-export const PROVENANCE_DRIVES_TITLE = 'Drives these slots';
+export function provenanceDrivesTitle(): string {
+  return rvT('authoring', 'vocab.drivesTitle');
+}
 
 /** Title of the incoming block: what references this object (tooltip + inspector). */
-export const PROVENANCE_REFERENCED_TITLE = 'Referenced by';
+export function provenanceReferencedTitle(): string {
+  return rvT('authoring', 'vocab.referencedTitle');
+}
 
 // ── Signal level: liveness wording ─────────────────────────────────────────
 //

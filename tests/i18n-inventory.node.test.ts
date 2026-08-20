@@ -134,5 +134,8 @@ describe('i18n inventory — exception registry', () => {
     // A stale exception keeps suppressing whatever moves into its place later.
     const { unusedExceptions } = computeInventory(ROOT);
     expect(unusedExceptions).toEqual([]);
-  });
+    // Explicit timeout for the same reason as the verbatim gate: a full-tree
+    // scan gets slower every batch, and a timeout would be reported as a
+    // stale-exception failure that no amount of reading the registry explains.
+  }, 60_000);
 });

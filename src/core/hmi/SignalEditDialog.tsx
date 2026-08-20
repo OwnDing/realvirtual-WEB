@@ -45,6 +45,7 @@ import {
   type ConnectSignalSchema,
   type SignalValidationResult,
 } from './connect-store';
+import { useRvTranslation } from '../i18n';
 
 /** Debounce for the live address validation round-trip. */
 const VALIDATE_DEBOUNCE_MS = 300;
@@ -141,6 +142,7 @@ export function SignalEditDialog({
   /** True when the edited signal is bound to the loaded model (rename warning). */
   isBound?: boolean;
 }) {
+  const { t } = useRvTranslation('authoring');
   const isEdit = !!editSignal;
 
   const [name, setName] = useState('');
@@ -250,17 +252,16 @@ export function SignalEditDialog({
         <TextField
           fullWidth
           size="small"
-          label="Signal name"
+          label={t('signal.name')}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          helperText="Unique across all interfaces — models couple to signals by this name"
+          helperText={t('signal.nameHelper')}
           sx={{ mt: 1, mb: 1 }}
         />
 
         {renamed && isBound && (
           <Alert severity="warning" sx={{ mb: 1, fontSize: 11, py: 0 }}>
-            This signal is used by the loaded model (coupled by name). Renaming it breaks that
-            binding until the model or link is updated.
+            {t('signal.renameWarning')}
           </Alert>
         )}
 
@@ -278,7 +279,7 @@ export function SignalEditDialog({
               ? <CircularProgress size={12} />
               : validation?.checked && validation.valid
                 ? (
-                  <Tooltip title={`Validated${validation.normalizedAddress && validation.normalizedAddress !== address.trim() ? ` — saved as ${validation.normalizedAddress}` : ''}`}>
+                  <Tooltip title={`${t('signal.validated')}${validation.normalizedAddress && validation.normalizedAddress !== address.trim() ? t('signal.validatedSavedAs', { address: validation.normalizedAddress }) : ''}`}>
                     <CheckCircleOutline sx={{ fontSize: 16, color: '#66bb6a' }} />
                   </Tooltip>
                 )
@@ -289,9 +290,9 @@ export function SignalEditDialog({
 
         {(schema?.addressExamples.length ?? 0) > 0 && (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center', mb: 1.5 }}>
-            <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>e.g.</Typography>
+            <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>{t('signal.eg')}</Typography>
             {schema!.addressExamples.map(ex => (
-              <Tooltip key={ex} title="Click to use this example" disableInteractive>
+              <Tooltip key={ex} title={t('signal.useExample')} disableInteractive>
                 <Chip
                   label={ex}
                   size="small"
@@ -308,7 +309,7 @@ export function SignalEditDialog({
             <TextField
               select
               size="small"
-              label="Data type"
+              label={t('signal.dataType')}
               value={dataTypes.includes(dataType) ? dataType : ''}
               onChange={(e) => setDataType(e.target.value)}
               sx={{ flex: 1 }}
@@ -318,7 +319,7 @@ export function SignalEditDialog({
           ) : (
             <TextField
               size="small"
-              label="Data type (optional)"
+              label={t('signal.dataTypeOptional')}
               value={dataType}
               onChange={(e) => setDataType(e.target.value)}
               sx={{ flex: 1 }}
@@ -330,7 +331,7 @@ export function SignalEditDialog({
               a direction (S7 area, FANUC prefix); a manual choice always wins. */}
           <Box>
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', mb: 0.25 }}>
-              Direction
+              {t('signal.direction')}
             </Typography>
             <ToggleButtonGroup
               size="small"
@@ -347,13 +348,13 @@ export function SignalEditDialog({
                   selection props via cloneElement into direct children, and a Tooltip in
                   between would swallow them. */}
               <ToggleButton value="output">
-                <Tooltip title="PLC Output — the PLC supplies the value, the viewer reads it" disableInteractive>
-                  <span>Read from PLC</span>
+                <Tooltip title={t('signal.outputTip')} disableInteractive>
+                  <span>{t('signal.readFromPlc')}</span>
                 </Tooltip>
               </ToggleButton>
               <ToggleButton value="input">
-                <Tooltip title="PLC Input — the viewer writes the value to the PLC" disableInteractive>
-                  <span>Write to PLC</span>
+                <Tooltip title={t('signal.inputTip')} disableInteractive>
+                  <span>{t('signal.writeToPlc')}</span>
                 </Tooltip>
               </ToggleButton>
             </ToggleButtonGroup>
@@ -363,7 +364,7 @@ export function SignalEditDialog({
         <TextField
           fullWidth
           size="small"
-          label="Comment (optional)"
+          label={t('signal.commentOptional')}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           sx={{ mb: 0.5 }}
@@ -371,13 +372,13 @@ export function SignalEditDialog({
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Checkbox checked={record} onChange={(e) => setRecord(e.target.checked)} size="small" />
-          <Tooltip title="Store this signal's value history in the CONNECT historian" disableInteractive>
-            <Typography sx={{ fontSize: 12 }}>Record (historian)</Typography>
+          <Tooltip title={t('signal.recordTip')} disableInteractive>
+            <Typography sx={{ fontSize: 12 }}>{t('signal.record')}</Typography>
           </Tooltip>
           <Box sx={{ flex: 1 }} />
-          <Tooltip title="Resulting wire type — derived from direction and data type" disableInteractive>
+          <Tooltip title={t('signal.wireTypeTip')} disableInteractive>
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
-              wire type: {wireType}
+              {t('signal.wireType', { type: wireType })}
             </Typography>
           </Tooltip>
         </Box>
@@ -389,7 +390,7 @@ export function SignalEditDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('signal.cancel')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={!canSave} sx={{ textTransform: 'none' }}>
           {saving ? 'Saving...' : isEdit ? 'Save' : 'Add'}
         </Button>

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { rvT } from '../../i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -281,7 +282,7 @@ function ensureChannel(): BroadcastChannel | null {
     emit({
       kind: 'other-tab',
       slot: String(data.slot ?? ''),
-      message: 'Another tab is editing this scene. The last save wins, and you will be told if yours is refused.',
+      message: rvT('authoring', 'doc.otherTab'),
     });
   };
   return channel;

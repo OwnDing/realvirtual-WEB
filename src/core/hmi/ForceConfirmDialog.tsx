@@ -22,28 +22,28 @@ import {
   getForceConfirmOpen,
   resolveForceConfirm,
 } from './force-confirm-store';
+import { useRvTranslation } from '../i18n';
 
 export function ForceConfirmDialog() {
+  const { t } = useRvTranslation('authoring');
   const open = useSyncExternalStore(subscribeForceConfirm, getForceConfirmOpen);
 
   return (
     <Dialog open={open} onClose={() => resolveForceConfirm(false)} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14, fontWeight: 600 }}>
         <Bolt sx={{ color: '#ffb300' }} />
-        Force signals?
+        {t('signal.forceTitle')}
       </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          Forcing overrides a signal's value and holds it — incoming updates from the
-          PLC or interface are ignored until you release the force. Use this for
-          testing only.
+          {t('signal.forceBody')}
           <br /><br />
-          Enable forcing for this session?
+          {t('signal.forceEnableQuestion')}
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button size="small" onClick={() => resolveForceConfirm(false)} sx={{ textTransform: 'none', mr: 'auto' }}>
-          Cancel
+          {t('signal.cancel')}
         </Button>
         <Button
           size="small"
@@ -52,7 +52,7 @@ export function ForceConfirmDialog() {
           onClick={() => resolveForceConfirm(true)}
           sx={{ textTransform: 'none' }}
         >
-          Enable forcing
+          {t('signal.forceEnable')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -31,6 +31,7 @@ import {
   freshOpId, WEB_COMPONENT_CODE_FIELD, WEB_COMPONENT_TYPE,
 } from '../scene/rv-scene-edits';
 import type { RvScenePrimitiveOp } from '../../ops/rv-unified-ops';
+import { rvT } from '../../i18n';
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export function validateScriptForSave(
     const { line, col } = parseErrorPosition(err);
     diagnostics.push({
       line, col, severity: 'error', rule: 'parse',
-      message: `Syntax error: ${err instanceof Error ? err.message : String(err)}`,
+      message: rvT('authoring', 'script.syntaxError', { message: err instanceof Error ? err.message : String(err) }),
     });
   }
 
@@ -111,7 +112,7 @@ export function validateScriptForSave(
       line: upto.split('\n').length,
       col: moduleMatch.index - (upto.lastIndexOf('\n') + 1) + 1,
       severity: 'error', rule: 'module-syntax',
-      message: 'Module syntax (import/export/exports) is not allowed — component scripts are plain scripts with a global setup(self) function.',
+      message: rvT('authoring', 'script.moduleSyntax'),
     });
   }
 
@@ -125,7 +126,7 @@ export function validateScriptForSave(
   if (!Number.isFinite(apiVersion) || apiVersion > SDK_API_VERSION) {
     diagnostics.push({
       line: 0, col: 0, severity: 'error', rule: 'api-version',
-      message: `Component declares ApiVersion ${apiVersion}, but this build supports up to ${SDK_API_VERSION}.`,
+      message: rvT('authoring', 'script.apiVersion', { declared: apiVersion, supported: SDK_API_VERSION }),
     });
   }
 
@@ -133,7 +134,7 @@ export function validateScriptForSave(
   if (js.trim().length > 0 && !/\bfunction\s+setup\s*\(/.test(js) && !/\bsetup\s*=/.test(js)) {
     diagnostics.push({
       line: 0, col: 0, severity: 'warning', rule: 'missing-setup',
-      message: "No global 'setup' function found — the component will not start (expected: function setup(self) { … }).",
+      message: rvT('authoring', 'script.noSetup'),
     });
   }
 

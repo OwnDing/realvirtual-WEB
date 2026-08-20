@@ -8,7 +8,7 @@
  * elements with bindable slots, only while signalLinkMode is on; clicking an
  * element opens the bind popover; toggling the mode / disposing cleans up.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { Object3D } from 'three';
 import { SignalStore } from '../src/core/engine/rv-signal-store';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
@@ -34,6 +34,12 @@ import {
   type SignalDragPayload,
 } from '../src/core/hmi/signal-drag-store';
 import type { GizmoHandle, GizmoOverlayManager } from '../src/core/engine/rv-gizmo-manager';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 /** A placed Conveyor exposes a bindable Flow.Run slot. */
 function makeConveyor(store: SignalStore, registry: NodeRegistry, scope: string): Object3D {

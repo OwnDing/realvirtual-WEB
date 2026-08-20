@@ -2,12 +2,18 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import {
   SignalBindPopover,
   type PickerSignal,
   type SlotRow,
 } from '../src/plugins/signal-bind/SignalBindPopover';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const SIGNALS: PickerSignal[] = [
   { name: 'Forward', interfaceId: 'connect', direction: 'output', dataType: 'PLCOutputBool' },

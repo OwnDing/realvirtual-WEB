@@ -25,6 +25,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { INSPECTOR_DOT_GUTTER, INSPECTOR_ROW_GAP } from './layout-constants';
+import { useRvTranslation } from '../i18n';
 
 const ACCENT = '79,195,247'; // selection / rail / drag-insertion accent (rgb tuple)
 
@@ -64,6 +65,7 @@ export interface ReorderableListProps {
 export function ReorderableList({
   items, title, onReorder, onSelect, onRemove, selectedId, emptyText = '(empty)', showIndex = true,
 }: ReorderableListProps) {
+  const { t } = useRvTranslation('authoring');
   const dragFrom = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -161,7 +163,7 @@ export function ReorderableList({
             className="rv-rl-actions"
             sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, opacity: selected ? 1 : 0, transition: 'opacity 120ms ease' }}
           >
-            <Tooltip title="Remove" placement="top">
+            <Tooltip title={t('component.remove')} placement="top">
               <IconButton size="small" onClick={(e) => { e.stopPropagation(); onRemove(i, item); }} sx={{ p: 0.25, color: 'rgba(255,120,120,0.8)' }}>
                 <RemoveIcon sx={{ fontSize: 14 }} />
               </IconButton>

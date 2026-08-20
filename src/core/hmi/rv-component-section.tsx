@@ -45,6 +45,7 @@ import { FieldRow } from './rv-field-row';
 import { InspectorRow } from './rv-inspector-row';
 import { fieldRendererRegistry } from './rv-field-renderer-registry';
 import { componentActionRegistry, type ComponentActionContext } from './rv-component-action-registry';
+import { useRvTranslation } from '../i18n';
 
 // ── Expand state persistence (default: expanded) ────────────────────────
 
@@ -142,6 +143,7 @@ function activateOnKey(handler: () => void) {
  *  visual language as the editable field rows, but never an editor. Resolves
  *  a {@link RuntimeRowSpec} (color + clickable navigation) or a raw value. */
 function ReadOnlyLiveRow({ fieldName, value }: { fieldName: string; value: unknown }) {
+  const { t } = useRvTranslation('authoring');
   const spec = isRuntimeRow(value) ? value : null;
   const text = spec ? spec.display : formatDisplayValue(value);
   const clickable = !!spec?.onClick;
@@ -212,6 +214,7 @@ export interface ComponentSectionProps {
 }
 
 export function ComponentSection({ nodePath, componentType, data, overriddenFields, consumedOnly, signalValue, headerAction, extraContent, readOnlyLive, onFieldEdit, onFieldReset, onResetComponent, viewer, signalStore }: ComponentSectionProps) {
+  const { t } = useRvTranslation('authoring');
   // A PLCInput/PLCOutput section header is a pure TYPE badge — it names the
   // direction while no value is in play, so the hue stays but the intensity is
   // always `weak` (plan-341 §2.8 b). Every other component keeps its type colour.
@@ -403,7 +406,7 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
       <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 0.375, bgcolor: color + '11', borderBottom: `1px solid ${color}22`, borderTop: `1px solid ${color}22` }}>
           <Typography sx={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-            {`Signal (${signalTypeLabel(componentType)})`}
+            {t('component.signalType', { type: signalTypeLabel(componentType) })}
           </Typography>
           <Typography sx={{ fontSize: 11, fontWeight: 600, fontFamily: 'monospace', ml: 'auto', color: valueColor }}>
             {valueText}
@@ -411,18 +414,18 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
           {headerAction}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.15 }}>
-          <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>Symbol</Typography>
+          <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>{t('component.symbol')}</Typography>
           <Tooltip title={symbol} placement="top">
             <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: INK_MED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{symbol}</Typography>
           </Tooltip>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.15 }}>
-          <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>Value</Typography>
+          <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>{t('component.value')}</Typography>
           <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: valueColor, fontWeight: 500 }}>{valueText}</Typography>
         </Box>
         {comment && (
           <Box sx={{ display: 'flex', alignItems: 'flex-start', px: 1, py: 0.15 }}>
-            <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>Comment</Typography>
+            <Typography sx={{ fontSize: 11, color: INK_LOW, width: 64, flexShrink: 0 }}>{t('component.comment')}</Typography>
             <Typography sx={{ fontSize: 11, color: INK_MED }}>{comment}</Typography>
           </Box>
         )}
@@ -494,12 +497,12 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
         )}
         {headerAction}
         {overriddenFields.size > 0 && (
-          <Tooltip title="Click to reset all overrides for this component" placement="top">
+          <Tooltip title={t('component.resetOverrides')} placement="top">
             <Typography
               onClick={(e) => { e.stopPropagation(); onResetComponent(); }}
               role="button"
               tabIndex={0}
-              aria-label={`Reset ${overriddenFields.size} override${overriddenFields.size !== 1 ? 's' : ''} for ${componentType}`}
+              aria-label={t('component.resetOverridesAria', { count: overriddenFields.size, component: componentType })}
               onKeyDown={activateOnKey(onResetComponent)}
               sx={{
                 display: 'flex',
@@ -681,7 +684,7 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
               transition: 'transform 0.15s',
             }} />
             <Typography sx={{ fontSize: 11, color: INK_LOW, ml: 0.25 }}>
-              {otherEntries.length} more field{otherEntries.length !== 1 ? 's' : ''}
+              {t('component.moreFields', { count: otherEntries.length })}
             </Typography>
           </Box>
           {showOther && otherEntries.map(([fieldName, value]) => (

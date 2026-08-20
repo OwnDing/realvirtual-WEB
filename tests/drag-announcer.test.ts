@@ -10,7 +10,7 @@
  * of the announcer is that it reads the Phase-2 transition stream — a stub
  * would happily keep passing after that stream changed shape.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
 import {
   createDragAnnouncer,
   DRAG_ANNOUNCE_DEBOUNCE_MS,
@@ -29,6 +29,12 @@ import {
   type SignalDragPayload,
 } from '../src/core/hmi/signal-drag-store';
 import { dropRejectText, type DropRejectReason } from '../src/plugins/signal-bind/drop-accept';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const PAYLOAD: SignalDragPayload = {
   name: 'MC07_Start',

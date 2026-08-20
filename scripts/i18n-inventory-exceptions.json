@@ -96,6 +96,18 @@
       "category": "react-copy",
       "match": "SIMITShared Memory",
       "reason": "Default SIMIT shared-memory name, shown as a placeholder. It must match the name RobotStudio's SIMIT connection opens, byte for byte."
+    },
+    {
+      "file": "src/core/hmi/rv-hierarchy-browser.tsx",
+      "category": "react-copy",
+      "match": "&middot;",
+      "reason": "A middle dot separating the footer's three counts, written as an entity because it sits bare in JSX. It is punctuation, not a word: the counts on either side ARE translated (authoring:hierarchy.nodes / .overrides / .filteringInline), and routing a separator through the catalog would invite someone to translate it into a word."
+    },
+    {
+      "file": "src/core/hmi/rv-signal-slot-row.tsx",
+      "category": "react-copy",
+      "match": "&nbsp;·&nbsp;",
+      "reason": "Non-breaking spaces around a middle dot, joining a node-name qualifier to a slot label. Pure typography — both halves are data (node and slot names), never copy, so there is nothing here to translate."
     }
   ]
 }

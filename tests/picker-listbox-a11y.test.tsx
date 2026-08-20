@@ -13,7 +13,7 @@
  * after a filter change, and two independently mounted overlays whose option
  * ids cannot collide.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
 import { useState } from 'react';
 import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react';
 import {
@@ -21,6 +21,12 @@ import {
   type SignalSearchItem,
 } from '../src/core/hmi/SignalSearchOverlay';
 import { dropRejectText, type DropRejectReason } from '../src/plugins/signal-bind/drop-accept';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 /** Two CONNECT signals and two model signals → the list renders TWO group headers. */
 const SIGNALS: SignalSearchItem[] = [

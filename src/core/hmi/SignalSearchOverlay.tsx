@@ -55,6 +55,7 @@ import type { RVViewer } from '../rv-viewer';
 import type { SignalDirection } from './rv-signal-badge';
 import { SignalListItem } from './SignalListItem';
 import { dropRejectText, type DropRejectReason } from '../../plugins/signal-bind/drop-accept';
+import { useRvTranslation } from '../i18n';
 
 /** One selectable signal in the overlay. */
 export interface SignalSearchItem {
@@ -106,6 +107,7 @@ export function SignalSearchOverlay({
    */
   getRejectReason?: (item: SignalSearchItem) => DropRejectReason | null;
 }) {
+  const { t } = useRvTranslation('authoring');
   const [q, setQ] = useState('');
   // Deferred filtering: keystrokes stay snappy, the (potentially large) list
   // catches up in a lower-priority render.
@@ -163,11 +165,11 @@ export function SignalSearchOverlay({
     const internal = base.filter((x) => x.origin === 'internal');
     const out: RowEntry[] = [];
     if (connect.length > 0) {
-      out.push({ kind: 'header', label: 'CONNECT (live)' });
+      out.push({ kind: 'header', label: t('signal.connectLive') });
       for (const item of connect) out.push({ kind: 'item', item });
     }
     if (internal.length > 0) {
-      out.push({ kind: 'header', label: 'Model signals' });
+      out.push({ kind: 'header', label: t('signal.modelSignals') });
       for (const item of internal) out.push({ kind: 'item', item });
     }
     return [out, hidden];
@@ -360,7 +362,7 @@ export function SignalSearchOverlay({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onSearchKeyDown}
-          placeholder="Search name, address, comment…"
+          placeholder={t('signal.searchPlaceholder')}
           slotProps={{
             input: {
               startAdornment: (
@@ -390,7 +392,7 @@ export function SignalSearchOverlay({
         >
           {signals.length === 0 ? (
             <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textAlign: 'center', py: 1.5, px: 1, lineHeight: 1.5 }}>
-              No interface connected.<br />Connect an interface to link signals.
+              {t('signal.noInterface')}<br />{t('signal.connectToLink')}
             </Typography>
           ) : rows.length === 0 && (
             <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textAlign: 'center', py: 1.5 }}>
@@ -516,8 +518,8 @@ export function SignalSearchOverlay({
             }}
           >
             {showAll
-              ? 'Hide signals that do not fit'
-              : `${hiddenCount} ${hiddenCount === 1 ? 'signal does' : 'signals do'} not fit — show`}
+              ? t('signal.hideUnfit')
+              : t('signal.showUnfit', { count: hiddenCount })}
           </ButtonBase>
         )}
       </Box>

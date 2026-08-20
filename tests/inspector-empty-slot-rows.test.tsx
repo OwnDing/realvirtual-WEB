@@ -7,10 +7,16 @@
  * the two-group picker, and picking an internal model signal binds it live
  * through the manager (F1/F2/F3/F9).
  */
-import { describe, expect, it, afterEach } from 'vitest';
+import { describe, expect, it, afterEach, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { ComponentSignalSlots } from '../src/plugins/signal-bind/InlineSignalSlots';
 import { makeInlineSlotFixture } from './_inline-slot-fixture';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(cleanup);
 

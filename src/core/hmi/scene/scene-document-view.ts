@@ -35,6 +35,7 @@ import {
 } from '../../editor/active-document-view';
 import { decideSaveVerb, saveDocument, type SaveVerb } from '../../editor/rv-save-document';
 import type { SceneSnapshot, SceneStore } from './scene-store';
+import { onLocaleChange, rvT } from '../../i18n';
 
 /** The mode whose writer owns the seam instead of this one. */
 export const EDITOR_MODE = 'editor';
@@ -95,39 +96,39 @@ export function sceneDocumentView(
   const menu: ActiveDocumentVerb[] = [
     {
       id: 'save-as',
-      label: 'Save as…',
+      label: rvT('authoring', 'doc.saveAs'),
       prompt: {
-        title: 'Save as new scene',
-        initial: snap.isDraft ? draft.name : `${draft.name} (copy)`,
+        title: rvT('authoring', 'doc.saveAsTitle'),
+        initial: snap.isDraft ? draft.name : rvT('authoring', 'doc.copySuffix', { name: draft.name }),
       },
       run: async (name) => { if (name) await store.saveAs(name); },
     },
     {
       id: 'rename',
-      label: 'Rename…',
+      label: rvT('authoring', 'doc.rename'),
       disabled: !savedId,
-      prompt: { title: 'Rename scene', initial: snap.saved?.name ?? draft.name },
+      prompt: { title: rvT('authoring', 'doc.renameTitle'), initial: snap.saved?.name ?? draft.name },
       run: (name) => { if (savedId && name) store.rename(savedId, name); },
     },
     {
       id: 'duplicate',
-      label: 'Duplicate',
+      label: rvT('authoring', 'doc.duplicate'),
       disabled: !savedId,
       run: async () => { if (savedId) await store.duplicate(savedId); },
     },
     {
       id: 'discard',
-      label: 'Discard changes',
+      label: rvT('authoring', 'doc.discardChanges'),
       danger: true,
       disabled: !snap.dirty,
       run: async () => { await store.discard(); },
     },
     {
       id: 'save-into-model',
-      label: 'Save settings into model…',
-      secondary: 'Settings travel with the file',
+      label: rvT('authoring', 'doc.saveIntoModel'),
+      secondary: rvT('authoring', 'doc.saveIntoModelSecondary'),
       disabled: snap.busy,
-      prompt: { title: 'Save settings into model', initial: draft.name },
+      prompt: { title: rvT('authoring', 'doc.saveIntoModelTitle'), initial: draft.name },
       run: async (name) => {
         if (!name) return;
         return describeSaveIntoModel(await store.saveSettingsIntoModel(name));
@@ -213,7 +214,7 @@ async function saveScene(
     case 'target-changed':
       return {
         status: 'error',
-        message: 'The project changed while saving — nothing was adopted. Try again.',
+        message: rvT('authoring', 'doc.projectChanged'),
       };
     default:           return { status: 'error', message: result.message };
   }
@@ -302,11 +303,16 @@ export function installSceneDocumentView(viewer: RVViewer, store: SceneStore): (
 
   const unsubStore = store.subscribe(publish);
   const unsubModes = subscribeModes?.(publish);
+  // The verb labels are resolved by `sceneDocumentView` on every publish, so a
+  // language switch only needs a REASON to publish again — no `() => string`
+  // widening of `ActiveDocumentVerb`, and no stale menu after the switch.
+  const unsubLocale = onLocaleChange(publish);
   publish();
 
   return () => {
     unsubStore();
     unsubModes?.();
+    unsubLocale();
     if (published) { clearActiveDocumentViewFor(published); published = null; }
   };
 }

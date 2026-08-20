@@ -20,6 +20,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { ikEditStore, type IKEditValues } from './ik-edit-store';
 import { EnumEditor, NumberEditor, BooleanEditor } from './rv-field-editors';
 import { popoverContentRegistry } from './popover-store';
+import { useRvTranslation } from '../i18n';
 
 const INTERP = ['PointToPoint', 'PointToPointUnsynced', 'Linear'];
 
@@ -52,15 +53,16 @@ function StatusRow({ reachable, count, index, onCycle, onPreview }: {
   reachable: boolean; count: number; index: number;
   onCycle: (dir: 1 | -1) => void; onPreview: (dir: 1 | -1 | null) => void;
 }) {
+  const { t } = useRvTranslation('authoring');
   const col = reachable ? '#5dd55d' : '#ff5d5d';
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
       <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: col, boxShadow: `0 0 6px ${col}`, flexShrink: 0 }} />
       <Typography sx={{ fontSize: 10.5, color: 'rgba(255,255,255,0.55)', flex: 1 }}>
-        {reachable ? 'reachable' : 'not reachable'}
+        {t(reachable ? 'ik.reachable' : 'ik.notReachable')}
       </Typography>
       {count > 0 && (
-        <Tooltip title="IK configuration (shoulder/elbow/wrist)" placement="top">
+        <Tooltip title={t('ik.configTip')} placement="top">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
             <IconButton
               size="small" disabled={count < 2}
@@ -109,6 +111,7 @@ function TripleRow({ label, values, unit, onChange }: {
 }
 
 function IKTargetQuickEdit() {
+  const { t } = useRvTranslation('authoring');
   const active = useSyncExternalStore(ikEditStore.subscribe, ikEditStore.getSnapshot);
   if (!active) return null;
   const ctl = ikEditStore.getController();
@@ -129,35 +132,35 @@ function IKTargetQuickEdit() {
       />
 
       <TripleRow
-        label="Pos (mm)" values={active.poseMm}
+        label={t('ik.pos')} values={active.poseMm}
         onChange={(i, v) => poseField((['x', 'y', 'z'] as const)[i], v)}
       />
       <TripleRow
-        label="Rot (°)" values={active.poseDeg}
+        label={t('ik.rot')} values={active.poseDeg}
         onChange={(i, v) => poseField((['rx', 'ry', 'rz'] as const)[i], v)}
       />
-      <Row label="Align">
+      <Row label={t('ik.align')}>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <ActionBtn label="Down" onClick={() => ctl.align('down')} />
-          <ActionBtn label="World" onClick={() => ctl.align('world')} />
+          <ActionBtn label={t('ik.down')} onClick={() => ctl.align('down')} />
+          <ActionBtn label={t('ik.world')} onClick={() => ctl.align('world')} />
         </Box>
       </Row>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 0.75 }} />
 
-      <Row label="Interpolation"><EnumEditor value={active.interpolation} options={INTERP} onChange={(v) => set('interpolation', v)} /></Row>
-      <Row label="Speed"><NumberEditor value={active.speedToTarget} onChange={(v) => set('speedToTarget', v)} /></Row>
-      {isLinear && <Row label="Lin. Speed"><NumberEditor value={active.linearSpeed} onChange={(v) => set('linearSpeed', v)} /></Row>}
-      {isLinear && <Row label="Lin. Accel"><NumberEditor value={active.linearAccel} onChange={(v) => set('linearAccel', v)} /></Row>}
-      <Row label="Blending"><BooleanEditor value={active.enableBlending} onChange={(v) => set('enableBlending', v)} /></Row>
-      {active.enableBlending && <Row label="Blend R."><NumberEditor value={active.blendRadius} onChange={(v) => set('blendRadius', v)} /></Row>}
-      <Row label="Wait (s)"><NumberEditor value={active.waitForSeconds} onChange={(v) => set('waitForSeconds', v)} /></Row>
-      <Row label="Pick&Place"><BooleanEditor value={active.pickAndPlace} onChange={(v) => set('pickAndPlace', v)} /></Row>
+      <Row label={t('ik.interpolation')}><EnumEditor value={active.interpolation} options={INTERP} onChange={(v) => set('interpolation', v)} /></Row>
+      <Row label={t('ik.speed')}><NumberEditor value={active.speedToTarget} onChange={(v) => set('speedToTarget', v)} /></Row>
+      {isLinear && <Row label={t('ik.linSpeed')}><NumberEditor value={active.linearSpeed} onChange={(v) => set('linearSpeed', v)} /></Row>}
+      {isLinear && <Row label={t('ik.linAccel')}><NumberEditor value={active.linearAccel} onChange={(v) => set('linearAccel', v)} /></Row>}
+      <Row label={t('ik.blending')}><BooleanEditor value={active.enableBlending} onChange={(v) => set('enableBlending', v)} /></Row>
+      {active.enableBlending && <Row label={t('ik.blendR')}><NumberEditor value={active.blendRadius} onChange={(v) => set('blendRadius', v)} /></Row>}
+      <Row label={t('ik.wait')}><NumberEditor value={active.waitForSeconds} onChange={(v) => set('waitForSeconds', v)} /></Row>
+      <Row label={t('ik.pickPlace')}><BooleanEditor value={active.pickAndPlace} onChange={(v) => set('pickAndPlace', v)} /></Row>
 
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 0.75 }} />
       <Box sx={{ display: 'flex', gap: 0.5 }}>
-        <ActionBtn label="+ before" onClick={() => ctl.addPoint('before')} />
-        <ActionBtn label="+ after" onClick={() => ctl.addPoint('after')} />
-        <ActionBtn label="Delete" color="#ff8080" onClick={() => ctl.deleteTarget()} />
+        <ActionBtn label={t('ik.addBefore')} onClick={() => ctl.addPoint('before')} />
+        <ActionBtn label={t('ik.addAfter')} onClick={() => ctl.addPoint('after')} />
+        <ActionBtn label={t('ik.delete')} color="#ff8080" onClick={() => ctl.deleteTarget()} />
       </Box>
     </Box>
   );

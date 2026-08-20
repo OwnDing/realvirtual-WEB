@@ -50,6 +50,7 @@ import {
 import {
   closeScriptEditor, getScriptEditorState, setScriptEditorNode, subscribeScriptEditor,
 } from './script-editor-store';
+import { useRvTranslation } from '../../i18n';
 
 type MonacoEditor = ReturnType<Monaco['editor']['create']>;
 
@@ -135,6 +136,7 @@ function applyLintMarkers(
 }
 
 function MonacoHost({ initialCode, readOnly, desSafe, onEditor, onDirty, onSaveShortcut }: MonacoHostProps) {
+  const { t } = useRvTranslation('authoring');
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -208,12 +210,12 @@ function MonacoHost({ initialCode, readOnly, desSafe, onEditor, onDirty, onSaveS
       <Box ref={containerRef} sx={{ position: 'absolute', inset: 0 }} />
       {loading && (
         <Typography sx={{ p: 2, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-          Loading editor…
+          {t('script.loading')}
         </Typography>
       )}
       {loadError && (
         <Typography sx={{ p: 2, fontSize: 12, color: '#ef5350' }}>
-          Editor failed to load: {loadError}
+          {t('script.loadFailed', { error: loadError })}
         </Typography>
       )}
     </Box>
@@ -227,6 +229,7 @@ function MonacoHost({ initialCode, readOnly, desSafe, onEditor, onDirty, onSaveS
  * whenever the script-editor-store says `open`.
  */
 export function ScriptEditorPanel({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('authoring');
   const state = useSyncExternalStore(subscribeScriptEditor, getScriptEditorState);
   const plugin = getScriptPlugin(viewer);
   const [allowed, setAllowed] = useState(plugin?.scriptsAllowed ?? false);
@@ -375,7 +378,7 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
       >
         {nodes.length === 0 && (
           <MenuItem value="" disabled sx={{ fontSize: 12 }}>
-            No scripted nodes
+            {t('script.noScriptedNodes')}
           </MenuItem>
         )}
         {nodes.map((n) => (
@@ -385,8 +388,8 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
         ))}
       </Select>
       <Tooltip title={canAddToSelection
-        ? `Add a script to the selected node (${selectedPath})`
-        : 'Select a node in the 3D view to add a script to it'}
+        ? t('script.addToSelected', { name: selectedPath })
+        : t('script.selectNodeFirst')}
       >
         <span>
           <IconButton
@@ -400,7 +403,7 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Save — transpile, validate, hot-reload (Ctrl-S)">
+      <Tooltip title={t('script.saveTip')}>
         <span>
           <IconButton
             size="small"
@@ -415,7 +418,7 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
       </Tooltip>
       <Chip
         size="small"
-        label={desSafe ? 'DES-safe' : 'continuous'}
+        label={t(desSafe ? 'script.desSafe' : 'script.continuous')}
         color={desSafe ? 'success' : 'default'}
         variant="outlined"
         sx={{ height: 18, fontSize: 10, mx: 0.5 }}
@@ -423,11 +426,11 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
       />
       {dirty && (
         <Typography sx={{ fontSize: 10, color: DIRTY_INK }} data-testid="script-dirty">
-          modified
+          {t('script.modified')}
         </Typography>
       )}
       {saveState === 'error' && (
-        <Typography sx={{ fontSize: 10, color: '#ef5350' }}>not saved</Typography>
+        <Typography sx={{ fontSize: 10, color: '#ef5350' }}>{t('script.notSaved')}</Typography>
       )}
     </Box>
   );
@@ -437,8 +440,8 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
       <FloatingPanel
         open
         onClose={closeScriptEditor}
-        title="Script Editor"
-        subtitle={state.nodePath ?? 'no node selected'}
+        title={t('script.title')}
+        subtitle={state.nodePath ?? t('script.noNodeSelected')}
         panelId="script-editor"
         defaultWidth={720}
         defaultHeight={520}
@@ -454,10 +457,10 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
             data-testid="script-trust-banner"
           >
             <Typography sx={{ fontSize: 12, color: '#ffb74d', flex: 1 }}>
-              Scripting is disabled for this model — the editor is read-only and no component script runs.
+              {t('script.disabled')}
             </Typography>
             <Button size="small" variant="outlined" color="warning" onClick={handleEnableScripts} data-testid="script-enable">
-              Enable scripting
+              {t('script.enable')}
             </Button>
           </Box>
         )}
@@ -473,8 +476,7 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
           />
         ) : (
           <Typography sx={{ p: 2, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-            No node with a WebComponent script in this model. Select a node in the 3D view and use
-            the + button to add one.
+            {t('script.emptyHint')}
           </Typography>
         )}
       </FloatingPanel>

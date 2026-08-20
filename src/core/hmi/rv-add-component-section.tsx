@@ -31,6 +31,7 @@ import {
   getSchemaDefaults,
 } from '../engine/rv-component-registry';
 import { getActiveEditTarget } from './rv-edit-target';
+import { useRvTranslation } from '../i18n';
 
 export interface AddComponentSectionProps {
   viewer: RVViewer;
@@ -38,6 +39,7 @@ export interface AddComponentSectionProps {
 }
 
 export function AddComponentSection({ viewer, nodePath }: AddComponentSectionProps) {
+  const { t } = useRvTranslation('authoring');
   // Re-render on workspace-mode changes so the affordance appears/disappears
   // with the asset editor's EditTarget.
   useSyncExternalStore(viewer.modes.subscribe, viewer.modes.getSnapshot);
@@ -76,7 +78,7 @@ export function AddComponentSection({ viewer, nodePath }: AddComponentSectionPro
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{ fontSize: '0.72rem', px: 1.5, py: 0.25 }}
       >
-        Add Component
+        {t('component.addComponent')}
       </Button>
       <Menu
         anchorEl={anchor}
@@ -89,7 +91,7 @@ export function AddComponentSection({ viewer, nodePath }: AddComponentSectionPro
             autoFocus
             size="small"
             fullWidth
-            placeholder="Search components…"
+            placeholder={t('component.searchComponents')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
@@ -110,7 +112,7 @@ export function AddComponentSection({ viewer, nodePath }: AddComponentSectionPro
           </MenuItem>
         ))}
         {filtered.length === 0 && (
-          <MenuItem disabled sx={{ fontSize: 12 }}>No matching components</MenuItem>
+          <MenuItem disabled sx={{ fontSize: 12 }}>{t('component.noMatchingComponents')}</MenuItem>
         )}
       </Menu>
     </Box>

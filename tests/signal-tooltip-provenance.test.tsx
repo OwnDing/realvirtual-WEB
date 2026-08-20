@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { RVViewer } from '../src/core/rv-viewer';
 import { SignalStore } from '../src/core/engine/rv-signal-store';
@@ -18,6 +18,12 @@ import {
 } from '../src/core/hmi/rv-signal-badge';
 import { setTooltipField } from '../src/core/hmi/signal-display-store';
 import { AUTHORITY_SENTENCE } from '../src/core/hmi/signal-vocabulary';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const SIGNAL_NAME = 'Line.Start';
 

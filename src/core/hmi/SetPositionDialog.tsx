@@ -26,6 +26,7 @@ import { USER_PAUSE_REASON } from '../engine/rv-constants';
 import { Vector3Editor } from './rv-field-editors';
 import { useViewer } from '../../hooks/use-viewer';
 import { useEditorPlugin } from '../../hooks/use-editor-plugin';
+import { useRvTranslation } from '../i18n';
 
 // ─── Module-level open/close store (minimal — just tracks open state) ───
 
@@ -91,6 +92,7 @@ function useDrag(initialPos: { x: number; y: number }) {
 // ─── Component ──────────────────────────────────────────────────────────
 
 export function SetPositionDialog() {
+  const { t } = useRvTranslation('authoring');
   const open = useSyncExternalStore(subscribe, getSnapshot);
   const viewer = useViewer();
   const { state } = useEditorPlugin();
@@ -223,7 +225,7 @@ export function SetPositionDialog() {
         }}
       >
         <Typography sx={{ fontSize: 11, fontWeight: 600, flex: 1, color: 'text.primary' }}>
-          Set Transform
+          {t('transform.title')}
         </Typography>
         <IconButton
           size="small"
@@ -238,22 +240,22 @@ export function SetPositionDialog() {
       {/* Position */}
       <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-          <Typography sx={labelSx}>Position</Typography>
+          <Typography sx={labelSx}>{t('transform.position')}</Typography>
           <Box sx={{ flex: 1 }}>
             <Vector3Editor value={position} onChange={handlePositionChange} />
           </Box>
-          <Tooltip title="Reset position to 0">
+          <Tooltip title={t('transform.resetPosition')}>
             <IconButton size="small" onClick={() => handlePositionChange({ x: 0, y: 0, z: 0 })} sx={{ p: 0.25, ml: 0.5, color: 'text.secondary' }}>
               <RestartAlt sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography sx={labelSx}>Rotation</Typography>
+          <Typography sx={labelSx}>{t('transform.rotation')}</Typography>
           <Box sx={{ flex: 1 }}>
             <Vector3Editor value={rotation} onChange={handleRotationChange} />
           </Box>
-          <Tooltip title="Reset rotation to 0">
+          <Tooltip title={t('transform.resetRotation')}>
             <IconButton size="small" onClick={() => handleRotationChange({ x: 0, y: 0, z: 0 })} sx={{ p: 0.25, ml: 0.5, color: 'text.secondary' }}>
               <RestartAlt sx={{ fontSize: 14 }} />
             </IconButton>
@@ -264,7 +266,7 @@ export function SetPositionDialog() {
       {/* Footer */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 1.5, py: 0.75, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <Button size="small" onClick={closeSetPositionDialog} sx={{ fontSize: 10, textTransform: 'none', color: 'text.secondary', minWidth: 0, px: 1 }}>
-          Close
+          {t('transform.close')}
         </Button>
       </Box>
     </Paper>

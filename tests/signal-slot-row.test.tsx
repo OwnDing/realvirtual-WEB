@@ -10,9 +10,15 @@
  *  - A11y floor assertions: 11px text minimum, ink >= 0.5 alpha, >= 24px
  *    interactive targets (DESIGN.md floors, plan Phase 5).
  */
-import { describe, expect, it, vi, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterEach, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { SignalSlotRow, type SlotRow } from '../src/core/hmi/rv-signal-slot-row';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(cleanup);
 

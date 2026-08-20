@@ -24,7 +24,7 @@
  * assertion would be vacuous.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import { FakeDir, asDirHandle, namedError } from './helpers/fake-fs-handles';
 import { glbBytes, glbWrite } from './helpers/scene-write';
 import { BrowserBackend } from '../src/core/project/backends/browser-backend';
@@ -60,6 +60,12 @@ import {
   type SceneSyncNotice,
 } from '../src/core/hmi/scene/rv-scene-live-sync';
 import { sceneDocumentsOf } from '../src/core/project/rv-project-documents';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Fixtures ───────────────────────────────────────────────────────────
 

@@ -78,6 +78,7 @@ import {
   subscribeActiveDocumentView,
 } from '../editor/active-document-view';
 import { useUIVisible } from './ui-context-store';
+import { useRvTranslation, type RVTranslationKey } from '../i18n';
 
 // Re-exports for backwards compatibility — external callers (and tests) may
 // import these symbols from `rv-hierarchy-browser`.
@@ -109,26 +110,30 @@ function ensurePulseAnimation(): void {
 
 // ─── Type filter chips ───────────────────────────────────────────────────
 
-const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'drives', label: 'Drives' },
-  { key: 'sensors', label: 'Sensors' },
-  { key: 'signals', label: 'Signals' },
-  { key: 'logic', label: 'Logic' },
+// `labelKey`, not `label`: this table is built at module load — before any
+// language preference exists — so a resolved string here would be frozen at
+// whatever the first import saw. The chip resolves it at render instead.
+const TYPE_FILTERS: { key: TypeFilter; labelKey: RVTranslationKey<'authoring'> }[] = [
+  { key: 'all', labelKey: 'hierarchy.all' },
+  { key: 'drives', labelKey: 'hierarchy.drives' },
+  { key: 'sensors', labelKey: 'hierarchy.sensors' },
+  { key: 'signals', labelKey: 'hierarchy.signals' },
+  { key: 'logic', labelKey: 'hierarchy.logic' },
 ];
 
 /** Empty result state with an in-place recovery action. `onClear` resets the
  *  search + type filter in one click so the user never has to hunt for the tiny
  *  clear-X and the funnel icon to escape a dead-end "No matching nodes". */
 function NoMatchState({ onClear }: { onClear?: () => void }) {
+  const { t } = useRvTranslation('authoring');
   return (
     <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
       <Typography sx={{ fontSize: 12, color: 'text.disabled', mb: onClear ? 1 : 0 }}>
-        No matching nodes
+        {t('hierarchy.noMatch')}
       </Typography>
       {onClear && (
         <Button size="small" onClick={onClear} sx={{ textTransform: 'none', fontSize: 11 }}>
-          Clear filters
+          {t('hierarchy.clearFilters')}
         </Button>
       )}
     </Box>
@@ -179,6 +184,7 @@ export interface HierarchyBrowserProps {
 }
 
 export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
+  const { t } = useRvTranslation('authoring');
   const { plugin, state } = useEditorPlugin();
   const selection = useSelection();
 
@@ -1005,7 +1011,7 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
       }
       onClose={handleClose}
       toolbar={
-        <Tooltip title={filtersOpen ? 'Hide search & filter' : 'Search & filter'} disableInteractive>
+        <Tooltip title={t(filtersOpen ? 'hierarchy.hideSearch' : 'hierarchy.showSearch')} disableInteractive>
           <IconButton
             size="small"
             onClick={toggleFilters}
@@ -1038,12 +1044,12 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
         <Box sx={{ px: 1, py: 0.25, display: 'flex', alignItems: 'center' }}>
           <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
             {isFlat || treeVisibleCount !== null
-              ? `${displayCount} of ${counts.total} node${counts.total !== 1 ? 's' : ''}`
-              : `${counts.total} node${counts.total !== 1 ? 's' : ''}`}
+              ? t('hierarchy.nodesOf', { shown: displayCount, count: counts.total })
+              : t('hierarchy.nodes', { count: counts.total })}
             {counts.withOverrides > 0 && (
-              <> &middot; {counts.withOverrides} with override{counts.withOverrides !== 1 ? 's' : ''}</>
+              <> &middot; {t('hierarchy.overrides', { count: counts.withOverrides })}</>
             )}
-            {isSearchPending && <> &middot; filtering&hellip;</>}
+            {isSearchPending && <> &middot; {t('hierarchy.filteringInline')}</>}
           </Typography>
         </Box>
       }
@@ -1057,7 +1063,7 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
           <TextField
             size="small"
             fullWidth
-            placeholder="Search nodes..."
+            placeholder={t('hierarchy.searchNodes')}
             value={searchTerm}
             inputRef={searchInputRef}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1108,10 +1114,10 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
 
         {/* Type filter buttons */}
         <Box sx={{ display: 'flex', gap: 0.25, px: 0.75, pt: 0.25, pb: 0.5, borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          {TYPE_FILTERS.map(({ key, label }) => (
+          {TYPE_FILTERS.map(({ key, labelKey }) => (
             <Chip
               key={key}
-              label={label}
+              label={t(labelKey)}
               size="small"
               onClick={() => setTypeFilter(key)}
               sx={filterChipSx(typeFilter === key)}
@@ -1132,7 +1138,7 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
         ref={scrollContainerRef}
         className={RV_SCROLL_CLASS}
         role="tree"
-        aria-label="Scene hierarchy"
+        aria-label={t('hierarchy.sceneHierarchy')}
         aria-multiselectable
         tabIndex={0}
         aria-activedescendant={activeDescendant}
@@ -1230,11 +1236,11 @@ export function HierarchyBrowser({ viewer }: HierarchyBrowserProps) {
             </div>
           ) : isSearchPending ? (
             <Typography sx={{ fontSize: 12, color: 'text.disabled', textAlign: 'center', py: 4 }}>
-              Filtering&hellip;
+              {t('hierarchy.filtering')}
             </Typography>
           ) : state.editableNodes.length === 0 ? (
             <Typography sx={{ fontSize: 12, color: 'text.disabled', textAlign: 'center', py: 4 }}>
-              No model loaded
+              {t('hierarchy.noModel')}
             </Typography>
           ) : (
             <NoMatchState onClear={hasActiveFilters ? clearAllFilters : undefined} />

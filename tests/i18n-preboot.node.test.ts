@@ -95,11 +95,15 @@ describe('pre-boot markup stays in step with the catalog', () => {
 });
 
 describe('English catalog was moved, not rewritten (ADR-0001 §3)', () => {
+  // Explicit timeout: the work is every catalog value against every migrated
+  // source file at the base ref, so it grows with each batch and passed 5 s
+  // (the default) during batch 6. A default-timeout failure here reads exactly
+  // like a real regression, which is the wrong thing for this gate to say.
   it('traces every value back to the pre-migration source', () => {
     const { checked, missing } = checkVerbatim(MIGRATION_BASE_REF, ROOT);
     expect(missing, `not found verbatim in ${MIGRATION_BASE_REF}`).toEqual([]);
     expect(checked).toBeGreaterThan(50);
-  });
+  }, 60_000);
 
   it('states a reason for every declared exemption', () => {
     for (const [key, reason] of NEW_STRING_EXEMPTIONS) {

@@ -16,7 +16,7 @@
  *  - the live region speaks on save transitions and never on an edit.
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest';
 import { render, screen, cleanup, waitFor, fireEvent, act } from '@testing-library/react';
 import { DocumentCard } from '../src/core/hmi/scene/DocumentCard';
 import {
@@ -25,6 +25,12 @@ import {
   type ActiveDocumentView,
 } from '../src/core/editor/active-document-view';
 import { setOpenDocumentBase } from '../src/core/editor/active-asset-store';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Doubles ────────────────────────────────────────────────────────────
 

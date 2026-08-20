@@ -14,7 +14,7 @@
  * discovery bind that now persists the data type in the first place.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
@@ -30,6 +30,12 @@ import {
   type ConnectInterfaceSignal,
   type ConnectSignalSchema,
 } from '../src/core/hmi/connect-store';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 /** MQTT schema as the gateway reports it — note Bool FIRST and `String` (not `Text`). */
 const MQTT_SCHEMA: ConnectSignalSchema = {

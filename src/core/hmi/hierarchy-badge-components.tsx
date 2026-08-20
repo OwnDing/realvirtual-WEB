@@ -29,6 +29,7 @@ import {
   signalBadgeColor,
   splitTypes,
 } from './hierarchy-utils';
+import { useRvTranslation } from '../i18n';
 
 // ─── BadgeChip ───────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export function BadgeChip({
   label: string;
   onClick?: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useRvTranslation('authoring');
   const clickable = !!onClick;
   return (
     <Chip
@@ -61,7 +63,7 @@ export function BadgeChip({
       // Row uses double-click to open the inspector; the chip does it on a
       // single click, so swallow the chip's own dblclick to avoid a stray fit.
       onDoubleClick={clickable ? (e) => e.stopPropagation() : undefined}
-      title={clickable ? 'Open in inspector' : undefined}
+      title={clickable ? t('hierarchy.openInInspector') : undefined}
       className={clickable ? 'rv-type-chip-btn' : undefined}
       sx={{
         height: 16,

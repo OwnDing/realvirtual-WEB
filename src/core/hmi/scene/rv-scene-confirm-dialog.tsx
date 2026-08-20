@@ -19,6 +19,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { useRvTranslation } from '../../i18n';
 
 interface SceneConfirmDialogProps {
   open: boolean;
@@ -51,18 +52,19 @@ export function SceneConfirmDialog({
   onDiscard,
   onCancel,
 }: SceneConfirmDialogProps) {
+  const { t } = useRvTranslation('authoring');
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>Unsaved changes</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('doc.confirmTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          You have unsaved changes in <b>"{sceneName}"</b>. What would you like to do?
+          {t('doc.confirmBody')} <b>"{sceneName}"</b>. {t('doc.confirmQuestion')}
         </DialogContentText>
         {alsoUnsaved && alsoUnsaved.length > 0 && (
           <DialogContentText sx={{ fontSize: 13, mt: 1 }}>
             {alsoUnsaved.length === 1
-              ? 'This document is also unsaved:'
-              : `These ${alsoUnsaved.length} documents are also unsaved:`}
+              ? t('doc.alsoUnsavedOne')
+              : t('doc.alsoUnsavedMany', { count: alsoUnsaved.length })}
             <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
               {alsoUnsaved.map((name, i) => (
                 <li key={`${name}:${i}`}><b>{name}</b></li>
@@ -73,18 +75,18 @@ export function SceneConfirmDialog({
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button size="small" onClick={onCancel} sx={{ textTransform: 'none', mr: 'auto' }}>
-          Cancel
+          {t('doc.cancel')}
         </Button>
         <Button size="small" color="error" onClick={onDiscard} sx={{ textTransform: 'none' }}>
-          Discard
+          {t('doc.discard')}
         </Button>
         {canSave ? (
           <Button size="small" variant="contained" onClick={onSave} sx={{ textTransform: 'none' }}>
-            Save
+            {t('doc.save')}
           </Button>
         ) : (
           <Button size="small" variant="contained" onClick={onSaveAs} sx={{ textTransform: 'none' }}>
-            Save as…
+            {t('doc.saveAs')}
           </Button>
         )}
       </DialogActions>

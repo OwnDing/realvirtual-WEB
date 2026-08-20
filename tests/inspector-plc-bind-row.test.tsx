@@ -32,6 +32,12 @@ import type { RVViewer } from '../src/core/rv-viewer';
 import '../src/core/engine/rv-lamp';
 import '../src/core/engine/rv-push-button3d';
 
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
+
 const DEMO_MODEL = '/models/DemoRealvirtualWeb.glb';
 /**
  * The node from the user's screenshot, at its path in the shipping demo.

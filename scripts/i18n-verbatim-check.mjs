@@ -144,6 +144,37 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/tooltip/MetadataTooltipContent.tsx',
   'src/core/hmi/tooltip/PdfTooltipSection.tsx',
   'src/core/hmi/tooltip/SignalBadgeTooltipContent.tsx',
+  // Authoring & inspector workspace (Milestone 4b, batch 6)
+  'src/core/hmi/DragNumberField.tsx',
+  'src/core/hmi/ForceConfirmDialog.tsx',
+  'src/core/hmi/HierarchyNodeRow.tsx',
+  'src/core/hmi/IKTargetQuickEdit.tsx',
+  'src/core/hmi/ReorderableList.tsx',
+  'src/core/hmi/SetPositionDialog.tsx',
+  'src/core/hmi/SignalEditDialog.tsx',
+  'src/core/hmi/SignalSearchOverlay.tsx',
+  'src/core/hmi/hierarchy-badge-components.tsx',
+  'src/core/hmi/rv-add-component-section.tsx',
+  'src/core/hmi/rv-component-section.tsx',
+  'src/core/hmi/rv-custom-runtime-instruction-field-renderer.tsx',
+  'src/core/hmi/rv-extras-editor.tsx',
+  'src/core/hmi/rv-field-row.tsx',
+  'src/core/hmi/rv-hierarchy-browser.tsx',
+  'src/core/hmi/rv-ik-path-field-renderer.tsx',
+  'src/core/hmi/rv-property-inspector.tsx',
+  'src/core/hmi/rv-reference-display.tsx',
+  'src/core/hmi/rv-signal-badge.tsx',
+  'src/core/hmi/rv-signal-slot-row.tsx',
+  'src/core/hmi/scene/DocumentCard.tsx',
+  'src/core/hmi/scene/DocumentCrumbs.tsx',
+  'src/core/hmi/scene/rv-scene-confirm-dialog.tsx',
+  'src/core/hmi/scene/rv-scene-edits.ts',
+  'src/core/hmi/scene/rv-scene-live-sync.ts',
+  'src/core/hmi/scene/scene-document-view.ts',
+  'src/core/hmi/script/ScriptEditorPanel.tsx',
+  'src/core/hmi/script/ScriptToolbarButton.tsx',
+  'src/core/hmi/script/rv-script-save-pipeline.ts',
+  'src/core/hmi/signal-vocabulary.ts',
 ];
 
 /**
@@ -192,6 +223,10 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['settings.backup.clearLegacyConfirm_one', PLURAL_SPLICE],
   ['settings.backup.clearLegacyConfirm_other', PLURAL_SPLICE],
   ['settings.groups.objectCount_other', PLURAL_SPLICE],
+  ['authoring.hierarchy.overrides_other', PLURAL_SPLICE],
+  ['authoring.signal.showUnfit_one', PLURAL_SPLICE],
+  ['authoring.signal.showUnfit_other', PLURAL_SPLICE],
+  ['authoring.doc.estimateOccurrences_other', PLURAL_SPLICE],
   ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
     + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
     + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '
@@ -297,7 +332,16 @@ export function verbatimPattern(value) {
   const body = escaped
     .replace(/<\/?\d>/g, SLOT)
     .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
-    .replace(/['&"<>—–©…]/g, (char) => `(?:${char.replace(/[&]/g, '\\&')}|${ENTITY_FORMS.get(char)})`)
+    // A non-ASCII character has THREE spellings in source: the character, an
+    // HTML entity, and a `\uXXXX` escape. The third is the one an author reaches
+    // for when the literal would be invisible in review — `\u2014` for an em
+    // dash — so a value that moved verbatim can still look rewritten here.
+    .replace(/['&"<>—–©…]/g, (char) => {
+      const forms = [char.replace(/[&]/g, '\\&'), ENTITY_FORMS.get(char)];
+      const code = char.codePointAt(0);
+      if (code > 0x7f) forms.push(`\\\\u${code.toString(16).padStart(4, '0')}`);
+      return `(?:${forms.join('|')})`;
+    })
     .split(SLOT).join('\\s*<[^>]*>\\s*')
     .replace(/ +/g, () => `(?=((?:\\s|['\`]\\s*\\+\\s*['\`]|\\{' '\\}|&nbsp;)+))(?:\\${++group})`);
   // `\n` in a template literal is two SOURCE characters, so `\nBranch:` has no

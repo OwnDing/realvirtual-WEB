@@ -8,10 +8,16 @@
  * NOT the AnchoredPopover wrapper (which needs useViewer()/projectPointToScreen).
  * The viewer side is passed as plain props (pattern: camera-startpos-tab.test.tsx).
  */
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { SignalBindPopover, type PickerSignal } from '../src/plugins/signal-bind/SignalBindPopover';
 import { mapDiscoveredDirection } from '../src/plugins/signal-bind/signal-bind-store';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const SLOTS = [
   { slot: 'Flow.Run', type: 'bool' as const, direction: 'plcInput' as const, aliases: ['run', 'start'] },

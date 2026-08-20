@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 533,
-    "a11y-name": 35,
-    "plugin-registry": 102,
-    "dynamic-text": 86,
+    "react-copy": 382,
+    "a11y-name": 28,
+    "plugin-registry": 90,
+    "dynamic-text": 55,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
     "ui-state-text": 4
   },
-  "total": 788,
-  "fileCount": 138,
+  "total": 587,
+  "fileCount": 109,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -60,112 +60,9 @@
     "src/core/engine/rv-script-sandbox.ts": {
       "plugin-registry": 2
     },
-    "src/core/hmi/DragNumberField.tsx": {
-      "dynamic-text": 1
-    },
-    "src/core/hmi/ForceConfirmDialog.tsx": {
-      "react-copy": 5
-    },
-    "src/core/hmi/HierarchyNodeRow.tsx": {
-      "react-copy": 1,
-      "a11y-name": 3,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/IKTargetQuickEdit.tsx": {
-      "react-copy": 17
-    },
-    "src/core/hmi/ReorderableList.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/SetPositionDialog.tsx": {
-      "react-copy": 6
-    },
-    "src/core/hmi/SignalEditDialog.tsx": {
-      "react-copy": 18,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/SignalSearchOverlay.tsx": {
-      "react-copy": 5,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/hierarchy-badge-components.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/rv-add-component-section.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/rv-component-section.tsx": {
-      "react-copy": 5,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/rv-custom-runtime-instruction-field-renderer.tsx": {
-      "react-copy": 2,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/rv-extras-editor.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/rv-field-row.tsx": {
-      "react-copy": 2,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/rv-hierarchy-browser.tsx": {
-      "react-copy": 14,
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/rv-ik-path-field-renderer.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/rv-property-inspector.tsx": {
-      "react-copy": 26,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/rv-reference-display.tsx": {
-      "dynamic-text": 5
-    },
-    "src/core/hmi/rv-signal-badge.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/rv-signal-slot-row.tsx": {
-      "react-copy": 10,
-      "dynamic-text": 4
-    },
-    "src/core/hmi/scene/DocumentCard.tsx": {
-      "react-copy": 13,
-      "a11y-name": 3,
-      "dynamic-text": 4
-    },
-    "src/core/hmi/scene/DocumentCrumbs.tsx": {
-      "dynamic-text": 1
-    },
-    "src/core/hmi/scene/rv-scene-confirm-dialog.tsx": {
-      "react-copy": 6,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/scene/rv-scene-edits.ts": {
-      "dynamic-text": 1
-    },
-    "src/core/hmi/scene/rv-scene-live-sync.ts": {
-      "plugin-registry": 1
-    },
-    "src/core/hmi/scene/scene-document-view.ts": {
-      "plugin-registry": 9
-    },
     "src/core/hmi/scene/scene-store.ts": {
       "plugin-registry": 2,
       "dynamic-text": 1
-    },
-    "src/core/hmi/script/ScriptEditorPanel.tsx": {
-      "react-copy": 10,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/script/ScriptToolbarButton.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/script/rv-script-save-pipeline.ts": {
-      "plugin-registry": 2,
-      "dynamic-text": 2
     },
     "src/core/library/AddLibraryDialog.tsx": {
       "react-copy": 19

@@ -10,7 +10,7 @@
  * keeps a `data-locked` attribute while re-adding the eye must fail here.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { Group, Object3D, Scene } from 'three';
 import type { RVViewer } from '../src/core/rv-viewer';
 import { TreeNodeRow } from '../src/core/hmi/HierarchyNodeRow';
@@ -18,6 +18,12 @@ import { buildStructureTree, flattenVisibleTree, type TreeNode } from '../src/co
 import { isModelRoot } from '../src/core/engine/rv-model-root';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
 import type { EditableNodeInfo } from '../src/core/hmi/rv-extras-editor';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const viewer = { id: 'test-viewer' } as unknown as RVViewer;
 const noop = () => {};

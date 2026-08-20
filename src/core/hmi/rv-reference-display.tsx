@@ -30,6 +30,7 @@ import {
   getSensorRefColor,
 } from './rv-inspector-helpers';
 import { SignalBadge, type SignalDirection } from './rv-signal-badge';
+import { useRvTranslation } from '../i18n';
 
 // ── navigateToRef ────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ export function ReferenceDisplay({ value, viewer, signalStore }: {
   viewer: RVViewer | null;
   signalStore: SignalStore | null;
 }) {
+  const { t } = useRvTranslation('authoring');
   const resolvedNode = viewer?.registry?.getNode(value.path);
   const isLinked = !!resolvedNode;
   const shortName = value.path.split('/').pop() ?? value.path;
@@ -83,7 +85,7 @@ export function ReferenceDisplay({ value, viewer, signalStore }: {
     const valueStr = formatRefSignalValue(shortType, signalStore, value.path);
 
     return (
-      <Tooltip title={`${isLinked ? 'Linked' : 'Unlinked'} \u2192 ${value.path}\nClick to navigate`} placement="top">
+      <Tooltip title={`${t(isLinked ? 'component.linked' : 'component.unlinked')} \u2192 ${value.path}\n${t('inspector.clickToNavigate')}`} placement="top">
         <Chip
           label={`${shortName} ${typeLabel} ${valueStr}`}
           size="small"
@@ -109,9 +111,9 @@ export function ReferenceDisplay({ value, viewer, signalStore }: {
     const liveColor = isLinked ? getSensorRefColor(signalStore, value.path) : '#ef5350';
     const statusStr = formatSensorStatus(signalStore, value.path);
     return (
-      <Tooltip title={`${isLinked ? 'Linked' : 'Unlinked'} \u2192 ${value.path}\nClick to navigate`} placement="top">
+      <Tooltip title={`${t(isLinked ? 'component.linked' : 'component.unlinked')} \u2192 ${value.path}\n${t('inspector.clickToNavigate')}`} placement="top">
         <Chip
-          label={`${shortName} Sensor ${statusStr}`}
+          label={`${shortName} ${t('component.refSensor')} ${statusStr}`}
           size="small"
           onClick={handleClick}
           sx={{
@@ -132,7 +134,7 @@ export function ReferenceDisplay({ value, viewer, signalStore }: {
 
   // Non-signal reference -> link icon badge, clickable to navigate
   return (
-    <Tooltip title={`${isLinked ? 'Linked' : 'Unlinked'} \u2192 ${value.path}\nClick to navigate`} placement="top">
+    <Tooltip title={`${t(isLinked ? 'component.linked' : 'component.unlinked')} \u2192 ${value.path}\n${t('inspector.clickToNavigate')}`} placement="top">
       <Chip
         icon={isLinked ? <Link sx={{ fontSize: 11 }} /> : <LinkOff sx={{ fontSize: 11 }} />}
         label={shortName + (shortType ? ` ${shortType}` : '')}
@@ -159,9 +161,10 @@ export function ReferenceDisplay({ value, viewer, signalStore }: {
 
 /** Display a ScriptableObject reference (always read-only). */
 export function ScriptableObjectDisplay({ value }: { value: Record<string, unknown> }) {
+  const { t } = useRvTranslation('authoring');
   const name = (value['name'] as string) ?? 'ScriptableObject';
   return (
-    <Tooltip title={`ScriptableObject: ${name}`} placement="top">
+    <Tooltip title={t('component.refScriptable', { name })} placement="top">
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.375, overflow: 'hidden' }}>
         <Link sx={{ fontSize: 12, color: '#7e57c2', flexShrink: 0 }} />
         <Typography sx={{

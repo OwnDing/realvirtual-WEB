@@ -24,6 +24,7 @@ import { ChevronRight } from '@mui/icons-material';
 import type { RvStackCrumb } from '../../ops/rv-document-stack';
 import { RV_SCROLL_CLASS } from '../shared-sx';
 import { DirtyDot } from '../rv-dirty-dot';
+import { useRvTranslation } from '../../i18n';
 
 export interface DocumentCrumbsProps {
   crumbs: RvStackCrumb[];
@@ -53,6 +54,7 @@ export function DocumentCrumbs({
   fontSize = 11,
   ariaLabel = 'Document stack',
 }: DocumentCrumbsProps) {
+  const { t } = useRvTranslation('authoring');
   return (
     <Box
       className={RV_SCROLL_CLASS}
@@ -106,7 +108,7 @@ export function DocumentCrumbs({
             >
               {c.label}
               {c.dirty && (
-                <DirtyDot size={6} sx={{ ml: 0.5 }} title={`${c.label} has unsaved changes`} />
+                <DirtyDot size={6} sx={{ ml: 0.5 }} title={t('doc.hasUnsavedChanges', { name: c.label })} />
               )}
             </Typography>
             {!c.current && <ChevronRight sx={{ fontSize: 14, color: 'text.disabled' }} />}

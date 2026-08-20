@@ -26,6 +26,7 @@ import { isLogicStepType, isSignalType, signalOwnerLabel, type VisibleTreeRow } 
 import { NodeBadges, StepStateDot } from './hierarchy-badge-components';
 import { useLongPress } from '../../hooks/use-long-press';
 import { useStepState } from '../../hooks/use-step-state';
+import { useRvTranslation } from '../i18n';
 
 // ─── Selection click modifiers ───────────────────────────────────────────
 
@@ -104,6 +105,7 @@ export interface VisibilityRowProps {
 /** Trailing eye IconButton shared by both row variants. Hidden until row
  *  hover (opacity) unless the node is hidden — then always visible. */
 function EyeToggle({ path, visible, onToggle }: { path: string; visible: boolean; onToggle: (path: string) => void }) {
+  const { t } = useRvTranslation('authoring');
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onToggle(path);
@@ -111,7 +113,7 @@ function EyeToggle({ path, visible, onToggle }: { path: string; visible: boolean
   return (
     <IconButton
       size="small"
-      aria-label={visible ? 'Hide' : 'Show'}
+      aria-label={t(visible ? 'hierarchy.hide' : 'hierarchy.show')}
       onClick={handleClick}
       onDoubleClick={(e) => e.stopPropagation()}
       className="rv-eye-toggle"
@@ -135,6 +137,7 @@ function EyeToggle({ path, visible, onToggle }: { path: string; visible: boolean
  *  this ↗ appears (dimmed, brightening on hover) as an explicit way to open the
  *  property inspector — clicking it runs the same action as the row's dblclick. */
 function OpenInspectorButton({ path, onOpen }: { path: string; onOpen: (path: string) => void }) {
+  const { t } = useRvTranslation('authoring');
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onOpen(path);
@@ -142,8 +145,8 @@ function OpenInspectorButton({ path, onOpen }: { path: string; onOpen: (path: st
   return (
     <IconButton
       size="small"
-      aria-label="Open in inspector"
-      title="Open in inspector"
+      aria-label={t('hierarchy.openInInspector')}
+      title={t('hierarchy.openInInspector')}
       onClick={handleClick}
       onDoubleClick={(e) => e.stopPropagation()}
       className="rv-open-inspector"
@@ -206,6 +209,7 @@ export const TreeNodeRow = memo(function TreeNodeRow({
   onRowDrop,
   onRowDragEnd,
 }: TreeNodeRowProps) {
+  const { t } = useRvTranslation('authoring');
   const { node, depth, posInSet, setSize } = row;
   const expandKey = node.path ?? node.name;
   const isExpanded = expanded.has(expandKey);
@@ -370,7 +374,7 @@ export const TreeNodeRow = memo(function TreeNodeRow({
         {hasChildren ? (
           <IconButton
             size="small"
-            aria-label={isExpanded ? 'Collapse' : 'Expand'}
+            aria-label={t(isExpanded ? 'hierarchy.collapse' : 'hierarchy.expand')}
             onClick={handleExpandClick}
             sx={{ p: 0, mr: 0.25, color: 'text.secondary' }}
           >
@@ -393,7 +397,7 @@ export const TreeNodeRow = memo(function TreeNodeRow({
         )}
 
         <Tooltip
-          title={isRootRow ? `${label}\nModel root — locked (node: ${node.name})` : node.name}
+          title={isRootRow ? `${label}\n${t('hierarchy.rootLocked', { name: node.name })}` : node.name}
           placement="right"
           enterDelay={400}
           slotProps={{ tooltip: { sx: { fontSize: 10, whiteSpace: 'pre-line' } } }}
@@ -481,6 +485,7 @@ export const FlatNodeRow = memo(function FlatNodeRow({
   getEffectiveVisible,
   onToggleVisible,
 }: FlatNodeRowProps) {
+  const { t } = useRvTranslation('authoring');
   const leaf = info.path.split('/').pop() ?? info.path;
   // Signal nodes in the flat list get an owner-qualified dot-symbol label so the
   // same leaf on different instances ("Flow.Occupied") is distinguishable; the

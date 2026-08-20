@@ -85,7 +85,8 @@ import { InspectorRow } from './rv-inspector-row';
 import { StepState } from '../engine/rv-logic-step';
 import type { StepStateInfo } from '../engine/rv-logic-engine';
 import { STEP_STATE_COLORS, STEP_STATE_LABELS } from './rv-logic-step-colors';
-import { PROVENANCE_REFERENCED_TITLE } from './signal-vocabulary';
+import { provenanceReferencedTitle } from './signal-vocabulary';
+import { useRvTranslation } from '../i18n';
 
 // Re-export isHiddenComponentType for backward compatibility
 export { isHiddenComponentType } from './rv-inspector-helpers';
@@ -176,6 +177,7 @@ interface RuntimeFieldRowProps {
 }
 
 function RuntimeFieldRow({ label, value, color }: RuntimeFieldRowProps) {
+  const { t } = useRvTranslation('authoring');
   return (
     <InspectorRow label={label} labelTitle={label} labelColor="text.disabled" dense minHeight={22} py={0.15}>
       <Typography sx={{ fontSize: 10, color: color ?? 'text.primary', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -237,6 +239,7 @@ function buildSnapVirtualComponent(viewer: RVViewer, uuid: string): { type: stri
 }
 
 function LogicStepRuntimeSection({ info }: { info: StepStateInfo }) {
+  const { t } = useRvTranslation('authoring');
   const stateColor = STEP_STATE_COLORS[info.state];
   const stateLabel = STEP_STATE_LABELS[info.state];
 
@@ -264,7 +267,7 @@ function LogicStepRuntimeSection({ info }: { info: StepStateInfo }) {
           }}
         />
         <Typography sx={{ fontSize: 10, fontWeight: 700, color: stateColor, textTransform: 'uppercase', letterSpacing: 0.5, flex: 1 }}>
-          Runtime Status
+          {t('inspector.runtimeStatus')}
         </Typography>
         <Typography sx={{ fontSize: 9, color: stateColor, fontWeight: 600 }}>
           {stateLabel}
@@ -273,17 +276,17 @@ function LogicStepRuntimeSection({ info }: { info: StepStateInfo }) {
 
       {/* Runtime fields */}
       <Box sx={{ py: 0.5 }}>
-        <RuntimeFieldRow label="State" value={info.state} color={stateColor} />
+        <RuntimeFieldRow label={t('inspector.state')} value={info.state} color={stateColor} />
         {info.reason === 'suppressed-live' && (
-          <RuntimeFieldRow label="Control" value="Live-controlled" color="#ffb74d" />
+          <RuntimeFieldRow label={t('inspector.control')} value={t('inspector.liveControlled')} color="#ffb74d" />
         )}
-        <RuntimeFieldRow label="Type" value={info.type} />
+        <RuntimeFieldRow label={t('inspector.type')} value={info.type} />
 
         {/* Progress bar */}
         <Box sx={{ px: 1, py: 0.25 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography sx={{ fontSize: 10, color: 'text.disabled', width: 100, flexShrink: 0 }}>
-              Progress
+              {t('inspector.progress')}
             </Typography>
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <LinearProgress
@@ -308,31 +311,31 @@ function LogicStepRuntimeSection({ info }: { info: StepStateInfo }) {
         {info.type === 'SerialContainer' && (
           <>
             {info.currentIndex !== undefined && info.childCount !== undefined && (
-              <RuntimeFieldRow label="Current Step" value={`${info.currentIndex + 1} / ${info.childCount}`} />
+              <RuntimeFieldRow label={t('inspector.currentStep')} value={`${info.currentIndex + 1} / ${info.childCount}`} />
             )}
             {info.completedCycles !== undefined && (
-              <RuntimeFieldRow label="Completed Cycles" value={info.completedCycles.toString()} />
+              <RuntimeFieldRow label={t('inspector.completedCycles')} value={info.completedCycles.toString()} />
             )}
             {info.minCycleTime !== undefined && info.minCycleTime > 0 && (
-              <RuntimeFieldRow label="Min Cycle Time" value={`${info.minCycleTime.toFixed(3)}s`} />
+              <RuntimeFieldRow label={t('inspector.minCycleTime')} value={`${info.minCycleTime.toFixed(3)}s`} />
             )}
             {info.maxCycleTime !== undefined && info.maxCycleTime > 0 && (
-              <RuntimeFieldRow label="Max Cycle Time" value={`${info.maxCycleTime.toFixed(3)}s`} />
+              <RuntimeFieldRow label={t('inspector.maxCycleTime')} value={`${info.maxCycleTime.toFixed(3)}s`} />
             )}
             {info.medianCycleTime !== undefined && info.medianCycleTime > 0 && (
-              <RuntimeFieldRow label="Median Cycle Time" value={`${info.medianCycleTime.toFixed(3)}s`} />
+              <RuntimeFieldRow label={t('inspector.medianCycleTime')} value={`${info.medianCycleTime.toFixed(3)}s`} />
             )}
           </>
         )}
 
         {/* ParallelContainer-specific fields */}
         {info.type === 'ParallelContainer' && info.finishedCount !== undefined && info.childCount !== undefined && (
-          <RuntimeFieldRow label="Finished" value={`${info.finishedCount} / ${info.childCount}`} />
+          <RuntimeFieldRow label={t('inspector.finished')} value={`${info.finishedCount} / ${info.childCount}`} />
         )}
 
         {/* Delay-specific fields */}
         {info.type === 'Delay' && info.elapsed !== undefined && info.duration !== undefined && (
-          <RuntimeFieldRow label="Elapsed" value={`${info.elapsed.toFixed(2)}s / ${info.duration.toFixed(2)}s`} />
+          <RuntimeFieldRow label={t('inspector.elapsed')} value={`${info.elapsed.toFixed(2)}s / ${info.duration.toFixed(2)}s`} />
         )}
       </Box>
     </Box>
@@ -439,6 +442,7 @@ interface LayoutTransformSectionProps {
 }
 
 function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleLock, onToggleVisible, onReverseDirection, canReverse }: LayoutTransformSectionProps) {
+  const { t } = useRvTranslation('authoring');
   const node = viewer.registry?.getNode(nodePath);
 
   // Poll position/rotation at 200 ms for live updates (e.g. during a
@@ -523,7 +527,7 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
     <Box sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, bgcolor: 'rgba(100, 181, 246, 0.08)', borderBottom: '2px solid rgba(100, 181, 246, 0.2)' }}>
         <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#64b5f6', textTransform: 'uppercase', letterSpacing: 0.5, flex: 1 }}>
-          Transform
+          {t('inspector.transform')}
         </Typography>
         {/* Reverse direction — rotates the asset 180° around its connected
             snap-point's outward axis. Only visible when the asset is part of
@@ -531,7 +535,7 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
             toggle so the most-disruptive geometric action is leftmost in the
             cluster of icons. */}
         {onReverseDirection && canReverse && (
-          <Tooltip title="Reverse direction (rotate 180° around connection)">
+          <Tooltip title={t('inspector.reverseDirection')}>
             <IconButton
               size="small"
               onClick={onReverseDirection}
@@ -544,7 +548,7 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
         {/* Visibility toggle — sits next to the lock icon so both
             object-level flags are reachable from the section header. */}
         {onToggleVisible && (
-          <Tooltip title={node.visible ? 'Hide object' : 'Show object'}>
+          <Tooltip title={t(node.visible ? 'inspector.hideObject' : 'inspector.showObject')}>
             <IconButton
               size="small"
               onClick={() => onToggleVisible(!node.visible)}
@@ -555,11 +559,11 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
           </Tooltip>
         )}
         {lockFixed ? (
-          <Tooltip title="Model root — always at the asset origin, not editable">
+          <Tooltip title={t('inspector.modelRoot')}>
             <Lock sx={{ fontSize: 14, color: 'text.disabled', mx: 0.25 }} />
           </Tooltip>
         ) : (
-          <Tooltip title={locked ? 'Unlock object' : 'Lock object'}>
+          <Tooltip title={t(locked ? 'inspector.unlockObject' : 'inspector.lockObject')}>
             <IconButton
               size="small"
               onClick={onToggleLock}
@@ -573,11 +577,11 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
       <Box sx={{ py: 0.5, opacity: locked ? 0.5 : 1, pointerEvents: locked ? 'none' : 'auto' }}>
         <InspectorRow
           fullWidthField
-          label="Position"
+          label={t('inspector.position')}
           labelColor={labelColor}
           py={0.25}
           trailing={
-            <Tooltip title="Reset position to 0,0,0">
+            <Tooltip title={t('inspector.resetPosition')}>
               <IconButton size="small" onClick={handleResetPosition} sx={resetBtnSx}>
                 <RestartAlt sx={{ fontSize: 12 }} />
               </IconButton>
@@ -590,11 +594,11 @@ function LayoutTransformSection({ viewer, nodePath, locked, lockFixed, onToggleL
         </InspectorRow>
         <InspectorRow
           fullWidthField
-          label="Rotation"
+          label={t('inspector.rotation')}
           labelColor={labelColor}
           py={0.25}
           trailing={
-            <Tooltip title="Reset rotation to 0,0,0">
+            <Tooltip title={t('inspector.resetRotation')}>
               <IconButton size="small" onClick={handleResetRotation} sx={resetBtnSx}>
                 <RestartAlt sx={{ fontSize: 12 }} />
               </IconButton>
@@ -617,6 +621,7 @@ export interface PropertyInspectorProps {
 }
 
 export function PropertyInspector({ viewer }: PropertyInspectorProps) {
+  const { t } = useRvTranslation('authoring');
   const { plugin, state } = useEditorPlugin();
   const selectedPath = state.selectedNodePath;
 
@@ -915,12 +920,12 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
   // ── Shared toolbar buttons ────────────────────────────────────────────
   const toolbarButtons = (
     <>
-      <Tooltip title={consumedOnly ? 'Showing active fields only \u2014 click to show all' : 'Click to show only active fields'}>
+      <Tooltip title={t(consumedOnly ? 'inspector.activeOnly' : 'inspector.showActiveOnly')}>
         <IconButton size="small" onClick={toggleConsumedOnly} sx={{ color: consumedOnly ? '#66bb6a' : 'text.secondary', p: 0.25 }}>
           <FilterList sx={{ fontSize: 14 }} />
         </IconButton>
       </Tooltip>
-      <Tooltip title={detached ? 'Dock to hierarchy panel' : 'Detach as floating window'}>
+      <Tooltip title={t(detached ? 'inspector.dock' : 'inspector.detach')}>
         <IconButton size="small" onClick={toggleDetached} sx={{ color: 'text.secondary', p: 0.25 }}>
           {detached ? <PushPin sx={{ fontSize: 14 }} /> : <OpenInNew sx={{ fontSize: 14 }} />}
         </IconButton>
@@ -937,14 +942,14 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
       {referencedBy.length > 0 && (
         <Box sx={{ px: 1, py: 0.75, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <Typography sx={{ fontSize: 9, color: 'text.disabled', mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
-            {PROVENANCE_REFERENCED_TITLE}
+            {provenanceReferencedTitle()}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {referencedBy.map((ref, i) => {
               const sourceName = ref.sourcePath.split('/').pop() ?? ref.sourcePath;
               const color = componentColor(ref.componentType);
               return (
-                <Tooltip key={i} title={`${ref.sourcePath} \u2192 ${ref.fieldName}\nClick to navigate`} placement="top">
+                <Tooltip key={i} title={`${ref.sourcePath} \u2192 ${ref.fieldName}\n${t('inspector.clickToNavigate')}`} placement="top">
                   <Chip
                     label={`${sourceName}.${ref.fieldName}`}
                     size="small"
@@ -991,7 +996,7 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
               '&:hover': { bgcolor: 'rgba(255,167,38,0.1)' },
             }}
           >
-            Reset All
+            {t('inspector.resetAll')}
           </Button>
         )}
       </Box>
@@ -1048,7 +1053,7 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
       {pickOwner && (
         <Box sx={{ px: 1, py: 0.75, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <Typography sx={{ fontSize: 9, color: 'text.disabled', mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
-            Part of
+            {t('inspector.partOf')}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {(() => {
@@ -1056,7 +1061,7 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
               const primaryType = pickOwner.components[0];
               const color = componentColor(primaryType);
               return (
-                <Tooltip title={`${pickOwner.path}\nClick to select`} placement="top">
+                <Tooltip title={`${pickOwner.path}\n${t('inspector.clickToSelect')}`} placement="top">
                   <Chip
                     label={`${primaryType}: ${ownerName}`}
                     size="small"
@@ -1113,7 +1118,7 @@ export function PropertyInspector({ viewer }: PropertyInspectorProps) {
 
       {!hasContent ? (
         <Typography sx={{ fontSize: 12, color: 'text.disabled', textAlign: 'center', py: 4 }}>
-          No component data
+          {t('inspector.noComponentData')}
         </Typography>
       ) : (
         // Lock wraps the entire component edit area: when a LayoutObject is

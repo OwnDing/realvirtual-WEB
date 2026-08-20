@@ -281,6 +281,7 @@ export interface MaterialisedEdits {
 
 export { MAX_OP_HISTORY, COALESCE_WINDOW_MS, freshOpId, deepCloneJSON } from '../../ops/rv-op-utils';
 import { freshOpId, deepCloneJSON } from '../../ops/rv-op-utils';
+import { rvT } from '../../i18n';
 
 // ─── Materialise (replay ops onto an empty workspace) ───────────────────
 
@@ -621,7 +622,7 @@ export function inverseOp(op: RvSceneOp): RvSceneOp {
       }
       return {
         id: freshOpId(), ts: Date.now(), schemaV: 1,
-        kind: 'composite', label: `Undo: ${op.label}`, ops: reversed,
+        kind: 'composite', label: rvT('authoring', 'doc.undoAction', { name: op.label }), ops: reversed,
       };
     }
   }

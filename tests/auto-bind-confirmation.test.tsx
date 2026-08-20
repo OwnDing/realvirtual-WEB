@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { computeAutoBindSuggestions } from '../src/plugins/signal-bind/auto-bind';
 import { SignalBindPopover } from '../src/plugins/signal-bind/SignalBindPopover';
 import type { ResolvedSlot } from '../src/core/engine/rv-binding-slot-resolver';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(cleanup);
 

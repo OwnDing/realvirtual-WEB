@@ -26,6 +26,7 @@ import { getFieldDescriptor, isFieldDisplayReadonly } from '../engine/rv-compone
 import { openSetPositionDialog } from './SetPositionDialog';
 import { INSPECTOR_PANEL_WIDTH, INSPECTOR_MIN_WIDTH, INSPECTOR_MAX_WIDTH } from './layout-constants';
 import { isCompactWidth } from '../../hooks/use-mobile-layout';
+import { rvT } from '../i18n';
 
 // ─── Layout Object Helpers (for context menu) ──────────────────────────
 
@@ -791,7 +792,7 @@ export class RvExtrasEditorPlugin implements RVViewerPlugin {
         // ── Edit (open hierarchy + inspector) ──
         {
           id: 'layout.edit',
-          label: 'Edit',
+          label: () => rvT('authoring', 'component.edit'),
           order: 10,
           condition: hasLayoutObject,
           action: (target) => {

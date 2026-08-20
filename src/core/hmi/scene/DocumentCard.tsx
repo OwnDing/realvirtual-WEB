@@ -86,6 +86,7 @@ import { DirtyDot, DIRTY_INK } from '../rv-dirty-dot';
 import { DocumentCrumbs } from './DocumentCrumbs';
 import { ShareDialog } from '../../share/ShareDialog';
 import type { RvShareMeta, RvShareLevel } from '../../share/rv-share-meta';
+import { useRvTranslation } from '../../i18n';
 
 export type DocumentCardVariant = 'compact' | 'hero';
 
@@ -154,6 +155,7 @@ export function DocumentCard({
   onReveal,
   previewVisible = true,
 }: DocumentCardProps) {
+  const { t } = useRvTranslation('authoring');
   const viewer = useOptionalViewer();
   const version = useSyncExternalStore(
     subscribeActiveDocumentView,
@@ -394,13 +396,13 @@ export function DocumentCard({
       data-testid="document-card-stale"
       sx={{ fontSize: 11, color: DIRTY_INK, lineHeight: 1.3 }}
     >
-      The file changed below — reopen it before saving.
+      {t('doc.stale')}
     </Typography>
   ) : (
     <Tooltip
       title={view.saveVerb === 'save-into-project'
-        ? 'This source cannot be written to — Save puts a copy in the open project.'
-        : (view.saveReason ?? 'Save changes')}
+        ? t('doc.saveIntoProject')
+        : (view.saveReason ?? t('doc.saveChanges'))}
       placement="top"
     >
       <Button
@@ -439,7 +441,7 @@ export function DocumentCard({
         <Typography
           sx={{ color: DIRTY_INK, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}
         >
-          Unsaved
+          {t('doc.unsaved')}
         </Typography>
       )}
     </Box>
@@ -472,7 +474,7 @@ export function DocumentCard({
             letterSpacing: 0.5, flexShrink: 0,
           }}
         >
-          Unsaved
+          {t('doc.unsaved')}
         </Typography>
       )}
     </Box>
@@ -481,11 +483,11 @@ export function DocumentCard({
   const historyButtons = (view.actions.undo || view.actions.redo) && (
     <>
       {view.actions.undo && (
-        <Tooltip title={view.undoLabel ? `Undo: ${view.undoLabel}` : 'Undo'}>
+        <Tooltip title={view.undoLabel ? t('doc.undoNamed', { name: view.undoLabel }) : t('doc.undo')}>
           <span>
             <IconButton
               size="small"
-              aria-label="Undo"
+              aria-label={t('doc.undo')}
               data-testid="document-card-undo"
               disabled={view.canUndo === false}
               onClick={() => { void view.actions.undo?.(); }}
@@ -496,11 +498,11 @@ export function DocumentCard({
         </Tooltip>
       )}
       {view.actions.redo && (
-        <Tooltip title={view.redoLabel ? `Redo: ${view.redoLabel}` : 'Redo'}>
+        <Tooltip title={view.redoLabel ? t('doc.redoNamed', { name: view.redoLabel }) : t('doc.redo')}>
           <span>
             <IconButton
               size="small"
-              aria-label="Redo"
+              aria-label={t('doc.redo')}
               data-testid="document-card-redo"
               disabled={view.canRedo === false}
               onClick={() => { void view.actions.redo?.(); }}
@@ -514,11 +516,11 @@ export function DocumentCard({
   );
 
   const kebab = hasMenu && (
-    <Tooltip title="More actions" placement="top">
+    <Tooltip title={t('doc.moreActions')} placement="top">
       <IconButton
         size="small"
         sx={{ p: 0.25 }}
-        aria-label="More actions"
+        aria-label={t('doc.moreActions')}
         onClick={(e) => setMenuAnchor(e.currentTarget)}
       >
         <MoreVert sx={{ fontSize: 16 }} />
@@ -573,7 +575,7 @@ export function DocumentCard({
               key={documentKey ?? view.name}
               role={onReveal ? 'button' : undefined}
               tabIndex={onReveal ? 0 : undefined}
-              aria-label={onReveal ? `Show ${view.name} in the library` : undefined}
+              aria-label={onReveal ? t('doc.showInLibrary', { name: view.name }) : undefined}
               onKeyDown={(e) => {
                 if (!onReveal) return;
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onReveal(); }
@@ -731,7 +733,7 @@ export function DocumentCard({
               onClick={() => { closeMenu(); setShareOpen(true); }}
             >
               <ListItemIcon sx={{ minWidth: 28 }}><ShareIcon sx={{ fontSize: 16 }} /></ListItemIcon>
-              <ListItemText primaryTypographyProps={{ fontSize: 13 }}>Share…</ListItemText>
+              <ListItemText primaryTypographyProps={{ fontSize: 13 }}>{t('doc.share')}</ListItemText>
             </MenuItem>
           )}
           {view.actions.exportGlb && [
@@ -742,7 +744,7 @@ export function DocumentCard({
               onClick={() => { void openExport(); }}
             >
               <ListItemIcon sx={{ minWidth: 28 }}><FileDownload sx={{ fontSize: 16 }} /></ListItemIcon>
-              <ListItemText primaryTypographyProps={{ fontSize: 13 }}>Export .glb…</ListItemText>
+              <ListItemText primaryTypographyProps={{ fontSize: 13 }}>{t('doc.exportGlb')}</ListItemText>
             </MenuItem>,
           ]}
         </Menu>
@@ -758,7 +760,7 @@ export function DocumentCard({
             autoFocus
             fullWidth
             size="small"
-            label="Name"
+            label={t('doc.name')}
             value={nameDialog?.value ?? ''}
             onChange={(e) => nameDialog && setNameDialog({ ...nameDialog, value: e.target.value })}
             onKeyDown={(e) => { if (e.key === 'Enter') void submitNameDialog(); }}
@@ -767,7 +769,7 @@ export function DocumentCard({
         </DialogContent>
         <DialogActions>
           <Button size="small" onClick={() => setNameDialog(null)} sx={{ textTransform: 'none' }}>
-            Cancel
+            {t('doc.cancel')}
           </Button>
           <Button
             size="small"
@@ -783,7 +785,7 @@ export function DocumentCard({
 
       {/* Export .glb — the one place the reference/flat trade-off is stated. */}
       <Dialog open={Boolean(exportDialog)} onClose={() => setExportDialog(null)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>Export as .glb</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('doc.exportTitle')}</DialogTitle>
         <DialogContent>
           <FormControlLabel
             control={(
@@ -793,29 +795,27 @@ export function DocumentCard({
                 onChange={(e) => exportDialog && setExportDialog({ ...exportDialog, embed: e.target.checked })}
               />
             )}
-            label={<Typography sx={{ fontSize: 13 }}>Embed references</Typography>}
+            label={<Typography sx={{ fontSize: 13 }}>{t('doc.embedReferences')}</Typography>}
           />
           <Typography sx={{ fontSize: 12, opacity: 0.75, mt: 0.5 }}>
-            {exportDialog?.embed
-              ? 'Referenced assets are written into the file. It runs anywhere on its own and still records what it was built from.'
-              : 'References stay references. The file is smaller, and a corrected library asset still reaches it — but the recipient needs that library.'}
+            {t(exportDialog?.embed ? 'doc.embedYes' : 'doc.embedNo')}
           </Typography>
           {exportDialog?.estimate && exportDialog.estimate.occurrences > 0 && (
             <Typography sx={{ fontSize: 12, mt: 1.25 }}>
               {exportDialog.embed
-                ? `About ${formatBytes(exportDialog.estimate.totalBytes)} — `
-                  + `${formatBytes(exportDialog.estimate.baseBytes)} scene plus `
-                  + `${exportDialog.estimate.distinctAssets} referenced asset`
-                  + `${exportDialog.estimate.distinctAssets === 1 ? '' : 's'} `
-                  + `(${exportDialog.estimate.occurrences} occurrence`
-                  + `${exportDialog.estimate.occurrences === 1 ? '' : 's'}).`
-                : `About ${formatBytes(exportDialog.estimate.baseBytes)}.`}
+                ? t('doc.estimateEmbed', {
+                  total: formatBytes(exportDialog.estimate.totalBytes),
+                  base: formatBytes(exportDialog.estimate.baseBytes),
+                  assets: t('doc.estimateAssets', { count: exportDialog.estimate.distinctAssets }),
+                  occurrences: t('doc.estimateOccurrences', { count: exportDialog.estimate.occurrences }),
+                })
+                : t('doc.estimateFlat', { base: formatBytes(exportDialog.estimate.baseBytes) })}
             </Typography>
           )}
         </DialogContent>
         <DialogActions>
           <Button size="small" onClick={() => setExportDialog(null)} sx={{ textTransform: 'none' }}>
-            Cancel
+            {t('doc.cancel')}
           </Button>
           <Button
             size="small"
@@ -852,7 +852,7 @@ export function DocumentCard({
             onClick={() => setMessage(null)}
             sx={{ textTransform: 'none' }}
           >
-            Close
+            {t('doc.close')}
           </Button>
         </DialogActions>
       </Dialog>
