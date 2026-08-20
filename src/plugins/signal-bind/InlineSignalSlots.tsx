@@ -51,6 +51,7 @@ import { SignalSearchOverlay, type SignalSearchItem } from '../../core/hmi/Signa
 import { baseComponentType, isComponentRef } from '../../core/hmi/rv-inspector-helpers';
 import { getConnectSnapshot, subscribeConnectStore } from '../../core/hmi/connect-store';
 import { omitUndefined } from '../../core/hmi/rv-omit-undefined';
+import { rvT, useRvTranslation, type RVTranslationKey } from '../../core/i18n';
 import { collectConnectSignals } from './SignalBindPopover';
 import { slotRejectReason, type DropRejectReason } from './drop-accept';
 import {
@@ -125,6 +126,7 @@ function BindableSlotRows({ viewer, target, buildRows, disabledReason }: {
   buildRows: (mappings: readonly import('../layout-planner/rv-layout-store').SignalMapping[]) => SlotRow[];
   disabledReason?: string;
 }) {
+  const { t } = useRvTranslation('authoring');
   const mgr = viewer.signalBindingManager;
   const persistence = useMemo(() => createSignalBindingPersistence(viewer, target), [viewer, target]);
   const subscribeMappings = useCallback(
@@ -223,7 +225,7 @@ function BindableSlotRows({ viewer, target, buildRows, disabledReason }: {
         onClose={() => setPicker(null)}
         signals={searchItems}
         viewer={viewer}
-        title={pickerRow ? `Link ${pickerRow.label ?? pickerRow.slot}` : undefined}
+        title={pickerRow ? t('signalBind.linkSlot', { slot: pickerRow.label ?? pickerRow.slot }) : undefined}
         getRejectReason={pickerRejectReason}
         onPick={(_name, item) => {
           if (!pickerRow || !item) return;
@@ -259,6 +261,7 @@ export interface ComponentSignalSlotsProps {
 }
 
 export function ComponentSignalSlots({ viewer, signalStore, nodePath, componentType, data }: ComponentSignalSlotsProps) {
+  const { t } = useRvTranslation('authoring');
   const base = baseComponentType(componentType);
   const fields = getSignalSlotFields(base);
 
@@ -326,7 +329,7 @@ export function ComponentSignalSlots({ viewer, signalStore, nodePath, componentT
           kind: 'unavailable',
           slot: f.field,
           label: slotLabelOverride(base, f.field),
-          reason: `No active ${base} instance provides this slot in the loaded scene`,
+          reason: t('signalBind.noActiveInstance', { component: base }),
         });
       }
     }
@@ -334,12 +337,16 @@ export function ComponentSignalSlots({ viewer, signalStore, nodePath, componentT
     return ordered;
   };
 
+  const disabledReason = eligibility && !eligibility.eligible
+    ? localizedEligibilityReason(eligibility.reason)
+    : undefined;
+
   return (
     <>
       {eligibility && !eligibility.eligible && (
         <Box sx={{ px: 1, py: 0.25 }}>
           <Typography sx={{ fontSize: 11, color: INK_LOW }}>
-            Signal linking unavailable — {eligibility.reason}
+            {t('signalBind.unavailableReason', { reason: disabledReason })}
           </Typography>
         </Box>
       )}
@@ -347,7 +354,7 @@ export function ComponentSignalSlots({ viewer, signalStore, nodePath, componentT
         viewer={viewer}
         target={target}
         buildRows={buildRows}
-        disabledReason={eligibility && !eligibility.eligible ? eligibility.reason : undefined}
+        disabledReason={disabledReason}
       />
     </>
   );
@@ -356,10 +363,22 @@ export function ComponentSignalSlots({ viewer, signalStore, nodePath, componentT
 // ── PLCSignalSlot (plan-418 F6 — the one slot of a raw PLC signal node) ──────
 
 /** Human sentences for the resolver's fail-closed reasons. */
-const PLC_UNAVAILABLE_TEXT: Record<string, string> = {
-  'signal-not-registered': 'This signal is not registered in the loaded model — nothing to link to',
-  'duplicate-signal-name': 'Another node registers the same signal name — linking one would drive both',
+const PLC_UNAVAILABLE_KEYS: Record<string, RVTranslationKey<'authoring'>> = {
+  'signal-not-registered': 'signalBind.signalNotRegistered',
+  'duplicate-signal-name': 'signalBind.duplicateSignalName',
 };
+
+function localizedEligibilityReason(reason: string | undefined): string {
+  if (reason === 'controlled by Drive_ErraticPosition') {
+    return rvT('authoring', 'signalBind.controlledByErraticDrive');
+  }
+  if (reason === 'controlled by an IK path') {
+    return rvT('authoring', 'signalBind.controlledByIkPath');
+  }
+  const behavior = reason?.match(/^controlled by JavaScript behavior (.+)$/)?.[1];
+  if (behavior) return rvT('authoring', 'signalBind.controlledByBehavior', { behavior });
+  return reason ?? '';
+}
 
 /** Whether a component section belongs to a raw PLC signal node. */
 export function isPLCSignalComponent(componentType: string): boolean {
@@ -374,6 +393,7 @@ export interface PLCSignalSlotProps {
 }
 
 export function PLCSignalSlot({ viewer, nodePath, componentType }: PLCSignalSlotProps) {
+  const { t } = useRvTranslation('authoring');
   const base = baseComponentType(componentType);
   const node = viewer?.registry?.getNode(nodePath) ?? null;
   const mgr = viewer?.signalBindingManager ?? null;
@@ -393,7 +413,7 @@ export function PLCSignalSlot({ viewer, nodePath, componentType }: PLCSignalSlot
   if (!viewer || !mgr || !target) {
     return (
       <SignalSlotRow
-        row={{ kind: 'unavailable', slot: PLC_SIGNAL_SLOT, reason: 'Signal linking is not available in this session' }}
+        row={{ kind: 'unavailable', slot: PLC_SIGNAL_SLOT, reason: t('signalBind.unavailableInSession') }}
         viewer={viewer ?? undefined}
         readOnly
       />
@@ -424,17 +444,21 @@ export function PLCSignalSlot({ viewer, nodePath, componentType }: PLCSignalSlot
     return [{
       kind: 'unavailable',
       slot: PLC_SIGNAL_SLOT,
-      reason: (reason && PLC_UNAVAILABLE_TEXT[reason]) ?? reason
-        ?? 'This signal is not offered as a link target in the loaded scene',
+      reason: (reason && PLC_UNAVAILABLE_KEYS[reason] ? t(PLC_UNAVAILABLE_KEYS[reason]) : reason)
+        ?? t('signalBind.notOfferedInScene'),
     }];
   };
+
+  const disabledReason = eligibility && !eligibility.eligible
+    ? localizedEligibilityReason(eligibility.reason)
+    : undefined;
 
   return (
     <>
       {eligibility && !eligibility.eligible && (
         <Box sx={{ px: 1, py: 0.25 }}>
           <Typography sx={{ fontSize: 11, color: INK_LOW }}>
-            Signal linking unavailable — {eligibility.reason}
+            {t('signalBind.unavailableReason', { reason: disabledReason })}
           </Typography>
         </Box>
       )}
@@ -442,7 +466,7 @@ export function PLCSignalSlot({ viewer, nodePath, componentType }: PLCSignalSlot
         viewer={viewer}
         target={target}
         buildRows={buildRows}
-        disabledReason={eligibility && !eligibility.eligible ? eligibility.reason : undefined}
+        disabledReason={disabledReason}
       />
     </>
   );

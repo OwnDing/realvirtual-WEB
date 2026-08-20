@@ -13,7 +13,7 @@
  *    the reason stays visible in the inspector row instead.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Object3D, Scene } from 'three';
 import { ContextMenuStore, type ContextMenuTarget } from '../src/core/hmi/context-menu-store';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
@@ -29,6 +29,9 @@ import {
 } from '../src/plugins/signal-bind/plc-signal-context-menu';
 import { signalBindStore, closeSignalBindPopover } from '../src/plugins/signal-bind/signal-bind-store';
 import type { RVViewer } from '../src/core/rv-viewer';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const ITEM_ID = 'signal-bind.link-signal';
 

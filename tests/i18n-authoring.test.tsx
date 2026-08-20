@@ -46,13 +46,22 @@ import {
 import { resolveSlotStatusToken } from '../src/core/hmi/rv-signal-slot-row';
 import { validateScriptForSave } from '../src/core/hmi/script/rv-script-save-pipeline';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
+import {
+  _resetFirstLinkNoticeForTests,
+  noteSignalMappingsWritten,
+} from '../src/plugins/signal-bind/first-link-notice';
+import { clearBySource, getInstructions } from '../src/core/hmi/instruction-store';
 
 beforeEach(async () => {
   initI18n();
   clearI18nDiagnostics();
   await act(async () => { await setLocale('zh-CN'); });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  clearBySource('signal-bind');
+  _resetFirstLinkNoticeForTests();
+});
 
 describe('the shared signal vocabulary', () => {
   it('follows a language switch instead of freezing at import', async () => {
@@ -135,6 +144,22 @@ describe('script diagnostics', () => {
     expect(msg).toContain('ApiVersion');
     expect(msg).toContain('99');
     expect(msg).toMatch(/[一-鿿]/);
+  });
+});
+
+describe('signal-binding imperative notice', () => {
+  it('resolves at the write boundary instead of freezing at module import', async () => {
+    _resetFirstLinkNoticeForTests();
+    noteSignalMappingsWritten(0, 1);
+    expect(getInstructions().find((item) => item.source === 'signal-bind')?.text).toMatch(/[一-鿿]/);
+
+    clearBySource('signal-bind');
+    _resetFirstLinkNoticeForTests();
+    await act(async () => { await setLocale('en-US'); });
+    noteSignalMappingsWritten(0, 1);
+    expect(getInstructions().find((item) => item.source === 'signal-bind')?.text)
+      .toBe('External signal linked — internal control is no longer active.');
+    clearBySource('signal-bind');
   });
 });
 

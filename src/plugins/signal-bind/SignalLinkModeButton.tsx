@@ -5,6 +5,7 @@ import { useSyncExternalStore } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import SettingsInputComponent from '@mui/icons-material/SettingsInputComponent';
 import type { UISlotProps } from '../../core/rv-ui-plugin';
+import { useRvTranslation } from '../../core/i18n';
 import {
   getSignalLinkModeSnapshot,
   setSignalLinkModeExplicit,
@@ -12,6 +13,7 @@ import {
 } from './signal-link-mode-store';
 
 export function SignalLinkModeButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('authoring');
   const snapshot = useSyncExternalStore(
     subscribeSignalLinkMode,
     getSignalLinkModeSnapshot,
@@ -21,14 +23,14 @@ export function SignalLinkModeButton({ viewer }: UISlotProps) {
   return (
     <Tooltip
       title={snapshot.explicit
-        ? 'Signal linking: ON (click badges to bind live signals)'
-        : 'Signal linking: OFF'}
+        ? t('signalBind.linkModeOn')
+        : t('signalBind.linkModeOff')}
       placement="right"
     >
       <IconButton
         size="small"
         data-testid="signal-link-mode-toggle"
-        aria-label="Toggle signal linking mode"
+        aria-label={t('signalBind.toggleLinkMode')}
         aria-pressed={snapshot.explicit}
         onClick={() => setSignalLinkModeExplicit(!snapshot.explicit)}
         sx={{

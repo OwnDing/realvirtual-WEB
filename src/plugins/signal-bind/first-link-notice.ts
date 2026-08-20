@@ -23,6 +23,7 @@
  */
 
 import { showInstruction } from '../../core/hmi/instruction-store';
+import { rvT } from '../../core/i18n';
 
 const NOTICE_ID = 'signal-bind-first-link';
 
@@ -37,7 +38,7 @@ export function noteSignalMappingsWritten(prevCount: number, nextCount: number):
   shown = true;
   showInstruction({
     id: NOTICE_ID,
-    text: 'Externes Signal verknüpft — interne Steuerung nun nicht mehr aktiv.',
+    text: rvT('authoring', 'signalBind.firstLinkNotice'),
     anchor: { kind: 'edge', edge: 'bottom' },
     style: 'info',
     autoClearAfterMs: 9000,

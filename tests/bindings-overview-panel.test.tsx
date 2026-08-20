@@ -18,7 +18,7 @@
  * silently rewire a machine.
  */
 
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { Object3D } from 'three';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '../src/core/engine/rv-signal-construction';
@@ -30,6 +30,11 @@ import { setActiveEditTarget, type EditTarget } from '../src/core/hmi/rv-edit-ta
 import { createSignalBindingPersistence } from '../src/plugins/signal-bind/signal-binding-persistence';
 import type { RVViewer } from '../src/core/rv-viewer';
 import type { SignalMapping } from '../src/plugins/layout-planner/rv-layout-store';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts the legacy English wording. Pin it rather than inheriting
+// the product default, which is Chinese (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const NOOP_TARGET: EditTarget = {
   available: true,

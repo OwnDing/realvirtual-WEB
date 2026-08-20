@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { afterEach, describe, expect, it, beforeAll } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { EventEmitter } from '../src/core/rv-events';
 import type { RVViewer } from '../src/core/rv-viewer';
@@ -78,6 +78,16 @@ function renderPanel(viewer: RVViewer) {
 }
 
 describe('InstructionPanel Ask AI', () => {
+  it('updates the instruction chrome when the language changes', async () => {
+    const { viewer } = makeViewer();
+    await act(async () => { await setLocale('zh-CN'); });
+    renderPanel(viewer);
+    expect(screen.getByText('警告')).toBeTruthy();
+
+    await act(async () => { await setLocale('en-US'); });
+    expect(screen.getByText('Warning')).toBeTruthy();
+  });
+
   it('renders the action only while a search diagnosis provider is registered', async () => {
     const { viewer } = makeViewer();
     renderPanel(viewer);

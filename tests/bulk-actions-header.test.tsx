@@ -9,7 +9,7 @@
  *  - Unbind all: two-click confirm (label flips to "Confirm unbind all").
  *  - The old inspector SignalBindSection is gone from the codebase.
  */
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeAll, beforeEach, vi } from 'vitest';
 import {
   registerSignalBulkActions,
   _resetBulkActionStateForTesting,
@@ -17,6 +17,9 @@ import {
 import { componentActionRegistry, type ComponentActionContext } from '../src/core/hmi/rv-component-action-registry';
 import { makeInlineSlotFixture } from './_inline-slot-fixture';
 import { getConnectSnapshot } from '../src/core/hmi/connect-store';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 vi.mock('../src/core/hmi/connect-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/core/hmi/connect-store')>();
@@ -59,6 +62,17 @@ describe('bulk header actions (plan-325 9.8)', () => {
     // Types without signal slots get no bulk actions.
     expect(componentActionRegistry.get('LayoutObject').map((a) => a.id))
       .not.toContain('signal-auto-assign');
+  });
+
+  it('resolves registered labels at call time after a language switch', async () => {
+    const f = makeInlineSlotFixture();
+    const ctx = ctxFor(f);
+    const auto = componentActionRegistry.get('Drive_Simple').find((a) => a.id === 'signal-auto-assign')!;
+
+    await setLocale('zh-CN');
+    expect(typeof auto.label === 'function' ? auto.label(ctx) : auto.label).toBe('自动分配');
+    await setLocale('en-US');
+    expect(typeof auto.label === 'function' ? auto.label(ctx) : auto.label).toBe('Auto-assign');
   });
 
   it('Auto-assign arms with confident matches on the first click and applies on the second', () => {

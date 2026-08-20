@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 62,
-    "a11y-name": 4,
-    "plugin-registry": 65,
-    "dynamic-text": 23,
+    "react-copy": 23,
+    "a11y-name": 1,
+    "plugin-registry": 62,
+    "dynamic-text": 16,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 9,
-    "ui-state-text": 1
+    "ui-state-text": 0
   },
-  "total": 182,
-  "fileCount": 56,
+  "total": 129,
+  "fileCount": 46,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -93,19 +93,12 @@
       "dynamic-text": 1,
       "pre-boot": 1
     },
-    "src/plugins/aas-link-plugin.tsx": {
-      "react-copy": 12,
-      "ui-state-text": 1
-    },
     "src/plugins/annotation-plugin.ts": {
       "plugin-registry": 1
     },
     "src/plugins/collision-alert-plugin.tsx": {
       "react-copy": 1,
       "dynamic-text": 1
-    },
-    "src/plugins/custom-runtime-instruction-plugin.tsx": {
-      "react-copy": 12
     },
     "src/plugins/docs-browser-plugin.tsx": {
       "react-copy": 1
@@ -153,36 +146,6 @@
     },
     "src/plugins/rv-clipping-plugin.tsx": {
       "react-copy": 1
-    },
-    "src/plugins/signal-bind/BindingsOverviewButton.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1
-    },
-    "src/plugins/signal-bind/BindingsOverviewPanel.tsx": {
-      "react-copy": 7,
-      "a11y-name": 1,
-      "dynamic-text": 4
-    },
-    "src/plugins/signal-bind/InlineSignalSlots.tsx": {
-      "react-copy": 2,
-      "dynamic-text": 1
-    },
-    "src/plugins/signal-bind/SignalBindPopover.tsx": {
-      "react-copy": 4,
-      "dynamic-text": 1
-    },
-    "src/plugins/signal-bind/SignalLinkModeButton.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1
-    },
-    "src/plugins/signal-bind/component-bulk-actions.ts": {
-      "plugin-registry": 2
-    },
-    "src/plugins/signal-bind/first-link-notice.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/signal-bind/plc-signal-context-menu.ts": {
-      "dynamic-text": 1
     },
     "src/plugins/snap-point/index.ts": {
       "plugin-registry": 1

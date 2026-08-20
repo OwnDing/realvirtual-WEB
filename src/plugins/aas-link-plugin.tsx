@@ -48,6 +48,7 @@ import { extractOrderData } from './order-manager-plugin';
 import { NavButton } from '../core/hmi/NavButton';
 import type { UISlotEntry, UISlotProps } from '../core/rv-ui-plugin';
 import { openPdfViewer, disposePdfViewer, type PdfLink } from '../core/hmi/pdf-viewer-store';
+import { useRvTranslation } from '../core/i18n';
 
 // ─── Capability Registration (side-effect at import time) ──────────────
 // This runs when the plugin module is imported, BEFORE loadGLB() builds the BVH.
@@ -99,6 +100,7 @@ function getAasNodes(viewer: RVViewer): import('three').Object3D[] {
 
 /** Left sidebar button — highlights all AASLink nodes on click. */
 function AasButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('assets');
   const [active, setActive] = useState(false);
   // Re-render when a resolution pass finishes so the badge count is never stale.
   useSyncExternalStore(subscribeAasResolution, getAasResolutionVersion, getAasResolutionVersion);
@@ -126,7 +128,7 @@ function AasButton({ viewer }: UISlotProps) {
   return (
     <NavButton
       icon={<Description />}
-      label="AAS Components"
+      label={t('aas.components')}
       badge={getAasNodes(viewer).length || undefined}
       active={active}
       onClick={handleClick}
@@ -487,6 +489,7 @@ const HOVER_MAX_ROWS = 5;
 
 /** AAS tooltip content provider. Self-registers in tooltipRegistry at module load. */
 export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProps<AasTooltipData>) {
+  const { t } = useRvTranslation('assets');
   const branding = useCustomBranding();
   const accentColor = branding?.primaryColor ?? '#26a69a';
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -501,7 +504,7 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
     if (hidden) return;
     if (!data.aasId) {
       setState('error');
-      setError('No AAS ID');
+      setError(t('aas.noId'));
       return;
     }
 
@@ -527,7 +530,7 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
       });
 
     return () => { cancelled = true; };
-  }, [data.aasId, hidden]);
+  }, [data.aasId, hidden, t]);
 
   // Header: use description from rv_extras, or product name from parsed data, or AAS ID
   const headerText = data.description
@@ -551,7 +554,7 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
         </Typography>
         {isPinned && data.aasId && (
           <>
-            <MuiTooltip title="Open AAS detail panel" placement="top">
+            <MuiTooltip title={t('aas.openDetail')} placement="top">
               <IconButton
                 size="small"
                 onClick={() => {
@@ -576,7 +579,7 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <CircularProgress size={12} sx={{ color: 'rgba(255,255,255,0.5)' }} />
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
-            Loading AAS...
+            {t('aas.loading')}
           </Typography>
         </Box>
       )}
@@ -610,14 +613,16 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
               lastSection = row.section;
               return (
                 <Box key={row.key}>
-                  {showHeader && <SectionHeader text={row.section === 'nameplate' ? 'Nameplate' : 'Technical Data'} />}
+                  {showHeader && (
+                    <SectionHeader text={row.section === 'nameplate' ? t('aas.nameplate') : t('aas.technicalData')} />
+                  )}
                   <Row label={row.label} value={row.value} />
                 </Box>
               );
             })}
             {hiddenCount > 0 && (
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, mt: 0.5, display: 'block' }}>
-                +{hiddenCount} more (click to expand)
+                {t('aas.more', { count: hiddenCount })}
               </Typography>
             )}
           </Box>
@@ -655,7 +660,7 @@ export function AasTooltipContent({ data, isPinned, viewer }: TooltipContentProp
               '&:hover': { borderColor: accentColor, bgcolor: `${accentColor}1a` },
             }}
           >
-            Add to Cart
+            {t('aas.addToCart')}
           </Button>
         );
       })()}
@@ -763,6 +768,7 @@ export function AasDetailHeaderAction({ viewer, nodePath, data }: {
   nodePath?: string | null;
   data: Record<string, unknown>;
 }) {
+  const { t } = useRvTranslation('assets');
   const aasId = (data.AASId ?? data.aasId ?? '') as string;
   const description = (data.Description ?? data.description ?? '') as string;
   // Re-render when a resolution pass finishes (the inspector can be open first).
@@ -777,7 +783,7 @@ export function AasDetailHeaderAction({ viewer, nodePath, data }: {
   if (node && !isAasNodeVisible(node)) return null;
 
   return (
-    <MuiTooltip title="Open AAS detail panel" placement="top">
+    <MuiTooltip title={t('aas.openDetail')} placement="top">
       <IconButton size="small" onClick={handleOpen} sx={{ color: '#26a69a', p: 0.25, ml: 'auto' }}>
         <OpenInNew sx={{ fontSize: 13 }} />
       </IconButton>
@@ -787,6 +793,7 @@ export function AasDetailHeaderAction({ viewer, nodePath, data }: {
 
 /** Floating AAS detail panel — renders nameplate + technical data in a draggable FloatingPanel. */
 export function AasDetailPanel() {
+  const { t } = useRvTranslation('assets');
   const state = useAasDetailState();
   const [parsed, setParsed] = useState<AasParsedData | null>(null);
   const [indexEntry, setIndexEntry] = useState<AasIndexEntry | null>(null);
@@ -835,7 +842,7 @@ export function AasDetailPanel() {
         {loading && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 2 }}>
             <CircularProgress size={16} sx={{ color: 'rgba(255,255,255,0.5)' }} />
-            <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Loading AAS data...</Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{t('aas.loadingData')}</Typography>
           </Box>
         )}
         {error && (
@@ -845,19 +852,19 @@ export function AasDetailPanel() {
           <>
             {parsed.nameplate.length > 0 && (
               <>
-                <SectionHeader text="Nameplate" />
+                <SectionHeader text={t('aas.nameplate')} />
                 {parsed.nameplate.map((p, i) => <Row key={`np-${i}`} label={p.label} value={p.value} />)}
               </>
             )}
             {parsed.technicalData.length > 0 && (
               <>
-                <SectionHeader text="Technical Data" />
+                <SectionHeader text={t('aas.technicalData')} />
                 {parsed.technicalData.map((p, i) => <Row key={`td-${i}`} label={p.label} value={p.value} />)}
               </>
             )}
             {parsed.documents.length > 0 && (
               <>
-                <SectionHeader text="Documents" />
+                <SectionHeader text={t('aas.documents')} />
                 {parsed.documents.map((doc, i) => (
                   <Box
                     key={`doc-${i}`}
@@ -876,7 +883,7 @@ export function AasDetailPanel() {
             )}
             {parsed.nameplate.length === 0 && parsed.technicalData.length === 0 && parsed.documents.length === 0 && (
               <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, py: 2, textAlign: 'center' }}>
-                No nameplate, technical data, or documents found
+                {t('aas.empty')}
               </Typography>
             )}
           </>

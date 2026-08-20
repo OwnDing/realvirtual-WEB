@@ -41,6 +41,7 @@ import {
   signalBindTargetId,
   type SignalBindTarget,
 } from './signal-bind-target';
+import { rvT } from '../../core/i18n';
 
 /** Plugin id used for register/unregister — same string as `SignalBindPlugin.id`. */
 export const SIGNAL_BIND_MENU_PLUGIN_ID = 'signal-bind';
@@ -103,7 +104,9 @@ export function resolvePLCBindMenuTarget(
   const placement = target.kind === 'placed' ? (target.label ?? target.node.name) : null;
   return {
     target,
-    label: placement ? `Link signal… (on ${placement})` : 'Link signal…',
+    label: placement
+      ? rvT('authoring', 'signalBind.linkSignalOn', { placement })
+      : rvT('authoring', 'signalBind.linkSignal'),
   };
 }
 
@@ -112,7 +115,8 @@ export function signalBindContextMenuItems(viewer: RVViewer): ContextMenuItem[] 
   return [{
     id: 'signal-bind.link-signal',
     // Resolved eagerly at open() time, right after `condition` said yes.
-    label: (menuTarget) => resolvePLCBindMenuTarget(viewer, menuTarget)?.label ?? 'Link signal…',
+    label: (menuTarget) => resolvePLCBindMenuTarget(viewer, menuTarget)?.label
+      ?? rvT('authoring', 'signalBind.linkSignal'),
     icon: 'link',
     order: 55,
     condition: (menuTarget) => resolvePLCBindMenuTarget(viewer, menuTarget) !== null,

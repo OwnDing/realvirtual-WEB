@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { Object3D, Mesh, BoxGeometry, MeshBasicMaterial, Vector3 } from 'three';
 import { rvDarkTheme } from '../src/core/hmi/theme';
@@ -190,6 +190,23 @@ describe('surface: tooltip', () => {
       </ThemeProvider>,
     );
     expect(screen.queryByText(/Loading AAS/)).not.toBeInTheDocument();
+  });
+
+  it('updates the local AAS error when the language changes', async () => {
+    await act(async () => { await setLocale('zh-CN'); });
+    render(
+      <ThemeProvider theme={rvDarkTheme}>
+        <AasTooltipContent
+          data={{ type: 'aas', aasId: '', description: '', resolution: 'resolved' } as never}
+          isPinned={false}
+          viewer={{ getPlugin: () => null } as never}
+        />
+      </ThemeProvider>,
+    );
+    expect(await screen.findByText('缺少 AAS ID')).toBeInTheDocument();
+
+    await act(async () => { await setLocale('en-US'); });
+    expect(await screen.findByText('No AAS ID')).toBeInTheDocument();
   });
 });
 

@@ -232,6 +232,19 @@ export const MIGRATED_SOURCES = [
   'src/plugins/layout-planner/PendingLoadMessage.tsx',
   'src/plugins/layout-planner/PlannerToolbarButtons.tsx',
   'src/plugins/layout-planner/index.ts',
+  // AAS, runtime instructions and signal binding (Milestone 4b, batch 11)
+  'src/core/engine/rv-binding-slot-resolver.ts',
+  'src/plugins/aas-link-plugin.tsx',
+  'src/plugins/custom-runtime-instruction-plugin.tsx',
+  'src/plugins/signal-bind/BindingsOverviewButton.tsx',
+  'src/plugins/signal-bind/BindingsOverviewPanel.tsx',
+  'src/plugins/signal-bind/InlineSignalSlots.tsx',
+  'src/plugins/signal-bind/SignalBindPopover.tsx',
+  'src/plugins/signal-bind/SignalLinkModeButton.tsx',
+  'src/plugins/signal-bind/component-bulk-actions.ts',
+  'src/plugins/signal-bind/first-link-notice.ts',
+  'src/plugins/signal-bind/plc-signal-context-menu.ts',
+  'src/plugins/signal-bind/signal-bind-target.ts',
 ];
 
 /**
@@ -266,6 +279,11 @@ const GERMAN_SOURCE = 'There is no English original to move: `NewsDialog.tsx` sh
   + 'gone from the source. Listed in full — including the values that happen to match a word used '
   + 'elsewhere — because the fact worth recording is that this whole dialog had no English, not '
   + 'whether a three-letter button label collides with another file.';
+
+const GERMAN_SIGNAL_NOTICE = 'There is no English original to move: the first-link notice shipped '
+  + 'GERMAN copy ("Externes Signal verknüpft — interne Steuerung nun nicht mehr aktiv.") in an '
+  + 'otherwise English signal-binding flow. The English catalog value is newly written, and the '
+  + 'German is gone from the source.';
 
 const NESTED_TEMPLATE = 'The separator lived INSIDE a nested ternary — `Browse${iface ? ` — ${type}` : \'\'}` '
   + 'and `CONNECTIONS${n > 0 ? ` (${n})` : \'\'}` — so the joined form never existed as one run of '
@@ -303,6 +321,7 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['tools.planner.loadFailedItem', GERMAN_PLANNER],
   ['tools.planner.retry', GERMAN_PLANNER],
   ['tools.planner.remove', GERMAN_PLANNER],
+  ['authoring.signalBind.firstLinkNotice', GERMAN_SIGNAL_NOTICE],
   ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
     + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
     + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '

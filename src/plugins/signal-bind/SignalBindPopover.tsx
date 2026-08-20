@@ -52,6 +52,7 @@ import { popoverContentRegistry } from '../../core/hmi/popover-store';
 import { getConnectSnapshot, subscribeConnectStore, type ConnectInterface } from '../../core/hmi/connect-store';
 import { BINDING_STATE_LABEL } from '../../core/hmi/signal-vocabulary';
 import { omitUndefined } from '../../core/hmi/rv-omit-undefined';
+import { useRvTranslation } from '../../core/i18n';
 
 // Re-exports: the row/picker shapes moved to the shared core row (plan-325);
 // existing imports from this module keep working.
@@ -116,6 +117,7 @@ export interface SignalBindPopoverProps {
 export function SignalBindPopover({
   slots, signals, state, viewer, onBind, onUnbind,
 }: SignalBindPopoverProps) {
+  const { t } = useRvTranslation('authoring');
   // Open search overlay for a slot (anchored to the clicked trigger).
   const [picker, setPicker] = useState<{ key: string; anchor: HTMLElement } | null>(null);
 
@@ -229,15 +231,15 @@ export function SignalBindPopover({
       </Box>
       {slots.length === 0 && (
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', py: 1 }}>
-          No bindable signals on this element.
+          {t('signalBind.noBindableSignals')}
         </Typography>
       )}
 
-      {controls.length > 0 && <SectionHeader label="PLC Outputs" />}
+      {controls.length > 0 && <SectionHeader label={t('signalBind.plcOutputs')} />}
       {controls.map(renderRow)}
-      {feedback.length > 0 && <SectionHeader label="PLC Inputs" />}
+      {feedback.length > 0 && <SectionHeader label={t('signalBind.plcInputs')} />}
       {feedback.map(renderRow)}
-      {unavailable.length > 0 && <SectionHeader label="Unavailable" />}
+      {unavailable.length > 0 && <SectionHeader label={t('signalBind.unavailable')} />}
       {unavailable.map(renderRow)}
 
       <SignalSearchOverlay
@@ -246,7 +248,7 @@ export function SignalBindPopover({
         onClose={() => setPicker(null)}
         signals={searchItems}
         viewer={viewer}
-        title={pickerRow ? `Link ${pickerRow.label ?? pickerRow.slot}` : undefined}
+        title={pickerRow ? t('signalBind.linkSlot', { slot: pickerRow.label ?? pickerRow.slot }) : undefined}
         getRejectReason={pickerRejectReason}
         onPick={(_name, item) => {
           if (!pickerRow || !item) return;

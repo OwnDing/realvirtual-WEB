@@ -30,6 +30,7 @@ import { SEVERITY_COLORS } from '../core/hmi/severity-pulse';
 import { collectNodeAiContext } from '../core/hmi/search-ai-context';
 import { AskAiButton } from '../core/hmi/AskAiButton';
 import { useSearchDiagnosisAvailable } from './diagnose/search-diagnose-registry';
+import { useRvTranslation, type RVTranslationKey } from '../core/i18n';
 
 // ─── Engine bridge helpers ──────────────────────────────────────────────────
 
@@ -41,10 +42,10 @@ function getInstance(viewer: RVViewer, path: string): RVCustomRuntimeInstruction
 }
 
 /** Format the activation wall-clock time as "HH:MM:SS · DD.MM.YYYY" (locale-aware). */
-function formatStamp(ms: number): string {
+function formatStamp(ms: number, locale: string): string {
   const d = new Date(ms);
-  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const date = d.toLocaleDateString();
+  const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const date = d.toLocaleDateString(locale);
   return `${time} · ${date}`;
 }
 
@@ -52,12 +53,12 @@ function formatStamp(ms: number): string {
 
 type InstructionType = InstructionEntry['type'];
 
-const TYPE_VISUALS: Record<InstructionType, { color: string; title: string; icon: React.ReactElement }> = {
-  info: { color: SEVERITY_COLORS.info, title: 'Info', icon: <Info fontSize="small" /> },
-  maintenance: { color: SEVERITY_COLORS.maintenance, title: 'Maintenance', icon: <Build fontSize="small" /> },
-  warning: { color: SEVERITY_COLORS.warning, title: 'Warning', icon: <Warning fontSize="small" /> },
-  error: { color: SEVERITY_COLORS.error, title: 'Error', icon: <ErrorIcon fontSize="small" /> },
-  success: { color: SEVERITY_COLORS.success, title: 'Success', icon: <CheckCircle fontSize="small" /> },
+const TYPE_VISUALS: Record<InstructionType, { color: string; titleKey: RVTranslationKey<'demo'>; icon: React.ReactElement }> = {
+  info: { color: SEVERITY_COLORS.info, titleKey: 'runtimeInstruction.info', icon: <Info fontSize="small" /> },
+  maintenance: { color: SEVERITY_COLORS.maintenance, titleKey: 'runtimeInstruction.maintenance', icon: <Build fontSize="small" /> },
+  warning: { color: SEVERITY_COLORS.warning, titleKey: 'runtimeInstruction.warning', icon: <Warning fontSize="small" /> },
+  error: { color: SEVERITY_COLORS.error, titleKey: 'runtimeInstruction.error', icon: <ErrorIcon fontSize="small" /> },
+  success: { color: SEVERITY_COLORS.success, titleKey: 'runtimeInstruction.success', icon: <CheckCircle fontSize="small" /> },
 };
 
 // ─── Reactive subscription to the InstructionRuntimeStore ───────────────────
@@ -78,6 +79,7 @@ function InstructionCard({
   viewer: RVViewer;
   aiAvailable: boolean;
 }) {
+  const { t, locale } = useRvTranslation('demo');
   const visuals = TYPE_VISUALS[entry.type] ?? TYPE_VISUALS.info;
 
   const stepCount = entry.steps.length;
@@ -127,7 +129,7 @@ function InstructionCard({
 
   const onUrl = (url: string) => {
     // Open the embedded document viewer (NOT a new browser tab).
-    openPdfViewer(step?.instruction || visuals.title, { type: 'url', url });
+    openPdfViewer(step?.instruction || t(visuals.titleKey), { type: 'url', url });
   };
 
   const askAi = () => {
@@ -156,7 +158,7 @@ function InstructionCard({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1 }}>
         <Box sx={{ color: visuals.color, display: 'flex' }}>{visuals.icon}</Box>
         <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}>
-          {visuals.title}
+          {t(visuals.titleKey)}
         </Typography>
         {stepCount > 1 && (
           <Typography variant="caption" sx={{ opacity: 0.6, flexShrink: 0 }}>
@@ -165,7 +167,7 @@ function InstructionCard({
         )}
         {/* Dismiss is only offered on the LAST step (and only when dismissible). */}
         {entry.dismissible && isLast && (
-          <Tooltip title="Dismiss">
+          <Tooltip title={t('runtimeInstruction.dismiss')}>
             <IconButton
               size="small"
               sx={{ p: 0.25 }}
@@ -180,7 +182,7 @@ function InstructionCard({
       {/* Activation time & date */}
       <Box sx={{ px: 1.5, pb: 0.5, mt: -0.75 }}>
         <Typography sx={{ fontSize: 10, color: 'text.disabled', letterSpacing: 0.2 }}>
-          {formatStamp(entry.at)}
+          {formatStamp(entry.at, locale)}
         </Typography>
       </Box>
 
@@ -205,14 +207,14 @@ function InstructionCard({
           <Box sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
             {aiAvailable && <AskAiButton onClick={askAi} />}
             {step.url && (
-              <Tooltip title="Open document">
+              <Tooltip title={t('runtimeInstruction.openDocument')}>
                 <IconButton size="small" sx={{ p: 0.25 }} onClick={(e) => { e.stopPropagation(); onUrl(step.url!); }}>
                   <Description sx={{ fontSize: 15 }} />
                 </IconButton>
               </Tooltip>
             )}
             {targetPaths.length > 0 && (
-              <Tooltip title="View in 3D">
+              <Tooltip title={t('runtimeInstruction.viewIn3d')}>
                 <IconButton size="small" sx={{ p: 0.25 }} onClick={(e) => { e.stopPropagation(); onView(); }}>
                   <Visibility sx={{ fontSize: 15 }} />
                 </IconButton>
@@ -234,14 +236,14 @@ function InstructionCard({
             borderTop: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <Tooltip title="Previous step">
+          <Tooltip title={t('runtimeInstruction.previousStep')}>
             <span>
               <IconButton size="small" disabled={isFirst} onClick={(e) => { e.stopPropagation(); goTo(clamped - 1); }}>
                 <NavigateBefore sx={{ fontSize: 18 }} />
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Next step">
+          <Tooltip title={t('runtimeInstruction.nextStep')}>
             <span>
               <IconButton size="small" disabled={isLast} onClick={(e) => { e.stopPropagation(); goTo(clamped + 1); }}>
                 <NavigateNext sx={{ fontSize: 18 }} />
@@ -275,6 +277,7 @@ const scrollSx = {
 } as const;
 
 export function InstructionPanel({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('demo');
   const instructions = useActiveInstructions(viewer);
   const aiAvailable = useSearchDiagnosisAvailable();
   const [expanded, setExpanded] = useState(false);
@@ -314,7 +317,9 @@ export function InstructionPanel({ viewer }: UISlotProps) {
             }}
           >
             <UnfoldLess sx={{ fontSize: 16 }} />
-            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{sorted.length} messages — stack</Typography>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>
+              {t('runtimeInstruction.stack', { count: sorted.length })}
+            </Typography>
           </Box>
         )}
         {renderCards(sorted)}
@@ -350,7 +355,9 @@ export function InstructionPanel({ viewer }: UISlotProps) {
         }}
       >
         <UnfoldMore sx={{ fontSize: 16 }} />
-        <Typography sx={{ fontSize: 11, fontWeight: 600 }}>+{hidden} more — show all</Typography>
+        <Typography sx={{ fontSize: 11, fontWeight: 600 }}>
+          {t('runtimeInstruction.showAll', { count: hidden })}
+        </Typography>
       </Box>
     </Box>
   );

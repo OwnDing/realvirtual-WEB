@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 10 之后）：
+截至 2026-08-20（批次 11 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`demo`、`tools`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **2198** 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）、演示 HMI 与存储通知（KPI 条/消息卡片/机器人报警与 AI 助手/图表浮层/浏览器存储横幅/展台导览）、AI 代理管理与布局规划器（代理定义/运行面板/规划器工具栏/素材库面板）。
-- 受门禁债务 **182 处 / 56 文件**（`node scripts/i18n-inventory.mjs`），已从 Milestone 1 的 1944 降到不足十分之一；建议项 `error-message` 311、`intl-format` 22。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_454_550 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 63.9 KB**（`ADR-0001` R1 已把 `en-US` 的 8 个非启动 namespace 移入独立 chunk，构建产物 75.3 KB；`zh-CN` 全量仍在入口）。**余量按每批 4–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0 → 73.8 → 68.7 → 63.9），剩余 182 处大约还要吃掉 10–15 KB —— 按当前斜率**能够在预算内收尾**，但余量已回到批次 4 时的水平，因此这个决定仍未消失：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`demo`、`tools`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **2277** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）、演示 HMI 与存储通知（KPI 条/消息卡片/机器人报警与 AI 助手/图表浮层/浏览器存储横幅/展台导览）、AI 代理管理与布局规划器（代理定义/运行面板/规划器工具栏/素材库面板）、AAS 数据面板、运行时指令与完整信号绑定流程。
+- 受门禁债务 **129 处 / 46 文件**（`node scripts/i18n-inventory.mjs`），已从 Milestone 1 的 1944 降到不足十五分之一；建议项 `error-message` 311、`intl-format` 22，其中未显式传 locale 的站点 11。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_458_596 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 60.0 KB**（`ADR-0001` R1 已把 `en-US` 的 8 个非启动 namespace 移入独立 chunk，当前构建产物 80_324 B；`zh-CN` 全量仍在入口）。**余量按每批 4–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0 → 73.8 → 68.7 → 63.9 → 60.0），剩余 129 处按当前密度大约还要吃掉 7–10 KB —— 按当前斜率**能够在预算内收尾**，但余量已回到批次 4 时的水平，因此这个决定仍未消失：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 182 处受门禁文案（批次 1–10 见下方各节）。
+- [ ] Milestone 4b：按风险分批迁移其余 129 处受门禁文案（批次 1–11 见下方各节）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,15 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 11：AAS、运行时指令与信号绑定（2026-08-20）
+
+- 覆盖 10 个受门禁源文件、53 处：AAS 标识解析/属性/文档/购物车，运行时指令卡片与导航，以及信号绑定总览、行内插槽、选择浮层、连接模式、批量动作、首次连接通知和 PLC 右键菜单。全仓 182 → **129**（56 → **46 文件**）。扫描器看不见的表头数组与动态失败原因也一起迁移，避免同一面板出现半中半英。
+- AAS 和运行时指令是 React 面，使用 `useRvTranslation`；模块级动作注册表、右键菜单和首次连接通知必须等到**调用/写入边界**再用 `rvT` 解析。这样既不会在 `initI18n()` 前冻结语言，也不用把既有注册契约改宽。回归用例覆盖了组件原地切换，以及模块级标签和通知在调用时读取当前语言。
+- 信号名、组件路径、PLC、`CONNECT`、错误码和线上取值保持不变；可读的绑定状态、资格失败原因、方向、动作和通知进目录。`formatStamp` 改为把当前 locale 显式传给日期与时间，未显式 locale 的建议项 12 → **11**。
+- **第四处德文残留**出现在首次绑定通知：`Externes Signal verknüpft — interne Steuerung nun nicht mehr aktiv.`。中文与英文都没有可逐字搬运的英文源，因此为新写的 `authoring.signalBind.firstLinkNotice` 登记单点 `GERMAN_SIGNAL_NOTICE` 例外；其余既有英文仍必须逐字追溯。
+- **目录 parity 不能证明 key 放在了正确 namespace。** 第一版把 `runtimeInstruction` 同时放进两种语言相邻的 `sim` 分组，两个目录结构完全一致，所以 parity 门禁通过；组件实际请求 `demo:runtimeInstruction.*`，行为测试渲染出裸 key 并失败。已移回 `demo`，并保留中英文原地切换用例钉住真实解析路径。
+- 验证：`./scripts/verify.sh static` 通过；Node 全套 55 文件 **503** 例通过；受影响 Browser 测试 11 文件 **121** 例通过；`node scripts/i18n-verbatim-check.mjs` 的 **2277** 条值全部追溯到 `d1949a5`；`npm run build` 通过，入口 3_454_550 → **3_458_596 B**（+4_046 B，预算余 **60.0 KB**），`tests/bundle-splitting.test.ts` 14 例通过。分包测试第一次与 static/Node 并发执行时 T11 扫描延迟 chunk 撞到 15 s 超时；空载原样复跑为 9.7 s 通过，预算 T5 在两次运行中都通过。
 
 ### Milestone 4b 批次 10：AI 代理管理与布局规划器（2026-08-20）
 

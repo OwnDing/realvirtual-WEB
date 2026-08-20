@@ -16,21 +16,23 @@ import { Suspense, lazy, useState } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import type { UISlotProps } from '../../core/rv-ui-plugin';
+import { useRvTranslation } from '../../core/i18n';
 
 const BindingsOverviewPanel = lazy(() =>
   import('./BindingsOverviewPanel').then((m) => ({ default: m.BindingsOverviewPanel })));
 
 export function BindingsOverviewButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('authoring');
   const [open, setOpen] = useState(false);
   if (!viewer.signalBindingManager) return null;
 
   return (
     <>
-      <Tooltip title="Signal bindings overview" placement="right">
+      <Tooltip title={t('signalBind.overviewTooltip')} placement="right">
         <IconButton
           size="small"
           data-testid="bindings-overview-toggle"
-          aria-label="Open signal bindings overview"
+          aria-label={t('signalBind.openOverview')}
           onClick={() => setOpen(true)}
           sx={{ p: 0.75, color: open ? 'primary.main' : 'text.disabled' }}
         >
