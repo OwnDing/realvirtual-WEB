@@ -201,7 +201,7 @@ componentActionRegistry.register('Splat', [
     label: 'X',
     icon: SwapHoriz,
     color: AXIS_COLOR_X,
-    tooltip: 'Mirror along Three.js X axis (red — same axis as Position X / Rotation X).',
+    tooltip: () => rvT('tools', 'planner.mirrorX'),
     isActive: (ctx) => readSplatInvert(ctx.node, 'InvertX'),
     onClick: (ctx) => toggleSplatInvert(ctx, 'InvertX'),
     order: 10,
@@ -211,7 +211,7 @@ componentActionRegistry.register('Splat', [
     label: 'Y',
     icon: SwapVert,
     color: AXIS_COLOR_Y,
-    tooltip: 'Mirror along Three.js Y axis (green — vertical / up axis).',
+    tooltip: () => rvT('tools', 'planner.mirrorY'),
     isActive: (ctx) => readSplatInvert(ctx.node, 'InvertY'),
     onClick: (ctx) => toggleSplatInvert(ctx, 'InvertY'),
     order: 20,
@@ -221,7 +221,7 @@ componentActionRegistry.register('Splat', [
     label: 'Z',
     icon: SwapHoriz,
     color: AXIS_COLOR_Z,
-    tooltip: 'Mirror along Three.js Z axis (blue — same axis as Position Z / Rotation Z).',
+    tooltip: () => rvT('tools', 'planner.mirrorZ'),
     isActive: (ctx) => readSplatInvert(ctx.node, 'InvertZ'),
     onClick: (ctx) => toggleSplatInvert(ctx, 'InvertZ'),
     order: 30,
@@ -429,6 +429,7 @@ import { tooltipStore } from '../../core/hmi/tooltip/tooltip-store';
 import type { RVMovingUnit } from '../../core/engine/rv-mu';
 import { referenceBoundsFromSubtree } from '../../core/engine/rv-missing-reference-placeholder';
 import type { RvReferenceBounds } from '../../core/engine/rv-asset-reference';
+import { rvT } from '../../core/i18n';
 
 // ─── Placement bounds (plan-703 §2.8) ───────────────────────────────────
 

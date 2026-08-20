@@ -35,6 +35,7 @@ import { SEVERITY_COLORS } from '../../core/hmi/severity-pulse';
 import type { UISlotProps } from '../../core/rv-ui-plugin';
 import type { LayoutPlannerPlugin } from './index';
 import type { LayoutSnapshot, PendingPlacementInfo } from './rv-layout-store';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Stable empty list — a fresh `[]` per render would defeat memoisation and,
  *  as a `useSyncExternalStore` fallback, loop the component. */
@@ -44,6 +45,7 @@ const NOOP_SUBSCRIBE = (): (() => void) => () => {};
 const NULL_SNAPSHOT = (): LayoutSnapshot => null as unknown as LayoutSnapshot;
 
 export function PendingLoadMessage({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('tools');
   const plugin = viewer.getPlugin<LayoutPlannerPlugin>('layout-planner');
   const store = plugin?.store;
 
@@ -90,7 +92,7 @@ export function PendingLoadMessage({ viewer }: UISlotProps) {
       }}
     >
       <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.3, mb: 0.75 }}>
-        Assets werden geladen
+        {t('planner.loadingAssets')}
       </Typography>
 
       <Box aria-live="polite" role="status">
@@ -98,7 +100,7 @@ export function PendingLoadMessage({ viewer }: UISlotProps) {
           <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.25 }}>
             <CircularProgress size={14} thickness={5} sx={{ color: SEVERITY_COLORS.info }} />
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {`Lade ${item.name}…`}
+              {t('planner.loadingItem', { name: item.name })}
             </Typography>
           </Box>
         ))}
@@ -110,7 +112,7 @@ export function PendingLoadMessage({ viewer }: UISlotProps) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Warning sx={{ fontSize: 14, color: SEVERITY_COLORS.error }} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {`${item.name} konnte nicht geladen werden`}
+                {t('planner.loadFailedItem', { name: item.name })}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 0.75, mt: 0.5, ml: 3 }}>
@@ -119,14 +121,14 @@ export function PendingLoadMessage({ viewer }: UISlotProps) {
                 variant="outlined"
                 onClick={() => plugin.retryPendingPlacement(item.id)}
               >
-                Wiederholen
+                {t('planner.retry')}
               </Button>
               <Button
                 size="small"
                 color="inherit"
                 onClick={() => plugin.removePlacementById(item.id)}
               >
-                Entfernen
+                {t('planner.remove')}
               </Button>
             </Box>
           </Box>

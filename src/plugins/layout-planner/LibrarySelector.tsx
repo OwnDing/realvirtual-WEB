@@ -45,6 +45,7 @@ import {
   CollectionsBookmark,
   MoreVert,
 } from '@mui/icons-material';
+import { useRvTranslation } from '../../core/i18n';
 
 export type LibraryKind = 'url' | 'github' | 'cloud';
 
@@ -83,6 +84,7 @@ function kindIcon(kind: LibraryKind, status: LibraryItem['cloudStatus'], error?:
 }
 
 export function LibrarySelector({ items, activeId, onSelect, onManage, compact = false }: LibrarySelectorProps) {
+  const { t } = useRvTranslation('tools');
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const close = () => setAnchor(null);
   // Compact-mode overflow ("⋮") menu anchor — separate from the library dropdown.
@@ -135,13 +137,13 @@ export function LibrarySelector({ items, activeId, onSelect, onManage, compact =
           Compact (mobile): a single "⋮" overflow menu to keep the row small. */}
       {compact ? (
         <>
-          <IconButton size="small" onClick={(e) => setActionAnchor(e.currentTarget)} sx={{ p: 0.25, flexShrink: 0 }} aria-label="Library actions">
+          <IconButton size="small" onClick={(e) => setActionAnchor(e.currentTarget)} sx={{ p: 0.25, flexShrink: 0 }} aria-label={t('planner.libraryActions')}>
             <MoreVert sx={{ fontSize: 18 }} />
           </IconButton>
           <Menu anchorEl={actionAnchor} open={!!actionAnchor} onClose={closeActions}>
             <MenuItem onClick={() => { onManage(); closeActions(); }} sx={{ fontSize: 12 }}>
               <ListItemIcon sx={{ minWidth: 26 }}><Tune sx={{ fontSize: 16 }} /></ListItemIcon>
-              Manage libraries…
+              {t('planner.manageLibraries')}
             </MenuItem>
           </Menu>
         </>
@@ -169,7 +171,7 @@ export function LibrarySelector({ items, activeId, onSelect, onManage, compact =
               </ListItemIcon>
               <ListItemText
                 primary={item.label}
-                secondary={item.error ? 'Failed to load' : undefined}
+                secondary={item.error ? t('planner.failedToLoad') : undefined}
                 slotProps={{
                   primary: { sx: { fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
                   secondary: { sx: { fontSize: 10, color: item.error ? '#ef5350' : 'text.disabled' } },
@@ -190,7 +192,7 @@ export function LibrarySelector({ items, activeId, onSelect, onManage, compact =
           <ListItemIcon sx={{ minWidth: 26 }}>
             <Tune sx={{ fontSize: 16 }} />
           </ListItemIcon>
-          <Typography sx={{ fontSize: 12 }}>Manage libraries…</Typography>
+          <Typography sx={{ fontSize: 12 }}>{t('planner.manageLibraries')}</Typography>
         </MenuItem>
       </Menu>
     </Box>

@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 137,
-    "a11y-name": 20,
-    "plugin-registry": 68,
-    "dynamic-text": 29,
+    "react-copy": 62,
+    "a11y-name": 4,
+    "plugin-registry": 65,
+    "dynamic-text": 23,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 9,
-    "ui-state-text": 2
+    "ui-state-text": 1
   },
-  "total": 283,
-  "fileCount": 67,
+  "total": 182,
+  "fileCount": 56,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -97,18 +97,6 @@
       "react-copy": 12,
       "ui-state-text": 1
     },
-    "src/plugins/agents/AgentManagerPanel.tsx": {
-      "react-copy": 36,
-      "dynamic-text": 1
-    },
-    "src/plugins/agents/AgentReportView.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1
-    },
-    "src/plugins/agents/AgentRunPanel.tsx": {
-      "react-copy": 10,
-      "a11y-name": 3
-    },
     "src/plugins/annotation-plugin.ts": {
       "plugin-registry": 1
     },
@@ -137,36 +125,6 @@
     },
     "src/plugins/kiosk-tour-api.ts": {
       "plugin-registry": 1
-    },
-    "src/plugins/layout-planner/CatalogBrowser.tsx": {
-      "dynamic-text": 1
-    },
-    "src/plugins/layout-planner/LayoutLibraryPanel.tsx": {
-      "react-copy": 6,
-      "a11y-name": 2,
-      "ui-state-text": 1
-    },
-    "src/plugins/layout-planner/LayoutLibraryPanelHost.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/layout-planner/LibrarySelector.tsx": {
-      "react-copy": 3,
-      "a11y-name": 1
-    },
-    "src/plugins/layout-planner/MobileLibraryTab.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/layout-planner/PendingLoadMessage.tsx": {
-      "react-copy": 3,
-      "dynamic-text": 2
-    },
-    "src/plugins/layout-planner/PlannerToolbarButtons.tsx": {
-      "react-copy": 14,
-      "a11y-name": 9,
-      "dynamic-text": 2
-    },
-    "src/plugins/layout-planner/index.ts": {
-      "plugin-registry": 3
     },
     "src/plugins/login-gate-plugin.tsx": {
       "react-copy": 5

@@ -220,6 +220,18 @@ export const MIGRATED_SOURCES = [
   'src/plugins/demo/test-axes-plugin.tsx',
   'src/plugins/models/DemoRealvirtualWeb/demo-kiosk-tour.ts',
   'src/plugins/models/DemoRealvirtualWeb/model-options.ts',
+  // AI agents and the layout planner (Milestone 4b, batch 10)
+  'src/plugins/agents/AgentManagerPanel.tsx',
+  'src/plugins/agents/AgentReportView.tsx',
+  'src/plugins/agents/AgentRunPanel.tsx',
+  'src/plugins/layout-planner/CatalogBrowser.tsx',
+  'src/plugins/layout-planner/LayoutLibraryPanel.tsx',
+  'src/plugins/layout-planner/LayoutLibraryPanelHost.tsx',
+  'src/plugins/layout-planner/LibrarySelector.tsx',
+  'src/plugins/layout-planner/MobileLibraryTab.tsx',
+  'src/plugins/layout-planner/PendingLoadMessage.tsx',
+  'src/plugins/layout-planner/PlannerToolbarButtons.tsx',
+  'src/plugins/layout-planner/index.ts',
 ];
 
 /**
@@ -239,6 +251,14 @@ const PLURAL_SPLICE = 'English plural inflection spliced into the expression, no
 const CAPITALISED_AT_RENDER = 'Produced by `id.charAt(0).toUpperCase() + id.slice(1)` over the '
   + 'option id, so the capitalised word was never in the source text — only the lowercase id was. '
   + 'Moving the capitalisation into the catalog is what lets the label be translated at all.';
+
+const GERMAN_PLANNER = 'There is no English original to move: the layout planner\'s pending-load '
+  + 'message and the thumbnail-generation error shipped GERMAN copy ("Assets werden geladen", '
+  + '"Lade …", "… konnte nicht geladen werden", "Wiederholen", "Entfernen", "Preview konnte nicht '
+  + 'erzeugt werden — Schreibrechte verweigert oder GLB-Ladefehler") in an otherwise English '
+  + 'product. This is the THIRD German leftover found by this migration (Milestone 3 in '
+  + '`LayoutLibraryPanel.tsx`, batch 3 in `NewsDialog.tsx`), and like those the English is newly '
+  + 'written and the German is gone from the source.';
 
 const GERMAN_SOURCE = 'There is no English original to move: `NewsDialog.tsx` shipped GERMAN copy '
   + '("Neu in realvirtual WEB", "News schließen", "Mehr erfahren", "Weiter", "Schließen", "N von M") '
@@ -277,6 +297,12 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['assets.import.rejected_other', PLURAL_SPLICE],
   ['demo.alarm.historyTitle_one', PLURAL_SPLICE],
   ['demo.alarm.historyTitle_other', PLURAL_SPLICE],
+  ['tools.planner.previewFailed', GERMAN_PLANNER],
+  ['tools.planner.loadingAssets', GERMAN_PLANNER],
+  ['tools.planner.loadingItem', GERMAN_PLANNER],
+  ['tools.planner.loadFailedItem', GERMAN_PLANNER],
+  ['tools.planner.retry', GERMAN_PLANNER],
+  ['tools.planner.remove', GERMAN_PLANNER],
   ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
     + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
     + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '

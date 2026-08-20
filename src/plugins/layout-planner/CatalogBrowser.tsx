@@ -21,6 +21,7 @@ import { Box, Typography, TextField, Chip, Tooltip, IconButton, InputAdornment }
 import { Search } from '@mui/icons-material';
 import { RV_SCROLL_CLASS, filterChipSx } from '../../core/hmi/shared-sx';
 import type { LibraryChip } from '../../core/library/library-chips';
+import { useRvTranslation } from '../../core/i18n';
 
 export interface CatalogBrowserAction {
   key: string;
@@ -107,6 +108,7 @@ export function CatalogBrowser({
   emptyContent,
   children,
 }: CatalogBrowserProps) {
+  const { t } = useRvTranslation('tools');
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {/* Header */}
@@ -142,7 +144,7 @@ export function CatalogBrowser({
       {chips.length > 0 && (
         <Box sx={{ px: 0.75, py: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.25, borderBottom: '1px solid rgba(255, 255, 255, 0.05)', flexShrink: 0 }}>
           <Chip
-            label={`All (${totalCount})`}
+            label={t('planner.allCount', { count: totalCount })}
             size="small"
             onClick={() => onSelectChip(null)}
             sx={filterChipSx(selectedChip === null)}

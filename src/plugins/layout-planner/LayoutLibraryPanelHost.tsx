@@ -32,6 +32,7 @@ import { useActiveContexts } from '../../core/hmi/ui-context-store';
 import { LAYOUT_PANEL_WIDTH } from '../../core/hmi/layout-constants';
 import { LazyPanelBoundary } from '../../core/hmi/LazyPanelBoundary';
 import { MobileLibraryTab } from './MobileLibraryTab';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Panel id in the LeftPanelManager — must match `LayoutLibraryPanel`. */
 const PANEL_ID = 'layout-planner';
@@ -40,6 +41,7 @@ const LayoutLibraryPanel = lazy(() =>
   import('./LayoutLibraryPanel').then((m) => ({ default: m.LayoutLibraryPanel })));
 
 export function LayoutLibraryPanelHost() {
+  const { t } = useRvTranslation('tools');
   const viewer = useViewer();
   const lpm = viewer.leftPanelManager;
   // The planner docks RIGHT — read that slot directly so the gate is independent
@@ -55,7 +57,7 @@ export function LayoutLibraryPanelHost() {
   if (hasLoaded || isOpen) {
     // Once mounted the panel owns every state, including the mobile reveal tab.
     return (
-      <LazyPanelBoundary label="Layout Library">
+      <LazyPanelBoundary label={t('planner.layoutLibrary')}>
         <LayoutLibraryPanel />
       </LazyPanelBoundary>
     );

@@ -67,8 +67,15 @@ export interface ComponentAction {
   readonly label?: string | ((ctx: ComponentActionContext) => string);
   /** Optional MUI icon component rendered before the label. */
   readonly icon?: ComponentType<{ sx?: object }>;
-  /** Optional tooltip — explains the effect of clicking. */
-  readonly tooltip?: string;
+  /**
+   * Optional tooltip — explains the effect of clicking.
+   *
+   * The function form exists for the same reason `label`'s does: an action is
+   * registered in a plugin constructor, before any language preference exists,
+   * so a fixed string here would be frozen at registration. Plugins that still
+   * pass a string keep working unchanged (ADR-0001 §9).
+   */
+  readonly tooltip?: string | ((ctx: ComponentActionContext) => string);
   /** When `true`, the button uses the active/filled style. Defaults to off. */
   readonly isActive?: (ctx: ComponentActionContext) => boolean;
   /** Sort order within the component's action row. Lower = earlier. Default 100. */

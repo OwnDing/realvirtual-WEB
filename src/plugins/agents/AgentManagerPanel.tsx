@@ -30,15 +30,18 @@ import { Add, ContentCopy, Delete, Edit, MoreVert, PlayArrow, PowerSettingsNew }
 import { FloatingPanel } from '../../core/hmi/FloatingPanel';
 import type { AgentBackendsStatus, AgentDefinition, AgentProvider } from './agent-provider';
 import { AGENT_SCHEMA_V1, createDefaultAgentDefinition, V1_AGENT_TOOLS } from './agent-provider';
+import { rvT, useRvTranslation, type RVTranslationKey } from '../../core/i18n';
 
-const TOOL_LABELS: Record<string, string> = {
-  signal_list: 'List live signals',
-  signal_read: 'Read live signals',
-  interfaces_status: 'Read interface status',
-  health: 'Read gateway health',
-  signal_docs: 'Read signal documentation',
-  historian_query_aggregated: 'Query aggregated history',
-  rag_search: 'Search machine documentation',
+// Keys, not text: this table is built at module load, before a language
+// preference exists. The checkbox row resolves it at render.
+const TOOL_LABEL_KEYS: Record<string, RVTranslationKey<'tools'>> = {
+  signal_list: 'agent.toolSignalList',
+  signal_read: 'agent.toolSignalRead',
+  interfaces_status: 'agent.toolInterfacesStatus',
+  health: 'agent.toolHealth',
+  signal_docs: 'agent.toolSignalDocs',
+  historian_query_aggregated: 'agent.toolHistorian',
+  rag_search: 'agent.toolRag',
 };
 
 export interface AgentManagerPanelProps {
@@ -49,6 +52,7 @@ export interface AgentManagerPanelProps {
 }
 
 export function AgentManagerPanel({ open, onClose, provider, onRunStarted }: AgentManagerPanelProps) {
+  const { t } = useRvTranslation('tools');
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
   const [backendStatus, setBackendStatus] = useState<AgentBackendsStatus | null>(null);
   const [draft, setDraft] = useState<AgentDefinition | null>(null);
@@ -161,7 +165,7 @@ export function AgentManagerPanel({ open, onClose, provider, onRunStarted }: Age
       <FloatingPanel
         open={open}
         onClose={onClose}
-        title="Agents"
+        title={t('agent.title')}
         panelId="agents-manager"
         defaultWidth={720}
         defaultHeight={620}
@@ -170,10 +174,10 @@ export function AgentManagerPanel({ open, onClose, provider, onRunStarted }: Age
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1 }}>
             <Button size="small" variant="contained" startIcon={<Add />} onClick={newAgent} sx={{ textTransform: 'none' }}>
-              New agent
+              {t('agent.new')}
             </Button>
             <Typography sx={{ ml: 'auto', fontSize: 11, color: 'text.secondary', fontFamily: 'monospace' }}>
-              {loading ? 'Loading…' : `${agents.length} agents`}
+              {loading ? t('agent.loading') : t('agent.count', { count: agents.length })}
             </Typography>
           </Box>
           {error && <Alert severity="error" sx={{ mx: 1.5, mb: 1 }}>{error}</Alert>}
@@ -195,9 +199,9 @@ export function AgentManagerPanel({ open, onClose, provider, onRunStarted }: Age
             <>
               <Divider />
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, px: 1.5, py: 1 }}>
-                <Button size="small" onClick={() => { setDraft(null); setOriginalName(null); }} sx={{ textTransform: 'none' }}>Cancel</Button>
+                <Button size="small" onClick={() => { setDraft(null); setOriginalName(null); }} sx={{ textTransform: 'none' }}>{t('agent.cancel')}</Button>
                 <Button size="small" variant="contained" disabled={!!validationError || saving} onClick={() => void save()} sx={{ textTransform: 'none' }}>
-                  {saving ? 'Saving…' : 'Save agent'}
+                  {t(saving ? 'agent.saving' : 'agent.save')}
                 </Button>
               </Box>
             </>
@@ -207,28 +211,28 @@ export function AgentManagerPanel({ open, onClose, provider, onRunStarted }: Age
 
       <Menu anchorEl={menu?.anchor ?? null} open={!!menu} onClose={() => setMenu(null)}>
         {menu && [
-          <MenuItem key="edit" sx={{ fontSize: 12, gap: 1 }} onClick={() => edit(menu.agent)}><Edit sx={{ fontSize: 14 }} /> Edit…</MenuItem>,
-          <MenuItem key="duplicate" sx={{ fontSize: 12, gap: 1 }} onClick={() => duplicate(menu.agent)}><ContentCopy sx={{ fontSize: 14 }} /> Duplicate</MenuItem>,
+          <MenuItem key="edit" sx={{ fontSize: 12, gap: 1 }} onClick={() => edit(menu.agent)}><Edit sx={{ fontSize: 14 }} /> {t('agent.edit')}</MenuItem>,
+          <MenuItem key="duplicate" sx={{ fontSize: 12, gap: 1 }} onClick={() => duplicate(menu.agent)}><ContentCopy sx={{ fontSize: 14 }} /> {t('agent.duplicate')}</MenuItem>,
           <MenuItem key="toggle" sx={{ fontSize: 12, gap: 1 }} onClick={() => void toggleEnabled(menu.agent)}>
-            <PowerSettingsNew sx={{ fontSize: 14 }} /> {menu.agent.enabled ? 'Disable' : 'Enable'}
+            <PowerSettingsNew sx={{ fontSize: 14 }} /> {t(menu.agent.enabled ? 'agent.disable' : 'agent.enable')}
           </MenuItem>,
           <Divider key="divider" />,
           <MenuItem key="delete" sx={{ fontSize: 12, gap: 1, color: 'error.main' }} onClick={() => { setDeleteTarget(menu.agent); setMenu(null); }}>
-            <Delete sx={{ fontSize: 14 }} /> Delete…
+            <Delete sx={{ fontSize: 14 }} /> {t('agent.delete')}
           </MenuItem>,
         ]}
       </Menu>
 
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Delete agent?</DialogTitle>
+        <DialogTitle>{t('agent.deleteTitle')}</DialogTitle>
         <DialogContent>
           <Typography sx={{ fontSize: 13 }}>
-            “{deleteTarget?.displayName}” and its definition will be removed from CONNECT.
+            {t('agent.deleteBody', { name: deleteTarget?.displayName ?? '' })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" onClick={() => void remove()}>Delete</Button>
+          <Button onClick={() => setDeleteTarget(null)}>{t('agent.cancel')}</Button>
+          <Button color="error" onClick={() => void remove()}>{t('agent.deleteConfirm')}</Button>
         </DialogActions>
       </Dialog>
     </>
@@ -248,12 +252,13 @@ function AgentList({
   onRun: (agent: AgentDefinition) => void;
   onMenu: (anchor: HTMLElement, agent: AgentDefinition) => void;
 }) {
+  const { t } = useRvTranslation('tools');
   if (agents.length === 0) {
     return (
       <Box sx={{ py: 5, textAlign: 'center' }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 600 }}>No agents yet</Typography>
+        <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{t('agent.empty')}</Typography>
         <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5 }}>
-          Create a code-free agent to analyze live signals, history, and machine documentation.
+          {t('agent.emptyHint')}
         </Typography>
       </Box>
     );
@@ -276,7 +281,7 @@ function AgentList({
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography noWrap sx={{ fontSize: 12, fontWeight: 600 }}>{agent.displayName}</Typography>
             <Typography noWrap sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>
-              {agent.name} · {agent.agentClass} · {resolvedBackendLabel(agent, backendStatus)} · {agent.tools.length} tools
+              {t('agent.listMeta', { name: agent.name, class: agent.agentClass, backend: resolvedBackendLabel(agent, backendStatus), count: agent.tools.length })}
             </Typography>
           </Box>
           <Button
@@ -287,10 +292,10 @@ function AgentList({
             onClick={() => onRun(agent)}
             sx={{ minWidth: 64, textTransform: 'none', fontSize: 11 }}
           >
-            {running === agent.name ? 'Starting…' : 'Run'}
+            {t(running === agent.name ? 'agent.starting' : 'agent.run')}
           </Button>
-          <Tooltip title="Agent actions">
-            <IconButton size="small" aria-label={`Actions for agent ${agent.displayName}`} onClick={(event) => onMenu(event.currentTarget, agent)} sx={{ p: 0.35, color: 'text.secondary' }}>
+          <Tooltip title={t('agent.actions')}>
+            <IconButton size="small" aria-label={t('agent.actionsFor', { name: agent.displayName })} onClick={(event) => onMenu(event.currentTarget, agent)} sx={{ p: 0.35, color: 'text.secondary' }}>
               <MoreVert sx={{ fontSize: 16 }} />
             </IconButton>
           </Tooltip>
@@ -311,6 +316,7 @@ function AgentEditor({
   validationError: string | null;
   backendStatus: AgentBackendsStatus | null;
 }) {
+  const { t } = useRvTranslation('tools');
   const set = <K extends keyof AgentDefinition>(key: K, value: AgentDefinition[K]) => onChange({ ...draft, [key]: value });
   const toggleTool = (tool: string, checked: boolean) => set(
     'tools',
@@ -318,42 +324,42 @@ function AgentEditor({
   );
   return (
     <Box component="form" onSubmit={(event) => event.preventDefault()} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{draft.name ? 'Agent definition' : 'New agent'}</Typography>
+      <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{t(draft.name ? 'agent.definition' : 'agent.new')}</Typography>
       {validationError && <Alert severity="warning" variant="outlined" sx={{ py: 0 }}>{validationError}</Alert>}
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <TextField size="small" label="Schema" value={AGENT_SCHEMA_V1} disabled sx={{ width: 150 }} />
+        <TextField size="small" label={t('agent.schema')} value={AGENT_SCHEMA_V1} disabled sx={{ width: 150 }} />
         <TextField
           size="small"
-          label="Name"
+          label={t('agent.name')}
           value={draft.name}
           onChange={(event) => set('name', event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
           inputProps={{ maxLength: 63, 'aria-describedby': 'agent-name-help' }}
           fullWidth
         />
       </Box>
-      <Typography id="agent-name-help" sx={{ mt: -1, fontSize: 10, color: 'text.secondary' }}>Lowercase slug, 2–63 characters.</Typography>
-      <TextField size="small" label="Display name" value={draft.displayName} inputProps={{ maxLength: 120 }} onChange={(event) => set('displayName', event.target.value)} fullWidth />
-      <TextField size="small" label="Description" value={draft.description} inputProps={{ maxLength: 500 }} onChange={(event) => set('description', event.target.value)} fullWidth />
+      <Typography id="agent-name-help" sx={{ mt: -1, fontSize: 10, color: 'text.secondary' }}>{t('agent.nameHelp')}</Typography>
+      <TextField size="small" label={t('agent.displayName')} value={draft.displayName} inputProps={{ maxLength: 120 }} onChange={(event) => set('displayName', event.target.value)} fullWidth />
+      <TextField size="small" label={t('agent.description')} value={draft.description} inputProps={{ maxLength: 500 }} onChange={(event) => set('description', event.target.value)} fullWidth />
       <TextField
         size="small"
-        label="Instructions"
+        label={t('agent.instructions')}
         value={draft.instructions}
         onChange={(event) => set('instructions', event.target.value)}
         inputProps={{ maxLength: 16_000 }}
         minRows={5}
         multiline
         fullWidth
-        helperText="The only free-form behavior field. Reports remain read-only and server-gated."
+        helperText={t('agent.instructionsHelp')}
       />
 
       <Box component="fieldset" sx={{ m: 0, p: 1, border: '1px solid rgba(255,255,255,0.08)', borderRadius: '4px' }}>
-        <Typography component="legend" sx={{ px: 0.5, fontSize: 11, fontWeight: 600, color: 'text.secondary' }}>Allowed server tools</Typography>
+        <Typography component="legend" sx={{ px: 0.5, fontSize: 11, fontWeight: 600, color: 'text.secondary' }}>{t('agent.allowedTools')}</Typography>
         <FormGroup sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 1 }}>
           {V1_AGENT_TOOLS.map((tool) => (
             <FormControlLabel
               key={tool}
               control={<Checkbox size="small" checked={draft.tools.includes(tool)} onChange={(event) => toggleTool(tool, event.target.checked)} />}
-              label={<Typography sx={{ fontSize: 11 }}>{TOOL_LABELS[tool]}</Typography>}
+              label={<Typography sx={{ fontSize: 11 }}>{t(TOOL_LABEL_KEYS[tool])}</Typography>}
             />
           ))}
         </FormGroup>
@@ -361,55 +367,55 @@ function AgentEditor({
 
       <Box sx={{ display: 'flex', gap: 1 }}>
         <FormControl size="small" sx={{ width: 190, flexShrink: 0 }}>
-          <InputLabel id="agent-class-label">Agent class</InputLabel>
+          <InputLabel id="agent-class-label">{t('agent.agentClass')}</InputLabel>
           <Select
             labelId="agent-class-label"
-            label="Agent class"
+            label={t('agent.agentClass')}
             value={draft.agentClass}
             onChange={(event) => set('agentClass', event.target.value as AgentDefinition['agentClass'])}
           >
-            <MenuItem value="report">Report</MenuItem>
-            <MenuItem value="authoring" disabled>Authoring (reserved)</MenuItem>
+            <MenuItem value="report">{t('agent.classReport')}</MenuItem>
+            <MenuItem value="authoring" disabled>{t('agent.classAuthoring')}</MenuItem>
           </Select>
         </FormControl>
-        <TextField size="small" label="Permission tier" value="read-only" disabled fullWidth helperText="Actuating tools are not available in Phase 3." />
-        <TextField size="small" label="Trigger" value="manual" disabled fullWidth />
+        <TextField size="small" label={t('agent.permissionTier')} value="read-only" disabled fullWidth helperText={t('agent.permissionHelp')} />
+        <TextField size="small" label={t('agent.trigger')} value="manual" disabled fullWidth />
         <FormControl size="small" fullWidth>
-          <InputLabel id="agent-output-label">Output</InputLabel>
-          <Select labelId="agent-output-label" label="Output" value={draft.outputFormat} onChange={(event) => set('outputFormat', event.target.value as AgentDefinition['outputFormat'])}>
-            <MenuItem value="report">Report</MenuItem>
-            <MenuItem value="chat">Chat</MenuItem>
+          <InputLabel id="agent-output-label">{t('agent.output')}</InputLabel>
+          <Select labelId="agent-output-label" label={t('agent.output')} value={draft.outputFormat} onChange={(event) => set('outputFormat', event.target.value as AgentDefinition['outputFormat'])}>
+            <MenuItem value="report">{t('agent.outputReport')}</MenuItem>
+            <MenuItem value="chat">{t('agent.outputChat')}</MenuItem>
             <MenuItem value="json">JSON</MenuItem>
           </Select>
         </FormControl>
       </Box>
       <Typography sx={{ mt: -1, fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>
-        Backend: {resolvedBackendLabel(draft, backendStatus)}
+        {t('agent.backend', { name: resolvedBackendLabel(draft, backendStatus) })}
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-        <TextField size="small" type="number" label="Max turns" value={draft.maxTurns} inputProps={{ min: 1, max: 16 }} onChange={(event) => set('maxTurns', Number(event.target.value))} fullWidth />
-        <TextField size="small" type="number" label="Token budget" value={draft.maxBudget.tokens} inputProps={{ min: 1024, max: 2_000_000, step: 1000 }} onChange={(event) => set('maxBudget', { tokens: Number(event.target.value) })} fullWidth />
-        <FormControlLabel control={<Checkbox checked={draft.enabled} onChange={(event) => set('enabled', event.target.checked)} />} label={<Typography sx={{ fontSize: 12 }}>Enabled</Typography>} />
+        <TextField size="small" type="number" label={t('agent.maxTurns')} value={draft.maxTurns} inputProps={{ min: 1, max: 16 }} onChange={(event) => set('maxTurns', Number(event.target.value))} fullWidth />
+        <TextField size="small" type="number" label={t('agent.tokenBudget')} value={draft.maxBudget.tokens} inputProps={{ min: 1024, max: 2_000_000, step: 1000 }} onChange={(event) => set('maxBudget', { tokens: Number(event.target.value) })} fullWidth />
+        <FormControlLabel control={<Checkbox checked={draft.enabled} onChange={(event) => set('enabled', event.target.checked)} />} label={<Typography sx={{ fontSize: 12 }}>{t('agent.enabled')}</Typography>} />
       </Box>
     </Box>
   );
 }
 
 function validateDraft(draft: AgentDefinition): string | null {
-  if (draft.agentClass !== 'report' && draft.agentClass !== 'authoring') return 'Agent class must be report or authoring.';
-  if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(draft.name)) return 'Name must be a lowercase slug with 2–63 characters.';
-  if (!draft.displayName.trim()) return 'Display name is required.';
-  if (!draft.instructions.trim()) return 'Instructions are required.';
-  if (draft.tools.length === 0) return 'Select at least one server tool.';
-  if (!Number.isInteger(draft.maxTurns) || draft.maxTurns < 1 || draft.maxTurns > 16) return 'Max turns must be between 1 and 16.';
-  if (!Number.isInteger(draft.maxBudget.tokens) || draft.maxBudget.tokens < 1024 || draft.maxBudget.tokens > 2_000_000) return 'Token budget must be between 1,024 and 2,000,000.';
+  if (draft.agentClass !== 'report' && draft.agentClass !== 'authoring') return rvT('tools', 'agent.errClass');
+  if (!/^[a-z0-9][a-z0-9-]{1,62}$/.test(draft.name)) return rvT('tools', 'agent.errName');
+  if (!draft.displayName.trim()) return rvT('tools', 'agent.errDisplayName');
+  if (!draft.instructions.trim()) return rvT('tools', 'agent.errInstructions');
+  if (draft.tools.length === 0) return rvT('tools', 'agent.errTools');
+  if (!Number.isInteger(draft.maxTurns) || draft.maxTurns < 1 || draft.maxTurns > 16) return rvT('tools', 'agent.errMaxTurns');
+  if (!Number.isInteger(draft.maxBudget.tokens) || draft.maxBudget.tokens < 1024 || draft.maxBudget.tokens > 2_000_000) return rvT('tools', 'agent.errBudget');
   return null;
 }
 
 function resolvedBackendLabel(agent: AgentDefinition, status: AgentBackendsStatus | null): string {
   const mapping = status?.classes.find(item => item.agentClass === agent.agentClass);
   if (mapping?.backend) return `${mapping.backend.backendId} / ${mapping.backend.model}`;
-  return mapping?.error ?? 'backend unavailable';
+  return mapping?.error ?? rvT('tools', 'agent.backendUnavailable');
 }
 
 function cloneAgent(agent: AgentDefinition): AgentDefinition {

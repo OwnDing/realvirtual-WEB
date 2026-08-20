@@ -75,6 +75,7 @@ import { getProjectStore } from '../../core/project/project-store';
 // Lives in its own module so the lazy-loading host (LayoutLibraryPanelHost) can
 // show it WITHOUT pulling this panel's chunk (plan-344 Phase 4).
 import { MobileLibraryTab } from './MobileLibraryTab';
+import { useRvTranslation } from '../../core/i18n';
 
 
 // ─── Constants ──────────────────────────────────────────────────────────
@@ -117,6 +118,7 @@ function prefetchableUrl(entry: LibraryCatalogEntry): string | null {
 const EMPTY_CLOUD_SNAPSHOT = { connections: [], activeConnectionId: null };
 
 export function LayoutLibraryPanel() {
+  const { t } = useRvTranslation('tools');
   const viewer = useViewer();
   const isMobile = useMobileLayout();
   const activeContexts = useActiveContexts();
@@ -277,7 +279,7 @@ export function LayoutLibraryPanel() {
     emptyContent = (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          No libraries loaded. Attach one via “Manage libraries…” in the library dropdown.
+          {t('planner.noLibraries')}
         </Typography>
       </Box>
     );
@@ -285,7 +287,7 @@ export function LayoutLibraryPanel() {
     emptyContent = (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="caption" sx={{ color: '#ef5350' }}>
-          Library unavailable: {activeError}
+          {t('planner.libraryUnavailable', { reason: activeError })}
         </Typography>
       </Box>
     );
@@ -325,7 +327,7 @@ export function LayoutLibraryPanel() {
       ) : (
       /* Right-docked library window (toggled from the toolbar Library button). */
       <LeftPanel
-        title="Library"
+        title={t('planner.library')}
         anchor="right"
         onClose={handleClose}
         // Width is driven by the panel manager — it owns persistence via
@@ -409,6 +411,7 @@ function MobileLibraryStrip({
   entries, plugin, snapshot, isAmTab, libraryItems, activeId,
   onSelect, onManage, onClose,
 }: MobileLibraryStripProps) {
+  const { t } = useRvTranslation('tools');
   // Single combined menu (library switch + manage) opened from the floating ⋮.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const closeMenu = () => setMenuAnchor(null);
@@ -483,7 +486,7 @@ function MobileLibraryStrip({
             size="small"
             onClick={(e) => setMenuAnchor(e.currentTarget)}
             sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.45)', '&:hover': { bgcolor: 'rgba(0,0,0,0.65)' }, p: 0, width: 22, height: 22 }}
-            aria-label="Library menu"
+            aria-label={t('planner.libraryMenu')}
           >
             <MoreVert sx={{ fontSize: 15 }} />
           </IconButton>
@@ -491,7 +494,7 @@ function MobileLibraryStrip({
             size="small"
             onClick={onClose}
             sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.45)', '&:hover': { bgcolor: 'rgba(0,0,0,0.65)' }, p: 0, width: 22, height: 22 }}
-            aria-label="Close library"
+            aria-label={t('planner.closeLibrary')}
           >
             <Close sx={{ fontSize: 15 }} />
           </IconButton>
@@ -524,7 +527,7 @@ function MobileLibraryStrip({
             sx={{ fontSize: 12 }}
           >
             <ListItemIcon sx={{ minWidth: 26 }}><Tune sx={{ fontSize: 16 }} /></ListItemIcon>
-            Manage libraries…
+            {t('planner.manageLibraries')}
           </MenuItem>
         </Menu>
       </Paper>
@@ -543,6 +546,7 @@ interface ThumbnailCardProps {
 }
 
 export const ThumbnailCard = memo(function ThumbnailCard({ entry, isPlacing, isPending, plugin }: ThumbnailCardProps) {
+  const { t } = useRvTranslation('tools');
   const viewer = useViewer();
   // Hover-intent prefetch (plan-371 F8). The timer is the whole mechanism:
   // start on enter, drop on leave, so only a deliberate rest over the card
@@ -663,7 +667,7 @@ export const ThumbnailCard = memo(function ThumbnailCard({ entry, isPlacing, isP
       // still set on the store, so the card switches away from the camera
       // fallback — no error in that case.
       if (!result && !entry.thumbnailUrl) {
-        setGenError('Preview konnte nicht erzeugt werden — Schreibrechte verweigert oder GLB-Ladefehler');
+        setGenError(t('planner.previewFailed'));
       }
     } catch (err) {
       setGenError(err instanceof Error ? err.message : String(err));
@@ -738,9 +742,9 @@ export const ThumbnailCard = memo(function ThumbnailCard({ entry, isPlacing, isP
       placeholderAction={
         <Tooltip
           title={
-            (generating || isPending) ? 'Generating preview…'
+            (generating || isPending) ? t('planner.generatingPreview')
               : genError ? genError
-              : 'Generate preview'
+              : t('planner.generatePreview')
           }
           placement="top"
         >
@@ -793,7 +797,7 @@ export const ThumbnailCard = memo(function ThumbnailCard({ entry, isPlacing, isP
           sx={{ fontSize: 12 }}
         >
           <EditIcon sx={{ fontSize: 14, mr: 1 }} />
-          Edit asset
+          {t('planner.editAsset')}
         </MenuItem>
       )}
     </Menu>

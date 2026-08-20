@@ -63,6 +63,7 @@ import type { SceneSnapshot } from '../../core/hmi/scene/scene-store';
 import { DragNumberField } from '../../core/hmi/DragNumberField';
 import type { LayoutPlannerPlugin } from './index';
 import type { LayoutSnapshot } from './rv-layout-store';
+import { useRvTranslation } from '../../core/i18n';
 
 // Sane bounds for typed values — keeps the gizmo from getting micro-snap or
 // >360° steps. The user can still set anything within these ranges precisely.
@@ -111,6 +112,7 @@ function clampNumber(raw: string, min: number, max: number): number | null {
 // ─── Grid / snap settings popover ─────────────────────────────────────────
 
 export function PlannerGridButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin, snapshot } = usePlannerToolbarState();
   // Click toggles grid snap; right-click / press-and-hold opens the settings popover.
   const { anchorEl, closeMenu, buttonProps } = useToolButtonInteraction({
@@ -165,8 +167,8 @@ export function PlannerGridButton() {
     <>
       <Tooltip
         title={enabled
-          ? `Snap on: ${sizeMm > 0 ? `${sizeMm} mm` : 'translation off'} / ${rotDeg}° — right-click for settings`
-          : 'Snap off — click to enable, right-click for settings'}
+          ? t('planner.snapOn', { grid: sizeMm > 0 ? `${sizeMm} mm` : t('planner.snapTranslationOff'), rot: rotDeg })
+          : t('planner.snapOff')}
         placement="right"
       >
         <IconButton
@@ -176,7 +178,7 @@ export function PlannerGridButton() {
             p: 0.75,
             color: enabled ? 'primary.main' : 'text.disabled',
           }}
-          aria-label="Toggle grid snap"
+          aria-label={t('planner.toggleGridSnap')}
         >
           <GridOn sx={{ fontSize: 18 }} />
         </IconButton>
@@ -204,7 +206,7 @@ export function PlannerGridButton() {
             variant="subtitle2"
             sx={{ fontSize: 13, fontWeight: 600, flex: 1 }}
           >
-            Snap to grid
+            {t('planner.snapToGrid')}
           </Typography>
         </Box>
 
@@ -222,7 +224,7 @@ export function PlannerGridButton() {
           }}
         >
           <DragNumberField
-            label="Translation"
+            label={t('planner.translation')}
             icon={<Straighten sx={{ fontSize: 16 }} />}
             unit="mm"
             value={transDraft}
@@ -231,10 +233,10 @@ export function PlannerGridButton() {
             min={MIN_TRANSLATION_MM}
             max={MAX_TRANSLATION_MM}
             step={1}
-            ariaLabel="Translation"
+            ariaLabel={t('planner.translation')}
           />
           <DragNumberField
-            label="Rotation"
+            label={t('planner.rotation')}
             icon={<Rotate90DegreesCcw sx={{ fontSize: 16 }} />}
             unit="°"
             value={rotDraft}
@@ -243,7 +245,7 @@ export function PlannerGridButton() {
             min={MIN_ROTATION_DEG}
             max={MAX_ROTATION_DEG}
             step={0.1}
-            ariaLabel="Rotation"
+            ariaLabel={t('planner.rotation')}
           />
         </Stack>
       </Popover>
@@ -254,12 +256,13 @@ export function PlannerGridButton() {
 // ─── Drop-to-surface button ──────────────────────────────────────────────
 
 export function PlannerDropToSurfaceButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin, snapshot } = usePlannerToolbarState();
   if (!plugin || !snapshot) return null;
 
   const on = snapshot.dropToSurface;
   return (
-    <Tooltip title={on ? 'Drop to surface: ON' : 'Drop to surface: OFF'} placement="right">
+    <Tooltip title={t(on ? 'planner.dropOn' : 'planner.dropOff')} placement="right">
       <IconButton
         size="small"
         onClick={() => plugin.store.setDropToSurface(!on)}
@@ -267,7 +270,7 @@ export function PlannerDropToSurfaceButton() {
           p: 0.75,
           color: on ? 'primary.main' : 'text.disabled',
         }}
-        aria-label="Toggle drop to surface"
+        aria-label={t('planner.toggleDrop')}
       >
         <VerticalAlignBottom sx={{ fontSize: 18 }} />
       </IconButton>
@@ -284,12 +287,13 @@ export function PlannerDropToSurfaceButton() {
  * (the snap-point plugin reads `store.chainModeEnabled` on its own).
  */
 export function PlannerChainModeButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin, snapshot } = usePlannerToolbarState();
   if (!plugin || !snapshot) return null;
 
   const on = snapshot.chainModeEnabled;
   return (
-    <Tooltip title={on ? 'Chain mode: ON' : 'Chain mode: OFF'} placement="right">
+    <Tooltip title={t(on ? 'planner.chainOn' : 'planner.chainOff')} placement="right">
       <IconButton
         size="small"
         onClick={() => plugin.store.setChainMode(!on)}
@@ -297,7 +301,7 @@ export function PlannerChainModeButton() {
           p: 0.75,
           color: on ? 'primary.main' : 'text.disabled',
         }}
-        aria-label="Toggle chain mode"
+        aria-label={t('planner.toggleChain')}
       >
         <LinkIcon sx={{ fontSize: 18 }} />
       </IconButton>
@@ -314,11 +318,12 @@ export function PlannerChainModeButton() {
  * onto the live transport manager via `viewer.setVanishMUs`.
  */
 export function PlannerVanishMUsButton() {
+  const { t } = useRvTranslation('tools');
   const viewer = useViewer();
   const on = useVanishMUs();
 
   return (
-    <Tooltip title={on ? 'Vanish MUs at end of line: ON' : 'Vanish MUs at end of line: OFF'} placement="right">
+    <Tooltip title={t(on ? 'planner.vanishOn' : 'planner.vanishOff')} placement="right">
       <IconButton
         size="small"
         onClick={() => viewer.setVanishMUs(!on)}
@@ -326,7 +331,7 @@ export function PlannerVanishMUsButton() {
           p: 0.75,
           color: on ? 'primary.main' : 'text.disabled',
         }}
-        aria-label="Toggle vanish MUs at end of line"
+        aria-label={t('planner.toggleVanish')}
       >
         <AutoDelete sx={{ fontSize: 18 }} />
       </IconButton>
@@ -344,12 +349,13 @@ export function PlannerVanishMUsButton() {
  * so this toggle only matters in planner mode.
  */
 export function PlannerDocModeButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin, snapshot } = usePlannerToolbarState();
   if (!plugin || !snapshot) return null;
 
   const on = snapshot.docMode;
   return (
-    <Tooltip title={on ? 'Documentation mode: ON (component datasheets visible)' : 'Documentation mode: OFF'} placement="right">
+    <Tooltip title={t(on ? 'planner.docOn' : 'planner.docOff')} placement="right">
       <IconButton
         size="small"
         onClick={() => plugin.store.setDocMode(!on)}
@@ -357,7 +363,7 @@ export function PlannerDocModeButton() {
           p: 0.75,
           color: on ? 'primary.main' : 'text.disabled',
         }}
-        aria-label="Toggle documentation mode"
+        aria-label={t('planner.toggleDoc')}
       >
         <MenuBook sx={{ fontSize: 18 }} />
       </IconButton>
@@ -387,6 +393,7 @@ export function PlannerDocModeButton() {
  * immediate visual cue when nothing is selected.
  */
 export function PlannerDeleteButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin } = usePlannerToolbarState();
   const selection = useSelection();
   if (!plugin) return null;
@@ -412,7 +419,7 @@ export function PlannerDeleteButton() {
             p: 0.75,
             color: disabled ? 'text.disabled' : '#ef5350',
           }}
-          aria-label="Delete selected"
+          aria-label={t('planner.deleteSelected')}
         >
           <DeleteOutline sx={{ fontSize: 18 }} />
         </IconButton>
@@ -431,13 +438,14 @@ export function PlannerDeleteButton() {
  * (primary) while the library is open.
  */
 export function PlannerLibraryButton() {
+  const { t } = useRvTranslation('tools');
   const viewer = useViewer();
   const lpm = viewer.leftPanelManager;
   const snap = useSyncExternalStore(lpm.subscribe, lpm.getSnapshot);
   const isOpen = snap.right.activePanel === 'layout-planner';
 
   return (
-    <Tooltip title={isOpen ? 'Hide Library' : 'Show Library'} placement="right">
+    <Tooltip title={t(isOpen ? 'planner.hideLibrary' : 'planner.showLibrary')} placement="right">
       <IconButton
         size="small"
         onClick={() => {
@@ -445,7 +453,7 @@ export function PlannerLibraryButton() {
           else lpm.open('layout-planner', LAYOUT_PANEL_WIDTH, 'right');
         }}
         sx={{ p: 0.75, color: isOpen ? 'primary.main' : 'text.disabled' }}
-        aria-label="Toggle planner library"
+        aria-label={t('planner.toggleLibrary')}
       >
         <ViewSidebar sx={{ fontSize: 18 }} />
       </IconButton>
@@ -466,6 +474,7 @@ const _nullSnapshot = () => null as unknown as SceneSnapshot;
  * drive — so planner edits, deletes and placements all share one history.
  */
 function HistoryButton({ kind }: { kind: 'undo' | 'redo' }) {
+  const { t } = useRvTranslation('tools');
   const store = getSceneStore();
   const snap = useSyncExternalStore(
     store?.subscribe ?? _noopSubscribe,
@@ -474,7 +483,7 @@ function HistoryButton({ kind }: { kind: 'undo' | 'redo' }) {
   if (!store) return null;
 
   const enabled = (kind === 'undo' ? snap.canUndo : snap.canRedo) === true;
-  const label = (kind === 'undo' ? snap.undoLabel : snap.redoLabel) ?? (kind === 'undo' ? 'Undo' : 'Redo');
+  const label = (kind === 'undo' ? snap.undoLabel : snap.redoLabel) ?? t(kind === 'undo' ? 'planner.undo' : 'planner.redo');
   const run = () => { void (kind === 'undo' ? store.undo() : store.redo()); };
 
   return (
@@ -486,7 +495,7 @@ function HistoryButton({ kind }: { kind: 'undo' | 'redo' }) {
           onClick={run}
           disabled={!enabled}
           sx={{ p: 0.75, color: enabled ? 'text.secondary' : 'text.disabled' }}
-          aria-label={kind === 'undo' ? 'Undo' : 'Redo'}
+          aria-label={t(kind === 'undo' ? 'planner.undo' : 'planner.redo')}
         >
           {kind === 'undo' ? <Undo sx={{ fontSize: 18 }} /> : <Redo sx={{ fontSize: 18 }} />}
         </IconButton>
@@ -518,6 +527,7 @@ const MAX_NEIGHBOR_MAX_MM = 100_000;
  * within its tolerance; grid is the fallback quantizer.
  */
 export function PlannerSnapButton() {
+  const { t } = useRvTranslation('tools');
   const { plugin, snapshot } = usePlannerToolbarState();
   // Click toggles magnetic snap; right-click / press-and-hold opens the settings popover.
   const { anchorEl, closeMenu, buttonProps } = useToolButtonInteraction({
@@ -566,8 +576,8 @@ export function PlannerSnapButton() {
     <>
       <Tooltip
         title={enabled
-          ? `Magnetic snap on: ${tolMm} mm — right-click for settings`
-          : 'Magnetic snap off — click to enable, right-click for settings'}
+          ? t('planner.magneticOn', { tol: tolMm })
+          : t('planner.magneticOff')}
         placement="right"
       >
         <IconButton
@@ -577,7 +587,7 @@ export function PlannerSnapButton() {
             p: 0.75,
             color: enabled ? 'primary.main' : 'text.disabled',
           }}
-          aria-label="Toggle magnetic snap"
+          aria-label={t('planner.toggleMagnetic')}
         >
           <JoinInner sx={{ fontSize: 18 }} />
         </IconButton>
@@ -594,7 +604,7 @@ export function PlannerSnapButton() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.25 }}>
           <JoinInner sx={{ fontSize: 18, color: enabled ? 'primary.main' : 'text.disabled' }} />
           <Typography variant="subtitle2" sx={{ fontSize: 13, fontWeight: 600, flex: 1 }}>
-            Magnetic snap
+            {t('planner.magneticSnap')}
           </Typography>
         </Box>
 
@@ -615,7 +625,7 @@ export function PlannerSnapButton() {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Adjust sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography sx={{ fontSize: 12, flex: 1 }}>Mid</Typography>
+            <Typography sx={{ fontSize: 12, flex: 1 }}>{t('planner.mid')}</Typography>
             <Switch
               size="small"
               checked={mid}
@@ -624,7 +634,7 @@ export function PlannerSnapButton() {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <BorderOuter sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography sx={{ fontSize: 12, flex: 1 }}>Side</Typography>
+            <Typography sx={{ fontSize: 12, flex: 1 }}>{t('planner.side')}</Typography>
             <Switch
               size="small"
               checked={side}
@@ -633,7 +643,7 @@ export function PlannerSnapButton() {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Tag sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography sx={{ fontSize: 12, flex: 1 }}>Neighbor distances</Typography>
+            <Typography sx={{ fontSize: 12, flex: 1 }}>{t('planner.neighborDistances')}</Typography>
             <Switch
               size="small"
               checked={showDistance}
@@ -642,7 +652,7 @@ export function PlannerSnapButton() {
           </Box>
 
           <DragNumberField
-            label="Snap distance"
+            label={t('planner.snapDistance')}
             icon={<SettingsEthernet sx={{ fontSize: 16 }} />}
             unit="mm"
             value={tolDraft}
@@ -651,10 +661,10 @@ export function PlannerSnapButton() {
             min={MIN_BBOX_TOL_MM}
             max={MAX_BBOX_TOL_MM}
             step={1}
-            ariaLabel="Snap distance"
+            ariaLabel={t('planner.snapDistance')}
           />
           <DragNumberField
-            label="Max measure"
+            label={t('planner.maxMeasure')}
             icon={<Straighten sx={{ fontSize: 16 }} />}
             unit="mm"
             value={maxDistDraft}

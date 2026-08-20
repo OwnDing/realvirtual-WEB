@@ -16,6 +16,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import { ViewSidebar, KeyboardArrowUp } from '@mui/icons-material';
 import { WINDOW_DARK_BG } from '../../core/hmi/LeftPanel';
 import { LEFT_PANEL_ZINDEX } from '../../core/hmi/layout-constants';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Height reserved for the bottom nav strips (ActivityBar / ButtonPanel). */
 const MOBILE_NAV_CLEARANCE = 48;
@@ -24,6 +25,7 @@ const MOBILE_NAV_CLEARANCE = 48;
  *  and the library is closed. Tapping it opens the horizontal strip. Sits above
  *  the bottom nav strips (ActivityBar / ButtonPanel). */
 export function MobileLibraryTab({ onOpen }: { onOpen: () => void }) {
+  const { t } = useRvTranslation('tools');
   return (
     <Box
       sx={{
@@ -45,7 +47,7 @@ export function MobileLibraryTab({ onOpen }: { onOpen: () => void }) {
         }}
       >
         <ViewSidebar sx={{ fontSize: 18, color: 'primary.main' }} />
-        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: 12 }}>Library</Typography>
+        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: 12 }}>{t('planner.library')}</Typography>
         <KeyboardArrowUp sx={{ fontSize: 16, color: 'text.secondary' }} />
       </Paper>
     </Box>

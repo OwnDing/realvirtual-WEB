@@ -205,11 +205,13 @@ const ENTRY_BUDGET_BYTES = 3_520_000;
  *  panel in its `lazy(() => import(...))` call and Vite's dep manifest. */
 const SPLIT_PANELS = [
   { name: 'DESExperimentMatrixPanel', marker: 'des-matrix-panel' },
-  // Was 'Edit Connection' until plan-702 removed the Edit-Connection dialog
-  // along with the rest of the panel's library management. 'Generating
-  // preview…' sits in ThumbnailCard, well outside anything 702 touched, and
-  // is repo-wide unique.
-  { name: 'LayoutLibraryPanel', marker: 'Generating preview…' },
+  // Was 'Edit Connection' until plan-702, then the copy string 'Generating
+  // preview…' until EP-I18N-001 batch 10 moved it into the catalog and the
+  // literal left the chunk. The marker is now the translation KEY, which is a
+  // strictly better one: a key is repo-wide unique by construction, lives only
+  // in the implementation that resolves it, and — unlike any copy string —
+  // cannot be changed by a translator.
+  { name: 'LayoutLibraryPanel', marker: 'planner.generatingPreview' },
   { name: 'VisualTab', marker: null },
   { name: 'DevToolsTab', marker: null },
   { name: 'GroupsTab', marker: null },

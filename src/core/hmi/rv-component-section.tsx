@@ -646,8 +646,9 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
                 {typeof action.label === 'function' ? action.label(actionCtx) : action.label ?? action.id}
               </Button>
             );
-            return action.tooltip
-              ? <Tooltip key={action.id} title={action.tooltip} placement="top">{button}</Tooltip>
+            const tip = typeof action.tooltip === 'function' ? action.tooltip(actionCtx) : action.tooltip;
+            return tip
+              ? <Tooltip key={action.id} title={tip} placement="top">{button}</Tooltip>
               : button;
           })}
         </Box>

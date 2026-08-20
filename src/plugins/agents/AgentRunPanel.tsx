@@ -23,6 +23,7 @@ import type { AgentProvider, AgentRunRecord, AgentRunStatus } from './agent-prov
 import { isTerminalAgentRunStatus } from './agent-provider';
 import { pollAgentRun } from './agent-store';
 import { AgentReportView } from './AgentReportView';
+import { useRvTranslation } from '../../core/i18n';
 
 export interface AgentRunPanelProps {
   open: boolean;
@@ -33,6 +34,7 @@ export interface AgentRunPanelProps {
 }
 
 export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentRunPanelProps) {
+  const { t } = useRvTranslation('tools');
   const [run, setRun] = useState<AgentRunRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
@@ -68,16 +70,16 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
   const toolbar = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
       {onBack && (
-        <Tooltip title="Back to agents">
-          <IconButton size="small" aria-label="Back to agents" onClick={onBack} sx={{ p: 0.35, color: 'text.secondary' }}>
+        <Tooltip title={t('agent.backToAgents')}>
+          <IconButton size="small" aria-label={t('agent.backToAgents')} onClick={onBack} sx={{ p: 0.35, color: 'text.secondary' }}>
             <ArrowBack sx={{ fontSize: 16 }} />
           </IconButton>
         </Tooltip>
       )}
       {run && !isTerminalAgentRunStatus(run.status) && (
-        <Tooltip title="Cancel run">
+        <Tooltip title={t('agent.cancelRun')}>
           <span>
-            <IconButton size="small" aria-label="Cancel agent run" disabled={cancelling} onClick={() => void cancel()} sx={{ p: 0.35, color: 'text.secondary' }}>
+            <IconButton size="small" aria-label={t('agent.cancelRunAria')} disabled={cancelling} onClick={() => void cancel()} sx={{ p: 0.35, color: 'text.secondary' }}>
               <Cancel sx={{ fontSize: 16 }} />
             </IconButton>
           </span>
@@ -90,7 +92,7 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Agent run"
+      title={t('agent.runTitle')}
       subtitle={run?.agent}
       panelId="agents-run"
       defaultWidth={720}
@@ -103,7 +105,7 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
         {!run && !error && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
             <CircularProgress size={16} />
-            <Typography sx={{ fontSize: 12 }}>Loading run status…</Typography>
+            <Typography sx={{ fontSize: 12 }}>{t('agent.loadingRun')}</Typography>
           </Box>
         )}
         {run && (
@@ -112,7 +114,7 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
               <StatusChip status={run.status} />
               {!isTerminalAgentRunStatus(run.status) && <CircularProgress size={14} />}
               <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: 'text.secondary' }}>
-                {run.totalTokens.toLocaleString()} tokens{run.usageEstimated ? ' (estimated)' : ''}
+                {t('agent.tokens', { count: run.totalTokens.toLocaleString() })}{run.usageEstimated ? t('agent.tokensEstimated') : ''}
               </Typography>
             </Box>
             {run.backend && (
@@ -127,21 +129,21 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
 
             {run.status === 'waiting_approval' && (
               <Alert severity="warning" variant="outlined" sx={{ mb: 1.5 }}>
-                This run is waiting for approval. Actuating approval becomes available in Phase 5.
+                {t('agent.waitingApproval')}
               </Alert>
             )}
             {run.error && <Alert severity="error" variant="outlined" sx={{ mb: 1.5 }}>{run.error}</Alert>}
 
             {run.trace.length > 0 && (
-              <Box component="section" aria-label="Tool trace" sx={{ mb: 1.5 }}>
+              <Box component="section" aria-label={t('agent.toolTrace')} sx={{ mb: 1.5 }}>
                 <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>
-                  Tools used · {run.trace.length}
+                  {t('agent.toolsUsed', { count: run.trace.length })}
                 </Typography>
                 {run.trace.map((entry, index) => (
                   <Accordion key={`${entry.turn}-${entry.tool}-${index}`} disableGutters elevation={0} sx={{ bgcolor: 'transparent', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <AccordionSummary expandIcon={<ExpandMore sx={{ fontSize: 16 }} />} sx={{ minHeight: 34, '& .MuiAccordionSummary-content': { my: 0.5 } }}>
                       <Typography sx={{ fontSize: 11, fontFamily: 'monospace' }}>
-                        Turn {entry.turn} · {entry.tool} · {entry.resultChars.toLocaleString()} chars
+                        {t('agent.turnLine', { turn: entry.turn, tool: entry.tool, chars: entry.resultChars.toLocaleString() })}
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ pt: 0 }}>
@@ -157,14 +159,14 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
             {run.result ? (
               <AgentReportView result={run.result} />
             ) : isTerminalAgentRunStatus(run.status) ? (
-              <Alert severity="info" variant="outlined">This run finished without a report.</Alert>
+              <Alert severity="info" variant="outlined">{t('agent.noReport')}</Alert>
             ) : (
-              <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>The report appears when the run completes.</Typography>
+              <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{t('agent.reportPending')}</Typography>
             )}
 
             {!isTerminalAgentRunStatus(run.status) && (
               <Button size="small" variant="text" disabled={cancelling} onClick={() => void cancel()} sx={{ mt: 1, textTransform: 'none' }}>
-                Cancel run
+                {t('agent.cancelRun')}
               </Button>
             )}
           </>

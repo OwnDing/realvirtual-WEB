@@ -25,12 +25,14 @@ import {
   type AgentChartRenderModel,
   type SafeInlineNode,
 } from './agent-report';
+import { useRvTranslation } from '../../core/i18n';
 
 export interface AgentReportViewProps {
   result: AgentRunResult;
 }
 
 export function AgentReportView({ result }: AgentReportViewProps) {
+  const { t } = useRvTranslation('tools');
   const blocks = parseAgentMarkdown(result.markdown, result.sources);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 1 }}>
@@ -66,8 +68,8 @@ export function AgentReportView({ result }: AgentReportViewProps) {
         <AgentReportChart key={index} model={agentChartToRenderModel(chart)} />
       ))}
       {result.sources.length > 0 && (
-        <Box component="section" aria-label="Report sources" sx={{ pt: 0.5 }}>
-          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>Sources</Typography>
+        <Box component="section" aria-label={t('agent.reportSources')} sx={{ pt: 0.5 }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>{t('agent.sources')}</Typography>
           {result.sources.map((source) => (
             <Typography key={source.id} sx={{ fontSize: 11, fontFamily: 'monospace', color: 'text.secondary' }}>
               {source.url && isSafeHttpUrl(source.url) ? (
