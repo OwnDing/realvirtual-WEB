@@ -30,6 +30,7 @@ import {
   BookmarkAddOutlined, BookmarkAdded,
 } from '@mui/icons-material';
 import type { SharedGlbInfo } from './rv-share-meta';
+import { useRvTranslation } from '../i18n';
 
 const ACCENT = '#4fc3f7';
 
@@ -67,6 +68,7 @@ export function SharedGlbInfoCard({
   bookmarked = false,
   onDismiss,
 }: SharedGlbInfoCardProps) {
+  const { t } = useRvTranslation('assets');
   if (!info && !error && !loading) return null;
 
   const meta = info?.meta ?? null;
@@ -126,7 +128,7 @@ export function SharedGlbInfoCard({
           )}
         </Box>
         {onDismiss && (
-          <IconButton size="small" onClick={onDismiss} aria-label="Dismiss" sx={{ mt: -0.5, mr: -0.5 }}>
+          <IconButton size="small" onClick={onDismiss} aria-label={t('share.dismiss')} sx={{ mt: -0.5, mr: -0.5 }}>
             <Close sx={{ fontSize: 16, color: 'rgba(255,255,255,0.5)' }} />
           </IconButton>
         )}
@@ -152,7 +154,7 @@ export function SharedGlbInfoCard({
               data-testid="shared-glb-origin"
               sx={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
-              loaded from {info.originHost ?? 'an unknown source'}
+              {t('share.loadedFrom', { host: info.originHost ?? t('share.unknownSource') })}
             </Typography>
           </Stack>
 
@@ -161,7 +163,7 @@ export function SharedGlbInfoCard({
             <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.5 }}>
               <HourglassBottom sx={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }} />
               <Typography data-testid="shared-glb-expiry" sx={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>
-                link expires on {formatExpiry(meta.expiresAt)}
+                {t('share.linkExpiresOn', { date: formatExpiry(meta.expiresAt) })}
               </Typography>
             </Stack>
           )}
@@ -172,8 +174,7 @@ export function SharedGlbInfoCard({
               placement="top"
             >
               <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', mt: 0.5, cursor: 'help' }}>
-                contains {info.embeddedOrigins.length} embedded asset
-                {info.embeddedOrigins.length === 1 ? '' : 's'}
+                {t('share.embedded', { count: info.embeddedOrigins.length })}
               </Typography>
             </Tooltip>
           )}
@@ -189,7 +190,7 @@ export function SharedGlbInfoCard({
                 disabled={loading}
                 sx={{ fontSize: 11, textTransform: 'none', flex: 1, borderColor: `${ACCENT}55`, color: ACCENT }}
               >
-                Open in realvirtual WEB
+                {t('share.openInApp')}
               </Button>
             </Stack>
           )}

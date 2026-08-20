@@ -23,13 +23,19 @@
  * file, `library-cross-source-ops.test.ts`.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   LIBRARY_FOLDER,
   setAssetCollections,
   type DocumentRowWriter,
 } from '../src/core/library/library-asset-ops';
 import type { RvDocumentEntry, RvProject } from '../src/core/project/rv-project-types';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 /**
  * The manifest half `setAssetCollections` writes through, in memory.

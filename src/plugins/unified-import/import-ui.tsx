@@ -24,6 +24,7 @@ import { useCallback, useEffect, useRef, useState, type DragEvent, type ReactNod
 import { Box, Checkbox, Link, MenuItem, Select, Tooltip, Typography, type SxProps, type Theme } from '@mui/material';
 import { OpenInNew } from '@mui/icons-material';
 import type { ImportProviderContext } from '../../core/import/rv-import-provider';
+import { useRvTranslation } from '../../core/i18n';
 
 /** Standard column layout of one provider tab: consistent rhythm across tabs. */
 export const TAB_PANE_SX: SxProps<Theme> = {
@@ -225,6 +226,7 @@ export function FileDropZone({ accept, multiple = true, onFiles, children }: {
   /** Idle content. Defaults to a line naming the accepted extensions. */
   children?: ReactNode;
 }) {
+  const { t } = useRvTranslation('assets');
   const [over, setOver] = useState(false);
   const [rejected, setRejected] = useState(0);
   const depth = useRef(0);
@@ -290,12 +292,12 @@ export function FileDropZone({ accept, multiple = true, onFiles, children }: {
         }}
       >
         <Typography sx={{ fontSize: 11, lineHeight: 1.5, color: over ? 'primary.main' : 'text.secondary' }}>
-          {children ?? <>Drop {accept.join(' / ')} files here</>}
+          {children ?? t('import.dropHere', { accept: accept.join(' / ') })}
         </Typography>
       </Box>
       {rejected > 0 && (
         <Typography sx={{ fontSize: 11, lineHeight: 1.7, color: 'text.secondary' }}>
-          {rejected} file{rejected === 1 ? '' : 's'} ignored — only {accept.join(' / ')} is accepted here.
+          {t('import.rejected', { count: rejected, accept: accept.join(' / ') })}
         </Typography>
       )}
     </Box>
@@ -317,10 +319,11 @@ export function FileDropZone({ accept, multiple = true, onFiles, children }: {
  * into by accident.
  */
 export function PartSourceLinks() {
+  const { t } = useRvTranslation('assets');
   const sx = { fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 0.25 } as const;
   return (
     <Typography sx={{ fontSize: 11, lineHeight: 1.7, color: 'text.secondary' }}>
-      Need a standard part?{' '}
+      {t('import.needStandardPart')}{' '}
       <Link href="https://www.3dfindit.com/" target="_blank" rel="noopener noreferrer" sx={sx}>
         3Dfindit<OpenInNew sx={{ fontSize: 11 }} />
       </Link>

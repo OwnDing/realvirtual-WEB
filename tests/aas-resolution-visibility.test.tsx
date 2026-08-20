@@ -14,7 +14,7 @@
  * that started this plan was ONE surface being forgotten.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { Object3D, Mesh, BoxGeometry, MeshBasicMaterial, Vector3 } from 'three';
@@ -43,6 +43,12 @@ import { resetIndex, resetCache } from '../src/plugins/aas-link-parser';
 import { attachDriveDatasheets, SEW_DRIVE_AAS } from '../src/behaviors/_shared/aas-link';
 import { OrderManagerPlugin, _resetOrderStore } from '../src/plugins/order-manager-plugin';
 import { tooltipRegistry } from '../src/core/hmi/tooltip/tooltip-registry';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const AAS_ID = 'urn:test:motor';
 const OTHER_ID = 'urn:test:other';

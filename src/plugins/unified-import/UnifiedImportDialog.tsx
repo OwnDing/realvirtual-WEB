@@ -43,6 +43,7 @@ import {
 import {
   abortImportJob, dismissImportOutcome, startImportJob, useImportJob,
 } from './import-job-store';
+import { useRvTranslation } from '../../core/i18n';
 
 /**
  * Map known failure signatures to an actionable next step. Raw engine errors
@@ -105,6 +106,7 @@ function loadLastProviderId(): string | null {
 }
 
 export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDialogProps) {
+  const { t } = useRvTranslation('assets');
   const providers = useProviders(open);
   const [activeId, setActiveId] = useState<string | null>(loadLastProviderId);
   const isEditor = viewer.modes.activeMode === 'editor';
@@ -203,10 +205,10 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
       <DialogTitle
         sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 14, fontWeight: 600, px: 2, pt: 1.5, pb: 0.75 }}
       >
-        Import
+        {t('import.title')}
         <IconButton
           size="small"
-          aria-label="Close"
+          aria-label={t('import.close')}
           onClick={cancelOrClose}
           disabled={busy}
           sx={{ p: 0.5, mr: -0.5 }}
@@ -271,7 +273,7 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
 
         {providers.length === 0 && (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            No import providers registered.
+            {t('import.noProviders')}
           </Typography>
         )}
 
@@ -286,8 +288,8 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
           {active && availability !== 'ready' && (
             <Alert severity="info" sx={{ mt: 1.25 }}>
               {availability === 'connecting'
-                ? `Connecting to ${active.label}…`
-                : active.setupHint ?? `${active.label} needs to be set up before importing.`}
+                ? t('import.connecting', { name: active.label })
+                : active.setupHint ?? t('import.needsSetup', { name: active.label })}
             </Alert>
           )}
         </Box>
@@ -326,7 +328,7 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
 
         {cancelled && !busy && (
           <Alert severity="info" sx={{ mt: 1.25 }}>
-            Import cancelled — your file selection and settings are kept.
+            {t('import.cancelled')}
           </Alert>
         )}
 
@@ -334,7 +336,7 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
             instead of leaving success implicit behind a warning. */}
         {outcome?.kind === 'warning' && outcome.importedNames.length > 0 && (
           <Alert severity="success" sx={{ mt: 1.25 }}>
-            Import complete — {outcome.importedNames.join(', ')}.
+            {t('import.completeNamed', { names: outcome.importedNames.join(', ') })}
           </Alert>
         )}
 
@@ -363,10 +365,10 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
       >
         {!isEditor && (
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Tooltip title="Turn off for multi-part CAD assemblies that must keep their original positions.">
+            <Tooltip title={t('import.alignHint')}>
               <FormControlLabel
                 control={<Checkbox size="small" checked={alignToFloor} onChange={(_, v) => setAlignToFloor(v)} sx={{ py: 0.25 }} />}
-                label="Auto-align to floor"
+                label={t('import.alignToFloor')}
                 sx={{ mr: 0, ml: -0.75, '& .MuiFormControlLabel-label': { fontSize: 12, color: 'text.secondary' } }}
               />
             </Tooltip>

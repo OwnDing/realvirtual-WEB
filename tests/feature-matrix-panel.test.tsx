@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, beforeAll } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { fireEvent, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import type { RVViewer } from '../src/core/rv-viewer';
@@ -14,6 +14,12 @@ import {
   FeatureMatrixPlugin,
 } from '../../realvirtual-WebViewer-Private~/src/plugins/feature-matrix/feature-matrix-plugin';
 import { createFeatureMatrixViewerHarness } from './helpers/feature-matrix-viewer';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const STORAGE_KEY = 'rv-feature-matrix-view-v2';
 

@@ -69,7 +69,14 @@ describe('i18n inventory — incremental hardcoded-text gate', () => {
     // A gate whose scan silently returns nothing is a green tick over an unchecked
     // repository. These are floors, not targets: they may only be lowered by a
     // migration that also refreshes the baseline.
-    expect(baseline.total).toBeGreaterThan(500);
+    //
+    // They are also a SECONDARY belt, and deliberately so — the classification
+    // fixtures above are what actually prove the scanner still works, and they
+    // keep proving it at zero debt. These floors only catch a collapse while
+    // real debt is still large, so lowering them as the migration lands is the
+    // intended motion rather than a weakening of the gate. 300 was set in batch
+    // 7 (real total 452, down from 1944 at Milestone 1).
+    expect(baseline.total).toBeGreaterThan(300);
     expect(baseline.totals['react-copy']).toBeGreaterThan(100);
     expect(baseline.fileCount).toBeGreaterThan(50);
   });

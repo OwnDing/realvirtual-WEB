@@ -34,6 +34,7 @@
 
 import { PROJECT_MANIFEST_FILE, newProject, type RvProject } from './rv-project-types';
 import { PROJECT_GIT_TEMPLATES } from './templates/project-git-templates';
+import { rvT } from '../i18n';
 
 /** File extension of the transport container. */
 export const RVPROJECT_EXTENSION = '.rvproject';
@@ -133,7 +134,7 @@ export async function exportProject(
     await collectFiles(dir, '', files, skipped);
 
     if (!files.some(f => f.path === PROJECT_MANIFEST_FILE)) {
-      return { kind: 'error', message: `"${dir.name}" has no ${PROJECT_MANIFEST_FILE} — it is not a project.` };
+      return { kind: 'error', message: rvT('assets', 'project.notAProject', { dir: dir.name, manifest: PROJECT_MANIFEST_FILE }) };
     }
 
     // Dynamic import: JSZip is a large dependency and most sessions never
@@ -202,7 +203,7 @@ export async function importProject(
       await target.getFileHandle(PROJECT_MANIFEST_FILE);
       return {
         kind: 'project-exists',
-        message: `"${target.name}" already contains a project. Choose an empty folder.`,
+        message: rvT('assets', 'project.alreadyContains', { dir: target.name }),
       };
     } catch { /* no manifest — good, carry on */ }
 
@@ -211,14 +212,14 @@ export async function importProject(
 
     const manifestEntry = zip.file(PROJECT_MANIFEST_FILE);
     if (!manifestEntry) {
-      return { kind: 'invalid', message: `This archive has no ${PROJECT_MANIFEST_FILE}.` };
+      return { kind: 'invalid', message: rvT('assets', 'project.archiveNoManifest', { manifest: PROJECT_MANIFEST_FILE }) };
     }
 
     let source: RvProject;
     try {
       source = JSON.parse(await manifestEntry.async('string')) as RvProject;
     } catch {
-      return { kind: 'invalid', message: `${PROJECT_MANIFEST_FILE} in the archive is not valid JSON.` };
+      return { kind: 'invalid', message: rvT('assets', 'project.archiveBadJson', { manifest: PROJECT_MANIFEST_FILE }) };
     }
 
     // A copy is a NEW project: a shared id would make two projects fight over
@@ -234,7 +235,7 @@ export async function importProject(
       if (isUnsafeEntryPath(entry.name)) {
         return {
           kind: 'invalid',
-          message: `Refusing to unpack "${entry.name}" — it would write outside the chosen folder.`,
+          message: rvT('assets', 'project.unsafeEntry', { entry: entry.name }),
         };
       }
       const segments = entry.name.split('/');

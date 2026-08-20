@@ -16,7 +16,7 @@
  * tests are where it shows.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 
@@ -60,6 +60,12 @@ import { ShareDialog } from '../src/core/share/ShareDialog';
 import { SharedGlbInfoCardHost } from '../src/core/share/share-plugin';
 import { setSharedGlb, clearSharedGlb } from '../src/core/share/rv-share-store';
 import { ShareBackendStub } from './helpers/rv-share-backend-stub';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const LINK_BASE = 'https://web.realvirtual.test/';
 

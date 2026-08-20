@@ -20,7 +20,7 @@
  * ONE dirty bit, so the card cannot say "saved" while the guard still asks.
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 // A writable project, so the routing decision under test is the identity's and
@@ -42,6 +42,12 @@ import {
   setActiveDocumentView,
 } from '../src/core/editor/active-document-view';
 import { documentBase, libraryDocumentBase } from '../src/core/editor/active-asset-store';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Doubles ────────────────────────────────────────────────────────────
 

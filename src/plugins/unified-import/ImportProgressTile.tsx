@@ -19,6 +19,7 @@ import { Box, Button, IconButton, LinearProgress, Paper, Portal, Typography } fr
 import { visuallyHidden } from '@mui/utils';
 import { CheckCircleOutline, Close, ErrorOutline, WarningAmber } from '@mui/icons-material';
 import { abortImportJob, dismissImportOutcome, useImportJob } from './import-job-store';
+import { useRvTranslation } from '../../core/i18n';
 
 /** How long the success confirmation stays before auto-dismissing (ms). */
 const SUCCESS_DISMISS_MS = 4000;
@@ -29,6 +30,7 @@ interface ImportProgressTileProps {
 }
 
 export function ImportProgressTile({ onOpenDialog }: ImportProgressTileProps) {
+  const { t } = useRvTranslation('assets');
   const job = useImportJob();
 
   // Success confirmations dismiss themselves — the changed scene is the real
@@ -77,7 +79,7 @@ export function ImportProgressTile({ onOpenDialog }: ImportProgressTileProps) {
               )}
               <IconButton
                 size="small"
-                aria-label="Cancel import"
+                aria-label={t('import.cancelImport')}
                 onClick={(e) => { e.stopPropagation(); abortImportJob(); }}
                 sx={{ p: 0.25, flexShrink: 0 }}
               >
@@ -104,19 +106,19 @@ export function ImportProgressTile({ onOpenDialog }: ImportProgressTileProps) {
             {outcome.kind === 'error' && <ErrorOutline fontSize="small" color="error" />}
             <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
               {outcome.kind === 'success'
-                ? `Import complete — ${outcome.importedNames.join(', ') || 'done'}`
+                ? t('import.tileComplete', { names: outcome.importedNames.join(', ') || t('import.tileDone') })
                 : outcome.kind === 'warning'
-                  ? `Imported with warnings — ${outcome.warnings[0] ?? ''}`
-                  : `Import failed — ${outcome.errors[0] ?? ''}`}
+                  ? t('import.tileWarning', { message: outcome.warnings[0] ?? '' })
+                  : t('import.tileFailed', { message: outcome.errors[0] ?? '' })}
             </Typography>
             {outcome.kind !== 'success' && (
               <Button size="small" onClick={onOpenDialog} sx={{ textTransform: 'none', flexShrink: 0 }}>
-                Details
+                {t('import.details')}
               </Button>
             )}
             <IconButton
               size="small"
-              aria-label="Dismiss"
+              aria-label={t('import.dismiss')}
               onClick={dismissImportOutcome}
               sx={{ p: 0.25, flexShrink: 0 }}
             >

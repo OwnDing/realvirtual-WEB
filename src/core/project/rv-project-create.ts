@@ -46,6 +46,7 @@ import {
   type RvProject,
   type RvProjectSceneEntry,
 } from './rv-project-types';
+import { rvT } from '../i18n';
 
 export interface CreateProjectFromScenesOptions {
   /** Scene id to record as `activeSceneId`. Ignored when it was not written. */
@@ -92,7 +93,7 @@ export async function createProjectFromScenes(
     return {
       ok: false,
       reason: 'project-exists',
-      message: `"${dir.name}" already contains the project "${existing.project.name}". Open it instead.`,
+      message: rvT('assets', 'project.alreadyContainsNamed', { dir: dir.name, project: existing.project.name }),
     };
   }
 

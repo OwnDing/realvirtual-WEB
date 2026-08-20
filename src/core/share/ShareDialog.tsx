@@ -84,6 +84,8 @@ import { uploadSharedGlb, type ShareUploadPhase } from './rv-share-upload';
 import { buildOwnUrlShareLink, buildShareViewerLink } from './rv-share-target';
 import { MySharesPanel } from './MySharesPanel';
 import { RV_SHARE_VERSION, type RvShareLevel, type RvShareMeta } from './rv-share-meta';
+import { Trans } from 'react-i18next';
+import { getLocale, rvT, useRvTranslation, type RVTranslationKey } from '../i18n';
 
 const LICENSES = [
   '', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'CC0-1.0', 'MIT', 'Apache-2.0', 'All rights reserved',
@@ -98,16 +100,18 @@ const LICENSES = [
  * are sent to be LOOKED at; `commissioning` is for the integrator who is meant
  * to connect the model to his own PLC.
  */
-const RECIPIENT_MODES: ReadonlyArray<{ value: string; label: string; hint: string }> = [
-  { value: 'viewer', label: 'View only', hint: 'the model and its running kinematics' },
-  { value: 'commissioning', label: 'Commissioning', hint: 'plus Inspector, signals and CONNECT' },
+// Keys, not text: this table is built at module load, before a language
+// preference exists. The radio row resolves both halves at render.
+const RECIPIENT_MODES: ReadonlyArray<{ value: string; labelKey: RVTranslationKey<'assets'>; hintKey: RVTranslationKey<'assets'> }> = [
+  { value: 'viewer', labelKey: 'share.modeViewer', hintKey: 'share.modeViewerHint' },
+  { value: 'commissioning', labelKey: 'share.modeCommissioning', hintKey: 'share.modeCommissioningHint' },
 ];
 
-const EXPIRY_LABELS: ReadonlyArray<{ value: ShareExpiry; label: string }> = [
-  { value: 'never', label: 'never' },
-  { value: '7d', label: 'after 7 days' },
-  { value: '30d', label: 'after 30 days' },
-  { value: '90d', label: 'after 90 days' },
+const EXPIRY_LABELS: ReadonlyArray<{ value: ShareExpiry; labelKey: RVTranslationKey<'assets'> }> = [
+  { value: 'never', labelKey: 'share.expiryNever' },
+  { value: '7d', labelKey: 'share.expiry7d' },
+  { value: '30d', labelKey: 'share.expiry30d' },
+  { value: '90d', labelKey: 'share.expiry90d' },
 ];
 
 export interface ShareDialogProps {
@@ -144,6 +148,7 @@ export function ShareDialog({
   defaultAuthor = '',
   linkBase,
 }: ShareDialogProps) {
+  const { t } = useRvTranslation('assets');
   const session = useSyncExternalStore(subscribeShareSession, getShareSession, getShareSession);
 
   const [view, setView] = useState<View>('form');
@@ -289,7 +294,7 @@ export function ShareDialog({
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }).catch(() => setError('The link could not be copied. Select and copy it manually.'));
+    }).catch(() => setError(t('share.copyFailed')));
   }, [link]);
 
   const handleClose = useCallback(() => {
@@ -301,7 +306,7 @@ export function ShareDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth data-testid="share-dialog">
       <DialogTitle sx={{ pb: 0.5 }}>
-        {view === 'shares' ? 'My shared links' : 'Share'}
+        {t(view === 'shares' ? 'share.mySharesTitle' : 'share.title')}
         {view !== 'shares' && (
           <Typography component="span" sx={{ float: 'right', fontSize: 12, color: 'text.secondary', mt: 0.75 }}>
             {formatSize(sizeBytes)}{level ? ` · ${level}` : ''}
@@ -319,40 +324,40 @@ export function ShareDialog({
         {view === 'form' && (
           <Stack spacing={1.5} sx={{ mt: 1 }}>
             <TextField
-              label="Name" size="small" value={name}
+              label={t('share.name')} size="small" value={name}
               onChange={e => setName(e.target.value)}
               inputProps={{ 'data-testid': 'share-name' }}
             />
             <TextField
-              label="Author" size="small" value={author}
+              label={t('share.author')} size="small" value={author}
               onChange={e => setAuthor(e.target.value)}
               inputProps={{ 'data-testid': 'share-author' }}
             />
             <TextField
-              select label="Licence (optional)" size="small" value={license}
+              select label={t('share.licence')} size="small" value={license}
               onChange={e => setLicense(e.target.value)}
               SelectProps={{ native: false }}
             >
               {LICENSES.map(l => (
-                <MenuItem key={l || 'none'} value={l}>{l || '— none —'}</MenuItem>
+                <MenuItem key={l || 'none'} value={l}>{l || t('share.licenceNone')}</MenuItem>
               ))}
             </TextField>
 
             <Divider />
 
             <FormControl>
-              <FormLabel sx={{ fontSize: 12 }}>Where the file lives</FormLabel>
+              <FormLabel sx={{ fontSize: 12 }}>{t('share.whereFileLives')}</FormLabel>
               <RadioGroup
                 value={target}
                 onChange={e => setTarget(e.target.value as 'upload' | 'own-url')}
               >
                 <FormControlLabel
                   value="upload" control={<Radio size="small" inputProps={{ 'data-testid': 'share-target-upload' } as never} />}
-                  label="Upload to realvirtual"
+                  label={t('share.uploadToRv')}
                 />
                 <FormControlLabel
                   value="own-url" control={<Radio size="small" inputProps={{ 'data-testid': 'share-target-own' } as never} />}
-                  label="Use my own URL"
+                  label={t('share.useOwnUrl')}
                 />
               </RadioGroup>
               {target === 'own-url' && (
@@ -360,13 +365,13 @@ export function ShareDialog({
                   size="small" placeholder="https://…/model.glb" value={ownUrl}
                   onChange={e => setOwnUrl(e.target.value)}
                   inputProps={{ 'data-testid': 'share-own-url' }}
-                  helperText="Nothing is uploaded and no sign-in is needed."
+                  helperText={t('share.ownUrlHelper')}
                 />
               )}
             </FormControl>
 
             <FormControl>
-              <FormLabel sx={{ fontSize: 12 }}>Recipient&apos;s view</FormLabel>
+              <FormLabel sx={{ fontSize: 12 }}>{t('share.recipientView')}</FormLabel>
               <RadioGroup
                 value={recipientMode}
                 onChange={e => setRecipientMode(e.target.value)}
@@ -377,9 +382,9 @@ export function ShareDialog({
                     control={<Radio size="small" inputProps={{ 'data-testid': `share-mode-${o.value}` } as never} />}
                     label={(
                       <Typography sx={{ fontSize: 13 }}>
-                        {o.label}
+                        {t(o.labelKey)}
                         <Typography component="span" sx={{ fontSize: 12, color: 'text.secondary' }}>
-                          {` — ${o.hint}`}
+                          {t('share.modeHintSuffix', { hint: t(o.hintKey) })}
                         </Typography>
                       </Typography>
                     )}
@@ -391,7 +396,7 @@ export function ShareDialog({
             {target === 'upload' && (
               <>
                 <FormControl>
-                  <FormLabel sx={{ fontSize: 12 }}>Delete automatically</FormLabel>
+                  <FormLabel sx={{ fontSize: 12 }}>{t('share.deleteAutomatically')}</FormLabel>
                   <RadioGroup
                     row value={expiry}
                     onChange={e => setExpiry(e.target.value as ShareExpiry)}
@@ -400,7 +405,7 @@ export function ShareDialog({
                       <FormControlLabel
                         key={o.value} value={o.value}
                         control={<Radio size="small" inputProps={{ 'data-testid': `share-expiry-${o.value}` } as never} />}
-                        label={o.label}
+                        label={t(o.labelKey)}
                       />
                     ))}
                   </RadioGroup>
@@ -414,7 +419,7 @@ export function ShareDialog({
                       slotProps={{ input: { 'data-testid': 'share-allow-download' } as never }}
                     />
                   )}
-                  label="Allow downloading the GLB"
+                  label={t('share.allowDownload')}
                 />
               </>
             )}
@@ -423,8 +428,7 @@ export function ShareDialog({
 
             {/* The warning, immediately above the box it is about. */}
             <Alert severity="warning" icon={false} sx={{ py: 0.5, fontSize: 12 }} data-testid="share-nda-warning">
-              Anyone with the link can view the model. The link is <strong>unlisted</strong>, not
-              private — do not upload anything confidential.
+              <Trans ns="assets" i18nKey="share.ndaWarning" components={[<strong key="unlisted" />]} />
             </Alert>
 
             {target === 'upload' && (
@@ -441,8 +445,7 @@ export function ShareDialog({
                 )}
                 label={(
                   <Typography sx={{ fontSize: 12 }}>
-                    I hold the rights to this content and accept the terms of use. realvirtual may
-                    delete shared files at any time.
+                    {t('share.terms')}
                   </Typography>
                 )}
               />
@@ -453,16 +456,15 @@ export function ShareDialog({
         {view === 'signin' && (
           <Stack spacing={1.5} sx={{ mt: 1 }}>
             <Typography sx={{ fontSize: 13 }}>
-              Sign in with your e-mail so you can manage and delete your shared files later.
+              {t('share.signinIntro')}
             </Typography>
             <TextField
-              label="E-mail" size="small" type="email" value={email}
+              label={t('share.email')} size="small" type="email" value={email}
               onChange={e => setEmail(e.target.value)}
               inputProps={{ 'data-testid': 'share-email' }}
             />
             <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-              We send you a sign-in link. No password, nothing to remember. Your entries here are
-              kept while you fetch it.
+              {t('share.signinHelper')}
             </Typography>
           </Stack>
         )}
@@ -470,10 +472,10 @@ export function ShareDialog({
         {view === 'mail-sent' && (
           <Stack spacing={1} sx={{ mt: 1 }} data-testid="share-mail-sent">
             <Typography sx={{ fontSize: 13 }}>
-              A sign-in link is on its way to <strong>{email}</strong>.
+              <Trans ns="assets" i18nKey="share.mailSent" values={{ email }} components={[<strong key="email" />]} />
             </Typography>
             <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-              Open it and come back here — your entries are waiting.
+              {t('share.mailSentHint')}
             </Typography>
           </Stack>
         )}
@@ -487,7 +489,7 @@ export function ShareDialog({
 
         {view === 'done' && (
           <Stack spacing={1.5} sx={{ mt: 1 }} data-testid="share-done">
-            <Typography sx={{ fontSize: 13 }}>The link is ready.</Typography>
+            <Typography sx={{ fontSize: 13 }}>{t('share.linkReady')}</Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <LinkIcon sx={{ fontSize: 16, opacity: 0.6 }} />
               <TextField
@@ -500,18 +502,18 @@ export function ShareDialog({
                 startIcon={copied ? <Check sx={{ fontSize: 14 }} /> : <ContentCopy sx={{ fontSize: 14 }} />}
                 data-testid="share-copy"
               >
-                {copied ? 'Copied' : 'Copy'}
+                {t(copied ? 'share.copied' : 'share.copy')}
               </Button>
             </Stack>
             {expiresAt && (
               <Typography sx={{ fontSize: 12, color: 'text.secondary' }} data-testid="share-expires">
-                Deleted automatically on {new Date(expiresAt).toLocaleDateString()}.
+                {t('share.expiresOn', { date: new Date(expiresAt).toLocaleDateString(getLocale()) })}
               </Typography>
             )}
             {session && (
               <Box>
                 <Button size="small" onClick={() => setView('shares')} data-testid="share-open-myshares">
-                  My shared links
+                  {t('share.mySharesTitle')}
                 </Button>
               </Box>
             )}
@@ -521,16 +523,16 @@ export function ShareDialog({
 
       <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
         <Typography sx={{ fontSize: 11, color: 'text.secondary' }} data-testid="share-identity">
-          {session ? `signed in as ${session.email}` : ''}
+          {session ? t('share.signedInAs', { email: session.email }) : ''}
           {session && (
             <Button size="small" sx={{ ml: 1, fontSize: 11 }} onClick={() => void signOutShare()}>
-              sign out
+              {t('share.signOut')}
             </Button>
           )}
         </Typography>
 
         <Stack direction="row" spacing={1}>
-          <Button onClick={handleClose} size="small">Close</Button>
+          <Button onClick={handleClose} size="small">{t('share.close')}</Button>
 
           {view === 'form' && (
             <Button
@@ -538,7 +540,7 @@ export function ShareDialog({
               onClick={() => void handleShare()}
               data-testid="share-submit"
             >
-              Share
+              {t('share.title')}
             </Button>
           )}
 
@@ -549,12 +551,12 @@ export function ShareDialog({
               data-testid="share-send-mail"
               startIcon={busy ? <CircularProgress size={12} /> : undefined}
             >
-              Send link
+              {t('share.sendLink')}
             </Button>
           )}
 
           {view === 'shares' && (
-            <Button size="small" onClick={() => setView('done')}>Back</Button>
+            <Button size="small" onClick={() => setView('done')}>{t('share.back')}</Button>
           )}
         </Stack>
       </DialogActions>
@@ -564,10 +566,10 @@ export function ShareDialog({
 
 function phaseLabel(phase: ShareUploadPhase): string {
   switch (phase) {
-    case 'creating': return 'Preparing the upload…';
-    case 'uploading': return 'Uploading the model…';
-    case 'confirming': return 'Publishing the link…';
-    default: return 'Done.';
+    case 'creating': return rvT('assets', 'share.phaseCreating');
+    case 'uploading': return rvT('assets', 'share.phaseUploading');
+    case 'confirming': return rvT('assets', 'share.phaseConfirming');
+    default: return rvT('assets', 'share.phaseDone');
   }
 }
 

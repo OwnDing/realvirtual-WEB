@@ -9,12 +9,18 @@
  *    generic FieldRow editor (a null Forward would otherwise become a 'string'
  *    editor) and NEVER call onFieldEdit/onFieldReset.
  */
-import { describe, expect, it, vi, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterEach, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import '../src/core/engine/rv-signal-construction';
 import { FieldRow, isFieldEditable } from '../src/core/hmi/rv-field-row';
 import { isSignalRefType, isSensorRefType } from '../src/core/hmi/rv-inspector-helpers';
 import { ComponentSection } from '../src/core/hmi/rv-component-section';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(cleanup);
 

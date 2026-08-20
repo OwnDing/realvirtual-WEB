@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 6 之后）：
+截至 2026-08-20（批次 7 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1715** 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）。
-- 受门禁债务 **587 处 / 109 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 382、`a11y-name` 28、`plugin-registry` 90、`dynamic-text` 55、`pre-boot` 16、`dom-text` 10、`ui-state-text` 4、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 13 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_433_510 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 84.5 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring` 移入独立 chunk，构建产物 54.7 KB；`zh-CN` 全量仍在入口）。**余量按每批约 10 KB 递减**，剩余 587 处大约还要吃掉 40–50 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1856** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）。
+- 受门禁债务 **452 处 / 93 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 273、`a11y-name` 24、`plugin-registry` 85、`dynamic-text` 39、`pre-boot` 16、`dom-text` 10、`ui-state-text` 3、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 12 处未显式传 locale）。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_440_120 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 78.0 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator`/`authoring`/`assets` 移入独立 chunk，构建产物 61.0 KB；`zh-CN` 全量仍在入口）。**余量按每批 6–11 KB 递减**（102.8 → 95.3 → 84.5 → 78.0），剩余 452 处大约还要吃掉 30–40 KB，因此在预算见底前需要一次决定：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 587 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面）。
+- [ ] Milestone 4b：按风险分批迁移其余 452 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面；批次 6：创作与检查器工作面；批次 7：资产生命周期）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,20 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 7：资产生命周期（2026-08-20）
+
+- 覆盖 16 个文件、135 处（4335 行）：项目创建/重命名/冲突解决与项目导入导出、素材库添加与资产卡、分享对话框与「我的分享」、统一 CAD 导入（对话框、进度块、拖放区、GLB 提供方）。该面归零，全仓 587 → **452**；`assets` namespace 共 **141** 个 key。这一批讲的是一件事：模型怎么进来、怎么出去。
+- **文件名和格式名是要打字的东西，而且都在句子中间。** `project.json`、`catalog.json`、`.glb`、`STEP`、`JT`、`USD` 用户要在磁盘上找、要在输入框里敲，因此保持原样；包着它们的句子必须能整体调序。这正是 `<Trans>` 编号占位的用途——把一句话拆成三段 JSX 会把英文语序冻进目录，而中文里 `project.json` 的位置和英文并不一样。本批共 6 处这样的句子。
+- **第三方控制台的字段名与另一块屏幕对齐。** Asset Manager 凭据（`Project ID`、`Service Account Key ID`、`Secret Key`）是用户从别人的界面上逐字段抄过来的，放进 `assets.spec.*` 并在两种语言下取值完全相同——与批次 4 的 `connect.spec.*` 同一份约定。同批的 `3Dfindit`、`TraceParts` 是第三方零件库自己的产品名兼链接文字，按例外登记（译名会把用户送去一个不存在的地方），但引出这两个链接的那句话是翻译的。
+- 两张模块级表（`RECIPIENT_MODES`、`EXPIRY_LABELS`）改为持 key 而非文本，由单选行在渲染时解析——与批次 6 的 `TYPE_FILTERS`、批次 2 的 `RENDER_MODE_KEY` 同型。
+- **两个反例第一次没被抓到，测试因此被加强。** 这一点值得单独记：
+  1. 从 `library.urlHint` 里删掉一个 `<0>` 占位——原来的用例只钉了 `project.createHereBody` 一条。改成**扫全 namespace**：任何一条值在两种语言下的占位集合必须完全相同。少一个 `<0>`，整句会退化成纯文本并丢掉组件数组本来要塞进去的元素，而且只在一种语言里发生。
+  2. 把 `EXPIRY_LABELS` 里的 `labelKey` 换成另一个 key——表里现在存的是 key，光读目录的断言看不见错配。改成**渲染 ShareDialog 并读那一行单选按钮的文字**。同一条用例顺带也抓住了「把 `{t(o.labelKey)}` 写回 `{o.labelKey}`」。
+- `tests/i18n-inventory.node.test.ts` 的非空洞下限从 500 下调到 300：真实债务已经 452。这是该用例注释里写明允许的动作，但补了一句说明它**只是第二道保险**——真正证明扫描器还在工作的是同文件里的分类 fixture，那些在债务归零后依然有效；绝对下限会随迁移推进反复下调，这是设计使然而不是放水。
+- 3 条复数拼接登记为 `PLURAL_SPLICE` 例外；受检 `en-US` 值 1715 → **1856**。
+- 8 个既有浏览器测试按 ADR pin `en-US`。
+- **另外做了一次「未 pin 但断言英文」的普查，而不是每跑一次完整套件才捡出一个。** 做法是取全部 `en-US` 目录值，只保留出现在**文本断言行**（`ByText` / `ByLabelText` / `ByRole(name:)` / `textContent` 等）里的，再排除已 pin 的文件——1202 个测试文件里筛出 5 个，全部补 pin。其中 `aas-resolution-visibility.test.tsx` 值得单独说：它断言的是 `queryByRole({ name: 'Add to Cart' })` **不在文档里**，而按钮现在渲染成「加入购物车」——所以这条用例在中文默认下**一直是绿的，而且是因为错误的原因绿的**。这正是 `ADR-0001` Validation 里 pin 策略要防的那种情况：一条只会因为找不到英文而通过的否定断言，永远不会自己报警。
 
 ### Milestone 4b 批次 6：创作与检查器工作面（2026-08-20）
 

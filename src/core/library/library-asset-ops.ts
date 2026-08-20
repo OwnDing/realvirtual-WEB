@@ -53,6 +53,7 @@ import {
 } from '../project/rv-project-documents';
 import type { DocumentClassification } from '../project/rv-document-classification';
 import type { RvDocumentEntry, RvProject } from '../project/rv-project-types';
+import { rvT } from '../i18n';
 
 /** Root folder of a project's own assets. */
 export const LIBRARY_FOLDER = 'library';
@@ -294,20 +295,20 @@ async function transferDocument(
   mode: { keepId: boolean },
 ): Promise<DocumentTransferResult> {
   const { source, target } = session;
-  if (!source) return { kind: 'error', message: 'This transfer has no source.' };
-  if (!target) return { kind: 'error', message: 'This transfer has no target.' };
+  if (!source) return { kind: 'error', message: rvT('assets', 'library.noSource') };
+  if (!target) return { kind: 'error', message: rvT('assets', 'library.noTarget') };
   // Both halves are checked, and for a move both matter: the target has to
   // accept bytes and the source has to be able to give up its own.
   if (!target.writable) {
-    return { kind: 'error', message: `"${target.label}" is read-only.` };
+    return { kind: 'error', message: rvT('assets', 'library.targetReadOnly', { name: target.label }) };
   }
   if (mode.keepId && !source.writable) {
-    return { kind: 'error', message: `"${source.label}" is read-only — copy it instead.` };
+    return { kind: 'error', message: rvT('assets', 'library.sourceReadOnly', { name: source.label }) };
   }
   if (source.backendId === target.backendId) {
     return {
       kind: 'error',
-      message: 'Source and target are the same library — use Duplicate instead.',
+      message: rvT('assets', 'library.sameLibrary'),
     };
   }
 
@@ -320,7 +321,7 @@ async function transferDocument(
   } catch (e) {
     return { kind: 'error', message: errText(e) };
   }
-  if (!bytes) return { kind: 'error', message: `"${doc.name}" could not be read.` };
+  if (!bytes) return { kind: 'error', message: rvT('assets', 'library.unreadable', { name: doc.name }) };
 
   let targetPath: string | null;
   try {
@@ -329,7 +330,7 @@ async function transferDocument(
     return { kind: 'error', message: errText(e) };
   }
   if (!targetPath) {
-    return { kind: 'exists', message: `Too many copies of "${file}" already exist there.` };
+    return { kind: 'exists', message: rvT('assets', 'library.tooManyCopies', { name: file }) };
   }
 
   try {
@@ -505,12 +506,12 @@ export async function setAssetCollections(
       return { ...current, documents };
     });
     if (written === null) {
-      return { kind: 'error', message: 'This project has no manifest to record collections in.' };
+      return { kind: 'error', message: rvT('assets', 'library.noManifest') };
     }
     if (!found) {
       return {
         kind: 'error',
-        message: `"${relPath}" is not registered in this project yet — reopen the project and try again.`,
+        message: rvT('assets', 'library.notRegistered', { name: relPath }),
       };
     }
     return ok;

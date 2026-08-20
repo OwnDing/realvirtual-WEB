@@ -12,7 +12,7 @@
  * indistinguishable from one the user mistyped.
  */
 
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi, beforeAll } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
@@ -26,6 +26,12 @@ vi.mock('../src/core/library/library-store-singleton', () => ({
 }));
 
 import { AddLibraryDialog } from '../src/core/library/AddLibraryDialog';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 beforeEach(() => {
   h.addCatalog.mockReset();

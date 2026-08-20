@@ -108,6 +108,18 @@
       "category": "react-copy",
       "match": "&nbsp;·&nbsp;",
       "reason": "Non-breaking spaces around a middle dot, joining a node-name qualifier to a slot label. Pure typography — both halves are data (node and slot names), never copy, so there is nothing here to translate."
+    },
+    {
+      "file": "src/plugins/unified-import/import-ui.tsx",
+      "category": "react-copy",
+      "match": "3Dfindit",
+      "reason": "Name of a third-party part catalogue, and the visible text of a plain hyperlink to its own site. It is what the user types into a search engine and what the tab title will say when the link opens; a translated name would send them somewhere that does not exist. The sentence introducing both links IS translated (assets:import.needStandardPart)."
+    },
+    {
+      "file": "src/plugins/unified-import/import-ui.tsx",
+      "category": "react-copy",
+      "match": "TraceParts",
+      "reason": "Same as 3Dfindit — a third-party catalogue's own product name, used as the link text to its site."
     }
   ]
 }

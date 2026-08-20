@@ -26,6 +26,7 @@ import {
   type ImportResultItem,
 } from '../../core/import/rv-import-provider';
 import { importObject } from '../../core/import/rv-import-object';
+import { rvT } from '../../core/i18n';
 
 /** The slice of AssetEditorPlugin the editor sink needs (avoids a hard import). */
 type AssetEditorLike = RVViewerPlugin & {
@@ -145,7 +146,7 @@ export function startImportJob(
       if (result.ok.length > 0) {
         // Handing the bytes to the sink is itself measurable work (cache write +
         // GLB parse), so keep the bar alive instead of letting it sit at 100 %.
-        _progress = { percent: null, label: opts.isEditor ? 'Adding to asset' : 'Placing in scene' };
+        _progress = { percent: null, label: rvT('assets', opts.isEditor ? 'import.addingToAsset' : 'import.placingInScene') };
         _notify();
         for (const item of result.ok) {
           if (item.kind === 'glb') importedNames.push(item.suggestedName);

@@ -23,7 +23,7 @@
  *  4. **A torn copy leaves no orphan** in the target.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import { FakeDir, FailureInjector, asDirHandle } from './helpers/fake-fs-handles';
 import { FolderBackend } from '../src/core/project/backends/folder-backend';
 import {
@@ -50,6 +50,12 @@ import {
 import type { LibraryCatalogEntry } from '../src/core/library/library-types';
 import type { RvDocumentEntry, RvProject } from '../src/core/project/rv-project-types';
 import type { DocumentClassification } from '../src/core/project/rv-document-classification';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Fixtures ───────────────────────────────────────────────────────────
 

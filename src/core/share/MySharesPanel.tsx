@@ -33,6 +33,7 @@ import { DeleteOutline, HourglassBottom } from '@mui/icons-material';
 
 import { listMyShares, deleteShare, type MyShareEntry } from './rv-share-upload';
 import { describeShareApiError, type MagicLinkSession } from './rv-share-session';
+import { useRvTranslation } from '../i18n';
 
 export interface MySharesPanelProps {
   session: MagicLinkSession;
@@ -41,6 +42,7 @@ export interface MySharesPanelProps {
 }
 
 export function MySharesPanel({ session, onDeleted }: MySharesPanelProps) {
+  const { t } = useRvTranslation('assets');
   const [entries, setEntries] = useState<MyShareEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export function MySharesPanel({ session, onDeleted }: MySharesPanelProps) {
 
       {entries.length === 0 && !error && (
         <Typography sx={{ fontSize: 13, color: 'text.secondary' }} data-testid="my-shares-empty">
-          You have not shared anything yet.
+          {t('share.nothingShared')}
         </Typography>
       )}
 
@@ -119,13 +121,13 @@ export function MySharesPanel({ session, onDeleted }: MySharesPanelProps) {
                   color: entry.expired ? 'text.disabled' : 'text.primary',
                 }}
               >
-                {entry.name}{entry.expired ? ' (expired)' : ''}
+                {entry.name}{entry.expired ? t('share.entryExpired') : ''}
               </Typography>
               {entry.expiresAt && (
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   <HourglassBottom sx={{ fontSize: 12, opacity: 0.5 }} />
                   <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                    expires on {formatDate(entry.expiresAt)}
+                    {t('share.expiresOnShort', { date: formatDate(entry.expiresAt) })}
                   </Typography>
                 </Stack>
               )}
@@ -138,14 +140,14 @@ export function MySharesPanel({ session, onDeleted }: MySharesPanelProps) {
               {formatDate(entry.createdAt)}
             </Typography>
 
-            <Tooltip title="Delete now">
+            <Tooltip title={t('share.deleteNow')}>
               <span>
                 <IconButton
                   size="small"
                   disabled={deleting === entry.id}
                   onClick={() => void handleDelete(entry.id)}
                   data-testid={`my-share-delete-${entry.id}`}
-                  aria-label={`Delete ${entry.name}`}
+                  aria-label={t('share.deleteNamed', { name: entry.name })}
                 >
                   <DeleteOutline sx={{ fontSize: 16 }} />
                 </IconButton>

@@ -18,8 +18,10 @@ import type { UISlotProps } from '../../core/rv-ui-plugin';
 import { UnifiedImportDialog } from './UnifiedImportDialog';
 import { ImportJobAnnouncer, ImportProgressTile } from './ImportProgressTile';
 import { useImportJob } from './import-job-store';
+import { useRvTranslation } from '../../core/i18n';
 
 export function UnifiedImportButton({ viewer }: UISlotProps) {
+  const { t } = useRvTranslation('assets');
   const [open, setOpen] = useState(false);
   const job = useImportJob();
   const running = job.status === 'running';
@@ -27,9 +29,7 @@ export function UnifiedImportButton({ viewer }: UISlotProps) {
   return (
     <>
       <Tooltip
-        title={running
-          ? 'Import running — click for progress'
-          : 'Import 3D / CAD files — STEP, JT, USD, GLB, Onshape, Asset Manager'}
+        title={t(running ? 'import.buttonRunning' : 'import.buttonIdle')}
         placement="right"
       >
         <IconButton size="small" sx={{ p: 0.75 }} onClick={() => setOpen(true)} data-testid="unified-import-button">

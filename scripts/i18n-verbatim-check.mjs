@@ -175,6 +175,23 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/script/ScriptToolbarButton.tsx',
   'src/core/hmi/script/rv-script-save-pipeline.ts',
   'src/core/hmi/signal-vocabulary.ts',
+  // Asset lifecycle: project / library / share / import (Milestone 4b, batch 7)
+  'src/core/library/AddLibraryDialog.tsx',
+  'src/core/library/AssetCard.tsx',
+  'src/core/library/library-asset-ops.ts',
+  'src/core/project/ProjectCreateDialogs.tsx',
+  'src/core/project/rv-project-conflict-dialog.tsx',
+  'src/core/project/rv-project-create.ts',
+  'src/core/project/rv-project-transport.ts',
+  'src/core/share/MySharesPanel.tsx',
+  'src/core/share/ShareDialog.tsx',
+  'src/core/share/SharedGlbInfoCard.tsx',
+  'src/plugins/unified-import/ImportProgressTile.tsx',
+  'src/plugins/unified-import/UnifiedImportButton.tsx',
+  'src/plugins/unified-import/UnifiedImportDialog.tsx',
+  'src/plugins/unified-import/glb-file-provider.tsx',
+  'src/plugins/unified-import/import-job-store.ts',
+  'src/plugins/unified-import/import-ui.tsx',
 ];
 
 /**
@@ -227,6 +244,9 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['authoring.signal.showUnfit_one', PLURAL_SPLICE],
   ['authoring.signal.showUnfit_other', PLURAL_SPLICE],
   ['authoring.doc.estimateOccurrences_other', PLURAL_SPLICE],
+  ['assets.share.embedded_other', PLURAL_SPLICE],
+  ['assets.import.rejected_one', PLURAL_SPLICE],
+  ['assets.import.rejected_other', PLURAL_SPLICE],
   ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
     + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
     + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '

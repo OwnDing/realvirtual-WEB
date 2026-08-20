@@ -20,6 +20,8 @@ import {
   FileDropZone, HintCode, PartSourceLinks, PickedFileList, TAB_PANE_SX, TabHint,
   useRegisterFilePicker, type PickedFile,
 } from './import-ui';
+import { Trans } from 'react-i18next';
+import { rvT, useRvTranslation } from '../../core/i18n';
 
 /** Strip path + .glb extension from a filename. */
 export function glbBaseName(name: string): string {
@@ -50,6 +52,7 @@ export async function resolveGlbFiles(files: File[], signal?: AbortSignal): Prom
 }
 
 function GlbFileTab({ ctx }: { ctx: ImportProviderContext }) {
+  const { t } = useRvTranslation('assets');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [picked, setPicked] = useState<PickedFile[]>([]);
   useRegisterFilePicker(ctx, inputRef);
@@ -71,11 +74,12 @@ function GlbFileTab({ ctx }: { ctx: ImportProviderContext }) {
   return (
     <Box sx={TAB_PANE_SX}>
       <TabHint>
-        Import one or more local <HintCode>.glb</HintCode> files.
-        Files stay in your browser — nothing is uploaded.
+        {/* `children` is required by HintCode and supplied by Trans at runtime;
+            `null` is what satisfies the type without widening the component. */}
+        <Trans ns="assets" i18nKey="import.glbHint" components={[<HintCode key="glb">{null}</HintCode>]} />
       </TabHint>
       <FileDropZone accept={['.glb']} onFiles={selectFiles} />
-      <PickedFileList files={picked} placeholder="No files selected — drop them above or use Choose files… below." />
+      <PickedFileList files={picked} placeholder={t('import.noFilesSelected')} />
       <PartSourceLinks />
       <input
         ref={inputRef}
@@ -93,7 +97,7 @@ function GlbFileTab({ ctx }: { ctx: ImportProviderContext }) {
 export function createGlbFileProvider(): CadImportProvider {
   return {
     id: 'glb-file',
-    label: 'GLB File',
+    get label() { return rvT('assets', 'import.glbProvider'); },
     order: 10,
     availability: () => 'ready',
     onAvailabilityChange: () => () => undefined,

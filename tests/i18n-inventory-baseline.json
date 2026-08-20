@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 382,
-    "a11y-name": 28,
-    "plugin-registry": 90,
-    "dynamic-text": 55,
+    "react-copy": 273,
+    "a11y-name": 24,
+    "plugin-registry": 85,
+    "dynamic-text": 39,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
-    "ui-state-text": 4
+    "ui-state-text": 3
   },
-  "total": 587,
-  "fileCount": 109,
+  "total": 452,
+  "fileCount": 93,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -64,16 +64,6 @@
       "plugin-registry": 2,
       "dynamic-text": 1
     },
-    "src/core/library/AddLibraryDialog.tsx": {
-      "react-copy": 19
-    },
-    "src/core/library/AssetCard.tsx": {
-      "react-copy": 4
-    },
-    "src/core/library/library-asset-ops.ts": {
-      "plugin-registry": 4,
-      "dynamic-text": 5
-    },
     "src/core/ops/rv-document-projection.ts": {
       "plugin-registry": 3
     },
@@ -86,19 +76,6 @@
     "src/core/overlay-visibility-store.ts": {
       "plugin-registry": 7
     },
-    "src/core/project/ProjectCreateDialogs.tsx": {
-      "react-copy": 21
-    },
-    "src/core/project/rv-project-conflict-dialog.tsx": {
-      "react-copy": 8,
-      "dynamic-text": 1
-    },
-    "src/core/project/rv-project-create.ts": {
-      "dynamic-text": 1
-    },
-    "src/core/project/rv-project-transport.ts": {
-      "dynamic-text": 5
-    },
     "src/core/rv-render-modes.ts": {
       "plugin-registry": 6
     },
@@ -110,19 +87,6 @@
     },
     "src/core/sdk/rv-des-lint.ts": {
       "dynamic-text": 4
-    },
-    "src/core/share/MySharesPanel.tsx": {
-      "react-copy": 3,
-      "dynamic-text": 1
-    },
-    "src/core/share/ShareDialog.tsx": {
-      "react-copy": 31,
-      "dynamic-text": 1,
-      "ui-state-text": 1
-    },
-    "src/core/share/SharedGlbInfoCard.tsx": {
-      "react-copy": 4,
-      "a11y-name": 1
     },
     "src/core/storage/rv-opfs-blobs.ts": {
       "plugin-registry": 3,
@@ -356,28 +320,6 @@
     "src/plugins/tank-fill-history-plugin.tsx": {
       "react-copy": 3,
       "dynamic-text": 1
-    },
-    "src/plugins/unified-import/ImportProgressTile.tsx": {
-      "react-copy": 1,
-      "a11y-name": 2,
-      "dynamic-text": 1
-    },
-    "src/plugins/unified-import/UnifiedImportButton.tsx": {
-      "react-copy": 1
-    },
-    "src/plugins/unified-import/UnifiedImportDialog.tsx": {
-      "react-copy": 6,
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
-    "src/plugins/unified-import/glb-file-provider.tsx": {
-      "react-copy": 4
-    },
-    "src/plugins/unified-import/import-job-store.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/unified-import/import-ui.tsx": {
-      "react-copy": 7
     },
     "src/plugins/web-component-plugin.ts": {
       "plugin-registry": 2

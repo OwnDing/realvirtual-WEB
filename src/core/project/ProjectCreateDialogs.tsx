@@ -32,6 +32,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { Trans } from 'react-i18next';
+import { useRvTranslation } from '../i18n';
 
 /** Pending "this folder has no project.json — create one?" request. */
 export interface CreateHereRequest {
@@ -67,19 +69,24 @@ export interface CreateHereDialogProps<T extends CreateHereRequest> {
 export function CreateHereDialog<T extends CreateHereRequest>(
   { request, onChange, onConfirm }: CreateHereDialogProps<T>,
 ) {
+  const { t } = useRvTranslation('assets');
   return (
     <Dialog open={request !== null} onClose={() => onChange(null)} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>Create a project here?</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('project.createHereTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          <b>"{request?.dir.name}"</b> has no <code>project.json</code>. A new project can be
-          created in it — anything already in the folder is left untouched.
+          <Trans
+            ns="assets"
+            i18nKey="project.createHereBody"
+            values={{ name: request?.dir.name ?? '' }}
+            components={[<b key="dir" />, <code key="manifest" />]}
+          />
         </DialogContentText>
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label="Project name"
+          label={t('project.name')}
           value={request?.name ?? ''}
           onChange={e => onChange(request ? { ...request, name: e.target.value } : request)}
           sx={{ mt: 2 }}
@@ -87,7 +94,7 @@ export function CreateHereDialog<T extends CreateHereRequest>(
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={() => onChange(null)} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('project.cancel')}
         </Button>
         <Button
           size="small"
@@ -96,7 +103,7 @@ export function CreateHereDialog<T extends CreateHereRequest>(
           onClick={onConfirm}
           sx={{ textTransform: 'none' }}
         >
-          Create project
+          {t('project.create')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -123,19 +130,20 @@ export interface NewProjectDialogProps {
 export function NewProjectDialog(
   { open, name, onChange, onClose, onConfirm }: NewProjectDialogProps,
 ) {
+  const { t } = useRvTranslation('assets');
   const canSubmit = name.trim().length > 0;
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>New project</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('project.newTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          An empty project is created as a folder in your workspace.
+          {t('project.newBody')}
         </DialogContentText>
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label="Project name"
+          label={t('project.name')}
           value={name}
           onChange={e => onChange(e.target.value)}
           // Enter is the expected way out of a single-field dialog.
@@ -145,7 +153,7 @@ export function NewProjectDialog(
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={onClose} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('project.cancel')}
         </Button>
         <Button
           size="small"
@@ -155,7 +163,7 @@ export function NewProjectDialog(
           onClick={onConfirm}
           sx={{ textTransform: 'none' }}
         >
-          Create project
+          {t('project.create')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -184,19 +192,20 @@ export interface ProjectRenameDialogProps {
 export function ProjectRenameDialog(
   { request, onChange, onConfirm }: ProjectRenameDialogProps,
 ) {
+  const { t } = useRvTranslation('assets');
   const canSubmit = (request?.name.trim().length ?? 0) > 0;
   return (
     <Dialog open={request !== null} onClose={() => onChange(null)} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>Rename project</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('project.renameTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          Only the display name changes — the folder keeps its name.
+          {t('project.renameBody')}
         </DialogContentText>
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label="Project name"
+          label={t('project.name')}
           value={request?.name ?? ''}
           onChange={e => onChange(request ? { ...request, name: e.target.value } : request)}
           // Enter is the expected way out of a single-field dialog.
@@ -206,7 +215,7 @@ export function ProjectRenameDialog(
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={() => onChange(null)} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('project.cancel')}
         </Button>
         <Button
           size="small"
@@ -216,7 +225,7 @@ export function ProjectRenameDialog(
           onClick={onConfirm}
           sx={{ textTransform: 'none' }}
         >
-          Rename
+          {t('project.rename')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -242,19 +251,19 @@ export interface FromScenesDialogProps<T extends FromScenesRequest> {
 export function FromScenesDialog<T extends FromScenesRequest>(
   { request, onChange, onConfirm, scenes }: FromScenesDialogProps<T>,
 ) {
+  const { t } = useRvTranslation('assets');
   return (
     <Dialog open={request !== null} onClose={() => onChange(null)} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>New project from current scenes</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{t('project.fromScenesTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }}>
-          The selected scenes are written into a folder you choose. They stay in the browser as
-          well — nothing is removed here.
+          {t('project.fromScenesBody')}
         </DialogContentText>
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label="Project name"
+          label={t('project.name')}
           value={request?.name ?? ''}
           onChange={e => onChange(request ? { ...request, name: e.target.value } : request)}
           sx={{ mt: 2, mb: 1 }}
@@ -287,7 +296,7 @@ export function FromScenesDialog<T extends FromScenesRequest>(
       </DialogContent>
       <DialogActions>
         <Button size="small" onClick={() => onChange(null)} sx={{ textTransform: 'none' }}>
-          Cancel
+          {t('project.cancel')}
         </Button>
         <Button
           size="small"
@@ -297,7 +306,7 @@ export function FromScenesDialog<T extends FromScenesRequest>(
           onClick={onConfirm}
           sx={{ textTransform: 'none' }}
         >
-          Choose folder…
+          {t('project.chooseFolder')}
         </Button>
       </DialogActions>
     </Dialog>

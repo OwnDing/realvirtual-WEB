@@ -43,6 +43,8 @@ import {
 } from '@mui/material';
 import { Cloud, GitHub } from '@mui/icons-material';
 import { getLibraryStore } from './library-store-singleton';
+import { Trans } from 'react-i18next';
+import { useRvTranslation } from '../i18n';
 
 /** Credentials the private Asset-Manager extension needs to open a connection. */
 export interface AssetManagerConnectRequest {
@@ -80,6 +82,7 @@ export function AddLibraryDialog({
   onAdded,
   onConnectAssetManager,
 }: AddLibraryDialogProps) {
+  const { t } = useRvTranslation('assets');
   const store = getLibraryStore();
 
   const tabs: TabId[] = [
@@ -144,7 +147,7 @@ export function AddLibraryDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontSize: 14, pb: 0 }}>Add Library</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14, pb: 0 }}>{t('library.addTitle')}</DialogTitle>
       <DialogContent sx={{ pt: 0 }}>
         <Tabs
           value={active}
@@ -152,22 +155,22 @@ export function AddLibraryDialog({
           sx={{ mb: 1, minHeight: 32, '& .MuiTab-root': { minHeight: 32, textTransform: 'none', fontSize: 12 } }}
         >
           <Tab value="url" label="URL" />
-          <Tab value="github" label="GitHub" icon={<GitHub sx={{ fontSize: 12 }} />} iconPosition="start" sx={{ gap: 0.5 }} />
+          <Tab value="github" label={t('library.tabGithub')} icon={<GitHub sx={{ fontSize: 12 }} />} iconPosition="start" sx={{ gap: 0.5 }} />
           {onConnectAssetManager && (
-            <Tab value="assetManager" label="Asset Manager" icon={<Cloud sx={{ fontSize: 12 }} />} iconPosition="start" sx={{ gap: 0.5 }} />
+            <Tab value="assetManager" label={t('library.tabAssetManager')} icon={<Cloud sx={{ fontSize: 12 }} />} iconPosition="start" sx={{ gap: 0.5 }} />
           )}
         </Tabs>
 
         {active === 'url' && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Load a component library from a public <Box component="code" sx={CODE_SX}>catalog.json</Box> URL.
+              <Trans ns="assets" i18nKey="library.urlHint" components={[<Box component="code" sx={CODE_SX} key="catalog" />]} />
             </Typography>
             <TextField
               autoFocus
               size="small"
               fullWidth
-              label="Catalog URL"
+              label={t('library.catalogUrl')}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void addByUrl(url); }}
@@ -178,14 +181,20 @@ export function AddLibraryDialog({
         {active === 'github' && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Point at a GitHub repository or folder; it is scanned for <Box component="code" sx={CODE_SX}>.glb</Box> files.
-              A direct <Box component="code" sx={CODE_SX}>catalog.json</Box> link works too.
+              <Trans
+                ns="assets"
+                i18nKey="library.githubHint"
+                components={[
+                  <Box component="code" sx={CODE_SX} key="glb" />,
+                  <Box component="code" sx={CODE_SX} key="catalog" />,
+                ]}
+              />
             </Typography>
             <TextField
               autoFocus
               size="small"
               fullWidth
-              label="GitHub URL"
+              label={t('library.githubUrl')}
               value={ghUrl}
               onChange={(e) => setGhUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void addByUrl(ghUrl); }}
@@ -195,13 +204,13 @@ export function AddLibraryDialog({
 
         {active === 'assetManager' && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-            <TextField size="small" fullWidth label="Name (optional)" placeholder="My Asset Library"
+            <TextField size="small" fullWidth label={t('library.nameOptional')} placeholder={t('library.namePlaceholder')}
               value={amLabel} onChange={(e) => setAmLabel(e.target.value)} />
-            <TextField size="small" fullWidth label="Project ID" required
+            <TextField size="small" fullWidth label={t('spec.amProjectId')} required
               value={amProjId} onChange={(e) => setAmProjId(e.target.value)} />
-            <TextField size="small" fullWidth label="Service Account Key ID" required
+            <TextField size="small" fullWidth label={t('spec.amKeyId')} required
               value={amKeyId} onChange={(e) => setAmKeyId(e.target.value)} />
-            <TextField size="small" fullWidth label="Secret Key" type="password" required
+            <TextField size="small" fullWidth label={t('spec.amSecret')} type="password" required
               value={amSecret} onChange={(e) => setAmSecret(e.target.value)} />
           </Box>
         )}
@@ -211,20 +220,20 @@ export function AddLibraryDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('library.cancel')}</Button>
         {active === 'url' && (
           <Button variant="contained" disabled={busy || !url.trim()} onClick={() => void addByUrl(url)} sx={{ textTransform: 'none' }}>
-            {busy ? <CircularProgress size={16} /> : 'Add'}
+            {busy ? <CircularProgress size={16} /> : t('library.add')}
           </Button>
         )}
         {active === 'github' && (
           <Button variant="contained" disabled={busy || !ghUrl.trim()} onClick={() => void addByUrl(ghUrl)} sx={{ textTransform: 'none' }}>
-            {busy ? <CircularProgress size={16} /> : 'Scan & Add'}
+            {busy ? <CircularProgress size={16} /> : t('library.scanAndAdd')}
           </Button>
         )}
         {active === 'assetManager' && (
           <Button variant="contained" disabled={busy || !amComplete} onClick={connectAssetManager} sx={{ textTransform: 'none' }}>
-            Connect
+            {t('library.connect')}
           </Button>
         )}
       </DialogActions>

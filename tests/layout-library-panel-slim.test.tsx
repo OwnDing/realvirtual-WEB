@@ -16,11 +16,17 @@
  * stubbed, so its half is asserted against its source text, the same technique
  * `bundle-splitting.test.ts` uses for its chunk markers.
  */
-import { describe, test, expect, afterEach, vi } from 'vitest';
+import { describe, test, expect, afterEach, vi, beforeAll } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { LibrarySelector, type LibraryItem } from '../src/plugins/layout-planner/LibrarySelector';
 import panelSource from '../src/plugins/layout-planner/LayoutLibraryPanel.tsx?raw';
 import selectorSource from '../src/plugins/layout-planner/LibrarySelector.tsx?raw';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(() => cleanup());
 

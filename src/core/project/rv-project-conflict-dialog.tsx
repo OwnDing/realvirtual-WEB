@@ -38,6 +38,8 @@ import {
   type SceneConflictChoice,
   type SceneConflictPromptItem,
 } from './project-store';
+import { Trans } from 'react-i18next';
+import { useRvTranslation } from '../i18n';
 
 // ─── Presentational dialog ──────────────────────────────────────────────
 
@@ -55,6 +57,7 @@ export function ProjectConflictDialog({
   items,
   onResolve,
 }: ProjectConflictDialogProps) {
+  const { t } = useRvTranslation('assets');
   // Default is "keep my edits" for every row: a dialog the user closes
   // without reading must never be the thing that deletes their work.
   //
@@ -78,21 +81,25 @@ export function ProjectConflictDialog({
   return (
     <Dialog open={open} onClose={() => onResolve(choices)} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>
-        {items.length === 1 ? 'This scene has changed in two places' : 'These scenes have changed in two places'}
+        {t(items.length === 1 ? 'project.conflictTitleOne' : 'project.conflictTitleMany')}
       </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13, mb: 2 }}>
-          The folder <b>"{projectName}"</b> and your browser copy differ. Choose which
-          version to keep for each scene.
+          <Trans
+            ns="assets"
+            i18nKey="project.conflictBody"
+            values={{ name: projectName }}
+            components={[<b key="folder" />]}
+          />
         </DialogContentText>
 
         {items.length > 1 && (
           <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
             <Button size="small" onClick={() => setAll('keep-cache')} sx={{ textTransform: 'none' }}>
-              Keep all my edits
+              {t('project.keepAllMine')}
             </Button>
             <Button size="small" onClick={() => setAll('use-folder')} sx={{ textTransform: 'none' }}>
-              Use all folder versions
+              {t('project.useAllFolder')}
             </Button>
           </Stack>
         )}
@@ -103,14 +110,20 @@ export function ProjectConflictDialog({
               <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{item.name}</Typography>
               <Typography sx={{ fontSize: 12, opacity: 0.75, fontFamily: 'monospace' }}>
                 {item.hasUnsavedDraft
-                  ? 'browser copy has unsaved edits'
-                  : `browser ${shortTime(item.cacheModifiedAt)} · folder ${shortTime(item.folderModifiedAt)}`}
+                  ? t('project.unsavedDraft')
+                  : t('project.browserFolderTimes', {
+                    cache: shortTime(item.cacheModifiedAt),
+                    folder: shortTime(item.folderModifiedAt),
+                  })}
               </Typography>
               {item.cachedFromProjectId && (
                 <Typography sx={{ fontSize: 12, color: 'warning.main' }}>
-                  The browser copy comes from another project —{' '}
-                  <b>{item.cachedFromProjectName ?? item.cachedFromProjectId}</b>. Keeping it
-                  writes that project's scene into this folder.
+                  <Trans
+                    ns="assets"
+                    i18nKey="project.fromOtherProject"
+                    values={{ name: item.cachedFromProjectName ?? item.cachedFromProjectId }}
+                    components={[<b key="project" />]}
+                  />
                 </Typography>
               )}
               <ToggleButtonGroup
@@ -123,10 +136,10 @@ export function ProjectConflictDialog({
                 sx={{ mt: 0.75 }}
               >
                 <ToggleButton value="keep-cache" sx={{ textTransform: 'none', fontSize: 12 }}>
-                  Keep my edits
+                  {t('project.keepMine')}
                 </ToggleButton>
                 <ToggleButton value="use-folder" sx={{ textTransform: 'none', fontSize: 12 }}>
-                  Use folder version
+                  {t('project.useFolder')}
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
@@ -140,7 +153,7 @@ export function ProjectConflictDialog({
           onClick={() => onResolve(choices)}
           sx={{ textTransform: 'none' }}
         >
-          Continue
+          {t('project.continue')}
         </Button>
       </DialogActions>
     </Dialog>

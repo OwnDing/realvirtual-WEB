@@ -27,6 +27,7 @@ import { forwardRef, type ReactNode } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { TimerOutlined, Landscape, PrecisionManufacturingOutlined } from '@mui/icons-material';
 import type { LibraryCatalogEntry } from './library-types';
+import { useRvTranslation } from '../i18n';
 
 /** Matches `CatalogBrowserVariant`; kept structural to avoid a circular import. */
 export type AssetCardVariant = 'compact' | 'comfortable';
@@ -103,6 +104,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
   },
   ref,
 ) {
+  const { t } = useRvTranslation('assets');
   const s = SCALE[variant];
 
   const preview = entry.thumbnailUrl ? (
@@ -130,7 +132,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
     <GlyphTile
       accent={SPLAT}
       icon={<Landscape sx={{ fontSize: s.glyph, color: `${SPLAT}, 0.6)` }} />}
-      label="Splat"
+      label={t('library.splat')}
       labelSize={s.glyphLabel}
     />
   ) : empty ? (
@@ -139,7 +141,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
     <GlyphTile
       accent={NEUTRAL}
       icon={<PrecisionManufacturingOutlined sx={{ fontSize: s.glyph, color: `${NEUTRAL}, 0.45)` }} />}
-      label="Empty"
+      label={t('library.empty')}
       labelSize={s.glyphLabel}
     />
   ) : (
@@ -212,7 +214,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
       {tier === 'bundled' && (
         <Typography
           component="span"
-          title="Ships with this build — edits are saved as your own copy"
+          title={t('library.bundledTip')}
           sx={{
             position: 'absolute',
             top: 4,
@@ -229,7 +231,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
             pointerEvents: 'none',
           }}
         >
-          Bundled
+          {t('library.bundled')}
         </Typography>
       )}
 

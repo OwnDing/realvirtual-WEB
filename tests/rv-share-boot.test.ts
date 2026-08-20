@@ -21,7 +21,7 @@
  * defect.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import { Object3D } from 'three';
@@ -44,6 +44,12 @@ import { SharedGlbInfoCard } from '../src/core/share/SharedGlbInfoCard';
 import { buildSharedGlbInfo } from '../src/core/share/rv-share-meta';
 import { InterfaceManager } from '../src/interfaces/interface-manager';
 import { listMetas } from '../src/core/hmi/scene/rv-scene-storage';
+
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const LS_KEY_MODEL = 'rv-webviewer-last-model';
 const SHARE_URL = 'https://files.example.org/pick-and-place.glb';
