@@ -44,6 +44,7 @@ import {
 import { WINDOW_DARK_BG } from './LeftPanel';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
 import { useViewportInsets } from '../../hooks/use-viewport-insets';
+import { useRvTranslation } from '../i18n';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ const BORDER = 'rgba(255,255,255,0.07)';
 // ── Panel Component ────────────────────────────────────────────────────
 
 export function MeasurementPanel() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeMeasurements, getMeasurementSnapshot);
   const plugin = viewer.getPlugin('measurements') as MeasurementPluginAPI | undefined;
@@ -160,7 +162,7 @@ export function MeasurementPanel() {
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1.25, gap: 0.5, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <Straighten sx={{ fontSize: 16, color: '#4fc3f7' }} />
         <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.primary', flexGrow: 1 }}>
-          Measurements ({snap.measurements.length})
+          {t('measure.title', { count: snap.measurements.length })}
         </Typography>
         {snap.measurements.length > 0 && (
           <>
@@ -171,7 +173,7 @@ export function MeasurementPanel() {
                 for (const m of snap.measurements) plugin?.updateMeasurement(m.id, { visible: !allVisible });
               }}
               sx={{ color: 'rgba(255,255,255,0.3)', p: 0.25, '&:hover': { color: '#4fc3f7' } }}
-              title={snap.measurements.every(m => m.visible) ? 'Hide all' : 'Show all'}
+              title={t(snap.measurements.every(m => m.visible) ? 'measure.hideAll' : 'measure.showAll')}
             >
               {snap.measurements.every(m => m.visible)
                 ? <Visibility sx={{ fontSize: 14 }} />
@@ -181,7 +183,7 @@ export function MeasurementPanel() {
               size="small"
               onClick={handleClearAll}
               sx={{ color: 'rgba(255,255,255,0.3)', p: 0.25, '&:hover': { color: '#ef5350' } }}
-              title="Clear all"
+              title={t('measure.clearAll')}
             >
               <DeleteSweep sx={{ fontSize: 14 }} />
             </IconButton>
@@ -207,7 +209,7 @@ export function MeasurementPanel() {
             },
           }}
         >
-          <ToggleButton value="auto">Auto</ToggleButton>
+          <ToggleButton value="auto">{t('measure.auto')}</ToggleButton>
           <ToggleButton value="mm">mm</ToggleButton>
           <ToggleButton value="m">m</ToggleButton>
         </ToggleButtonGroup>
@@ -236,7 +238,7 @@ export function MeasurementPanel() {
 
       {/* Display size slider */}
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, gap: 1, pb: 0.5 }}>
-        <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>Size</Typography>
+        <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>{t('measure.size')}</Typography>
         <Slider
           size="small"
           min={0.3}
@@ -257,7 +259,7 @@ export function MeasurementPanel() {
       <Box sx={{ flex: 1, overflow: 'auto', py: 0.5 }}>
         {snap.measurements.length === 0 && (
           <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', py: 2 }}>
-            Click two points on surfaces to measure distance
+            {t('measure.empty')}
           </Typography>
         )}
         {snap.measurements.map((m) => (

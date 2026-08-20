@@ -17,6 +17,7 @@ import { Box, Typography } from '@mui/material';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -64,6 +65,7 @@ function getHighLimitColor(value: number, limit: number): string | undefined {
 
 /** Pump tooltip content provider component. */
 export function PumpTooltipContent({ data, viewer }: TooltipContentProps<PumpTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [pumpData, setPumpData] = useState<{
     flowRate: number;
     state: string;
@@ -158,19 +160,19 @@ export function PumpTooltipContent({ data, viewer }: TooltipContentProps<PumpToo
         </Typography>
       </Box>
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}>
-        Pump
+        {t('tip.pump')}
       </Typography>
-      <Row label="Flow" value={formatFlow(pumpData.flowRate)} />
+      <Row label={t('tip.flow')} value={formatFlow(pumpData.flowRate)} />
       {(pumpData.suctionPressure !== 0 || pumpData.dischargePressure !== 0) && (
         <>
-          <Row label="Suction" value={`${pumpData.suctionPressure.toFixed(2)} bar`} />
-          <Row label="Discharge" value={`${pumpData.dischargePressure.toFixed(2)} bar`} />
-          <Row label="ΔP" value={`${pumpData.differentialPressure.toFixed(2)} bar`} />
+          <Row label={t('tip.suction')} value={`${pumpData.suctionPressure.toFixed(2)} bar`} />
+          <Row label={t('tip.discharge')} value={`${pumpData.dischargePressure.toFixed(2)} bar`} />
+          <Row label={t('tip.deltaP')} value={`${pumpData.differentialPressure.toFixed(2)} bar`} />
         </>
       )}
       {(pumpData.speedRpm > 0 || pumpData.speedPercent > 0) && (
         <Row
-          label="Speed"
+          label={t('tip.speed')}
           value={
             pumpData.speedPercent > 0
               ? `${pumpData.speedPercent.toFixed(0)}%${pumpData.speedRpm > 0 ? ` · ${pumpData.speedRpm.toFixed(0)} rpm` : ''}`
@@ -179,25 +181,25 @@ export function PumpTooltipContent({ data, viewer }: TooltipContentProps<PumpToo
         />
       )}
       {pumpData.powerKw > 0 && (
-        <Row label="Power" value={`${pumpData.powerKw.toFixed(2)} kW`} />
+        <Row label={t('tip.power')} value={`${pumpData.powerKw.toFixed(2)} kW`} />
       )}
       {pumpData.currentA > 0 && (
-        <Row label="Current" value={`${pumpData.currentA.toFixed(1)} A`} />
+        <Row label={t('tip.current')} value={`${pumpData.currentA.toFixed(1)} A`} />
       )}
       {pumpData.bearingTempC > 0 && (
-        <Row label="Bearing" value={`${pumpData.bearingTempC.toFixed(1)} °C`} color={bearingColor} />
+        <Row label={t('tip.bearing')} value={`${pumpData.bearingTempC.toFixed(1)} °C`} color={bearingColor} />
       )}
       {pumpData.motorTempC > 0 && (
-        <Row label="Motor Temp" value={`${pumpData.motorTempC.toFixed(1)} °C`} color={motorColor} />
+        <Row label={t('tip.motorTemp')} value={`${pumpData.motorTempC.toFixed(1)} °C`} color={motorColor} />
       )}
       {pumpData.vibrationMmS > 0 && (
-        <Row label="Vibration" value={`${pumpData.vibrationMmS.toFixed(2)} mm/s`} color={vibColor} />
+        <Row label={t('tip.vibration')} value={`${pumpData.vibrationMmS.toFixed(2)} mm/s`} color={vibColor} />
       )}
       {pumpData.npshMargin !== null && (
-        <Row label="NPSH Margin" value={`${pumpData.npshMargin.toFixed(1)} m`} color={npshColor} />
+        <Row label={t('tip.npsh')} value={`${pumpData.npshMargin.toFixed(1)} m`} color={npshColor} />
       )}
       {pumpData.runHours > 0 && (
-        <Row label="Run Hours" value={`${pumpData.runHours.toFixed(0)} h`} />
+        <Row label={t('tip.runHours')} value={`${pumpData.runHours.toFixed(0)} h`} />
       )}
     </>
   );

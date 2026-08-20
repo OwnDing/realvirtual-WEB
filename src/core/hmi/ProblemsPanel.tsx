@@ -34,6 +34,7 @@ import {
   type ProblemSeverity,
 } from './problems-store';
 import { uiBlur } from './rv-ui-blur';
+import { rvT, useRvTranslation } from '../i18n';
 
 /** Shared Warning Amber (DESIGN.md §2) — the one colour a rejection may take. */
 const AMBER = '#ffa726';
@@ -51,7 +52,8 @@ function SeverityIcon({ severity }: { severity: ProblemSeverity }) {
 
 /** Word form of the severity — the label half of "icon + label, never colour alone". */
 function severityWord(severity: ProblemSeverity): string {
-  return severity === 'error' ? 'Error' : severity === 'warning' ? 'Warning' : 'Info';
+  return rvT('operator', severity === 'error' ? 'problems.severityError'
+    : severity === 'warning' ? 'problems.severityWarning' : 'problems.severityInfo');
 }
 
 function ProblemRow({ entry }: { entry: ProblemEntry }) {
@@ -96,6 +98,7 @@ function ProblemRow({ entry }: { entry: ProblemEntry }) {
 }
 
 export function ProblemsPanel() {
+  const { t } = useRvTranslation('operator');
   const problems = useProblems();
   const [collapsed, setCollapsed] = useState(false);
   const toggle = useCallback(() => setCollapsed(c => !c), []);
@@ -106,7 +109,7 @@ export function ProblemsPanel() {
     <Box
       data-testid="problems-panel"
       role="region"
-      aria-label="Problems"
+      aria-label={t('problems.region')}
       sx={{
         position: 'absolute',
         left: 8,
@@ -131,7 +134,7 @@ export function ProblemsPanel() {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
         <IconButton
           size="small"
-          aria-label={collapsed ? 'Expand problems' : 'Collapse problems'}
+          aria-label={t(collapsed ? 'problems.expand' : 'problems.collapse')}
           onClick={toggle}
           sx={{ p: 0, color: 'rgba(255,255,255,0.7)' }}
         >
@@ -140,7 +143,7 @@ export function ProblemsPanel() {
         <Typography
           sx={{ fontSize: 11, fontWeight: 500, letterSpacing: 0.4, color: 'rgba(255,255,255,0.7)' }}
         >
-          {`PROBLEMS (${problems.length})`}
+          {t('problems.header', { count: problems.length })}
         </Typography>
       </Box>
       {!collapsed && problems.map(entry => <ProblemRow key={entry.id} entry={entry} />)}

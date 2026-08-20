@@ -25,6 +25,7 @@ import { PropertyInspector } from './rv-property-inspector';
 import { RV_SCROLL_CLASS } from './shared-sx';
 import { WINDOW_DARK_BG } from './LeftPanel';
 import { LEFT_PANEL_MOBILE_ZINDEX } from './layout-constants';
+import { useRvTranslation } from '../i18n';
 
 /** Display label for a path = its last segment. */
 function leafName(path: string): string {
@@ -32,6 +33,7 @@ function leafName(path: string): string {
 }
 
 export function MobileSelectionSheet() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const isMobile = useMobileLayout();
   const selection = useSelection();
@@ -120,7 +122,7 @@ export function MobileSelectionSheet() {
           size="small"
           onClick={() => { setOpen(false); viewer.selectionManager.clear(); }}
           sx={{ p: 0.25, flexShrink: 0, color: 'text.secondary' }}
-          aria-label="Close inspector"
+          aria-label={t('mobile.closeInspector')}
         >
           <Close sx={{ fontSize: 18 }} />
         </IconButton>

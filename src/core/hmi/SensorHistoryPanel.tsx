@@ -45,6 +45,7 @@ import {
   DEFAULT_CHART_THEME,
 } from './sensor-history-chart-options';
 import { useDrag } from './FloatingPanel';
+import { useRvTranslation } from '../i18n';
 
 // ─── Constants ─────────────────────────────────────────────────────────
 
@@ -97,6 +98,7 @@ function PanelHeader({
   onClose: () => void;
   dragRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const { t } = useRvTranslation('operator');
   return (
     <Box
       ref={dragRef}
@@ -141,7 +143,7 @@ function PanelHeader({
         sx={{ height: 24, '& .MuiToggleButton-root': { px: 1, py: 0.1, fontSize: 10 } }}
       >
         {WINDOW_OPTIONS.map(opt => (
-          <ToggleButton key={opt} value={opt} aria-label={`Window ${opt}`}>{opt}</ToggleButton>
+          <ToggleButton key={opt} value={opt} aria-label={t('sensors.window', { value: opt })}>{opt}</ToggleButton>
         ))}
       </ToggleButtonGroup>
 
@@ -153,20 +155,20 @@ function PanelHeader({
         onChange={(_, v) => { if (v) onModeChange(v as SensorHistoryMode); }}
         sx={{ height: 24, ml: 0.5, '& .MuiToggleButton-root': { px: 1, py: 0.1, fontSize: 10 } }}
       >
-        <ToggleButton value="single" aria-label="Single sensor view">
+        <ToggleButton value="single" aria-label={t('sensors.singleAria')}>
           <TimelineIcon sx={{ fontSize: 14, mr: 0.5 }} />
-          Single
+          {t('sensors.single')}
         </ToggleButton>
-        <ToggleButton value="all" aria-label="All sensors view">
+        <ToggleButton value="all" aria-label={t('sensors.allAria')}>
           <ViewAgenda sx={{ fontSize: 14, mr: 0.5 }} />
-          All
+          {t('sensors.all')}
         </ToggleButton>
       </ToggleButtonGroup>
 
       <IconButton
         size="small"
         onClick={onClose}
-        aria-label="Close sensor history"
+        aria-label={t('sensors.close')}
         sx={{ color: 'rgba(255,255,255,0.35)', p: 0.3, ml: 0.5, '&:hover': { color: '#fff' } }}
       >
         <Close sx={{ fontSize: 16 }} />
@@ -178,6 +180,7 @@ function PanelHeader({
 // ─── Main Panel ────────────────────────────────────────────────────────
 
 export function SensorHistoryPanel() {
+  const { t } = useRvTranslation('operator');
   const state = useSensorHistory();
   const viewer = useViewer();
   const { activeSensor, mode, window: win, layout } = state;
@@ -384,7 +387,7 @@ export function SensorHistoryPanel() {
           color: 'rgba(255,255,255,0.5)',
           fontSize: 12,
         }}>
-          No WebSensors in the current scene
+          {t('sensors.empty')}
         </Box>
       ) : mode === 'all' && allSensors.length > 6 ? (
         /* Scrollable wrapper for all-mode: ECharts canvas has a fixed height

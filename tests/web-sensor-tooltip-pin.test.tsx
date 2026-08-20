@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
@@ -12,6 +12,11 @@ import {
   __resetSensorHistoryStore,
 } from '../src/core/hmi/sensor-history-store';
 import type { RVViewer } from '../src/core/rv-viewer';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const data: WebSensorTooltipData = {
   type: 'web-sensor',

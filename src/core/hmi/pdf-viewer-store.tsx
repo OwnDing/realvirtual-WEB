@@ -19,6 +19,7 @@ import { Box, Typography, CircularProgress, Modal } from '@mui/material';
 import { extractFileBlob } from '../../plugins/aas-link-parser';
 import { tooltipRegistry } from './tooltip/tooltip-registry';
 import { DocViewerOverlay } from './DocViewerOverlay';
+import { useRvTranslation } from '../i18n';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -124,6 +125,7 @@ function usePdfViewerState(): PdfViewerState {
 // ─── PDF Viewer Bridge (headless controller, rendered by App.tsx) ──────
 
 function PdfViewerBridge() {
+  const { t } = useRvTranslation('operator');
   const state = usePdfViewerState();
   if (!state.open) return null;
 
@@ -150,10 +152,10 @@ function PdfViewerBridge() {
         }}
       >
         <Typography sx={{ color: '#f44336', fontSize: 14 }}>
-          Failed to load PDF: {state.error}
+          {t('doc.loadFailedDetail', { message: state.error })}
         </Typography>
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-          Click to close
+          {t('doc.clickToClose')}
         </Typography>
       </Box>
     );

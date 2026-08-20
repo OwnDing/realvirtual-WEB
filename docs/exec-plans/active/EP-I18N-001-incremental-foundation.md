@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 4 之后）：
+截至 2026-08-20（批次 5 之后）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 1267 条）。
-- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程。
-- 受门禁债务 **948 处 / 164 文件**（`node scripts/i18n-inventory.mjs`）；建议项 `error-message` 311、`intl-format` 22（其中 16 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_414_725 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 102.8 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect` 移入独立 chunk；`zh-CN` 全量仍在入口）。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **1468** 条）。
+- 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）。
+- 受门禁债务 **788 处 / 138 文件**（`node scripts/i18n-inventory.mjs`）：`react-copy` 533、`a11y-name` 35、`plugin-registry` 102、`dynamic-text` 86、`pre-boot` 16、`dom-text` 10、`ui-state-text` 4、`canvas-texture` 2；建议项 `error-message` 311、`intl-format` 22（其中 13 处未显式传 locale）。数字必须由脚本产生，不得手抄。
+- 入口 chunk 3_422_380 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 95.3 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect`/`operator` 移入独立 chunk，构建产物 45.5 KB；`zh-CN` 全量仍在入口）。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 948 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程）。
+- [ ] Milestone 4b：按风险分批迁移其余 788 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程；批次 5：操作员运行时面）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,29 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 5：操作员运行时面（2026-08-20）
+
+- 覆盖 26 个文件、160 处（7016 行）：10 个 3D 悬浮提示（加工单元 / 泵 / 罐 / 管道 / 驱动 / 指示灯 / WebSensor / 元数据 / 文档 / 信号徽标）与 16 个运行时面板（机器控制、维护引导、历史趋势、传感器历史、测量、多人协同、分组、剖切、问题、批注、PDF 文档、移动端选择表）。该面归零，全仓 948 → **788**；`operator` namespace 共 **201** 个 key。
+- 选这一批的理由与批次 3/4 不同：这是**车间操作员真正盯着的那一面**。工程师大多能读英文，站在机器前的操作员未必。
+- **产品术语规则在这一批分成两半，这是本批次唯一的判断**：单位与国际通用缩写保持英文（`MTBF`、`MTTR`、`NPSH`、`OEE`、`DN`、`pH`、`ΔP`、`InfluxDB`），普通测量词翻译（`Flow` → 流量、`Level` → 液位、`Vibration` → 振动）。依据是操作员对这两类词的认知方式不同：他认「流量」这两个字，但 `MTBF` 他只认这四个字母——把它译成「平均无故障时间」反而要重新对照。`tests/i18n-operator.test.tsx` 用**两条互为配重的用例**钉住：缩写在两种语言下取值完全相同，普通测量词则必须不同且含中文。只有前一条，一份原样复制的英文目录也能满分。
+- `tip.npsh` 是这条规则的形状本身：`NPSH Margin` → `NPSH 裕量`，缩写活下来、旁边的名词没有。写测试时把它错放进「完全相同」那一组，测试当场失败——分类由此才被写准。
+- **ISA-101 状态徽标一并翻译，尽管扫描器看不见它。** `MachineControlPanel` 的 `{state}` 是直接渲染的枚举值（`RUNNING`/`IDLE`/…），不在 160 处之内。但面板标题、模式选择器、启停按钮迁移之后，屏幕正中最大的那个词会是唯一剩下的英文。相邻的 `statusLabel()`（`RUN`/`OFF`/`ON`/`ERR`）**保持英文**：那是三字母状态码，与协议名同类。
+- 扫描器另有三处看不见的真实文案，一并迁移：`HistorianTrendPanel` 的连接状态三元表达式（`Historian connected` / `Authorization failed` / `Historian unavailable`）、`GroupsOverlay` 的三条复数副标题（`N overlay(s)/filter(s)/group(s)`）、`AnnotationEditModal` 的 `by … — attached to …`。三元赋值给变量、模板串拼复数，任何 JSX 位置规则都命中不了。
+- `problems-store.ts` 是本批唯一的非 React 生产者，用 `rvT`（与 `license-store.ts`、`rag-status.ts` 同型）。这里标识符规则再次出现：`assetId` 和 `path` 是**字段名**，句子翻译而字段名不动。**已知限制**：问题条目在模型加载时把文本定死，会话中途切语言不会重写已有条目——下次加载才更新。这属于 `dynamic-text` 类别的既有形态，未在本批次改动 `ProblemEntry` 契约。
+- `.join(' and ')` 里藏着一条文案：把两个路径连起来的连接词。中文句子中间冒出一个 ` and ` 不会被任何针对句子本身的断言抓到，因此单独立了 `problems.and` 并单独立了一条用例。
+- 顺手清掉本面 3 处 `intl-format` 建议项（`toLocaleString`/`toLocaleTimeString` 显式传 locale），全仓未显式传 locale 的站点 16 → **13**。
+- 3 个既有浏览器测试按 ADR pin `en-US`：`badge-tooltip`、`compose-missing-references`、`web-sensor-tooltip-pin`。
+- **逐字迁入门禁在本批次被反例证明是「只能证明通过、不能报告失败」的**，已修复。详见下节。
+
+### 修正：逐字迁入门禁在失败时不返回（2026-08-20，本批次反例发现）
+
+- 反例做法照旧：故意改写 4 条已迁移的 `en-US` 值，期望门禁指名它们。**结果是门禁跑了 6 分钟仍未结束**，两次都如此。它不是判错，是**永远给不出答案**——也就是说，任何一次真实的措辞回归都只会把 CI 挂住，而唯一有人观察得到的结果永远是「通过」。此前四个批次的通过结论仍然成立（通过路径 1 秒内返回），失去的是报告失败的能力。
+- 三个原因，都在 `verbatimPattern()`：
+  1. **首位通配符**。值以 `{{count}}` 开头时，模式以无锚点的惰性 `[\s\S]*?` 起头，每次未命中都要在每个起点上扫到文件尾——单文件 O(n²)，乘以数百个文件就是那 6 分钟。位于**两端**的通配符匹配空串，因此它接受的字符串集合与去掉它完全相同：删掉是等价变换，也是这次真正止血的一处。`{{count}} zone` 这类值在批次 2 就存在了，所以这个洞比本批次更早。
+  2. **空白匹配器的回溯**。空格被展开成 `(?:\s|' + '|{' '}|&nbsp;)+`，一个 N 空格的值在近似命中时给引擎指数级的切分方式。改成 JS 的原子组写法 `(?=(X+))\1`，取最长且不再回吐——这本来就是这些候选项的原意。
+  3. 加原子组后立刻踩到第二个坑，也是**只有反例才会暴露**的那种：`\2` 后面跟着 `3D`，JS 把 `\23` 读成第 23 个反向引用，再悄悄降级成八进制转义。16 条值因此被误判为新串。反向引用必须包在 `(?:…)` 里。
+- 修复后：完整检查 1.1 秒返回；4 条改写值被逐条指名，包括跨越 `—`、括号和数字的那条长句。三处都补了注释说明**为什么**，因为其中两处看起来只是风格问题。
 
 ### Milestone 4b 批次 4：CONNECT 工业连接流程（2026-08-20）
 

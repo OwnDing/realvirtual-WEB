@@ -27,7 +27,7 @@
  * `loadGLB`, no `WebGLRenderer`.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Object3D, Scene } from 'three';
 import { objectToGlb } from '../src/core/import/rv-import-object';
 import { loadGLB } from '../src/core/engine/rv-scene-loader';
@@ -59,6 +59,7 @@ import {
 } from '../src/core/hmi/scene/rv-scene-glb-bake';
 import { materialise } from '../src/core/hmi/scene/rv-scene-edits';
 import type { RvOp } from '../src/core/ops/rv-unified-ops';
+import { initI18n, setLocale } from '../src/core/i18n';
 
 const material = new MeshStandardMaterial({ color: 0x445566 });
 
@@ -105,6 +106,10 @@ function jsonNodeNamed(bytes: ArrayBuffer | Uint8Array, name: string): Record<st
   if (!hit) throw new Error(`test fixture: no glTF node named ${name}`);
   return hit;
 }
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 beforeEach(() => {
   resetProblemsForTests();

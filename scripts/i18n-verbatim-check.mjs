@@ -117,6 +117,33 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/rv-connections-section.tsx',
   'src/core/hmi/ConnectUpdateSection.tsx',
   'src/plugins/connect-embed/ConnectEmbedGate.tsx',
+  // Operator runtime surface (Milestone 4b, batch 5)
+  'src/core/hmi/MachineControlPanel.tsx',
+  'src/core/hmi/MaintenancePanel.tsx',
+  'src/core/hmi/HistorianTrendPanel.tsx',
+  'src/core/hmi/SensorHistoryPanel.tsx',
+  'src/core/hmi/MeasurementPanel.tsx',
+  'src/core/hmi/MultiuserPanel.tsx',
+  'src/core/hmi/GroupsListContent.tsx',
+  'src/core/hmi/GroupsOverlay.tsx',
+  'src/core/hmi/ClippingPanel.tsx',
+  'src/core/hmi/ProblemsPanel.tsx',
+  'src/core/hmi/problems-store.ts',
+  'src/core/hmi/AnnotationPanel.tsx',
+  'src/core/hmi/AnnotationEditModal.tsx',
+  'src/core/hmi/DocViewerOverlay.tsx',
+  'src/core/hmi/pdf-viewer-store.tsx',
+  'src/core/hmi/MobileSelectionSheet.tsx',
+  'src/core/hmi/tooltip/ProcessingUnitTooltipContent.tsx',
+  'src/core/hmi/tooltip/PumpTooltipContent.tsx',
+  'src/core/hmi/tooltip/TankTooltipContent.tsx',
+  'src/core/hmi/tooltip/PipeTooltipContent.tsx',
+  'src/core/hmi/tooltip/DriveTooltipContent.tsx',
+  'src/core/hmi/tooltip/LampTooltipContent.tsx',
+  'src/core/hmi/tooltip/WebSensorTooltipContent.tsx',
+  'src/core/hmi/tooltip/MetadataTooltipContent.tsx',
+  'src/core/hmi/tooltip/PdfTooltipSection.tsx',
+  'src/core/hmi/tooltip/SignalBadgeTooltipContent.tsx',
 ];
 
 /**
@@ -252,18 +279,42 @@ export function verbatimPattern(value) {
   // are themselves entity-able: expanding them in place would rewrite the marker
   // (and, a step later, the `<[^>]*>` it turns into) into something that matches
   // no tag at all.
+  // Each run of spaces becomes an ATOMIC group — `(?=(X+))\\1` — not a plain
+  // `X+`. Plain `+` over an alternation is a backtracking bomb: on a value that
+  // very nearly matches, an N-space value gives the engine exponentially many
+  // ways to split the whitespace, at every candidate offset in every source
+  // file. That does not make the check WRONG, it makes it never finish — so a
+  // genuine regression would hang CI instead of failing it, and the only
+  // outcome anyone would ever observe is a pass. Atomic groups take the longest
+  // run and never give it back, which is the only behaviour these alternatives
+  // were ever meant to have. (No alternative can swallow a following literal:
+  // each one consumes whitespace, or a quote-PLUS-quote splice.)
+  //
+  // The backreference is wrapped in `(?:…)` because the next character is
+  // often a digit: bare `\\2` before `3D` reads as backreference 23, which
+  // JS silently reinterprets as an octal escape rather than rejecting.
+  let group = 0;
   const body = escaped
     .replace(/<\/?\d>/g, SLOT)
     .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
     .replace(/['&"<>—–©…]/g, (char) => `(?:${char.replace(/[&]/g, '\\&')}|${ENTITY_FORMS.get(char)})`)
     .split(SLOT).join('\\s*<[^>]*>\\s*')
-    .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`]|\\{\' \'\\}|&nbsp;)+');
+    .replace(/ +/g, () => `(?=((?:\\s|['\`]\\s*\\+\\s*['\`]|\\{' '\\}|&nbsp;)+))(?:\\${++group})`);
   // `\n` in a template literal is two SOURCE characters, so `\nBranch:` has no
   // word boundary before `Branch` in the text this check reads — even though the
   // rendered string does. An escape sequence counts as a boundary.
+  // A wildcard at either END matches the empty string, so it accepts exactly
+  // what the rest of the pattern accepts — but as a LEADING unanchored `.*?` it
+  // makes every miss quadratic in file length, and a value that opens with
+  // `{{count}}` then takes minutes per run instead of milliseconds. Dropping it
+  // is semantics-preserving and is the difference between a gate that reports a
+  // regression and one that hangs before it can.
+  const trimmed = body
+    .replace(/^(?:\[\\s\\S\]\*\?)+/, '')
+    .replace(/(?:\[\\s\\S\]\*\?)+$/, '');
   const lead = /^\w/.test(value) ? '(?:\\b|\\\\[nrt])' : '';
   const tail = /\w$/.test(value) ? '\\b' : '';
-  return new RegExp(lead + body + tail);
+  return new RegExp(lead + trimmed + tail);
 }
 
 /**

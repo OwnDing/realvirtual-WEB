@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 670,
-    "a11y-name": 47,
+    "react-copy": 533,
+    "a11y-name": 35,
     "plugin-registry": 102,
-    "dynamic-text": 97,
+    "dynamic-text": 86,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
     "ui-state-text": 4
   },
-  "total": 948,
-  "fileCount": 164,
+  "total": 788,
+  "fileCount": 138,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -60,69 +60,22 @@
     "src/core/engine/rv-script-sandbox.ts": {
       "plugin-registry": 2
     },
-    "src/core/hmi/AnnotationEditModal.tsx": {
-      "react-copy": 5
-    },
-    "src/core/hmi/AnnotationPanel.tsx": {
-      "react-copy": 2
-    },
-    "src/core/hmi/ClippingPanel.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/DocViewerOverlay.tsx": {
-      "react-copy": 5
-    },
     "src/core/hmi/DragNumberField.tsx": {
       "dynamic-text": 1
     },
     "src/core/hmi/ForceConfirmDialog.tsx": {
       "react-copy": 5
     },
-    "src/core/hmi/GroupsListContent.tsx": {
-      "react-copy": 6,
-      "dynamic-text": 5
-    },
-    "src/core/hmi/GroupsOverlay.tsx": {
-      "react-copy": 1
-    },
     "src/core/hmi/HierarchyNodeRow.tsx": {
       "react-copy": 1,
       "a11y-name": 3,
       "dynamic-text": 1
     },
-    "src/core/hmi/HistorianTrendPanel.tsx": {
-      "react-copy": 16,
-      "a11y-name": 6
-    },
     "src/core/hmi/IKTargetQuickEdit.tsx": {
       "react-copy": 17
     },
-    "src/core/hmi/MachineControlPanel.tsx": {
-      "react-copy": 15
-    },
-    "src/core/hmi/MaintenancePanel.tsx": {
-      "react-copy": 12
-    },
-    "src/core/hmi/MeasurementPanel.tsx": {
-      "react-copy": 6
-    },
-    "src/core/hmi/MobileSelectionSheet.tsx": {
-      "a11y-name": 1
-    },
-    "src/core/hmi/MultiuserPanel.tsx": {
-      "react-copy": 8
-    },
-    "src/core/hmi/ProblemsPanel.tsx": {
-      "a11y-name": 2,
-      "dynamic-text": 1
-    },
     "src/core/hmi/ReorderableList.tsx": {
       "react-copy": 1
-    },
-    "src/core/hmi/SensorHistoryPanel.tsx": {
-      "react-copy": 3,
-      "a11y-name": 3,
-      "dynamic-text": 1
     },
     "src/core/hmi/SetPositionDialog.tsx": {
       "react-copy": 6
@@ -137,12 +90,6 @@
     },
     "src/core/hmi/hierarchy-badge-components.tsx": {
       "react-copy": 1
-    },
-    "src/core/hmi/pdf-viewer-store.tsx": {
-      "react-copy": 2
-    },
-    "src/core/hmi/problems-store.ts": {
-      "dynamic-text": 2
     },
     "src/core/hmi/rv-add-component-section.tsx": {
       "react-copy": 3
@@ -219,38 +166,6 @@
     "src/core/hmi/script/rv-script-save-pipeline.ts": {
       "plugin-registry": 2,
       "dynamic-text": 2
-    },
-    "src/core/hmi/tooltip/DriveTooltipContent.tsx": {
-      "react-copy": 4
-    },
-    "src/core/hmi/tooltip/LampTooltipContent.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/tooltip/MetadataTooltipContent.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/tooltip/PdfTooltipSection.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/tooltip/PipeTooltipContent.tsx": {
-      "react-copy": 5,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/tooltip/ProcessingUnitTooltipContent.tsx": {
-      "react-copy": 16
-    },
-    "src/core/hmi/tooltip/PumpTooltipContent.tsx": {
-      "react-copy": 12
-    },
-    "src/core/hmi/tooltip/SignalBadgeTooltipContent.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/tooltip/TankTooltipContent.tsx": {
-      "react-copy": 9
-    },
-    "src/core/hmi/tooltip/WebSensorTooltipContent.tsx": {
-      "react-copy": 1,
-      "dynamic-text": 1
     },
     "src/core/library/AddLibraryDialog.tsx": {
       "react-copy": 19

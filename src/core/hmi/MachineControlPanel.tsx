@@ -26,6 +26,7 @@ import { LeftPanel } from './LeftPanel';
 import { MACHINE_PANEL_WIDTH } from './layout-constants';
 import type { MachineControlPluginAPI, MachineState, MachineMode, MachineComponent, ComponentStatus } from '../types/plugin-types';
 import { ISA_GREEN, ISA_AMBER, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 // ─── ISA-101 Inspired Colors ─────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 // ─── State Badge (prominent) ────────────────────────────────────────────
 
 function StateBadge({ state }: { state: MachineState }) {
+  const { t } = useRvTranslation('operator');
   const color = STATE_COLORS[state];
   const isRunning = state === 'RUNNING';
   return (
@@ -85,7 +87,7 @@ function StateBadge({ state }: { state: MachineState }) {
       <Typography sx={{
         fontSize: 14, fontWeight: 800, letterSpacing: 1.5, fontFamily: 'monospace', color,
       }}>
-        {state}
+        {t(`machine.state${state.charAt(0)}${state.slice(1).toLowerCase()}` as 'machine.stateRunning')}
       </Typography>
     </Box>
   );
@@ -94,6 +96,7 @@ function StateBadge({ state }: { state: MachineState }) {
 // ─── Mode Selector ───────────────────────────────────────────────────────
 
 function ModeSelector({ mode, onModeChange }: { mode: MachineMode; onModeChange: (m: MachineMode) => void }) {
+  const { t } = useRvTranslation('operator');
   return (
     <ToggleButtonGroup
       value={mode}
@@ -111,7 +114,7 @@ function ModeSelector({ mode, onModeChange }: { mode: MachineMode; onModeChange:
             '&.Mui-selected': { bgcolor: `${c}20`, color: c },
             '&.Mui-selected:hover': { bgcolor: `${c}30` },
           }}>
-            {m === 'MAINTENANCE' ? 'Maint.' : m.charAt(0) + m.slice(1).toLowerCase()}
+            {t(m === 'AUTO' ? 'machine.modeAuto' : m === 'MANUAL' ? 'machine.modeManual' : 'machine.modeMaint')}
           </ToggleButton>
         );
       })}
@@ -122,6 +125,7 @@ function ModeSelector({ mode, onModeChange }: { mode: MachineMode; onModeChange:
 // ─── Control Buttons (with icons) ───────────────────────────────────────
 
 function ControlButtons({ state, plugin }: { state: MachineState; plugin: MachineControlPluginAPI }) {
+  const { t } = useRvTranslation('operator');
   const isRunning = state === 'RUNNING';
   const isError = state === 'ERROR';
 
@@ -145,7 +149,7 @@ function ControlButtons({ state, plugin }: { state: MachineState; plugin: Machin
             '&:hover': { bgcolor: isRunning ? '#4caf50' : 'rgba(255,255,255,0.25)' },
           }}
         >
-          {isRunning ? 'Running' : 'Start'}
+          {t(isRunning ? 'machine.running' : 'machine.start')}
         </Button>
       </Box>
       <Button
@@ -161,7 +165,7 @@ function ControlButtons({ state, plugin }: { state: MachineState; plugin: Machin
           '&.Mui-disabled': { bgcolor: 'rgba(211,47,47,0.3)', color: 'rgba(255,255,255,0.3)' },
         }}
       >
-        E-STOP
+        {t('machine.estop')}
       </Button>
     </Box>
   );
@@ -445,6 +449,7 @@ function ComponentList({ components, plugin, highlightedPath, machineRunning }: 
   components: MachineComponent[]; plugin: MachineControlPluginAPI; highlightedPath: string | null;
   machineRunning: boolean;
 }) {
+  const { t } = useRvTranslation('operator');
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
@@ -458,7 +463,7 @@ function ComponentList({ components, plugin, highlightedPath, machineRunning }: 
     return (
       <Box sx={{ px: 1.5, py: 2, textAlign: 'center' }}>
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
-          No components discovered
+          {t('machine.noComponents')}
         </Typography>
       </Box>
     );
@@ -490,6 +495,7 @@ function ComponentList({ components, plugin, highlightedPath, machineRunning }: 
 // ─── Main Panel ─────────────────────────────────────────────────────────
 
 export function MachineControlPanel() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const isMobile = useMobileLayout();
   const controlState = useMachineControl();
@@ -549,7 +555,7 @@ export function MachineControlPanel() {
 
   return (
     <LeftPanel
-      title="Machine Control"
+      title={t('machine.title')}
       onClose={handleClose}
       width={MACHINE_PANEL_WIDTH}
       mobile={isMobile ? 'full-screen' : undefined}
@@ -561,7 +567,7 @@ export function MachineControlPanel() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <StateBadge state={controlState.state} />
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>
-              Demo
+              {t('machine.demo')}
             </Typography>
           </Box>
           <ModeSelector mode={controlState.mode} onModeChange={handleModeChange} />
@@ -569,28 +575,28 @@ export function MachineControlPanel() {
 
         {/* ── Controls ── */}
         <Box sx={{ px: 1.5, py: 1, borderTop: `1px solid ${C.subtleBorder}` }}>
-          <SectionHeader>Controls</SectionHeader>
+          <SectionHeader>{t('machine.controls')}</SectionHeader>
           <ControlButtons state={controlState.state} plugin={plugin} />
         </Box>
 
         {/* ── Subsystems ── */}
         <Box sx={{ px: 1.5, py: 1, borderTop: `1px solid ${C.subtleBorder}` }}>
-          <SectionHeader>Subsystems</SectionHeader>
+          <SectionHeader>{t('machine.subsystems')}</SectionHeader>
           <Box sx={{ display: 'flex', gap: 0.75 }}>
             <SubsystemButton
               icon={<PrecisionManufacturing sx={{ fontSize: 20 }} />}
-              label="Robot"
+              label={t('machine.robot')}
               active={robotActive}
               onClick={() => setRobotActive(!robotActive)}
             />
             <SubsystemButton
               icon={<LocalShipping sx={{ fontSize: 20 }} />}
-              label="Entry Conv."
+              label={t('machine.entryConv')}
               active={entrySensorOccupied}
             />
             <SubsystemButton
               icon={<LocalShipping sx={{ fontSize: 20, transform: 'scaleX(-1)' }} />}
-              label="Exit Conv."
+              label={t('machine.exitConv')}
               active={exitSensorOccupied}
             />
           </Box>
@@ -598,23 +604,23 @@ export function MachineControlPanel() {
 
         {/* ── Status Indicators ── */}
         <Box sx={{ px: 1.5, py: 1, borderTop: `1px solid ${C.subtleBorder}` }}>
-          <SectionHeader>Status</SectionHeader>
+          <SectionHeader>{t('machine.status')}</SectionHeader>
           <Box sx={{ display: 'flex', gap: 3, mb: 0.5 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-              <Indicator label={doorClosed ? 'Door Closed' : 'Door Open'} active={doorClosed} color={doorClosed ? C.green : C.orange} />
-              <Indicator label={`${drivesRunning}/${drivesTotal} Drives`} active={drivesRunning > 0} />
+              <Indicator label={t(doorClosed ? 'machine.doorClosed' : 'machine.doorOpen')} active={doorClosed} color={doorClosed ? C.green : C.orange} />
+              <Indicator label={t('machine.drivesCount', { running: drivesRunning, total: drivesTotal })} active={drivesRunning > 0} />
             </Box>
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-            <SensorIndicatorWithHistory label="Entry Sensor" active={entrySensorOccupied} />
-            <SensorIndicatorWithHistory label="Exit Sensor" active={exitSensorOccupied} />
+            <SensorIndicatorWithHistory label={t('machine.entrySensor')} active={entrySensorOccupied} />
+            <SensorIndicatorWithHistory label={t('machine.exitSensor')} active={exitSensorOccupied} />
           </Box>
         </Box>
 
         {/* ── Components ── */}
         <Box sx={{ px: 0.5, py: 1, borderTop: `1px solid ${C.subtleBorder}`, flex: 1, minHeight: 0, overflow: 'auto' }}>
           <Box sx={{ px: 1, mb: 0.25 }}>
-            <SectionHeader>Drives ({controlState.components.filter(c => c.type === 'drive').length})</SectionHeader>
+            <SectionHeader>{t('machine.drivesSection', { count: controlState.components.filter(c => c.type === 'drive').length })}</SectionHeader>
           </Box>
           <ComponentList
             components={controlState.components}
@@ -628,7 +634,7 @@ export function MachineControlPanel() {
       {/* Demo disclaimer footer */}
       <Box sx={{ px: 1.5, py: 0.75, borderTop: `1px solid ${C.subtleBorder}`, textAlign: 'center' }}>
         <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', fontStyle: 'italic', letterSpacing: 0.5 }}>
-          Demo HMI — controls are for demonstration only
+          {t('machine.disclaimer')}
         </Typography>
       </Box>
     </LeftPanel>

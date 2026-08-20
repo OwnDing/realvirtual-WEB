@@ -25,6 +25,7 @@ import {
   getAnnotationSnapshot,
 } from '../../plugins/annotation-plugin';
 import type { AnnotationPlugin } from '../../plugins/annotation-plugin';
+import { getLocale, useRvTranslation } from '../i18n';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ const COLORS = ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4'
 // ── Component ──────────────────────────────────────────────────────────
 
 export function AnnotationEditModal() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeAnnotations, getAnnotationSnapshot);
   const plugin = viewer.getPlugin('annotations') as (AnnotationPluginAPI & AnnotationPlugin) | undefined;
@@ -122,7 +124,7 @@ export function AnnotationEditModal() {
             multiline
             minRows={3}
             maxRows={8}
-            placeholder="Enter annotation text..."
+            placeholder={t('annotation.placeholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoFocus
@@ -152,7 +154,7 @@ export function AnnotationEditModal() {
 
         {/* Color picker */}
         <Box sx={{ px: 1.5, pb: 1.5 }}>
-          <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>Color</Typography>
+          <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', mb: 0.5 }}>{t('annotation.color')}</Typography>
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             {COLORS.map((c) => (
               <Box
@@ -176,8 +178,8 @@ export function AnnotationEditModal() {
         {/* Author + timestamp info */}
         <Box sx={{ px: 1.5, pb: 1 }}>
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
-            by {annotation.author} — {new Date(annotation.timestamp).toLocaleString()}
-            {annotation.nodePath && ` — attached to ${annotation.nodePath.split('/').pop()}`}
+            {t('annotation.by', { author: annotation.author, time: new Date(annotation.timestamp).toLocaleString(getLocale()) })}
+            {annotation.nodePath && t('annotation.attachedTo', { node: annotation.nodePath.split('/').pop() })}
           </Typography>
         </Box>
 
@@ -187,7 +189,7 @@ export function AnnotationEditModal() {
             size="small"
             onClick={handleDelete}
             sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#ef5350' } }}
-            title="Delete annotation"
+            title={t('annotation.delete')}
           >
             <Delete sx={{ fontSize: 18 }} />
           </IconButton>
@@ -197,7 +199,7 @@ export function AnnotationEditModal() {
               onClick={handleClose}
               sx={{ fontSize: 11, textTransform: 'none', color: 'rgba(255,255,255,0.5)' }}
             >
-              Cancel
+              {t('annotation.cancel')}
             </Button>
             <Button
               size="small"
@@ -210,7 +212,7 @@ export function AnnotationEditModal() {
                 '&:hover': { bgcolor: color, filter: 'brightness(1.2)' },
               }}
             >
-              Save
+              {t('annotation.save')}
             </Button>
           </Box>
         </Box>

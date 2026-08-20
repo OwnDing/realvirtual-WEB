@@ -7,6 +7,7 @@ import type { RVLamp } from '../../engine/rv-lamp';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -18,6 +19,7 @@ export interface LampTooltipData extends TooltipData {
 
 /** Live state tooltip for Lamp components. */
 export function LampTooltipContent({ data, viewer }: TooltipContentProps<LampTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [state, setState] = useState<{
     lit: boolean;
     flashing: boolean;
@@ -56,20 +58,20 @@ export function LampTooltipContent({ data, viewer }: TooltipContentProps<LampToo
           {data.label}
         </Typography>
         <Typography variant="caption" sx={{ color, ml: 'auto', fontWeight: 700, fontSize: 11 }}>
-          {state?.lit ? (state.flashing ? 'FLASH' : 'ON') : 'OFF'}
+          {t(state?.lit ? (state.flashing ? 'tip.lampFlash' : 'tip.lampOn') : 'tip.lampOff')}
         </Typography>
       </Box>
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontSize: 11 }}>
-        Color {color.toUpperCase()}
+        {t('tip.lampColor', { color: color.toUpperCase() })}
       </Typography>
       {state?.signalOn && (
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontSize: 11 }}>
-          On: {state.signalOn}
+          {t('tip.lampSignalOn', { signal: state.signalOn })}
         </Typography>
       )}
       {state?.signalFlash && (
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontSize: 11 }}>
-          Flash: {state.signalFlash}
+          {t('tip.lampSignalFlash', { signal: state.signalFlash })}
         </Typography>
       )}
     </Box>

@@ -29,6 +29,7 @@ import {
 } from '../../plugins/rv-clipping-plugin';
 import type { ClipAxis, ClippingPlugin } from '../../plugins/rv-clipping-plugin';
 import { FloatingPanel } from './FloatingPanel';
+import { useRvTranslation } from '../i18n';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ const AXES: ClipAxis[] = ['x', 'y', 'z'];
 // ── Panel Component ────────────────────────────────────────────────────
 
 export function ClippingPanel() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeClipping, getClippingSnapshot);
   const plugin = viewer.getPlugin('clipping') as ClippingPlugin | undefined;
@@ -70,7 +72,7 @@ export function ClippingPanel() {
     <FloatingPanel
       open={snap.active && !!plugin}
       onClose={handleClose}
-      title="Section / Clip"
+      title={t('clip.title')}
       panelId="section-clip"
       defaultWidth={PANEL_WIDTH}
       defaultHeight={PANEL_HEIGHT}
@@ -100,7 +102,7 @@ export function ClippingPanel() {
                   size="small"
                   onClick={() => handleFlip(axis, s.flip)}
                   disabled={!s.enabled}
-                  title="Flip cut direction"
+                  title={t('clip.flip')}
                   sx={{ color: s.flip ? color : 'rgba(255,255,255,0.35)', p: 0.25 }}
                 >
                   <SwapHoriz sx={{ fontSize: 16 }} />
@@ -141,7 +143,7 @@ export function ClippingPanel() {
             '&:hover': { borderColor: '#4fc3f7', color: '#4fc3f7' },
           }}
         >
-          Reset All
+          {t('clip.resetAll')}
         </Button>
       </Box>
     </FloatingPanel>

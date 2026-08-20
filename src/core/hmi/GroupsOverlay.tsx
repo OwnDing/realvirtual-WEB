@@ -18,12 +18,14 @@ import { FloatingPanel } from './FloatingPanel';
 import { BOTTOM_BAR_HEIGHT } from './layout-constants';
 import { GroupsListContent, persistCurrentGroupVisibility } from './GroupsListContent';
 import { useOverlayVisibilityState } from '../../hooks/use-overlay-visible';
+import { useRvTranslation } from '../i18n';
 
 const DEFAULT_W = 280;
 const DEFAULT_H = 260;
 const BOTTOM_MARGIN = BOTTOM_BAR_HEIGHT + 12;
 
 export function GroupsOverlay() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const open = useGroupsOverlayOpen();
   const overlayCats = useOverlayVisibilityState().present;
@@ -50,16 +52,16 @@ export function GroupsOverlay() {
   if (!open) return null;
 
   const parts: string[] = [];
-  if (overlayCats.length > 0) parts.push(`${overlayCats.length} overlay${overlayCats.length !== 1 ? 's' : ''}`);
-  if (counts.filters > 0) parts.push(`${counts.filters} filter${counts.filters !== 1 ? 's' : ''}`);
-  if (counts.groups > 0) parts.push(`${counts.groups} group${counts.groups !== 1 ? 's' : ''}`);
+  if (overlayCats.length > 0) parts.push(t('groups.countOverlays', { count: overlayCats.length }));
+  if (counts.filters > 0) parts.push(t('groups.countFilters', { count: counts.filters }));
+  if (counts.groups > 0) parts.push(t('groups.countGroups', { count: counts.groups }));
   const subtitle = parts.length > 0 ? parts.join(', ') : undefined;
 
   return (
     <FloatingPanel
       open={open}
       onClose={handleClose}
-      title="Display"
+      title={t('groups.displayTitle')}
       titleColor="#4fc3f7"
       subtitle={subtitle}
       defaultWidth={DEFAULT_W}

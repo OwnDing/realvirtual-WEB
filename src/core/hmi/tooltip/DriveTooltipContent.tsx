@@ -18,6 +18,7 @@ import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
 import type { RVDrive } from '../../engine/rv-drive';
 import type { RVViewer } from '../../rv-viewer';
+import { useRvTranslation } from '../../i18n';
 
 const SMOOTH_FACTOR = 0.15; // Exponential moving average weight (lower = smoother)
 const REFRESH_MS = 100;
@@ -95,6 +96,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 /** Drive tooltip content provider component. */
 export function DriveTooltipContent({ data, viewer }: TooltipContentProps<DriveTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const prevPosRef = useRef(0);
   const prevTimeRef = useRef(0);
   const smoothSpeedRef = useRef(0);
@@ -155,22 +157,22 @@ export function DriveTooltipContent({ data, viewer }: TooltipContentProps<DriveT
 
       {/* Direction */}
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}>
-        {drive.Direction}{drive.ReverseDirection ? ' (rev)' : ''}
+        {drive.Direction}{drive.ReverseDirection ? t('tip.reverse') : ''}
       </Typography>
 
       {/* Position & Speed */}
-      <Row label="Position" value={fmtPos(drive.currentPosition)} />
-      <Row label="Speed" value={`${speed.toFixed(1)} ${unit}/s`} />
+      <Row label={t('tip.position')} value={fmtPos(drive.currentPosition)} />
+      <Row label={t('tip.speed')} value={`${speed.toFixed(1)} ${unit}/s`} />
 
       {/* Target (if running) */}
       {drive.isRunning && (
-        <Row label="Target" value={fmtPos(drive.targetPosition)} />
+        <Row label={t('tip.target')} value={fmtPos(drive.targetPosition)} />
       )}
 
       {/* Limits (if enabled) */}
       {drive.UseLimits && (
         <Row
-          label="Limits"
+          label={t('tip.limits')}
           value={`${drive.LowerLimit.toFixed(0)} \u2026 ${drive.UpperLimit.toFixed(0)}${unit}`}
         />
       )}

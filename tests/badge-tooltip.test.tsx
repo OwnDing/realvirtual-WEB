@@ -16,7 +16,7 @@
  * the drop overlay is already naming the candidate under the cursor.
  */
 
-import { describe, expect, it, afterEach } from 'vitest';
+import { describe, expect, it, afterEach, beforeAll } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { Object3D, Scene } from 'three';
 import { loadGLB, type LoadResult } from '../src/core/engine/rv-scene-loader';
@@ -34,6 +34,11 @@ import {
 } from '../src/core/hmi/tooltip/SignalBadgeTooltipContent';
 import type { RVViewer } from '../src/core/rv-viewer';
 import '../src/core/engine/rv-lamp';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+// This file asserts rendered English. Since EP-I18N-001 the app boots in
+// Chinese, so the locale is pinned rather than inherited (ADR-0001 Validation).
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 afterEach(cleanup);
 

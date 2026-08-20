@@ -29,6 +29,7 @@ import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
 import type { OrderManagerConfig, OrderManagerPluginAPI } from '../../types/plugin-types';
+import { useRvTranslation } from '../../i18n';
 const DOC_BASE_URL = 'https://doc.realvirtual.io/';
 
 /** Data shape for metadata tooltips. */
@@ -184,6 +185,7 @@ function LinkButton({ url, text }: { url: string; text: string }) {
 // ── Content provider ──
 
 export function MetadataTooltipContent({ data, viewer, isPinned }: TooltipContentProps<MetadataTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const branding = useCustomBranding();
   const accentColor = branding?.primaryColor ?? '#4fc3f7';
   const tooltipConfig = useMetadataTooltipConfig();
@@ -391,7 +393,7 @@ export function MetadataTooltipContent({ data, viewer, isPinned }: TooltipConten
             '&:hover': { borderColor: accentColor, bgcolor: `${accentColor}1a` },
           }}
         >
-          Add to Cart
+          {t('tip.addToCart')}
         </Button>
       )}
     </>

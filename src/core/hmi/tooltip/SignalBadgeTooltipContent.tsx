@@ -19,6 +19,7 @@ import { Box, Typography } from '@mui/material';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { useRvTranslation } from '../../i18n';
 
 /** One slot line: the slot's label and whether anything is on it. */
 export interface SignalBadgeTooltipSlot {
@@ -45,6 +46,7 @@ const INK = 'rgba(255,255,255,0.68)';
 const INK_DIM = 'rgba(255,255,255,0.40)';
 
 export function SignalBadgeTooltipContent({ data }: TooltipContentProps<SignalBadgeTooltipData>) {
+  const { t } = useRvTranslation('operator');
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 160 }}>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
@@ -62,7 +64,7 @@ export function SignalBadgeTooltipContent({ data }: TooltipContentProps<SignalBa
 
       {data.slots.length === 0 ? (
         <Typography variant="caption" sx={{ color: INK_DIM, fontSize: 11 }}>
-          No signal slots on this element
+          {t('tip.noSignalSlots')}
         </Typography>
       ) : data.slots.map((slot) => (
         <Box

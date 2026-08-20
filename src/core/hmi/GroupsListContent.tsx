@@ -29,6 +29,7 @@ import type { GroupInfo } from '../engine/rv-group-registry';
 import type { AutoFilterGroup } from '../engine/rv-auto-filter-registry';
 import { useOverlayVisibilityState } from '../../hooks/use-overlay-visible';
 import { setOverlayVisible, showAllOverlays } from '../overlay-visibility-store';
+import { useRvTranslation } from '../i18n';
 
 /** Persist the CURRENT visibility/isolate state of both registries. Reads
  *  the isolate state straight from the registries so it works without access
@@ -65,6 +66,7 @@ export function GroupsListContent({
    *  mesh reads clearly, not just the combined silhouette). */
   hoverPreview?: 'outline' | 'overlay';
 }) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [autoFilters, setAutoFilters] = useState<AutoFilterGroup[]>([]);
@@ -373,7 +375,7 @@ export function GroupsListContent({
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          No groups found in this model
+          {t('groups.empty')}
         </Typography>
       </Box>
     );
@@ -389,7 +391,7 @@ export function GroupsListContent({
         <Search sx={{ fontSize: 16, color: 'rgba(255,255,255,0.3)', mr: 0.5, flexShrink: 0 }} />
         <InputBase
           inputRef={filterRef}
-          placeholder="Filter..."
+          placeholder={t('groups.filter')}
           value={filter}
           onChange={e => setFilter(e.target.value)}
           sx={{
@@ -406,7 +408,7 @@ export function GroupsListContent({
         <IconButton
           size="small"
           onClick={handleShowAll}
-          title="Show all"
+          title={t('groups.showAll')}
           sx={{
             p: 0.3, ml: 0.5, flexShrink: 0,
             color: anyHidden ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)',
@@ -429,7 +431,7 @@ export function GroupsListContent({
           <>
             <ListItem sx={{ py: 0.25, px: 1, pointerEvents: 'none' }}>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Overlays
+                {t('groups.overlays')}
               </Typography>
             </ListItem>
             {overlayCats.map((cat) => {
@@ -454,7 +456,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={() => handleOverlayToggle(cat.id, !visible)}
-                    title={visible ? `Hide ${cat.label}` : `Show ${cat.label}`}
+                    title={t(visible ? 'groups.hideNamed' : 'groups.showNamed', { name: cat.label })}
                     sx={{
                       p: 0.3,
                       color: visible ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)',
@@ -479,7 +481,7 @@ export function GroupsListContent({
           <>
             <ListItem sx={{ py: 0.25, px: 1, pointerEvents: 'none' }}>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Filters
+                {t('groups.filters')}
               </Typography>
             </ListItem>
             {filteredAutoFilters.map((af) => {
@@ -528,7 +530,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); handleFilterIsolate(af.type); }}
-                    title={isIso ? `Stop isolating "${af.label}"` : `Isolate "${af.label}"`}
+                    title={t(isIso ? 'groups.stopIsolating' : 'groups.isolate', { name: af.label })}
                     sx={{
                       p: 0.3,
                       color: isIso ? '#4fc3f7' : 'rgba(255,255,255,0.25)',
@@ -540,7 +542,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); handleFilterToggle(af.type, !af.visible); }}
-                    title={af.visible ? `Hide "${af.label}"` : `Show "${af.label}"`}
+                    title={t(af.visible ? 'groups.hideQuoted' : 'groups.showQuoted', { name: af.label })}
                     sx={{
                       p: 0.3,
                       color: af.visible
@@ -570,7 +572,7 @@ export function GroupsListContent({
             {hasFilters && (
               <ListItem sx={{ py: 0.25, px: 1, pointerEvents: 'none' }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Groups
+                  {t('groups.title')}
                 </Typography>
               </ListItem>
             )}
@@ -608,7 +610,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); handleIsolate(group.name); }}
-                    title={isIsolated ? `Stop isolating "${group.name}"` : `Isolate "${group.name}"`}
+                    title={t(isIsolated ? 'groups.stopIsolating' : 'groups.isolate', { name: group.name })}
                     sx={{
                       p: 0.3,
                       color: isIsolated ? '#4fc3f7' : 'rgba(255,255,255,0.25)',
@@ -620,7 +622,7 @@ export function GroupsListContent({
                   <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); handleToggle(group.name, !group.visible); }}
-                    title={group.visible ? `Hide "${group.name}"` : `Show "${group.name}"`}
+                    title={t(group.visible ? 'groups.hideQuoted' : 'groups.showQuoted', { name: group.name })}
                     sx={{
                       p: 0.3,
                       color: group.visible

@@ -22,6 +22,7 @@ import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
 import { openPdfViewer, type PdfLink } from '../pdf-viewer-store';
 import { useViewer } from '../../../hooks/use-viewer';
+import { useRvTranslation } from '../../i18n';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ export interface PdfTooltipData extends TooltipData {
 // ─── Content Provider ──────────────────────────────────────────────────
 
 export function PdfTooltipSection({ data, isPinned }: TooltipContentProps<PdfTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const node = viewer.registry?.getNode(data.nodePath);
   const pdfLinks = node?.userData?._rvPdfLinks as PdfLink[] | undefined;
@@ -68,7 +70,7 @@ export function PdfTooltipSection({ data, isPinned }: TooltipContentProps<PdfToo
           textTransform: 'uppercase', letterSpacing: 0.5,
         }}
       >
-        Documents
+        {t('doc.documents')}
       </Typography>
       {pdfLinks.map((link, i) => (
         <Box

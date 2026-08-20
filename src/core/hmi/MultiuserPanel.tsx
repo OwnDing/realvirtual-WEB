@@ -27,6 +27,7 @@ import { loadMultiuserSettings, saveMultiuserSettings, useMultiuserEnabled } fro
 import type { MultiuserPluginAPI } from '../types/plugin-types';
 import type { PlayerInfo } from '../engine/rv-avatar-manager';
 import { ISA_GREEN, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 // ── Styling constants ─────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ interface MultiuserPanelProps {
 }
 
 export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const mu = useMultiuser();
 
@@ -206,7 +208,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
           ? <Wifi sx={{ fontSize: 14, color: ISA_GREEN, mr: 0.5 }} />
           : <WifiOff sx={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', mr: 0.5 }} />}
         <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', flexGrow: 1 }}>
-          Multiuser
+          {t('multiuser.title')}
         </Typography>
         <IconButton size="small" onClick={onClose} sx={{ color: 'rgba(255,255,255,0.4)', p: 0.25 }}>
           <Close sx={{ fontSize: 14 }} />
@@ -220,7 +222,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           <TextField
             fullWidth size="small"
-            placeholder="Your Name"
+            placeholder={t('multiuser.yourName')}
             value={localName}
             onChange={(e) => setLocalName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && canJoin) handleJoinAndShare(); }}
@@ -229,7 +231,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
 
           <TextField
             fullWidth size="small"
-            placeholder="Session Code"
+            placeholder={t('multiuser.sessionCode')}
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && canJoin) handleJoinAndShare(); }}
@@ -273,7 +275,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
               ? <ExpandLess sx={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }} />
               : <ExpandMore sx={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }} />}
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', ml: 0.25 }}>
-              Direct connection
+              {t('multiuser.directConnection')}
             </Typography>
           </Box>
 
@@ -314,7 +316,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.3 }}>
             <PersonOutline sx={{ fontSize: 12, color: '#2196F3' }} />
             <Typography sx={{ fontSize: 11, color: '#2196F3', flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {mu.localName} (You)
+              {t('multiuser.you', { name: mu.localName })}
             </Typography>
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
               {mu.localRole}
@@ -328,7 +330,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
 
           {players.length === 0 && (
             <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', py: 0.5, textAlign: 'center' }}>
-              No other players connected
+              {t('multiuser.noOthers')}
             </Typography>
           )}
 
@@ -358,7 +360,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
               '&:hover': { borderColor: ISA_RED, color: ISA_RED, bgcolor: 'rgba(239,83,80,0.06)' },
             }}
           >
-            Disconnect
+            {t('multiuser.disconnect')}
           </Button>
         </Box>
       )}
@@ -375,6 +377,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
  * is enabled (reactive) and the multiuser plugin is present.
  */
 export function MultiuserButton({ placement = 'right' }: { placement?: 'right' | 'top' }) {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const enabled = useMultiuserEnabled();
   const mu = useMultiuser();
@@ -385,7 +388,7 @@ export function MultiuserButton({ placement = 'right' }: { placement?: 'right' |
 
   return (
     <>
-      <Tooltip title={open ? 'Close Multiuser' : 'Multiuser'} placement={placement}>
+      <Tooltip title={t(open ? 'multiuser.close' : 'multiuser.title')} placement={placement}>
         <IconButton
           size="medium"
           color={open ? 'primary' : 'inherit'}

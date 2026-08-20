@@ -16,6 +16,7 @@ import { Box, Typography } from '@mui/material';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -54,6 +55,7 @@ function getVelocityColor(v: number): string | undefined {
 
 /** Pipe tooltip content provider component. */
 export function PipeTooltipContent({ data, viewer }: TooltipContentProps<PipeTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [pipeData, setPipeData] = useState<{
     resourceName: string;
     flowRate: number;
@@ -99,18 +101,18 @@ export function PipeTooltipContent({ data, viewer }: TooltipContentProps<PipeToo
         {data.nodePath.split('/').pop() ?? 'Pipe'}
       </Typography>
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}>
-        {pipeData.dnSize > 0 ? `Pipe · DN${pipeData.dnSize}` : 'Pipe'}
+        {pipeData.dnSize > 0 ? t('tip.pipeDn', { size: pipeData.dnSize }) : t('tip.pipe')}
       </Typography>
-      <Row label="Medium" value={pipeData.resourceName} />
-      <Row label="Flow" value={`${formatFlow(pipeData.flowRate)}${dirArrow}`} />
+      <Row label={t('tip.medium')} value={pipeData.resourceName} />
+      <Row label={t('tip.flow')} value={`${formatFlow(pipeData.flowRate)}${dirArrow}`} />
       {pipeData.velocityMs > 0 && (
-        <Row label="Velocity" value={`${pipeData.velocityMs.toFixed(2)} m/s`} color={velocityColor} />
+        <Row label={t('tip.velocity')} value={`${pipeData.velocityMs.toFixed(2)} m/s`} color={velocityColor} />
       )}
       {pipeData.pressure !== 0 && (
-        <Row label="Pressure" value={`${pipeData.pressure.toFixed(2)} bar`} />
+        <Row label={t('tip.pressure')} value={`${pipeData.pressure.toFixed(2)} bar`} />
       )}
       {pipeData.temperatureC !== 0 && (
-        <Row label="Temp" value={`${pipeData.temperatureC.toFixed(1)} °C`} />
+        <Row label={t('tip.temp')} value={`${pipeData.temperatureC.toFixed(1)} °C`} />
       )}
     </>
   );

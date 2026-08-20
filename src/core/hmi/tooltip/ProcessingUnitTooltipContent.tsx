@@ -17,6 +17,7 @@ import { Box, Typography } from '@mui/material';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { rvT, useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -50,12 +51,12 @@ function getOeeColor(percent: number): string {
 /** State → (color, label) for the status dot and header. */
 function stateMeta(state: string): { color: string; label: string } {
   switch (state) {
-    case 'running':     return { color: '#27AE60', label: 'Running' };
-    case 'setup':       return { color: '#4FC3F7', label: 'Setup' };
-    case 'maintenance': return { color: '#F5A623', label: 'Maint.' };
-    case 'down':        return { color: '#D0021B', label: 'Down' };
+    case 'running':     return { color: '#27AE60', label: rvT('operator', 'tip.stateRunning') };
+    case 'setup':       return { color: '#4FC3F7', label: rvT('operator', 'tip.stateSetup') };
+    case 'maintenance': return { color: '#F5A623', label: rvT('operator', 'tip.stateMaint') };
+    case 'down':        return { color: '#D0021B', label: rvT('operator', 'tip.stateDown') };
     case 'idle':
-    default:            return { color: '#9B9B9B', label: 'Idle' };
+    default:            return { color: '#9B9B9B', label: rvT('operator', 'tip.stateIdle') };
   }
 }
 
@@ -82,6 +83,7 @@ function OeeBar({
 
 /** Processing unit tooltip content provider component. */
 export function ProcessingUnitTooltipContent({ data, viewer }: TooltipContentProps<ProcessingUnitTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [puData, setPuData] = useState<{
     state: string;
     availability: number;
@@ -162,7 +164,7 @@ export function ProcessingUnitTooltipContent({ data, viewer }: TooltipContentPro
         </Typography>
       </Box>
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}>
-        Processing Unit
+        {t('tip.unit')}
       </Typography>
 
       {hasOee && (
@@ -180,15 +182,15 @@ export function ProcessingUnitTooltipContent({ data, viewer }: TooltipContentPro
             performance={puData.performance}
             quality={puData.quality}
           />
-          <Row label="Availability" value={`${(puData.availability * 100).toFixed(1)}%`} />
-          <Row label="Performance"  value={`${(puData.performance * 100).toFixed(1)}%`} />
-          <Row label="Quality"      value={`${(puData.quality * 100).toFixed(1)}%`} />
+          <Row label={t('tip.availability')} value={`${(puData.availability * 100).toFixed(1)}%`} />
+          <Row label={t('tip.performance')} value={`${(puData.performance * 100).toFixed(1)}%`} />
+          <Row label={t('tip.quality')} value={`${(puData.quality * 100).toFixed(1)}%`} />
         </>
       )}
 
       {(puData.cycleTimeS > 0 || puData.cycleTargetS > 0) && (
         <Row
-          label="Cycle"
+          label={t('tip.cycle')}
           value={
             puData.cycleTargetS > 0
               ? `${puData.cycleTimeS.toFixed(1)} / ${puData.cycleTargetS.toFixed(1)} s`
@@ -198,29 +200,29 @@ export function ProcessingUnitTooltipContent({ data, viewer }: TooltipContentPro
         />
       )}
       {puData.throughputPerHour > 0 && (
-        <Row label="Throughput" value={`${puData.throughputPerHour.toFixed(0)} /h`} />
+        <Row label={t('tip.throughput')} value={`${puData.throughputPerHour.toFixed(0)} /h`} />
       )}
       {puData.totalCount > 0 && (
         <>
-          <Row label="Good" value={puData.goodCount.toString()} />
-          <Row label="Scrap" value={puData.scrapCount.toString()} color={puData.scrapCount > 0 ? '#F5A623' : undefined} />
-          <Row label="Yield" value={`${qualityYield.toFixed(1)}%`} />
+          <Row label={t('tip.good')} value={puData.goodCount.toString()} />
+          <Row label={t('tip.scrap')} value={puData.scrapCount.toString()} color={puData.scrapCount > 0 ? '#F5A623' : undefined} />
+          <Row label={t('tip.yield')} value={`${qualityYield.toFixed(1)}%`} />
         </>
       )}
       {puData.mtbfHours > 0 && (
-        <Row label="MTBF" value={`${puData.mtbfHours.toFixed(1)} h`} />
+        <Row label={t('tip.mtbf')} value={`${puData.mtbfHours.toFixed(1)} h`} />
       )}
       {puData.mttrMinutes > 0 && (
-        <Row label="MTTR" value={`${puData.mttrMinutes.toFixed(1)} min`} />
+        <Row label={t('tip.mttr')} value={`${puData.mttrMinutes.toFixed(1)} min`} />
       )}
       {(puData.runHours > 0 || puData.downHours > 0) && (
         <Row
-          label="Up / Down"
+          label={t('tip.upDown')}
           value={`${puData.runHours.toFixed(1)} / ${puData.downHours.toFixed(1)} h`}
         />
       )}
       {puData.lastFault && (
-        <Row label="Last Fault" value={puData.lastFault} color="#F5A623" />
+        <Row label={t('tip.lastFault')} value={puData.lastFault} color="#F5A623" />
       )}
     </>
   );

@@ -44,6 +44,7 @@ import { useMaintenanceMode } from '../../hooks/use-maintenance-mode';
 import type { MaintenancePluginAPI } from '../types/plugin-types';
 import type { MaintenanceStep } from '../maintenance-parser';
 import { ISA_GREEN, ISA_AMBER, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 // ─── ISA-101 Colors ──────────────────────────────────────────────────────
 
@@ -188,6 +189,7 @@ function CompletionUI({ step, stepIndex, plugin }: {
 // ─── Mode Dialog (flythrough vs step-by-step) ───────────────────────────
 
 function ModeDialog({ plugin }: { plugin: MaintenancePluginAPI }) {
+  const { t } = useRvTranslation('operator');
   const state = plugin.getState();
   const proc = state.procedure;
   if (!proc) return null;
@@ -218,7 +220,7 @@ function ModeDialog({ plugin }: { plugin: MaintenancePluginAPI }) {
           '&:hover': { borderColor: 'rgba(255,255,255,0.3)' },
         }}
       >
-        Overview Flythrough
+        {t('maintenance.flythrough')}
       </Button>
 
       <Button
@@ -233,7 +235,7 @@ function ModeDialog({ plugin }: { plugin: MaintenancePluginAPI }) {
           '&:hover': { bgcolor: '#ffb74d' },
         }}
       >
-        Start Step-by-Step
+        {t('maintenance.startStepwise')}
       </Button>
 
       <Button
@@ -246,7 +248,7 @@ function ModeDialog({ plugin }: { plugin: MaintenancePluginAPI }) {
           justifyContent: 'flex-start',
         }}
       >
-        Cancel
+        {t('maintenance.cancel')}
       </Button>
     </Box>
   );
@@ -255,6 +257,7 @@ function ModeDialog({ plugin }: { plugin: MaintenancePluginAPI }) {
 // ─── Completion Summary ─────────────────────────────────────────────────
 
 function CompletionSummary({ plugin }: { plugin: MaintenancePluginAPI }) {
+  const { t } = useRvTranslation('operator');
   const state = plugin.getState();
   const proc = state.procedure;
   if (!proc) return null;
@@ -279,17 +282,17 @@ function CompletionSummary({ plugin }: { plugin: MaintenancePluginAPI }) {
       <Box sx={{ display: 'flex', gap: 2 }}>
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h5" sx={{ color: COLOR_DONE, fontWeight: 700 }}>{passCount}</Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>Passed</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('maintenance.passed')}</Typography>
         </Box>
         {failCount > 0 && (
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h5" sx={{ color: COLOR_WARNING, fontWeight: 700 }}>{failCount}</Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Failed</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('maintenance.failed')}</Typography>
           </Box>
         )}
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h5" sx={{ color: COLOR_PENDING, fontWeight: 700 }}>{totalSteps - passCount - failCount}</Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>Skipped</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('maintenance.skipped')}</Typography>
         </Box>
       </Box>
 
@@ -326,7 +329,7 @@ function CompletionSummary({ plugin }: { plugin: MaintenancePluginAPI }) {
           '&:hover': { bgcolor: '#81c784' },
         }}
       >
-        Back to Overview
+        {t('maintenance.backToOverview')}
       </Button>
     </Box>
   );
@@ -335,6 +338,7 @@ function CompletionSummary({ plugin }: { plugin: MaintenancePluginAPI }) {
 // ─── Step-by-Step Stepper ───────────────────────────────────────────────
 
 function StepperView({ plugin, isFlythrough }: { plugin: MaintenancePluginAPI; isFlythrough: boolean }) {
+  const { t } = useRvTranslation('operator');
   const state = plugin.getState();
   const proc = state.procedure;
   if (!proc) return null;
@@ -357,7 +361,7 @@ function StepperView({ plugin, isFlythrough }: { plugin: MaintenancePluginAPI; i
             <ArrowBack sx={{ fontSize: 18 }} />
           </IconButton>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 11 }}>
-            Back to Overview
+            {t('maintenance.backToOverview')}
           </Typography>
         </Box>
 
@@ -382,13 +386,13 @@ function StepperView({ plugin, isFlythrough }: { plugin: MaintenancePluginAPI; i
             />
           </Box>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 10, whiteSpace: 'nowrap' }}>
-            Step {currentStep + 1}/{proc.steps.length}
+            {t('maintenance.step', { current: currentStep + 1, total: proc.steps.length })}
           </Typography>
         </Box>
 
         {isFlythrough && (
           <Typography variant="caption" sx={{ color: COLOR_ACTIVE, fontSize: 10, mt: 0.5, display: 'block' }}>
-            Flythrough in progress...
+            {t('maintenance.flythroughRunning')}
           </Typography>
         )}
       </Box>
@@ -430,7 +434,7 @@ function StepperView({ plugin, isFlythrough }: { plugin: MaintenancePluginAPI; i
               '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
             }}
           >
-            Prev
+            {t('maintenance.prev')}
           </Button>
           <Button
             size="small"
@@ -446,7 +450,7 @@ function StepperView({ plugin, isFlythrough }: { plugin: MaintenancePluginAPI; i
               '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' },
             }}
           >
-            Next
+            {t('maintenance.next')}
           </Button>
         </Box>
       )}

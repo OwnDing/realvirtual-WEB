@@ -16,6 +16,7 @@ import { Box, Typography } from '@mui/material';
 import type { TooltipContentProps } from './tooltip-registry';
 import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
+import { useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -116,6 +117,7 @@ function StatusChip({ label, on }: { label: string; on: boolean }) {
 
 /** Tank tooltip content provider component. */
 export function TankTooltipContent({ data, viewer }: TooltipContentProps<TankTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [tankData, setTankData] = useState<{
     resourceName: string;
     capacity: number;
@@ -177,30 +179,30 @@ export function TankTooltipContent({ data, viewer }: TooltipContentProps<TankToo
         {data.nodePath.split('/').pop() ?? 'Tank'}
       </Typography>
       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 0.5 }}>
-        Tank
+        {t('tip.tank')}
       </Typography>
       <FillBar fraction={fraction} />
-      <Row label="Level" value={`${tankData.amount.toFixed(0)} / ${tankData.capacity.toFixed(0)} l`} />
-      <Row label="Medium" value={tankData.resourceName} />
+      <Row label={t('tip.level')} value={`${tankData.amount.toFixed(0)} / ${tankData.capacity.toFixed(0)} l`} />
+      <Row label={t('tip.medium')} value={tankData.resourceName} />
       {tankData.density > 0 && (
-        <Row label="Density" value={`${tankData.density.toFixed(0)} kg/m³`} />
+        <Row label={t('tip.density')} value={`${tankData.density.toFixed(0)} kg/m³`} />
       )}
       {tankData.massKg > 0 && (
-        <Row label="Mass" value={`${tankData.massKg.toFixed(0)} kg`} />
+        <Row label={t('tip.mass')} value={`${tankData.massKg.toFixed(0)} kg`} />
       )}
       {tankData.temperature !== 0 && (
-        <Row label="Temp" value={`${tankData.temperature.toFixed(1)} °C`} color={tempColor} />
+        <Row label={t('tip.temp')} value={`${tankData.temperature.toFixed(1)} °C`} color={tempColor} />
       )}
       {tankData.pressure !== 0 && (
-        <Row label="Pressure" value={`${tankData.pressure.toFixed(2)} bar`} color={pressureColor} />
+        <Row label={t('tip.pressure')} value={`${tankData.pressure.toFixed(2)} bar`} color={pressureColor} />
       )}
       {tankData.ph > 0 && (
-        <Row label="pH" value={tankData.ph.toFixed(2)} />
+        <Row label={t('tip.ph')} value={tankData.ph.toFixed(2)} />
       )}
       {hasMixerOrHeater && (
         <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
-          {tankData.agitatorOn && <StatusChip label="Mixer" on={true} />}
-          {tankData.heatingOn && <StatusChip label="Heater" on={true} />}
+          {tankData.agitatorOn && <StatusChip label={t('tip.mixer')} on={true} />}
+          {tankData.heatingOn && <StatusChip label={t('tip.heater')} on={true} />}
         </Box>
       )}
     </>

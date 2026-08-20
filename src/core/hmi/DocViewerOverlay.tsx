@@ -19,6 +19,7 @@ import { Box, Paper, IconButton, Typography, CircularProgress, InputBase, Global
 import { Close, NavigateBefore, NavigateNext, ZoomIn, ZoomOut, OpenInNew, Search, KeyboardArrowUp, KeyboardArrowDown } from '@mui/icons-material';
 
 import 'react-pdf/dist/Page/TextLayer.css';
+import { useRvTranslation } from '../i18n';
 
 export interface DocViewerOverlayProps {
   url: string;
@@ -89,6 +90,7 @@ export function highlightHtml(str: string, query: string): string {
 // ─── Component ──────────────────────────────────────────────────────────
 
 export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewerOverlayProps) {
+  const { t } = useRvTranslation('operator');
   const [pdfMod, setPdfMod] = useState<ReactPdfModule | null>(null);
   const [modError, setModError] = useState('');
   const [pdfError, setPdfError] = useState('');
@@ -257,7 +259,7 @@ export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewer
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); gotoMatch(e.shiftKey ? -1 : 1); } }}
-                placeholder="Search document…"
+                placeholder={t('doc.search')}
                 autoFocus
                 sx={{ fontSize: 13, color: '#fff', flex: 1, maxWidth: 240, '& input::placeholder': { color: 'rgba(255,255,255,0.4)' } }}
               />
@@ -273,7 +275,7 @@ export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewer
           {/* Search toggle + page navigation + zoom */}
           {numPages > 0 && !searchOpen && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-              <IconButton size="small" onClick={() => setSearchOpen(true)} title="Search document"><Search sx={{ fontSize: 18 }} /></IconButton>
+              <IconButton size="small" onClick={() => setSearchOpen(true)} title={t('doc.searchTip')}><Search sx={{ fontSize: 18 }} /></IconButton>
               <Box sx={{ width: 8 }} />
               <IconButton size="small" onClick={zoomOut} disabled={scale <= 0.4}><ZoomOut sx={{ fontSize: 18 }} /></IconButton>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 36, textAlign: 'center', fontSize: 11 }}>
@@ -293,7 +295,7 @@ export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewer
           <IconButton
             size="small"
             onClick={() => window.open(url, '_blank')}
-            title="Open in new tab"
+            title={t('doc.openInTab')}
             sx={{ ml: (title && !searchOpen) ? 0 : 'auto' }}
           >
             <OpenInNew sx={{ fontSize: 18 }} />
@@ -325,7 +327,7 @@ export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewer
           {/* Module load error */}
           {modError && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, flexDirection: 'column', gap: 1 }}>
-              <Typography sx={{ color: '#f44336', fontSize: 13 }}>Failed to load PDF viewer</Typography>
+              <Typography sx={{ color: '#f44336', fontSize: 13 }}>{t('doc.loadFailed')}</Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>{modError}</Typography>
             </Box>
           )}
@@ -358,7 +360,7 @@ export function DocViewerOverlay({ url, title, initialPage, onClose }: DocViewer
           {/* PDF render error */}
           {pdfError && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, flexDirection: 'column', gap: 1, minHeight: 200 }}>
-              <Typography sx={{ color: '#f44336', fontSize: 13 }}>Failed to render PDF</Typography>
+              <Typography sx={{ color: '#f44336', fontSize: 13 }}>{t('doc.renderFailed')}</Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', maxWidth: 400, textAlign: 'center' }}>{pdfError}</Typography>
             </Box>
           )}

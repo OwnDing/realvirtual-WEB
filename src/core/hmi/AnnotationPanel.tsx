@@ -39,6 +39,7 @@ import { WINDOW_DARK_BG } from './LeftPanel';
 import { useViewportInsets } from '../../hooks/use-viewport-insets';
 import { useDropOrphanedPanelSlot } from '../../hooks/use-drop-orphaned-panel-slot';
 import { ISA_RED } from './isa-colors';
+import { getLocale, useRvTranslation } from '../i18n';
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ const BORDER = 'rgba(255,255,255,0.07)';
 // ── Panel Component ────────────────────────────────────────────────────
 
 export function AnnotationPanel() {
+  const { t } = useRvTranslation('operator');
   const viewer = useViewer();
   const snap = useSyncExternalStore(subscribeAnnotations, getAnnotationSnapshot);
   const plugin = viewer.getPlugin('annotations') as (AnnotationPluginAPI & AnnotationPlugin) | undefined;
@@ -102,7 +104,7 @@ export function AnnotationPanel() {
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1.25, gap: 0.5, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <PushPin sx={{ fontSize: 16, color: '#FF5722' }} />
         <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.primary', flexGrow: 1 }}>
-          Annotations ({snap.annotations.length})
+          {t('annotation.title', { count: snap.annotations.length })}
         </Typography>
         <IconButton size="small" onClick={handleClose} sx={{ color: 'text.secondary', p: 0.25 }}>
           <Close sx={{ fontSize: 16 }} />
@@ -113,7 +115,7 @@ export function AnnotationPanel() {
       <Box sx={{ flex: 1, overflow: 'auto', py: 0.5 }}>
         {snap.annotations.length === 0 && (
           <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', py: 2 }}>
-            No annotations yet
+            {t('annotation.empty')}
           </Typography>
         )}
         {snap.annotations.map((ann) => (
@@ -152,10 +154,10 @@ export function AnnotationPanel() {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}>
-                    {ann.text || '(empty)'}
+                    {ann.text || t('annotation.emptyText')}
                   </Typography>
                   <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
-                    {ann.author} — {new Date(ann.timestamp).toLocaleTimeString()}
+                    {ann.author} — {new Date(ann.timestamp).toLocaleTimeString(getLocale())}
                   </Typography>
             </Box>
 

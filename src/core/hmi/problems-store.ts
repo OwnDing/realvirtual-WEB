@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { rvT } from '../i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -166,8 +167,8 @@ export function missingReferenceDetail(ref: { assetId?: string; path?: string })
   const path = (ref.path ?? '').trim();
   if (id) parts.push(`assetId "${id}"`);
   if (path) parts.push(`path "${path}"`);
-  if (parts.length === 0) return 'Searched for: nothing — the reference carries neither an assetId nor a path.';
-  return `Searched for: ${parts.join(' and ')}.`;
+  if (parts.length === 0) return rvT('operator', 'problems.searchedForNothing');
+  return rvT('operator', 'problems.searchedFor', { parts: parts.join(rvT('operator', 'problems.and')) });
 }
 
 /**
@@ -193,7 +194,7 @@ export function reportMissingReferences(missing: readonly MissingReferenceReport
       id: missingReferenceProblemId(m.occurrence),
       severity: 'error',
       code: 'missing-reference',
-      title: `Referenced asset not found: ${m.label}`,
+      title: rvT('operator', 'problems.missingReference', { label: m.label }),
       detail: missingReferenceDetail(m),
       nodePath: m.nodePath,
     });
@@ -242,11 +243,12 @@ export function reportDocumentIdCollisions(
       id: documentIdCollisionProblemId(collision.id),
       severity: 'error',
       code: 'duplicate-asset-id',
-      title: `Two documents claim the same id: ${collision.id}`,
+      title: rvT('operator', 'problems.duplicateId', { id: collision.id }),
       // Naming both paths is the whole value: the repair is to re-import or
       // rename ONE of them, and the user cannot pick which without seeing both.
-      detail: `Claimed by ${collision.paths.map(p => `"${p}"`).join(' and ')}. `
-        + 'A copied file must get its own id — rename or re-import one of them.',
+      detail: rvT('operator', 'problems.duplicateIdDetail', {
+        paths: collision.paths.map(p => `"${p}"`).join(rvT('operator', 'problems.and')),
+      }),
     });
   }
 }

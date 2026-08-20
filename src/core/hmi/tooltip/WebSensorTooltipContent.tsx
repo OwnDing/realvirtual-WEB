@@ -25,6 +25,7 @@ import {
   type WebSensorState,
 } from '../../engine/rv-web-sensor';
 import { sensorHistoryStore } from '../sensor-history-store';
+import { useRvTranslation } from '../../i18n';
 
 const REFRESH_MS = 100;
 
@@ -53,6 +54,7 @@ function colorForState(s: WebSensorState): string {
 
 /** WebSensor tooltip content provider component. */
 export function WebSensorTooltipContent({ data, viewer, isPinned }: TooltipContentProps<WebSensorTooltipData>) {
+  const { t } = useRvTranslation('operator');
   const [info, setInfo] = useState<{ label: string; state: WebSensorState } | null>(null);
 
   useEffect(() => {
@@ -121,7 +123,7 @@ export function WebSensorTooltipContent({ data, viewer, isPinned }: TooltipConte
           variant="outlined"
           startIcon={<TimelineIcon />}
           onClick={handleShow}
-          aria-label={`Show history for ${label}`}
+          aria-label={t('tip.showHistory', { name: label })}
           sx={{
             alignSelf: 'flex-start',
             mt: 0.25,
@@ -136,7 +138,7 @@ export function WebSensorTooltipContent({ data, viewer, isPinned }: TooltipConte
             },
           }}
         >
-          Show
+          {t('tip.show')}
         </Button>
       )}
     </Box>
