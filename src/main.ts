@@ -12,7 +12,7 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
-import { initI18n, rvT } from './core/i18n';
+import { ensureEnglishCatalog, getLocale, initI18n, rvT } from './core/i18n';
 import { RVViewer, type RendererKind } from './core/rv-viewer';
 import type { RVExtrasOverlay } from './core/engine/rv-extras-overlay-store';
 import { debug, logInfo } from './core/engine/rv-debug';
@@ -528,6 +528,14 @@ async function init() {
 
   // --- Load App Config (MUST complete before React mount — no flicker) ---
   const appConfig = await fetchAppConfig();
+
+  // --- Deferred English catalog (ADR-0001 R1) ---
+  // Same rule as the line above, and for the same reason: this must be in before
+  // React mounts, or an English user gets a frame of Chinese. It rides alongside
+  // the config fetch while the pre-boot overlay is up, and it never rejects — a
+  // chunk that does not arrive leaves the UI in Chinese, which is readable, and
+  // reports a diagnostic. Booting does not depend on it (ADR-0001 §8).
+  if (getLocale() === 'en-US') await ensureEnglishCatalog();
 
   // URL param override for lockSettings (highest priority)
   if (params.has('lockSettings')) {

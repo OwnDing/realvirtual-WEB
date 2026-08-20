@@ -19,6 +19,8 @@ export {
 } from './rv-i18n-diagnostics';
 export {
   RV_NAMESPACES,
+  ensureEnglishCatalog,
+  resetEnglishCatalogForTests,
   getI18n,
   getLocale,
   initI18n,

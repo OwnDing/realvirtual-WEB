@@ -47,7 +47,7 @@ authority: normative-process
 - namespace：`common`、`projects`、`settings`、`shell`、`connect`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 1267 条）。
 - 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程。
 - 受门禁债务 **948 处 / 164 文件**（`node scripts/i18n-inventory.mjs`）；建议项 `error-message` 311、`intl-format` 22（其中 16 处未显式传 locale）。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_455_142 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 63.3 KB**。
+- 入口 chunk 3_414_725 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 102.8 KB**（`ADR-0001` R1 已把 `en-US` 的 `projects`/`settings`/`connect` 移入独立 chunk；`zh-CN` 全量仍在入口）。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -95,6 +95,19 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### 目录分包：`en-US` 非启动 namespace 移出入口 chunk（2026-08-20）
+
+- 用户批准 `ADR-0001` 修订，`R1` 已写入 ADR（含第 2 条要求的四项：加载状态、失败回退、离线行为、包体积预算）。
+- **只分 `en-US`，`zh-CN` 一条不动。** 这是本次设计的核心取舍：第 3 条已经把 `zh-CN` 定为源目录兼最终回退，让它始终在场，等于让**任何一种失败都退化成可读中文，而不是退化成 `settings:backup.resetAll` 这种 key**。把中文也分包能多省一倍体积，但换来的是一个可能出现在客户机器上、且用户自己无法恢复的状态——不值。
+- 拆分点：`en-US.ts` 只留启动 namespace（`common`/`preboot`/`shell`/`viewer`/`plugins`，16.3 KB），`projects`/`settings`/`connect` 进 `en-US.deferred.ts`（52.8 KB 源码 → 构建产物 **41.0 KB 独立 chunk**）。
+- **没有引入任何加载状态**：bundle 在 `main.ts` 里 `await`，位置紧跟 `fetchAppConfig`——此刻屏幕上是 pre-boot 遮罩，本来就在等模型。`setLocale('en-US')` 同样先 `await` 再 `changeLanguage`，所以不存在「切到英文后先闪一段中文」。没有用 Suspense（第 10 条仍然有效）。
+- 入口 chunk 3_455_142 → **3_414_725 B**，预算余量 63.3 KB → **102.8 KB**。预算本身没动（`ENTRY_BUDGET_BYTES` 仍是 3_520_000，并加了一条断言钉住它）——分包是为后续迁移腾地方，不是给预算松绑。
+- **`ConnectPanel` 没有被改成 lazy。** `tests/bundle-splitting.test.ts` 的 `NON_TARGETS` 里写着「ConnectPanel stays mounted by decision（其用户状态必须在关闭后存活）」，所以「把目录挂到面板 chunk 上」这条路对 `connect` 走不通，只能按 namespace 切。
+- **完整套件跑出一个真实缺陷，专项测试没抓到。** 分包后第一次全量运行有 3 个文件失败并输出中文；再跑一次，失败的换成了另外 3 个——随机性说明是竞态而不是某个文件的问题。根因是 `setLocale` 的「已经是这个语言就直接返回」判断排在 `ensureEnglishCatalog()` **之前**：一个**回访的英文用户**，`initI18n` 从存储里读出来就是 `en-US`，`setLocale('en-US')` 什么都不用改于是直接返回，**deferred 目录永远不会被加载**——启动 namespace 是英文，面板是中文。这是生产缺陷，不是测试假象；专项测试永远在「切换语言」，只有全量套件里 localStorage 跨文件存活才复现得出来。已把 ensure 移到判断之前，并在 `initI18n` 里对已是英文的启动路径提前发起请求。回归测试必须**同时**伪造「实例已是英文」和「存储已是英文」才能复现——第一版只做了前者，反例不失败；改正后反例失败。
+- 修完连跑两次完整套件：失败集合完全一致（22 文件 / 82 例，全部 WebGL），失败输出中文出现次数为 **0**。
+- 新增 `tests/i18n-catalog-split.test.ts`（5 例）与 `tests/i18n-catalog-split-failure.test.ts`（5 例：不抛异常、回退中文而非 key、记录诊断、可重试、不影响启动 namespace）；`bundle-splitting.test.ts` 加 5 条 R1 断言（离开入口 / 确实在某个 chunk 里 / `zh-CN` 仍在入口 / 启动 `en-US` 仍在入口 / 预算未放宽）。
+- 反例：把 ensure 挪到 `changeLanguage` 之后 → 分包行为测试失败；把 deferred 目录塞回 `resources` 并重新构建 → T10/T11 失败；模拟 chunk 取不到 → 界面中文、诊断有记录、不抛异常。
 
 ### 修正：pre-boot 首屏契约（2026-08-20，外部评审发现）
 

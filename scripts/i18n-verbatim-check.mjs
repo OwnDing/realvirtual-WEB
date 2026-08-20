@@ -290,8 +290,12 @@ export function readCatalogValues(catalogText) {
 
 export function checkVerbatim(ref = MIGRATION_BASE_REF, root = ROOT) {
   const source = readBaseSources(ref, root);
-  const catalogPath = new URL('../src/core/i18n/catalogs/en-US.ts', import.meta.url);
-  const catalogText = readFileSync(catalogPath, 'utf8');
+  // Both halves: ADR-0001 R1 moved the non-startup namespaces into their own
+  // module so they leave the entry chunk. A check that only read one of them
+  // would quietly stop covering two thirds of the catalog.
+  const catalogText = ['en-US.ts', 'en-US.deferred.ts']
+    .map((name) => readFileSync(new URL(`../src/core/i18n/catalogs/${name}`, import.meta.url), 'utf8'))
+    .join('\n');
   // Read the values out of the module text rather than importing it: this script
   // has to run under plain node with no TypeScript loader.
   //

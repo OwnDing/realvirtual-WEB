@@ -44,7 +44,7 @@ import { LeftPanelManager } from '../src/core/hmi/left-panel-manager';
 import { UIPluginRegistry } from '../src/core/rv-ui-registry';
 import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { RENDER_MODES } from '../src/core/rv-render-modes';
-import { enUS } from '../src/core/i18n/catalogs/en-US';
+import { enUSFull as enUS } from './helpers/en-catalog';
 import { ragState } from '../src/core/hmi/settings/rag-status';
 import type { ConnectSnapshot } from '../src/core/hmi/connect-store';
 import type { UISlotEntry } from '../src/core/rv-ui-plugin';

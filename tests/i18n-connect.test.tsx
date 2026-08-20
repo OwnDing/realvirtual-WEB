@@ -32,7 +32,7 @@ import {
 import { CONNECT_INTERFACE_TYPES } from '../src/core/hmi/connect-store';
 import { ConnectOpener } from '../src/core/hmi/ConnectPanel';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
-import { enUS } from '../src/core/i18n/catalogs/en-US';
+import { enUSFull as enUS } from './helpers/en-catalog';
 
 beforeEach(async () => {
   initI18n();

@@ -12,8 +12,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { enUS } from '../src/core/i18n/catalogs/en-US';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
+import { enUSFull as enUS } from './helpers/en-catalog';
 import { RV_NAMESPACES } from '../src/core/i18n/rv-i18n';
 
 type Catalog = Record<string, unknown>;

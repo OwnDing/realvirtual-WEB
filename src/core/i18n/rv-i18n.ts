@@ -32,6 +32,15 @@ import { reportI18nDiagnostic } from './rv-i18n-diagnostics';
 import { enUS } from './catalogs/en-US';
 import { zhCN } from './catalogs/zh-CN';
 
+/**
+ * `en-US` namespaces that are NOT in the entry chunk (ADR-0001 R1).
+ *
+ * English only: `zh-CN` stays whole and static so any failure — a chunk that
+ * never arrives, an offline first visit — degrades to readable Chinese via the
+ * fallback chain §3 already defines, rather than to raw keys.
+ */
+const DEFERRED_EN_NAMESPACES = ['projects', 'settings', 'connect'] as const;
+
 export const RV_NAMESPACES = ['common', 'projects', 'settings', 'shell', 'connect', 'preboot', 'plugins', 'viewer'] as const;
 export type RVNamespace = (typeof RV_NAMESPACES)[number];
 
@@ -110,7 +119,48 @@ export function initI18n(locale: RVLocale = resolveStartupLocale()): I18nInstanc
   });
 
   applyDocumentLanguage(locale);
+  // Start the deferred fetch as early as possible for a user who is ALREADY in
+  // English — `main.ts` awaits the same promise a few lines later, so this only
+  // moves the request earlier, never adds one.
+  if (locale === 'en-US') void ensureEnglishCatalog();
   return i18next;
+}
+
+/**
+ * Pull in the deferred `en-US` namespaces (ADR-0001 R1).
+ *
+ * Awaited BEFORE React mounts and before `changeLanguage`, which is what keeps
+ * this free of any loading state: the only thing on screen while it resolves is
+ * the pre-boot overlay, which was already waiting for the model.
+ *
+ * Idempotent and never rejects. A chunk that cannot be fetched leaves the
+ * English namespaces absent, i18next falls back to `zh-CN`, and the diagnostic
+ * is what makes "an English user is seeing Chinese" observable instead of
+ * silent. Booting is not allowed to depend on it (§8).
+ */
+let englishCatalogPromise: Promise<void> | null = null;
+
+export function ensureEnglishCatalog(): Promise<void> {
+  englishCatalogPromise ??= import('./catalogs/en-US.deferred')
+    .then(({ enUSDeferred }) => {
+      const i18n = getI18n();
+      for (const ns of DEFERRED_EN_NAMESPACES) {
+        // `deep`/`overwrite` false: a namespace already present wins, so a second
+        // call can never clobber live resources.
+        i18n.addResourceBundle('en-US', ns, enUSDeferred[ns], false, false);
+      }
+    })
+    .catch(() => {
+      // Retryable: a later switch back to English should get another chance.
+      englishCatalogPromise = null;
+      reportI18nDiagnostic({ kind: 'fallback', key: 'en-US:<deferred-catalog>', locale: 'en-US' });
+    });
+  return englishCatalogPromise;
+}
+
+/** Test seam: forget that the deferred catalog was ever requested. */
+export function resetEnglishCatalogForTests(): void {
+  englishCatalogPromise = null;
 }
 
 /** The instance. Callers outside this module should prefer `rvT` / `useRvTranslation`. */
@@ -132,6 +182,12 @@ export function getLocale(): RVLocale {
  */
 export async function setLocale(locale: RVLocale): Promise<void> {
   getI18n();
+  // BEFORE the no-op check, not after. A returning user's stored preference is
+  // already `en-US`, so `initI18n` starts there and this call has nothing to
+  // change — but the deferred catalog still has to be in. Putting the ensure
+  // behind the early return left exactly those users with English startup
+  // namespaces and Chinese panels (ADR-0001 R1).
+  if (locale === 'en-US') await ensureEnglishCatalog();
   if (getLocale() === locale && readStoredLocale() === locale) return;
   await i18next.changeLanguage(locale);
   writeStoredLocale(locale);
@@ -209,4 +265,5 @@ export const rvT = translate;
 export function resetI18nForTests(): void {
   initialized = false;
   listeners.clear();
+  englishCatalogPromise = null;
 }

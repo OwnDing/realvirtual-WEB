@@ -306,6 +306,51 @@ describe('bundle splitting — panel chunks', () => {
     expect(entryText.length).toBeLessThan(ENTRY_BUDGET_BYTES);
   });
 
+  // ── i18n catalog split (ADR-0001 R1) ────────────────────────────────────
+  //
+  // Markers are catalog VALUES, because an identifier proves nothing: the entry
+  // legitimately still names `en-US.deferred` in its `import()` call.
+  const DEFERRED_EN_MARKER = 'Reset All Settings to Defaults'; // settings
+  const DEFERRED_EN_MARKER_2 = 'Import Tag Table';             // connect
+  const STARTUP_EN_MARKER = 'Follow selected part';            // shell
+  const SOURCE_ZH_MARKER = '将所有设置恢复为默认值';               // settings, zh-CN
+
+  it('T10 the non-startup en-US namespaces have left the entry', () => {
+    expect(entryText).not.toContain(DEFERRED_EN_MARKER);
+    expect(entryText).not.toContain(DEFERRED_EN_MARKER_2);
+  });
+
+  it('T11 …and are actually in a chunk, not merely deleted', async () => {
+    // Half of this pair is the point. "Not in the entry" alone is also true of a
+    // catalog somebody dropped on the floor.
+    const entryName = entryPath.slice(entryPath.lastIndexOf('/') + 1);
+    let carriers = 0;
+    for (const [name, load] of Object.entries(distFiles)) {
+      if (!name.endsWith('.js') || name.endsWith(entryName)) continue;
+      if ((await load()).includes(DEFERRED_EN_MARKER)) carriers += 1;
+    }
+    expect(carriers, 'no chunk carries the deferred en-US catalog').toBeGreaterThan(0);
+  });
+
+  it('T12 zh-CN stays whole in the entry — it is the fallback', () => {
+    // ADR-0001 §3 makes zh-CN the source catalog AND the final fallback. Splitting
+    // it too would turn a missing chunk into raw keys on an operator's screen,
+    // which is exactly what R1 refused to trade for bytes.
+    expect(entryText).toContain(SOURCE_ZH_MARKER);
+  });
+
+  it('T13 startup en-US namespaces stay in the entry', () => {
+    // The shell renders on the first frame; deferring its English would put a
+    // frame of Chinese in front of an English user.
+    expect(entryText).toContain(STARTUP_EN_MARKER);
+  });
+
+  it('T14 the budget was not relaxed to pay for the split', () => {
+    // Splitting buys room for the remaining migration. If a later change also
+    // raises the ceiling, the room is spent twice.
+    expect(ENTRY_BUDGET_BYTES).toBe(3_520_000);
+  });
+
   it('T6 the deliberate non-targets are still in the entry', () => {
     for (const name of NON_TARGETS) {
       expect(entryText.includes(name), `${name} unexpectedly left the entry chunk`).toBe(true);
