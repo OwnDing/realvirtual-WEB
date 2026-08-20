@@ -18,8 +18,10 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { ACTIVITY_BAR_WIDTH } from './layout-constants';
 import { useMcpBridge } from '../../hooks/use-mcp-bridge';
 import { useAiActivity } from './ai-activity-store';
+import { useRvTranslation } from '../i18n';
 
 export function AiActivityOverlay() {
+  const { t } = useRvTranslation('shell');
   const mcp = useMcpBridge();
   const activity = useAiActivity();
   const theme = useTheme();
@@ -56,7 +58,7 @@ export function AiActivityOverlay() {
         noWrap
         sx={{ display: 'block', fontWeight: 600, color: theme.palette.primary.contrastText }}
       >
-        AI · {activity}
+        {t('ai.activity', { text: activity })}
       </Typography>
     </Box>
   );

@@ -30,8 +30,11 @@ import {
   registerProjectCodeConsentHost,
   usePendingProjectCodeConsent,
 } from '../project/rv-project-code-consent';
+import { useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 
 export function ProjectCodeConsentDialog() {
+  const { t } = useRvTranslation('shell');
   const pending = usePendingProjectCodeConsent();
 
   useEffect(() => registerProjectCodeConsentHost(), []);
@@ -45,16 +48,21 @@ export function ProjectCodeConsentDialog() {
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14, fontWeight: 600 }}>
         <GppMaybe sx={{ color: '#ffb300' }} />
-        Run this project&apos;s code?
+        {t('projectCode.title')}
       </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ fontSize: 13 }} component="div">
-          The project <strong>{pending?.projectName || pending?.projectId}</strong> contains
-          executable code (<code>{pending?.scriptRef}</code>). It runs with the same rights as
-          the viewer itself — it is not sandboxed.
+          {/* One key per paragraph, with numbered slots for the two inline
+              elements: the project name and the script path both sit mid-clause,
+              and a translator has to be able to move them. */}
+          <Trans
+            ns="shell"
+            i18nKey="projectCode.body"
+            values={{ name: pending?.projectName || pending?.projectId || '', script: pending?.scriptRef ?? '' }}
+            components={[<strong key="name" />, <code key="script" />]}
+          />
           <br /><br />
-          Only allow this for projects from a source you trust. Without your consent the project
-          still opens; only its own code stays off.
+          {t('projectCode.warning')}
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -63,7 +71,7 @@ export function ProjectCodeConsentDialog() {
           onClick={() => answerProjectCodeConsent(false)}
           sx={{ textTransform: 'none', mr: 'auto' }}
         >
-          Don&apos;t run
+          {t('projectCode.deny')}
         </Button>
         <Button
           size="small"
@@ -72,7 +80,7 @@ export function ProjectCodeConsentDialog() {
           onClick={() => answerProjectCodeConsent(true)}
           sx={{ textTransform: 'none' }}
         >
-          Allow for this project
+          {t('projectCode.allow')}
         </Button>
       </DialogActions>
     </Dialog>

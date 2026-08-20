@@ -31,10 +31,12 @@ import { useViewer } from '../../hooks/use-viewer';
 import { isMobileDevice } from '../../hooks/use-mobile-layout';
 import type { GPUAnalysis } from '../engine/rv-gpu-info';
 import { ISA_AMBER, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 const DISMISS_KEY = 'rv-gpu-warning-dismissed';
 
 export function GPUWarningBanner() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const [analysis, setAnalysis] = useState<GPUAnalysis | null>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -125,7 +127,7 @@ export function GPUWarningBanner() {
           <IconButton
             size="small"
             onClick={handleDismiss}
-            aria-label="Dismiss warning"
+            aria-label={t('gpu.dismiss')}
             sx={{
               color: 'rgba(255,255,255,0.7)',
               p: 0.3,

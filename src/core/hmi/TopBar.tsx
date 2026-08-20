@@ -7,6 +7,8 @@ import { Typography, Box, Paper } from '@mui/material';
 import { Layers } from '@mui/icons-material';
 import { useMobileLayout, isMobileDevice } from '../../hooks/use-mobile-layout';
 import { useViewer } from '../../hooks/use-viewer';
+import { useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 import { useMode } from '../../hooks/use-mode';
 import { HierarchyBrowser } from './rv-hierarchy-browser';
 import { PropertyInspector } from './rv-property-inspector';
@@ -77,6 +79,7 @@ export function orphanedLeftSlot(
 }
 
 export function TopBar() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const [vrOpen, setVrOpen] = useState(false);
   const sceneStore = getSceneStore();
@@ -262,7 +265,7 @@ export function TopBar() {
         {((viewer.groups && viewer.groups.groupCount > 0) || overlayPresent) && (
           <ActionGroupPill>
             <ActionSegment
-              title="Toggle Display panel"
+              title={t('bar.toggleDisplay')}
               active={viewer.groupsOverlayOpen}
               onClick={() => viewer.toggleGroupsOverlay()}
               icon={<Layers />}
@@ -278,7 +281,7 @@ export function TopBar() {
             <ActionGroupPill>
               {showVr && (
                 <ActionSegment
-                  title={vrOpen ? 'Close VR/AR' : 'VR / AR'}
+                  title={t(vrOpen ? 'vr.close' : 'vr.open')}
                   active={vrOpen}
                   onClick={() => setVrOpen(!vrOpen)}
                   label="VR"
@@ -327,6 +330,7 @@ export function TopBar() {
 /* ─── VR/AR Modal ─── */
 
 function VRModal({ onClose }: { onClose: () => void }) {
+  const { t } = useRvTranslation('shell');
   const vrUrl = window.location.origin + window.location.pathname;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=121212&color=ffffff&data=${encodeURIComponent(vrUrl)}`;
 
@@ -350,18 +354,20 @@ function VRModal({ onClose }: { onClose: () => void }) {
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <Typography variant="h6" sx={{ fontWeight: 700, color: '#4fc3f7' }}>
-          VR / AR
+          {t('vr.open')}
         </Typography>
 
         <Box
           component="img"
           src={qrUrl}
-          alt="QR Code"
+          alt={t('vr.qrAlt')}
           sx={{ width: 200, height: 200, borderRadius: 1, border: '1px solid rgba(255,255,255,0.1)' }}
         />
 
         <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', lineHeight: 1.7 }}>
-          Scan this QR code with your phone or enter the URL in your <strong style={{ color: '#fff' }}>Meta Quest</strong> browser.
+          {/* One key with a numbered slot: the emphasised device name sits
+              mid-sentence and a translator has to be able to move it. */}
+          <Trans ns="shell" i18nKey="vr.scanHint" components={[<strong key="quest" style={{ color: '#fff' }} />]} />
         </Typography>
 
         <Box
@@ -377,7 +383,7 @@ function VRModal({ onClose }: { onClose: () => void }) {
             '&:hover': { bgcolor: 'rgba(79,195,247,0.1)' },
           }}
           onClick={() => navigator.clipboard.writeText(vrUrl)}
-          title="Click to copy URL"
+          title={t('vr.copyUrl')}
         >
           <Typography
             variant="body2"
@@ -400,15 +406,15 @@ function VRModal({ onClose }: { onClose: () => void }) {
 
         <Box sx={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', pt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-            How to start
+            {t('vr.howTo')}
           </Typography>
-          <StepRow n={1} text="Put on your headset and open the browser" />
-          <StepRow n={2} text="Enter the URL above or scan the QR code with your phone" />
-          <StepRow n={3} text="Wait for the scene to load, then tap 'Enter VR'" />
+          <StepRow n={1} text={t('vr.step1')} />
+          <StepRow n={2} text={t('vr.step2')} />
+          <StepRow n={3} text={t('vr.step3')} />
         </Box>
 
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
-          WebXR requires WebGL renderer. WebGPU does not support VR/AR sessions.
+          {t('vr.webglOnly')}
         </Typography>
       </Paper>
     </Box>

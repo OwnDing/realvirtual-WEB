@@ -16,6 +16,7 @@ import { useState, useCallback } from 'react';
 import { Paper, Box, Typography, IconButton } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
+import { useRvTranslation } from '../i18n';
 import { useViewportInsets } from '../../hooks/use-viewport-insets';
 import {
   LEFT_PANEL_TOP,
@@ -171,6 +172,7 @@ export function LeftPanel({
   sx: sxOverride,
   headerSx,
 }: LeftPanelProps) {
+  const { t } = useRvTranslation('shell');
   const isMobile = useMobileLayout();
   const topOffset = useViewportInsets().top;
   const [dragging, setDragging] = useState(false);
@@ -250,7 +252,7 @@ export function LeftPanel({
         {toolbar}
 
         {/* Close button */}
-        <IconButton size="small" aria-label="Close panel" onClick={onClose} sx={{ color: 'text.secondary', p: 0.25, flexShrink: 0 }}>
+        <IconButton size="small" aria-label={t('bar.closePanel')} onClick={onClose} sx={{ color: 'text.secondary', p: 0.25, flexShrink: 0 }}>
           <Close sx={{ fontSize: 16 }} />
         </IconButton>
       </Box>

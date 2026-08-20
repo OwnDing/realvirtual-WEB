@@ -21,7 +21,7 @@
  *    absence of a new write path plus a positive and a negative test on the
  *    existing one.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { Object3D } from 'three';
@@ -53,6 +53,16 @@ import trustStoreSource from '../src/core/share/rv-share-trust-store.ts?raw';
 import sceneLoaderSource from '../src/core/engine/rv-scene-loader.ts?raw';
 import connectPluginSource from '../src/plugins/connect-plugin.tsx?raw';
 import signalStoreSource from '../src/core/engine/rv-signal-store.ts?raw';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The shell copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const SHARE_URL = 'https://files.example.org/pick-and-place.glb';
 const SHARE_ID = 'sh_1234';

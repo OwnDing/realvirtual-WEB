@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect, Fragment } from 'react';
 import { Vector3 } from 'three';
 import { Visibility, VisibilityOff, DirectionsWalk, PhotoCamera, PhotoCameraOutlined, GpsFixed, EventSeat } from '@mui/icons-material';
 import { useViewer } from '../../hooks/use-viewer';
+import { useRvTranslation } from '../i18n';
 import type { FpvPluginAPI, CameraFollowPluginAPI } from '../types/plugin-types';
 import { loadVisualSettings, saveVisualSettings, type CameraBookmark } from './visual-settings-store';
 import { toggleHmiVisible, useHmiVisible } from './hmi-visibility-store';
@@ -20,6 +21,7 @@ const FLASH_MS = 800;
  * localStorage. Render inside an ActionGroupPill.
  */
 export function CameraBookmarks() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const [cameras, setCameras] = useState<(CameraBookmark | null)[]>(() => loadVisualSettings().cameras);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,7 +90,7 @@ export function CameraBookmarks() {
           <Fragment key={i}>
             {i > 0 && <ActionDivider />}
             <ActionSegment
-              title={hasBookmark ? `Camera ${i + 1} — Click: restore · Hold: save` : `Camera ${i + 1} — Hold to save current view`}
+              title={t(hasBookmark ? 'bar.cameraRestore' : 'bar.cameraSave', { n: i + 1 })}
               color={color}
               icon={<Icon />}
               label={i + 1}
@@ -107,10 +109,11 @@ export function CameraBookmarks() {
 
 /** HMI-visibility toggle (the "eye") as a single action-group segment. */
 export function HmiToggleButton() {
+  const { t } = useRvTranslation('shell');
   const hmiVisible = useHmiVisible();
   return (
     <ActionSegment
-      title="Toggle HMI (H)"
+      title={t('bar.toggleHmi')}
       onClick={toggleHmiVisible}
       color={hmiVisible ? undefined : 'rgba(255,255,255,0.5)'}
       icon={hmiVisible ? <Visibility /> : <VisibilityOff />}
@@ -121,6 +124,7 @@ export function HmiToggleButton() {
 /** First-Person View toggle as a single action-group segment. The host decides
  *  whether to render it (hidden on touch devices). */
 export function FpvBarButton() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -136,7 +140,7 @@ export function FpvBarButton() {
   };
   return (
     <ActionSegment
-      title="First-Person View (F)"
+      title={t('bar.firstPerson')}
       active={active}
       onClick={handleClick}
       icon={<DirectionsWalk />}
@@ -166,11 +170,12 @@ function useCameraFollowState(): { mode: 'follow' | 'siton' | null; canFollow: b
 
 /** Follow toggle — the camera follows the selected moving part keeping the view distance. */
 export function FollowCamButton() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const { mode, canFollow } = useCameraFollowState();
   return (
     <ActionSegment
-      title="Follow selected part"
+      title={t('bar.followPart')}
       active={mode === 'follow'}
       color={canFollow ? undefined : 'rgba(255,255,255,0.35)'}
       icon={<GpsFixed />}
@@ -181,11 +186,12 @@ export function FollowCamButton() {
 
 /** Sit-On toggle — the camera rides on the selected part; right-drag to look around. */
 export function SitOnCamButton() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const { mode, canFollow } = useCameraFollowState();
   return (
     <ActionSegment
-      title="Sit on selected part (right-drag to look)"
+      title={t('bar.sitOnPart')}
       active={mode === 'siton'}
       color={canFollow ? undefined : 'rgba(255,255,255,0.35)'}
       icon={<EventSeat />}

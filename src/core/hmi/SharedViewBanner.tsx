@@ -15,8 +15,10 @@ import {
   subscribeSharedView,
   getSharedViewSnapshot,
 } from '../../plugins/multiuser-plugin';
+import { useRvTranslation } from '../i18n';
 
 export function SharedViewBanner() {
+  const { t } = useRvTranslation('shell');
   const snap = useSyncExternalStore(subscribeSharedView, getSharedViewSnapshot);
 
   if (!snap.following) return null;
@@ -46,7 +48,7 @@ export function SharedViewBanner() {
       }}>
         <Visibility sx={{ fontSize: 16, color: '#fff' }} />
         <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#fff' }}>
-          Following {snap.operatorName}&apos;s view
+          {t('sharedView.following', { name: snap.operatorName })}
         </Typography>
         <Button
           size="small"
@@ -68,7 +70,7 @@ export function SharedViewBanner() {
             },
           }}
         >
-          Unfollow
+          {t('sharedView.unfollow')}
         </Button>
       </Box>
     </Box>

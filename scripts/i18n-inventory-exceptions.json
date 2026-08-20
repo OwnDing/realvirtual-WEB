@@ -54,6 +54,24 @@
       "category": "react-copy",
       "match": "Browser",
       "reason": "Placeholder mirroring MULTIUSER_DEFAULTS.displayName ('Browser' in multiuser-settings-store.ts). It has to match the value that is actually sent to peers, so translating it would advertise a name the session never uses."
+    },
+    {
+      "file": "src/core/hmi/WelcomeModal.tsx",
+      "category": "react-copy",
+      "match": "realvirtual WEB",
+      "reason": "Product name in the About/Welcome header and version line — the same brand exception as SettingsPanel.tsx. The prose around it IS translated (shell:welcome.*)."
+    },
+    {
+      "file": "src/core/hmi/WelcomeModal.tsx",
+      "category": "react-copy",
+      "match": "github.com/game4automation/realvirtual-WEB",
+      "reason": "Repository URL rendered as its own link text. A translated URL would not resolve."
+    },
+    {
+      "file": "src/core/hmi/WelcomeModal.tsx",
+      "category": "react-copy",
+      "match": "2025 realvirtual GmbH",
+      "reason": "Copyright notice. The legal entity and year are not localisable, and the AGPL header requires them verbatim."
     }
   ]
 }

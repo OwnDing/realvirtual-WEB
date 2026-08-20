@@ -73,7 +73,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 1537 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板）。
+- [ ] Milestone 4b：按风险分批迁移其余 1342 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳）。
 
 ## Surprises & Discoveries
 
@@ -86,6 +86,20 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### Milestone 4b 批次 3：常驻 HMI 外壳（2026-08-20）
+
+- 覆盖 32 个文件：顶栏 / 底栏 / 活动栏 / 相机栏 / 面板框架，以及所有门禁、横幅和全局浮层（欢迎页、许可、AI 桥接同意、模型签名、共享模型信任、密码、项目代码、分析同意、新特性、AI 回答对话框）。该面受门禁命中归零，全仓 1537 → **1342**；`shell` namespace 新增 **235** 个 key。
+- 这是第一次实质性地动 `a11y-name` 类别：83 → **58**。这类字符串在截图里看不见、在 diff 里也不显眼，所以新测试专门查了一条 `aria-label` 是否随语言切换。
+- **发现 `NewsDialog.tsx` 整个是德文**：`Neu in realvirtual WEB`、`News schließen`、`Mehr erfahren`、`Weiter`、`Schließen`、`N von M` —— 一个英文产品里的德文遗留面（Milestone 3 在 `LayoutLibraryPanel.tsx` 也遇到过一次德文残留）。这意味着**没有可以逐字搬运的英文原文**：英文是新写的，因此 6 个 key 全部登记进 `NEW_STRING_EXEMPTIONS`（包括那些恰好能在别处匹配到的短词——值得记录的事实是这个对话框从来没有英文，而不是某个三字母按钮标签是否与别的文件撞了）。`tests/news-render.test.tsx` 原本断言的正是这些德文，已随内容变更改为断言新的英文。
+- **逐字迁入门禁又漏了一类**：`<Trans>` 的编号占位替换成 `<[^>]*>`，但带属性的 `<Link>`/`<a>` 开标签会**跨行**，其内容从下一行开始，而目录里的句子是平的。因此标记两侧必须吸收空白（`\s*<[^>]*>\s*`）。反例：撤掉这个容错后，`welcome.betaText`、`license.betaNotice`、`license.terms` 三条立刻失败。
+- 同一处补了 HTML 实体等价：`&apos;`、`&amp;`、`&mdash;`、`&copy;` 等在渲染后就是对应字符，目录里存的是用户看到的字符。反例验证过这不是放水——把 `Following {{name}}'s view` 改成 `Watching …` 仍然失败。
+- 还补了转义序列边界：模板串里的 `\nBranch:` 在**源码文本**中是 `\`、`n`、`B` 三个字符，`n` 与 `B` 之间没有词边界，于是批次 2 加的词锚把它误判为新串。源码级转义序列算作边界。
+- 受检 `en-US` 值 604 → **839**。
+- 11 个既有浏览器测试因默认语言变化失败，全部按 ADR 显式 pin `en-US`（不放宽、不删除断言），107 例恢复通过。
+- `USE_CASES`（欢迎页的 5 组用例）在模块级数组里，扫描器看不见元组，但它是实打实的界面文案，一并迁移；不为此放宽分类规则——数组元组的启发式会带来大量误报。
+- 四项不可翻译项登记例外：品牌名 `realvirtual WEB`、仓库 URL、版权行 `© 2025 realvirtual GmbH`。
+- 本批次不含 CONNECT 面（`ConnectPanel.tsx` 282 处等，共 372 处）与 `plugin-registry` 类别（129 处），仍是后续批次。
 
 ### Milestone 4b 批次 2：Settings 面板（2026-08-20）
 
@@ -200,9 +214,29 @@ Milestone 4b 批次 2 已验证（2026-08-20，本地）：
 | 把 `RENDER_MODES` 的 `Shaded` 改成 `Lit` | `tests/i18n-settings.test.tsx` 漂移守卫失败 |
 | 去掉 `hmi-panels.spec.ts` 的 pin | `tests/i18n-test-locale-pin.node.test.ts` 指名该 spec 失败 |
 
+Milestone 4b 批次 3 已验证（2026-08-20，本地）：
+
+| 项 | 结果 |
+| --- | --- |
+| `./scripts/verify.sh static` | 通过（exit 0） |
+| `npm run test:node` | 55 文件 **500** 例通过 |
+| `npx vitest run tests/i18n-shell.test.tsx` | **5 例通过**（aria-label 随切换、类组件用 `rvT`、模块级表在调用时解析、独立 Root 无 Provider、235 key 全量扫描） |
+| 受影响 Browser 测试单独运行 | 11 文件 **107** 例通过 |
+| `npm run build` | 通过 |
+| 入口 chunk | 3_386_379 → **3_418_493 B**，净增 **31.4 KB**（235 key × 2 语言）；预算余 **99.1 KB**，`tests/bundle-splitting.test.ts` 9 例通过 |
+| `node scripts/i18n-inventory.mjs` | 受门禁 1537 → **1342**（170 文件）；`a11y-name` 83 → 58 |
+| `node scripts/i18n-verbatim-check.mjs` | **839** 条值全部逐字追溯 |
+| 完整 `npm test` | 951 文件 **10,298** 例通过；失败 22 文件 / 82 例，与批次 3 之前的本机基线逐条一致 |
+
+反例：撤掉 `<Trans>` 标记的空白容错 → 3 条跨行 `<Link>` 文案失败；改写 `shell.bar.followPart` → 指名失败；改写含 `&apos;` 的 `sharedView.following` → 指名失败；从 `en-US` 删掉一个 key → `tests/i18n-shell.test.tsx` 与目录 parity 测试失败。
+
 **未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 951 文件中 **22 文件 / 82 用例**失败，逐条核对均根因于 `THREE.WebGLRenderer: Error creating WebGL context.`（78 例直接报此错，1 例 `embed-boot` 超时与 1 例 `dispose` TypeError 是同一渲染器创建失败的下游）。失败输出中中文出现次数为 **0**，且已逐文件核对无一与本批次相关。完整浏览器门禁仍需在可用 GPU 的环境重跑后才能声称通过。
 
 后续里程碑至少仍需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
+
+### Decision Log — 批次 3
+
+- 2026-08-20：用户选择「常驻 HMI 外壳」作为批次 3（在 CONNECT 工业连接流程与外壳之间二选一）。理由是见效最快：项目与设置已中文化后，中文用户仍然每次开机就看到英文顶栏。CONNECT 面（372 处，含大量 PLC 型号与协议名）与 `plugin-registry` 全类别推迟到后续批次，本批次不扩大范围。
 
 ### Decision Log — 批次 2
 

@@ -12,6 +12,7 @@ import { useNodeFilter } from '../../hooks/use-node-filter';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
 import { useViewportInsets } from '../../hooks/use-viewport-insets';
 import { useViewer } from '../../hooks/use-viewer';
+import { useRvTranslation } from '../i18n';
 import { componentColor } from './rv-inspector-helpers';
 import { getCapabilities } from '../engine/rv-component-registry';
 import { tooltipStore } from './tooltip/tooltip-store';
@@ -41,7 +42,6 @@ import { groupSearchResults, flattenGroupedResults } from './search-result-group
 import { isSearchShortcut } from './search-shortcut';
 
 const DEBOUNCE_MS = 250;
-const ASK_AI_TOOLTIP = 'Ask the machine documentation (AI)';
 
 /** Neutral accent for the untyped "All objects" category chip (Instrument Blue). */
 const ALL_OBJECTS_COLOR = '#4fc3f7';
@@ -83,6 +83,7 @@ export function AskAiHistoryTooltip({
   onOpenChange,
   children,
 }: AskAiHistoryTooltipProps) {
+  const { t } = useRvTranslation('shell');
   const [open, setOpen] = useState(false);
 
   const setTooltipOpen = (next: boolean) => {
@@ -97,22 +98,22 @@ export function AskAiHistoryTooltip({
   };
 
   const title = historyEntries.length === 0
-    ? ASK_AI_TOOLTIP
+    ? t('search.askAiTooltip')
     : (
       <Box sx={{ minWidth: 220, maxWidth: 320 }}>
         <Typography sx={{ px: 1, pt: 0.75, pb: 0.5, fontSize: 11 }}>
-          {ASK_AI_TOOLTIP}
+          {t('search.askAiTooltip')}
         </Typography>
         <Divider />
         <Typography sx={{ px: 1, pt: 0.5, pb: 0.25, fontSize: 9, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.4 }}>
-          Recent answers
+          {t('search.recentAnswers')}
         </Typography>
-        <List dense disablePadding aria-label="Recent AI answers">
+        <List dense disablePadding aria-label={t('search.recentAnswersList')}>
           {historyEntries.map((entry) => (
             <ListItemButton
               key={`${entry.at}-${entry.query}`}
               title={entry.query}
-              aria-label={`Restore AI answer: ${entry.query}`}
+              aria-label={t('search.restoreAnswer', { query: entry.query })}
               onClick={() => restoreEntry(entry)}
               sx={{ px: 1, py: 0.5, minHeight: 0 }}
             >
@@ -140,6 +141,7 @@ export function AskAiHistoryTooltip({
 }
 
 export function BottomBar() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const { filter, filteredNodes, tooMany, setFilter } = useNodeFilter();
   const MAX_DROPDOWN = 20;
@@ -561,7 +563,7 @@ export function BottomBar() {
               ))}
               {resultCount > MAX_DROPDOWN && (
                 <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', py: 0.5, color: 'text.disabled' }}>
-                  and {resultCount - MAX_DROPDOWN} more — type to narrow
+                  {t('search.andMore', { count: resultCount - MAX_DROPDOWN })}
                 </Typography>
               )}
             </List>
@@ -595,10 +597,10 @@ export function BottomBar() {
           }}
         >
           {/* Magnifier — always visible; click (or `/`) to open + focus */}
-          <Tooltip title="Search ( / )">
+          <Tooltip title={t('search.tooltip')}>
             <IconButton
               size="small"
-              aria-label="Search"
+              aria-label={t('search.label')}
               onClick={() => expandSearch(true)}
               sx={{ width: 40, height: 40, flexShrink: 0, color: filter ? 'primary.main' : 'text.secondary' }}
             >
@@ -624,7 +626,7 @@ export function BottomBar() {
             }}
           >
             <TextField
-              placeholder="Search drives, sensors, objects..."
+              placeholder={t('search.placeholder')}
               size="small"
               fullWidth
               variant="standard"
@@ -648,7 +650,7 @@ export function BottomBar() {
                       )}
                       {/* Focus button (touch alternative to Enter) */}
                       {filter && filteredNodes.length > 0 && (
-                        <IconButton size="small" onClick={handleFocus} sx={{ p: 0.25 }} title="Focus camera (Enter)">
+                        <IconButton size="small" onClick={handleFocus} sx={{ p: 0.25 }} title={t('search.focusCamera')}>
                           <CenterFocusStrong sx={{ fontSize: 16, color: 'primary.main' }} />
                         </IconButton>
                       )}
@@ -687,10 +689,10 @@ export function BottomBar() {
                     startIcon={<AutoAwesome sx={{ fontSize: 14 }} />}
                     onClick={handleAskAi}
                     disabled={!inputValue.trim()}
-                    aria-label={ASK_AI_TOOLTIP}
+                    aria-label={t('search.askAiTooltip')}
                     sx={{ ml: 0.5, px: 1, minWidth: 0, whiteSpace: 'nowrap', textTransform: 'none', fontSize: 12 }}
                   >
-                    Ask AI
+                    {t('search.askAi')}
                   </Button>
                 </span>
               </AskAiHistoryTooltip>
@@ -718,7 +720,7 @@ export function BottomBar() {
         transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         slotProps={{ paper: { sx: { p: 1.5, minWidth: 232, pointerEvents: 'auto' } } }}
       >
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>Search Settings</Typography>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('search.settings')}</Typography>
         <FormControlLabel
           control={
             <Switch
@@ -727,7 +729,7 @@ export function BottomBar() {
               onChange={(_, checked) => updateSettings({ highlightEnabled: checked })}
             />
           }
-          label={<Typography variant="body2">Highlight in 3D</Typography>}
+          label={<Typography variant="body2">{t('search.highlight3d')}</Typography>}
           sx={{ ml: 0 }}
         />
         <Divider sx={{ my: 1 }} />
@@ -740,18 +742,18 @@ export function BottomBar() {
             variant="caption"
             sx={{ color: 'text.disabled', fontWeight: 600, letterSpacing: 0.4 }}
           >
-            INCLUDE IN RESULTS
+            {t('search.includeInResults')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Link component="button" type="button" underline="hover"
               onClick={() => setAllCategories(true)}
               sx={{ fontSize: 11, color: 'text.secondary' }}>
-              All
+              {t('search.all')}
             </Link>
             <Link component="button" type="button" underline="hover"
               onClick={() => setAllCategories(false)}
               sx={{ fontSize: 11, color: 'text.secondary' }}>
-              None
+              {t('search.none')}
             </Link>
           </Box>
         </Box>
@@ -760,7 +762,7 @@ export function BottomBar() {
           sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, maxHeight: 260, overflowY: 'auto' }}
         >
           <Chip
-            label="All objects"
+            label={t('search.allObjects')}
             size="small"
             onClick={() => updateSettings({ nodesEnabled: !settings.nodesEnabled })}
             sx={categoryChipSx(settings.nodesEnabled, ALL_OBJECTS_COLOR)}

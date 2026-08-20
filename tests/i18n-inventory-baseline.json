@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 1128,
-    "a11y-name": 83,
-    "plugin-registry": 131,
-    "dynamic-text": 153,
+    "react-copy": 973,
+    "a11y-name": 58,
+    "plugin-registry": 129,
+    "dynamic-text": 140,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
     "ui-state-text": 14
   },
-  "total": 1537,
-  "fileCount": 202,
+  "total": 1342,
+  "fileCount": 170,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -60,53 +60,14 @@
     "src/core/engine/rv-script-sandbox.ts": {
       "plugin-registry": 2
     },
-    "src/core/hmi/ActivityBar.tsx": {
-      "react-copy": 9,
-      "a11y-name": 1
-    },
-    "src/core/hmi/AiActivityOverlay.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/AiBridgeGate.tsx": {
-      "react-copy": 20
-    },
     "src/core/hmi/AnnotationEditModal.tsx": {
       "react-copy": 5
     },
     "src/core/hmi/AnnotationPanel.tsx": {
       "react-copy": 2
     },
-    "src/core/hmi/App.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/AskAiButton.tsx": {
-      "react-copy": 1
-    },
-    "src/core/hmi/AutoQualityDialog.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/BottomBar.tsx": {
-      "react-copy": 12,
-      "a11y-name": 2,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/ButtonPanel.tsx": {
-      "react-copy": 1,
-      "a11y-name": 2
-    },
-    "src/core/hmi/CameraBar.tsx": {
-      "react-copy": 4,
-      "dynamic-text": 1
-    },
     "src/core/hmi/ClippingPanel.tsx": {
       "react-copy": 3
-    },
-    "src/core/hmi/CommissioningTrustBanner.tsx": {
-      "react-copy": 10,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/ConfirmActionDialog.tsx": {
-      "react-copy": 1
     },
     "src/core/hmi/ConnectOptionsWindow.tsx": {
       "react-copy": 28,
@@ -119,9 +80,6 @@
       "dynamic-text": 28,
       "ui-state-text": 7
     },
-    "src/core/hmi/ConnectUpdateNotice.tsx": {
-      "dynamic-text": 1
-    },
     "src/core/hmi/ConnectUpdateSection.tsx": {
       "react-copy": 10,
       "dynamic-text": 3
@@ -132,14 +90,8 @@
     "src/core/hmi/DragNumberField.tsx": {
       "dynamic-text": 1
     },
-    "src/core/hmi/FloatingPanel.tsx": {
-      "a11y-name": 2
-    },
     "src/core/hmi/ForceConfirmDialog.tsx": {
       "react-copy": 5
-    },
-    "src/core/hmi/GPUWarningBanner.tsx": {
-      "a11y-name": 1
     },
     "src/core/hmi/GroupsListContent.tsx": {
       "react-copy": 6,
@@ -160,21 +112,6 @@
     "src/core/hmi/IKTargetQuickEdit.tsx": {
       "react-copy": 17
     },
-    "src/core/hmi/InstructionLayer.tsx": {
-      "a11y-name": 1
-    },
-    "src/core/hmi/LazyPanelBoundary.tsx": {
-      "react-copy": 1,
-      "a11y-name": 1
-    },
-    "src/core/hmi/LeftPanel.tsx": {
-      "a11y-name": 1
-    },
-    "src/core/hmi/LicenseSection.tsx": {
-      "react-copy": 19,
-      "a11y-name": 4,
-      "dynamic-text": 1
-    },
     "src/core/hmi/MachineControlPanel.tsx": {
       "react-copy": 15
     },
@@ -184,56 +121,26 @@
     "src/core/hmi/MeasurementPanel.tsx": {
       "react-copy": 6
     },
-    "src/core/hmi/MessagePanel.tsx": {
-      "react-copy": 2
-    },
     "src/core/hmi/MobileSelectionSheet.tsx": {
-      "a11y-name": 1
-    },
-    "src/core/hmi/ModeDropdown.tsx": {
       "a11y-name": 1
     },
     "src/core/hmi/MultiuserPanel.tsx": {
       "react-copy": 8
     },
-    "src/core/hmi/NewsDialog.tsx": {
-      "react-copy": 2,
-      "a11y-name": 1
-    },
     "src/core/hmi/ProblemsPanel.tsx": {
       "a11y-name": 2,
       "dynamic-text": 1
     },
-    "src/core/hmi/ProjectCodeConsentDialog.tsx": {
-      "react-copy": 7
-    },
     "src/core/hmi/ReorderableList.tsx": {
       "react-copy": 1
-    },
-    "src/core/hmi/SearchAiDialog.tsx": {
-      "react-copy": 14,
-      "a11y-name": 3,
-      "dynamic-text": 2
     },
     "src/core/hmi/SensorHistoryPanel.tsx": {
       "react-copy": 3,
       "a11y-name": 3,
       "dynamic-text": 1
     },
-    "src/core/hmi/ServeSessionBadge.tsx": {
-      "a11y-name": 1,
-      "dynamic-text": 1
-    },
     "src/core/hmi/SetPositionDialog.tsx": {
       "react-copy": 6
-    },
-    "src/core/hmi/SharedViewBanner.tsx": {
-      "react-copy": 3
-    },
-    "src/core/hmi/SigWarningBanner.tsx": {
-      "react-copy": 3,
-      "a11y-name": 1,
-      "dynamic-text": 1
     },
     "src/core/hmi/SignalEditDialog.tsx": {
       "react-copy": 18,
@@ -243,32 +150,11 @@
       "react-copy": 5,
       "dynamic-text": 1
     },
-    "src/core/hmi/StorageNoticeBanner.tsx": {
-      "a11y-name": 1
-    },
-    "src/core/hmi/TopBar.tsx": {
-      "react-copy": 12,
-      "a11y-name": 1
-    },
-    "src/core/hmi/WelcomeModal.tsx": {
-      "react-copy": 22
-    },
     "src/core/hmi/connect-store.ts": {
       "plugin-registry": 27
     },
-    "src/core/hmi/consent-gate.tsx": {
-      "react-copy": 2
-    },
     "src/core/hmi/hierarchy-badge-components.tsx": {
       "react-copy": 1
-    },
-    "src/core/hmi/license-store.ts": {
-      "plugin-registry": 2,
-      "dynamic-text": 4
-    },
-    "src/core/hmi/password-gate.tsx": {
-      "react-copy": 5,
-      "a11y-name": 1
     },
     "src/core/hmi/pdf-viewer-store.tsx": {
       "react-copy": 2

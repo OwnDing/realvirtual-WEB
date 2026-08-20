@@ -6,6 +6,7 @@ import { Box, Button, CircularProgress, IconButton, Typography } from '@mui/mate
 import { Close, GppBad, InfoOutlined, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { ISA_AMBER } from './isa-colors';
 import { useSignatureUiState } from '../rv-sig-store';
+import { useRvTranslation } from '../i18n';
 
 export interface SigWarningBannerProps {
   compact?: boolean;
@@ -16,6 +17,7 @@ export interface SigWarningBannerProps {
  * disabled until the user explicitly activates it.
  */
 export function SigWarningBanner({ compact = false }: SigWarningBannerProps) {
+  const { t } = useRvTranslation('shell');
   const state = useSignatureUiState();
   const [dismissed, setDismissed] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -33,12 +35,8 @@ export function SigWarningBanner({ compact = false }: SigWarningBannerProps) {
 
   const unverifiable = state.signatureState === 'unverifiable';
   const activating = state.logicRunState === 'activating';
-  const title = unverifiable
-    ? 'Model signature could not be verified'
-    : 'Model signature is invalid';
-  const summary = unverifiable
-    ? 'Automation logic is disabled because this browser could not verify the model provenance.'
-    : 'Automation logic is disabled because the model contents do not match its signature.';
+  const title = t(unverifiable ? 'signature.unverifiableTitle' : 'signature.invalidTitle');
+  const summary = t(unverifiable ? 'signature.unverifiableSummary' : 'signature.invalidSummary');
 
   const handleActivate = async () => {
     setActivationError(false);
@@ -93,14 +91,14 @@ export function SigWarningBanner({ compact = false }: SigWarningBannerProps) {
               data-testid="sig-warning-details"
               sx={{ mt: 0.75, fontSize: 11, color: 'rgba(255,255,255,0.78)', lineHeight: 1.4 }}
             >
-              Model: {state.modelName || 'unknown'}
-              {state.signerOrganization ? ` · Signer: ${state.signerOrganization}` : ''}
-              {' · Activation is remembered for this model in this browser.'}
+              {t('signature.model', { name: state.modelName || t('signature.unknown') })}
+              {state.signerOrganization ? t('signature.signer', { signer: state.signerOrganization }) : ''}
+              {t('signature.remembered')}
             </Typography>
           )}
           {activationError && (
             <Typography sx={{ mt: 0.75, fontSize: 11, color: '#ffd6d6', lineHeight: 1.4 }}>
-              Logic activation did not complete. Reload the model and try again.
+              {t('signature.activationFailed')}
             </Typography>
           )}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
@@ -112,7 +110,7 @@ export function SigWarningBanner({ compact = false }: SigWarningBannerProps) {
               startIcon={activating ? <CircularProgress size={12} color="inherit" /> : undefined}
               sx={{ minHeight: 28, px: 1.25, py: 0.25, fontSize: 11, textTransform: 'none' }}
             >
-              {activating ? 'Activating…' : 'Activate logic'}
+              {t(activating ? 'signature.activating' : 'signature.activate')}
             </Button>
             <Button
               size="small"
@@ -121,14 +119,14 @@ export function SigWarningBanner({ compact = false }: SigWarningBannerProps) {
               endIcon={detailsOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
               sx={{ minHeight: 28, px: 1, py: 0.25, color: 'rgba(255,255,255,0.85)', fontSize: 11, textTransform: 'none' }}
             >
-              Details
+              {t('signature.details')}
             </Button>
           </Box>
         </Box>
         <IconButton
           size="small"
           onClick={() => setDismissed(true)}
-          aria-label="Dismiss model signature warning"
+          aria-label={t('signature.dismiss')}
           sx={{ color: 'rgba(255,255,255,0.7)', p: 0.3, flexShrink: 0, '&:hover': { color: '#fff' } }}
         >
           <Close sx={{ fontSize: 16 }} />

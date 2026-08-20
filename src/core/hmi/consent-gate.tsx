@@ -23,6 +23,7 @@ import { Cookie } from '@mui/icons-material';
 import { rvDarkTheme } from './theme';
 import { getAppConfig } from '../rv-app-config';
 import { isAnalyticsConfigured, hasAnalyticsConsent, grantAnalyticsConsent } from '../consent-store';
+import { useRvTranslation } from '../i18n';
 
 /**
  * Resolve immediately when analytics is not configured or already consented.
@@ -57,6 +58,7 @@ export function requireAnalyticsConsent(): Promise<void> {
 }
 
 function ConsentGate({ onAccept }: { onAccept: () => void }) {
+  const { t } = useRvTranslation('shell');
   const [declined, setDeclined] = useState(false);
   const privacyUrl = getAppConfig().analytics?.privacyPolicyUrl;
 
@@ -80,13 +82,11 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
         </Box>
 
         <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.92)' }}>
-          {declined ? 'Consent required' : 'Analytics & cookies'}
+          {t(declined ? 'consent.requiredTitle' : 'consent.title')}
         </Typography>
 
         <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-          {declined
-            ? 'This demo uses Google Analytics, which requires your consent. Without it the application cannot be loaded.'
-            : 'This site uses Google Analytics to understand how the demo is used. It stores cookies and transfers usage data to Google. Analytics loads only after you accept — nothing is tracked until then.'}
+          {t(declined ? 'consent.requiredText' : 'consent.text')}
         </Typography>
 
         {privacyUrl && (
@@ -96,7 +96,7 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
             rel="noopener noreferrer"
             sx={{ fontSize: 12, color: '#4fc3f7' }}
           >
-            Privacy policy
+            {t('consent.privacy')}
           </Link>
         )}
 
@@ -108,7 +108,7 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
               onClick={() => setDeclined(true)}
               sx={{ textTransform: 'none', color: 'rgba(255,255,255,0.55)' }}
             >
-              Decline
+              {t('consent.decline')}
             </Button>
           )}
           <Button
@@ -117,7 +117,7 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
             onClick={onAccept}
             sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#4fc3f7', '&:hover': { bgcolor: '#4fc3f7cc' } }}
           >
-            {declined ? 'Accept & continue' : 'Accept'}
+            {t(declined ? 'consent.acceptContinue' : 'consent.accept')}
           </Button>
         </Box>
       </Paper>

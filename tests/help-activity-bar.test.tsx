@@ -10,7 +10,7 @@
  */
 
 import { type ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { ActivityBar } from '../src/core/hmi/ActivityBar';
@@ -21,6 +21,16 @@ import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { setAppConfig } from '../src/core/rv-app-config';
 import { activateContext, deactivateContext } from '../src/core/hmi/ui-context-store';
 import { _resetHelpTopicRegistryForTests, registerHelpTopic } from '../src/core/hmi/help-topic-registry';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The shell copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const layout = vi.hoisted(() => ({ mobile: false }));
 

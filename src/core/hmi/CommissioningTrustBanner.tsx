@@ -41,6 +41,8 @@ import { ISA_AMBER } from './isa-colors';
 import { useUIVisible } from './ui-context-store';
 import { useModelProvenance } from '../rv-model-provenance';
 import { forgetShareTrust, rememberShareTrust } from '../share/rv-share-trust-store';
+import { useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 
 export interface CommissioningTrustBannerProps {
   /** Test seam: what "reload the page" means. Defaults to `location.reload()`. */
@@ -48,6 +50,7 @@ export interface CommissioningTrustBannerProps {
 }
 
 export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerProps) {
+  const { t } = useRvTranslation('shell');
   const provenance = useModelProvenance();
   const [confirming, setConfirming] = useState(false);
   const [storageWarning, setStorageWarning] = useState(false);
@@ -85,7 +88,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
     reload();
   };
 
-  const origin = provenance.sourceOrigin ? ` from ${provenance.sourceOrigin}` : '';
+  const origin = provenance.sourceOrigin ? t('trust.origin', { host: provenance.sourceOrigin }) : '';
 
   return (
     <Box
@@ -119,15 +122,10 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
           : <WarningAmber sx={{ mt: 0.15, fontSize: 20, color: '#fff', flexShrink: 0 }} />}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#fff', lineHeight: 1.4 }}>
-            {provenance.trusted
-              ? 'Live connections are enabled for this shared model'
-              : 'Live connections are switched off for this shared model'}
+            {t(provenance.trusted ? 'trust.enabledTitle' : 'trust.disabledTitle')}
           </Typography>
           <Typography sx={{ mt: 0.25, fontSize: 11, color: 'rgba(255,255,255,0.82)', lineHeight: 1.4 }}>
-            {provenance.trusted
-              ? `This model${origin} may bind signals and connect to your interfaces.`
-              : `This model arrived through a shared link${origin}. Signal binding, CONNECT`
-                + ' streaming and interface auto-connect stay off until you allow them.'}
+            {t(provenance.trusted ? 'trust.enabledText' : 'trust.disabledText', { origin })}
           </Typography>
 
           {confirming && !provenance.trusted && (
@@ -135,9 +133,9 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
               data-testid="commissioning-trust-confirm"
               sx={{ mt: 0.75, fontSize: 11, color: '#ffe2a8', lineHeight: 1.4 }}
             >
-              Allowing this connects <strong>somebody else&apos;s model</strong> to your plant.
-              The page reloads to apply it — <strong>unsaved changes to this shared model are
-              lost</strong>.
+              {/* Two emphasised spans mid-sentence — one key with numbered slots
+                  so a translator can move both. */}
+              <Trans ns="shell" i18nKey="trust.confirm" components={[<strong key="model" />, <strong key="lost" />]} />
             </Typography>
           )}
 
@@ -146,8 +144,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
               data-testid="commissioning-trust-storage-warning"
               sx={{ mt: 0.75, fontSize: 11, color: '#ffd6d6', lineHeight: 1.4 }}
             >
-              This decision could not be stored in this browser, so it cannot be applied by
-              reloading. Check whether site data is blocked (private mode, quota).
+              {t('trust.storageWarning')}
             </Typography>
           )}
 
@@ -156,8 +153,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
               data-testid="commissioning-trust-unavailable"
               sx={{ mt: 0.75, fontSize: 11, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}
             >
-              Not available here: this page cannot fingerprint the model (no secure context), and
-              a decision that cannot name the exact bytes is not one worth remembering.
+              {t('trust.unavailable')}
             </Typography>
           )}
 
@@ -170,7 +166,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
                 data-testid="commissioning-trust-revoke"
                 sx={{ minHeight: 28, px: 1.25, py: 0.25, color: 'rgba(255,255,255,0.85)', fontSize: 11, textTransform: 'none' }}
               >
-                Revoke live connections
+                {t('trust.revoke')}
               </Button>
             ) : confirming ? (
               <>
@@ -182,7 +178,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
                   data-testid="commissioning-trust-confirm-activate"
                   sx={{ minHeight: 28, px: 1.25, py: 0.25, fontSize: 11, textTransform: 'none' }}
                 >
-                  Reload and allow
+                  {t('trust.reloadAllow')}
                 </Button>
                 <Button
                   size="small"
@@ -191,7 +187,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
                   data-testid="commissioning-trust-cancel"
                   sx={{ minHeight: 28, px: 1, py: 0.25, color: 'rgba(255,255,255,0.85)', fontSize: 11, textTransform: 'none' }}
                 >
-                  Cancel
+                  {t('trust.cancel')}
                 </Button>
               </>
             ) : (
@@ -203,7 +199,7 @@ export function CommissioningTrustBanner({ onReload }: CommissioningTrustBannerP
                 data-testid="commissioning-trust-activate"
                 sx={{ minHeight: 28, px: 1.25, py: 0.25, fontSize: 11, textTransform: 'none' }}
               >
-                Allow live connections
+                {t('trust.allow')}
               </Button>
             )}
           </Box>

@@ -17,6 +17,7 @@ import { Box, IconButton, Typography, Paper } from '@mui/material';
 import { Close, UnfoldMore, UnfoldLess, DragIndicator } from '@mui/icons-material';
 import { BOTTOM_BAR_HEIGHT } from './layout-constants';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
+import { useRvTranslation } from '../i18n';
 import { getRecentAnchorPoint, placeAdjacentToAnchor, getCSSViewportSize, clientToCSS } from './panel-anchor-store';
 import { getFloatingPanelRoot } from './HMIShell';
 
@@ -227,6 +228,7 @@ export function FloatingPanel({
   toolbar,
   children,
 }: FloatingPanelProps) {
+  const { t } = useRvTranslation('shell');
   const isMobile = useMobileLayout();
   const minW = isMobile ? MIN_W_MOBILE : (minWidth ?? MIN_W_DESKTOP);
   const stableId = panelId ?? title;
@@ -471,7 +473,7 @@ export function FloatingPanel({
 
         <IconButton
           size="small"
-          aria-label={expanded ? 'Collapse window' : 'Expand window'}
+          aria-label={t(expanded ? 'bar.collapseWindow' : 'bar.expandWindow')}
           onClick={() => setExpanded((e) => !e)}
           sx={{ color: 'rgba(255,255,255,0.5)', p: 0.3, '&:hover': { color: '#fff' } }}
         >
@@ -480,7 +482,7 @@ export function FloatingPanel({
 
         <IconButton
           size="small"
-          aria-label="Close window"
+          aria-label={t('bar.closeWindow')}
           onClick={onClose}
           sx={{ color: 'rgba(255,255,255,0.5)', p: 0.3, '&:hover': { color: '#fff' } }}
         >

@@ -44,6 +44,7 @@ import {
   subscribeSearchAiHistory,
   type SearchAiHistoryEntry,
 } from './search-ai-history-store';
+import { rvT, useRvTranslation } from '../i18n';
 
 /** Marks the title bar as the drag handle for {@link DraggablePaper}. */
 const DRAG_HANDLE_ATTR = 'data-dialog-drag-handle';
@@ -150,7 +151,7 @@ function prefersReducedMotion(): boolean {
 function openSource(src: DiagnoseSource): void {
   if (!src.url) return;
   openPdfViewer(
-    src.title || 'Document',
+    src.title || rvT('shell', 'searchAi.document'),
     { type: 'url', url: src.url },
     src.page !== undefined ? { initialPage: src.page } : undefined,
   );
@@ -159,12 +160,12 @@ function openSource(src: DiagnoseSource): void {
 /** Short leaf name of a scene path for the context chip ("A/B/GearMotor" → "GearMotor"). */
 /** One-line summary of what plan-284 context was sent (F6: "node, 4 signals, 1 alarm"). */
 function contextSummary(ctx: SearchAiContext): string {
-  const parts = ['node'];
+  const parts = [rvT('shell', 'searchAi.ctxNode')];
   const signals = (ctx.machineContext?.match(/^Signals: (.+)$/m)?.[1].split(',').length) ?? 0;
   const alarms = (ctx.machineContext?.match(/^Alarm: /gm)?.length) ?? 0;
-  if (signals) parts.push(`${signals} signal${signals === 1 ? '' : 's'}`);
-  if (alarms) parts.push(`${alarms} alarm${alarms === 1 ? '' : 's'}`);
-  if (ctx.docHints?.length) parts.push(`${ctx.docHints.length} doc${ctx.docHints.length === 1 ? '' : 's'}`);
+  if (signals) parts.push(rvT('shell', 'searchAi.ctxSignals', { count: signals }));
+  if (alarms) parts.push(rvT('shell', 'searchAi.ctxAlarms', { count: alarms }));
+  if (ctx.docHints?.length) parts.push(rvT('shell', 'searchAi.ctxDocs', { count: ctx.docHints.length }));
   return parts.join(', ');
 }
 
@@ -173,6 +174,7 @@ function contextSummary(ctx: SearchAiContext): string {
  * travelled with the request — operator trust + debuggability. ink-low, collapsed.
  */
 function ContextSent({ context }: { context: SearchAiContext }) {
+  const { t } = useRvTranslation('shell');
   const [open, setOpen] = useState(false);
   return (
     <Box sx={{ mt: 1 }}>
@@ -183,7 +185,7 @@ function ContextSent({ context }: { context: SearchAiContext }) {
         onClick={() => setOpen((o) => !o)}
         sx={{ color: 'text.disabled', fontSize: 12 }}
       >
-        {open ? '▾' : '▸'} Context sent ({contextSummary(context)})
+        {open ? '▾' : '▸'} {t('searchAi.contextSent', { summary: contextSummary(context) })}
       </Link>
       <Collapse in={open}>
         <Box
@@ -206,6 +208,7 @@ function ContextSent({ context }: { context: SearchAiContext }) {
  * for this answer. Mirrors ContextSent so passive transparency stays ink-low.
  */
 function ToolsUsed({ tools }: { tools: string[] }) {
+  const { t } = useRvTranslation('shell');
   const [open, setOpen] = useState(false);
   return (
     <Box sx={{ mt: 1 }}>
@@ -216,7 +219,7 @@ function ToolsUsed({ tools }: { tools: string[] }) {
         onClick={() => setOpen((o) => !o)}
         sx={{ color: 'text.disabled', fontSize: 12 }}
       >
-        {open ? '▾' : '▸'} Tools used ({tools.length})
+        {open ? '▾' : '▸'} {t('searchAi.toolsUsed', { count: tools.length })}
       </Link>
       <Collapse in={open}>
         <Box
@@ -240,6 +243,7 @@ function ToolsUsed({ tools }: { tools: string[] }) {
  * dialog stays open). Collapses to the first few with a "+N more" reveal.
  */
 function AffectedParts({ paths }: { paths: string[] }) {
+  const { t } = useRvTranslation('shell');
   const [expanded, setExpanded] = useState(false);
   const MAX_VISIBLE = 6;
   const visible = expanded ? paths : paths.slice(0, MAX_VISIBLE);
@@ -251,7 +255,7 @@ function AffectedParts({ paths }: { paths: string[] }) {
       ))}
       {hidden > 0 && (
         <Chip
-          label={`+${hidden} more`}
+          label={t('searchAi.morePartsChip', { count: hidden })}
           size="small"
           variant="outlined"
           clickable
@@ -417,6 +421,7 @@ function ElapsedSeconds({ startedAt }: { startedAt?: number }) {
 }
 
 export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
+  const { t } = useRvTranslation('shell');
   const state = useSyncExternalStore(subscribeSearchAi, getSearchAiSnapshot);
   const historyEntries = useSyncExternalStore(
     subscribeSearchAiHistory,
@@ -435,7 +440,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
     setSelectedResult(r?.comparison && isEmptyAnswer(r) && !isEmptyAnswer(r.comparison) ? 1 : 0);
   }, [state.result]);
   const activeResult = selectedResult === 1 ? comparison : res;
-  const comparisonFallback = res?.provider === 'cloud' ? 'Claude CLI' : 'Comparison';
+  const comparisonFallback = res?.provider === 'cloud' ? 'Claude CLI' : t('searchAi.comparison');
   const partLeafLookup = useMemo(
     () => activeResult ? buildPartLeafLookup(viewer) : new Map<string, string | null>(),
     [viewer, activeResult],
@@ -511,13 +516,13 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
           <IconButton
             onClick={(event) => setHistoryAnchor(event.currentTarget)}
             sx={{ position: 'absolute', right: 44, top: 8 }}
-            aria-label="AI answer history"
+            aria-label={t('searchAi.history')}
           >
             <History />
           </IconButton>
         )}
-        <span>AI Assistant{state.query ? ` · ${truncateQuery(state.query)}` : ''}</span>
-        <IconButton onClick={handleClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label="Close">
+        <span>{t('searchAi.title')}{state.query ? ` · ${truncateQuery(state.query)}` : ''}</span>
+        <IconButton onClick={handleClose} sx={{ position: 'absolute', right: 8, top: 8 }} aria-label={t('searchAi.close')}>
           <Close />
         </IconButton>
         <Menu
@@ -559,7 +564,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 3 }}>
             <CircularProgress size={22} />
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Searching the machine documentation…
+              {t('searchAi.searching')}
             </Typography>
             <ElapsedSeconds startedAt={state.startedAt} />
           </Box>
@@ -567,13 +572,13 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
 
         {state.status === 'error' && (
           <Typography variant="body2" sx={{ color: ERROR_COLOR, py: 2 }}>
-            {state.error || 'AI search failed'}
+            {state.error || t('searchAi.failed')}
           </Typography>
         )}
 
         {state.status === 'empty' && (
           <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
-            No matching answer found in the documentation.
+            {t('searchAi.empty')}
           </Typography>
         )}
 
@@ -583,28 +588,28 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
               <Tabs
                 value={selectedResult}
                 onChange={(_event, value: number) => setSelectedResult(value)}
-                aria-label="AI answer provider comparison"
+                aria-label={t('searchAi.comparisonTabs')}
                 sx={{ mb: 2 }}
               >
-                <Tab label={resultTabLabel(res, 'Primary')} />
+                <Tab label={resultTabLabel(res, t('searchAi.primary'))} />
                 <Tab
                   label={comparison
                     ? resultTabLabel(comparison, comparisonFallback)
-                    : `Comparison · ${res.comparisonError}`}
+                    : t('searchAi.comparisonLabel', { error: res.comparisonError })}
                 />
               </Tabs>
             )}
 
             {selectedResult === 1 && !comparison && res.comparisonError && (
               <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
-                Comparison provider unavailable: {res.comparisonError}.
+                {t('searchAi.comparisonError', { error: res.comparisonError })}
               </Typography>
             )}
 
             {activeResult && (
               <Box>
                 {revealed >= 1 && activeResult.cause && (
-                  <Section title="Answer">
+                  <Section title={t('searchAi.answer')}>
                     <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
                       {renderAnswerText(activeResult.cause, viewer, partLeafLookup, activeResult.sources)}
                     </Typography>
@@ -612,7 +617,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
                 )}
 
                 {revealed >= 2 && activeResult.remedy && (
-                  <Section title="Recommendation">
+                  <Section title={t('searchAi.recommendation')}>
                     <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
                       {renderAnswerText(activeResult.remedy, viewer, partLeafLookup, activeResult.sources)}
                     </Typography>
@@ -620,7 +625,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
                 )}
 
                 {revealed >= 3 && activeResult.sources.length > 0 && (
-                  <Section title="Sources">
+                  <Section title={t('searchAi.sources')}>
                     {activeResult.sources.map((src, i) => (
                       <Box key={`${src.title}-${src.page ?? ''}-${i}`} sx={{ mb: 0.75 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -657,7 +662,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
                 )}
 
                 {revealed >= 3 && affected.length > 0 && (
-                  <Section title="Affected parts">
+                  <Section title={t('searchAi.affectedParts')}>
                     <AffectedParts paths={affected} />
                   </Section>
                 )}
@@ -668,7 +673,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
 
                 {revealed >= TOTAL_LINES && activeResult.model && (
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Model: {activeResult.model}
+                    {t('searchAi.model', { name: activeResult.model })}
                   </Typography>
                 )}
               </Box>
@@ -678,7 +683,7 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
 
         {state.status === 'idle' && (
           <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
-            Type a question in the search field, then press “Ask AI”.
+            {t('searchAi.idle')}
           </Typography>
         )}
 
@@ -689,11 +694,11 @@ export function SearchAiDialog({ open, onClose }: SearchAiDialogProps) {
       <DialogActions>
         {state.status === 'error' && (
           <Button startIcon={<Replay />} onClick={handleTryAgain} disabled={!state.query}>
-            Try again
+            {t('searchAi.tryAgain')}
           </Button>
         )}
         <Box sx={{ flex: 1 }} />
-        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={handleClose}>{t('searchAi.close')}</Button>
       </DialogActions>
     </Dialog>
   );

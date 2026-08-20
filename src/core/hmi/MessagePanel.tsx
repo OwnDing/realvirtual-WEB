@@ -18,11 +18,13 @@ import { MaintenancePanel } from './MaintenancePanel';
 import { useOverlayVisible } from '../../hooks/use-overlay-visible';
 import { registerOverlayProducer, unregisterOverlayProducer } from '../overlay-visibility-store';
 import { useActiveContexts, evaluateVisibilityRule } from './ui-context-store';
+import { useRvTranslation } from '../i18n';
 
 /** Core layout container for messages (right side). Renders 'messages' slot entries.
  *  When maintenance mode is active, swaps to the MaintenancePanel stepper.
  *  Desktop supports a minimized peek mode that expands individual cards on hover. */
 export function MessagePanel() {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   // Honour `visibilityRule` exactly as ActivityBar and ButtonPanel do. Entries
   // WITHOUT a rule stay always-visible (the documented UISlotEntry invariant);
@@ -107,7 +109,7 @@ export function MessagePanel() {
           }}
         >
           <Box sx={{ alignSelf: 'flex-end', pointerEvents: 'auto', mb: 0.5 }}>
-            <Tooltip title="Expand messages" placement="left">
+            <Tooltip title={t('messages.expand')} placement="left">
               <IconButton
                 size="small"
                 onClick={toggleMessagePanelMinimized}
@@ -161,7 +163,7 @@ export function MessagePanel() {
         }}
       >
         <Box sx={{ alignSelf: 'flex-end', pointerEvents: 'auto' }}>
-          <Tooltip title="Minimize messages" placement="left">
+          <Tooltip title={t('messages.minimize')} placement="left">
             <IconButton
               size="small"
               onClick={toggleMessagePanelMinimized}

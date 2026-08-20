@@ -26,6 +26,8 @@
 import { Component, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 import { WarningAmber } from '@mui/icons-material';
+import { rvT } from '../i18n';
+import { useRvTranslation } from '../i18n';
 
 /** System Warning Amber (DESIGN.md) — a failed chunk is a warning, not a machine fault. */
 const WARNING_AMBER = '#ffa726';
@@ -58,9 +60,9 @@ class ChunkErrorBoundary extends Component<ChunkErrorBoundaryProps, ChunkErrorBo
         data-testid="lazy-panel-error"
         sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 1 }}
       >
-        <WarningAmber role="img" aria-label="Warning" sx={{ fontSize: 16, color: WARNING_AMBER, flexShrink: 0 }} />
+        <WarningAmber role="img" aria-label={rvT('shell', 'lazyPanel.warning')} sx={{ fontSize: 16, color: WARNING_AMBER, flexShrink: 0 }} />
         <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-          {this.props.label} could not be loaded. Reload the page to try again.
+          {rvT('shell', 'lazyPanel.failed', { label: this.props.label })}
         </Typography>
       </Box>
     );

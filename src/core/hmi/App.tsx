@@ -388,8 +388,9 @@ function FullHmiShell({
 /** Minimal restore affordance shown only while the HMI is hidden — a single
  *  eye button in the top-right corner that toggles the full HMI back on. */
 function HmiRestoreButton() {
+  const { t } = useRvTranslation('shell');
   return (
-    <Tooltip title="Show HMI (H)" placement="left">
+    <Tooltip title={t('bar.showHmi')} placement="left">
       <IconButton
         onClick={toggleHmiVisible}
         sx={{

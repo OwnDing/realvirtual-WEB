@@ -3,6 +3,7 @@
 
 import { createStore } from './create-store';
 import { connectRestFetch } from './connect-rest';
+import { rvT } from '../i18n';
 
 export type LicenseState =
   | 'Unlicensed'
@@ -120,7 +121,9 @@ export function mapLicenseStatus(value: unknown): LicenseStatus | null {
 }
 
 function humanizeReason(reason: string | null | undefined): string {
-  if (!reason) return 'License registration is required';
+  // The reason itself is a backend code (`LICENSE_TOKEN_EXPIRED`); ADR-0001 §6
+  // keeps server values as they are, so only the fallback sentence is copy.
+  if (!reason) return rvT('shell', 'license.reasonRequired');
   return reason
     .replace(/^LICENSE_/, '')
     .replaceAll('_', ' ')
@@ -133,45 +136,49 @@ export function deriveLicensePresentation(status: LicenseStatus): LicensePresent
   if (status.state === 'Degraded') {
     return {
       kind: 'warning',
-      label: `License degraded - ${humanizeReason(status.error)}`,
-      actionLabel: 'Activate license...',
+      label: rvT('shell', 'license.degraded', { reason: humanizeReason(status.error) }),
+      actionLabel: rvT('shell', 'license.actionActivate'),
     };
   }
   switch (status.state) {
     case 'LicensedAnnual':
       return {
         kind: 'licensed',
-        label: `License: Annual - ${status.maxSignals} signals`,
+        label: rvT('shell', 'license.annual', { signals: status.maxSignals }),
         detail: status.licenseKeyMasked ?? undefined,
-        actionLabel: 'Deactivate...',
+        actionLabel: rvT('shell', 'license.actionDeactivate'),
       };
     case 'LicensedLifetime':
       return {
         kind: 'licensed',
-        label: `License: Lifetime - ${status.maxSignals >= 2_147_483_647 ? 'Unlimited' : status.maxSignals} signals`,
+        label: rvT('shell', 'license.lifetime', {
+          signals: status.maxSignals >= 2_147_483_647 ? rvT('shell', 'license.unlimited') : status.maxSignals,
+        }),
         detail: status.licenseKeyMasked ?? undefined,
-        actionLabel: 'Deactivate...',
+        actionLabel: rvT('shell', 'license.actionDeactivate'),
       };
     case 'LicensedCommunity':
       return {
         kind: 'free',
-        label: `Free - ${status.admittedSignals} / ${status.maxSignals} signals`,
-        actionLabel: 'Activate license...',
+        label: rvT('shell', 'license.free', { used: status.admittedSignals, max: status.maxSignals }),
+        actionLabel: rvT('shell', 'license.actionActivate'),
       };
     case 'PendingRegistration':
       return {
         kind: 'pending',
-        label: 'License: Waiting for confirmation',
-        detail: status.registration?.email ? `Check ${status.registration.email}` : 'Check your inbox',
-        actionLabel: 'View registration...',
+        label: rvT('shell', 'license.pending'),
+        detail: status.registration?.email
+          ? rvT('shell', 'license.checkInbox', { email: status.registration.email })
+          : rvT('shell', 'license.checkYourInbox'),
+        actionLabel: rvT('shell', 'license.actionView'),
       };
     case 'Unlicensed':
     default:
       return {
         kind: 'warning',
-        label: 'License required',
-        detail: 'Register free for 20 PLC signals - or activate a license key.',
-        actionLabel: 'Activate license...',
+        label: rvT('shell', 'license.required'),
+        detail: rvT('shell', 'license.requiredDetail'),
+        actionLabel: rvT('shell', 'license.actionActivate'),
       };
   }
 }

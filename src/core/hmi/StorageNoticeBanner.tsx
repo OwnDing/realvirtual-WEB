@@ -32,6 +32,7 @@ import { Warning, Error as ErrorIcon, Info, Close } from '@mui/icons-material';
 import { onBlobStoreNotice, type BlobStoreNotice } from '../storage/rv-opfs-blobs';
 import { clearSceneSyncNotice, onSceneSyncEvent, type SceneSyncNotice } from './scene/rv-scene-live-sync';
 import { ISA_AMBER, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 import { useOptionalViewer } from '../../hooks/use-viewer';
 
 type Severity = 'info' | 'warning' | 'critical';
@@ -53,6 +54,7 @@ interface Entry {
 const PERSIST_DISMISS_KEY = 'rv-storage-persist-dismissed';
 
 export function StorageNoticeBanner() {
+  const { t } = useRvTranslation('shell');
   const viewer = useOptionalViewer();
   const [persistNotice, setPersistNotice] = useState<BlobStoreNotice | null>(null);
   // A map, not a single notice (plan-422 §2.3): an autosave error and a
@@ -195,7 +197,7 @@ export function StorageNoticeBanner() {
         <IconButton
           size="small"
           onClick={handleDismiss}
-          aria-label="Dismiss"
+          aria-label={t('storage.dismiss')}
           sx={{ color: 'rgba(255,255,255,0.8)', ml: 0.5, '&:hover': { color: '#fff' } }}
         >
           <Close sx={{ fontSize: 16 }} />

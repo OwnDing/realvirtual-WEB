@@ -9,16 +9,20 @@ import ViewQuiltOutlinedIcon from '@mui/icons-material/ViewQuiltOutlined';
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import { setWelcomeModalOpen } from './welcome-modal-store';
 import { useCustomBranding } from './branding-store';
+import { useRvTranslation, type RVTranslationKey } from '../i18n';
+import { Trans } from 'react-i18next';
 import { formatVersionFull } from '../rv-version';
 
 /** Primary use cases, shown as a compact list. */
-const USE_CASES: Array<[string, string]> = [
-  ['3D HMI & monitoring', 'live PLC dashboards in the browser'],
-  ['Machine & maintenance info', 'documents, guides and drawings on 3D parts'],
-  ['Product configuration', 'interactive configurators from a single GLB'],
-  ['Sales & presales', 'share a live digital twin with one link'],
-  ['Training', 'safe, interactive learning environments'],
-];
+/** Catalog key pairs, not resolved text: this table is module-level, so a
+ *  string here would be frozen at import time — before a language exists. */
+const USE_CASES = [
+  ['welcome.useCase1', 'welcome.useCase1Desc'],
+  ['welcome.useCase2', 'welcome.useCase2Desc'],
+  ['welcome.useCase3', 'welcome.useCase3Desc'],
+  ['welcome.useCase4', 'welcome.useCase4Desc'],
+  ['welcome.useCase5', 'welcome.useCase5Desc'],
+] as const satisfies ReadonlyArray<readonly [RVTranslationKey<'shell'>, RVTranslationKey<'shell'>]>;
 
 /** Deep links to the two built-in demos (resolved against the deploy base path). */
 const HMI_DEMO_HREF = `${import.meta.env.BASE_URL}?model=DemoRealvirtualWeb.glb`;
@@ -67,6 +71,7 @@ interface WelcomeModalProps {
 }
 
 export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) {
+  const { t } = useRvTranslation('shell');
   // Track visibility in the welcome-modal-store so KioskPlugin can pause idle
   // detection while the modal blocks interaction. Cleanup on unmount sets false.
   useEffect(() => {
@@ -140,39 +145,33 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
           </Box>
         </Box>
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', letterSpacing: 2, textTransform: 'uppercase', fontSize: 10, mt: -1 }}>
-          Open. Light. Industrial. Anywhere.
+          {t('welcome.slogan')}
         </Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          A browser-based 3D HMI and digital-twin viewer for industrial automation —
-          everything from a single GLB export, live in the browser. Use it for:
+          {t('welcome.intro')}
         </Typography>
 
         <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-          {USE_CASES.map(([label, desc]) => (
-            <Typography key={label} component="li" variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
-              <strong style={{ color: '#fff' }}>{label}</strong> &mdash; {desc}
+          {USE_CASES.map(([labelKey, descKey]) => (
+            <Typography key={labelKey} component="li" variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
+              <strong style={{ color: '#fff' }}>{t(labelKey)}</strong> — {t(descKey)}
             </Typography>
           ))}
         </Box>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          One link is all it takes. Share interactive 3D digital twins with operators,
-          service technicians, sales teams, and customers — directly in the browser,
-          on any device, no installation required.
-          No cloud lock-in. Your data, your server.
+          {t('welcome.share')}
         </Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          Connect to real PLCs via WebSocket or MQTT. Attach documents, maintenance guides,
-          and technical drawings directly to 3D components. Build product configurators,
-          KPI dashboards, and training environments — all from a single GLB export.
+          {t('welcome.connect')}
         </Typography>
 
         {!custom && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
-              Two demos to explore
+              {t('welcome.demosTitle')}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
               <Button
@@ -184,10 +183,10 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
                 data-testid="welcome-demo-hmi"
                 sx={{ textTransform: 'none', fontWeight: 600, minWidth: 150, justifyContent: 'flex-start' }}
               >
-                HMI Demo
+                {t('welcome.hmiDemo')}
               </Button>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Operate &amp; monitor a running line
+                {t('welcome.hmiDemoDesc')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
@@ -200,29 +199,29 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
                 data-testid="welcome-demo-planner"
                 sx={{ textTransform: 'none', fontWeight: 600, minWidth: 150, justifyContent: 'flex-start' }}
               >
-                Planner Demo
+                {t('welcome.plannerDemo')}
               </Button>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Build a layout from reusable library objects
+                {t('welcome.plannerDemoDesc')}
               </Typography>
             </Box>
           </Box>
         )}
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          <strong style={{ color: '#fff' }}>Beta software</strong> — realvirtual WEB is under
-          active development. Features, file formats, and APIs may still change, and it is
-          not intended for production use yet.
-          Open source under the <strong style={{ color: '#fff' }}>AGPL-3.0 license</strong>.
-          Provided as is, without warranty of any kind — see the{' '}
-          <a href="https://realvirtual.io/en/terms/" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
-            license terms
-          </a>.
-          Part of the{' '}
-          <a href="https://realvirtual.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
-            realvirtual.io
-          </a>{' '}
-          industrial digital twin platform.
+          {/* One paragraph, one key. The three links and the emphasis all sit
+              mid-sentence; split into fragments they would freeze English word
+              order into the catalog. */}
+          <strong style={{ color: '#fff' }}>{t('welcome.betaTitle')}</strong> —{' '}
+          <Trans
+            ns="shell"
+            i18nKey="welcome.betaText"
+            components={[
+              <strong key="license" style={{ color: '#fff' }} />,
+              <a key="terms" href="https://realvirtual.io/en/terms/" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="site" href="https://realvirtual.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+            ]}
+          />
         </Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
@@ -242,8 +241,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
 
         {mustAccept && (
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
-            By continuing you acknowledge the beta status of this software and accept the
-            license terms.
+            {t('welcome.mustAccept')}
           </Typography>
         )}
 
@@ -258,7 +256,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
               data-testid="welcome-start-demo"
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              Start Demo
+              {t('welcome.startDemo')}
             </Button>
           )}
           <Button
@@ -268,7 +266,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
             data-testid="welcome-dismiss"
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {mustAccept ? 'Accept & continue' : 'Got it'}
+            {t(mustAccept ? 'welcome.acceptContinue' : 'welcome.gotIt')}
           </Button>
         </Box>
       </Paper>

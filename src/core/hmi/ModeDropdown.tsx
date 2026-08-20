@@ -19,6 +19,7 @@ import {
   ArrowDropDown, Check, ViewQuilt, AccountTree, GridView, ViewInAr, Dashboard, Edit, Handyman,
 } from '@mui/icons-material';
 import { useMode } from '../../hooks/use-mode';
+import { useRvTranslation } from '../i18n';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
 import { useUIZoom } from './visual-settings-store';
 import { useUIVisible } from './ui-context-store';
@@ -43,6 +44,7 @@ function iconFor(idOrName: string | undefined, fallback: string): ReactElement {
 }
 
 export function ModeDropdown() {
+  const { t } = useRvTranslation('shell');
   const { active, modes, setMode, locked } = useMode();
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const isMobile = useMobileLayout();
@@ -83,7 +85,7 @@ export function ModeDropdown() {
     >
       <ButtonBase
         onClick={(e) => setAnchor(e.currentTarget)}
-        aria-label="Switch workspace mode"
+        aria-label={t('bar.switchMode')}
         aria-haspopup="menu"
         aria-expanded={open}
         sx={{

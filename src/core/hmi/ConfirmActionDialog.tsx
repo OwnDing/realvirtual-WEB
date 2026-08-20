@@ -9,6 +9,7 @@
  */
 
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { useRvTranslation } from '../i18n';
 
 export interface ConfirmAction {
   title: string;
@@ -23,6 +24,7 @@ export interface ConfirmAction {
  * focuses Cancel by default so Enter never destroys anything by accident.
  */
 export function ConfirmActionDialog({ action, onClose }: { action: ConfirmAction | null; onClose: () => void }) {
+  const { t } = useRvTranslation('shell');
   return (
     <Dialog open={!!action} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontSize: 14 }}>{action?.title}</DialogTitle>
@@ -30,7 +32,7 @@ export function ConfirmActionDialog({ action, onClose }: { action: ConfirmAction
         <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{action?.message}</Typography>
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>{t('confirm.cancel')}</Button>
         <Button
           color="error"
           variant="contained"

@@ -37,6 +37,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useViewer } from '../../hooks/use-viewer';
 import { projectToScreen } from './tooltip/tooltip-utils';
+import { useRvTranslation } from '../i18n';
 import {
   hideInstruction,
   useInstructions,
@@ -125,6 +126,7 @@ function computeStackOffsets(instructions: readonly Instruction[]): Map<string, 
  * @public @stable v1
  */
 export function InstructionLayer(): ReactNode {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const instructions = useInstructions();
 
@@ -223,6 +225,7 @@ const InstructionCard = memo(
     instruction: Instruction;
     stackOffset: number;
   }): ReactNode {
+    const { t } = useRvTranslation('shell');
     const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const anchor = instruction.anchor;
     const style: InstructionStyle = instruction.style ?? 'info';
@@ -270,7 +273,7 @@ const InstructionCard = memo(
           </Box>
           {instruction.dismissible && (
             <IconButton
-              aria-label="Dismiss instruction"
+              aria-label={t('instruction.dismiss')}
               size="small"
               onClick={() => {
                 safeInvoke(instruction.onDismiss, 'onDismiss');

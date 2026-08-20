@@ -28,6 +28,7 @@ import {
 import { AI_BRIDGE_CONSENT_VERSION, grantAiBridgeConsent, useAiBridgeConsent } from './ai-consent-store';
 import { requestSettingsTab } from './settings-tab-store';
 import { ConnectDownloadLinks } from './ConnectPanel';
+import { useRvTranslation } from '../i18n';
 
 /** AI tab id in SettingsPanel — the one place `Configure…` can land. */
 const SETTINGS_TAB_AI = 5;
@@ -56,38 +57,35 @@ export function AiBridgeConsentDialog({
   onConfigure: () => void;
   onClose: () => void;
 }) {
+  const { t } = useRvTranslation('shell');
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth data-testid="ai-consent-dialog">
-      <DialogTitle sx={{ fontSize: 14 }}>Before you connect an AI assistant</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14 }}>{t('ai.consentTitle')}</DialogTitle>
       <DialogContent>
         <Typography sx={{ fontSize: 13, color: 'text.primary', lineHeight: 1.6 }}>
-          The AI Bridge hands a connected assistant the same control you have in this
-          viewer. Nothing is asked again per action.
+          {t('ai.consentIntro')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1.5 }}>
           <ScopeLine
-            label="Scene"
-            text="read the full hierarchy, and create, move, rename or delete objects."
+            label={t('ai.scopeScene')}
+            text={t('ai.scopeSceneText')}
           />
           <ScopeLine
-            label="Signals"
-            text="read every PLC signal and write to them — including a live controller when one is attached."
+            label={t('ai.scopeSignals')}
+            text={t('ai.scopeSignalsText')}
           />
           <ScopeLine
-            label="Simulation"
-            text="start, pause, reset and jog drives."
+            label={t('ai.scopeSimulation')}
+            text={t('ai.scopeSimulationText')}
           />
         </Box>
         <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, mt: 1.5 }}>
-          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>How far it reaches.</Box>
+          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{t('ai.reachTitle')}</Box>
           {' '}
-          realvirtual CONNECT hosts the bridge. On this machine it works without any
-          configuration. From another machine it answers only with a valid API key, so
-          set one in CONNECT before you expose that machine to a network you do not
-          control.
+          {t('ai.reachText')}
         </Typography>
         <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, mt: 1 }}>
-          You can switch the bridge off or restrict it at any time under Settings ▸ AI.
+          {t('ai.switchOff')}
         </Typography>
         <Typography
           sx={{ fontSize: 10, fontFamily: 'monospace', color: 'text.disabled', mt: 1.5 }}
@@ -99,13 +97,13 @@ export function AiBridgeConsentDialog({
         {/* Escape and the backdrop lead here too: a modal that can only be left
             by agreeing would be coercion, not consent. */}
         <Button onClick={onClose} sx={{ textTransform: 'none', color: 'text.secondary', mr: 'auto' }}>
-          Not now
+          {t('ai.notNow')}
         </Button>
         <Button onClick={onConfigure} sx={{ textTransform: 'none' }}>
-          Configure…
+          {t('ai.configure')}
         </Button>
         <Button autoFocus variant="contained" onClick={onAcknowledge} sx={{ textTransform: 'none' }}>
-          Got it
+          {t('ai.gotIt')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -118,6 +116,7 @@ export function AiBridgeConsentDialog({
  * an un-consented device never loads, never mounts and never reaches the panel.
  */
 export function AiBridgeGate({ children }: { children: ReactNode }) {
+  const { t } = useRvTranslation('shell');
   const consented = useAiBridgeConsent();
   // Declining must be possible without agreeing to anything, and without the
   // dialog re-opening on the spot: it steps aside for this visit and the tab
@@ -135,7 +134,7 @@ export function AiBridgeGate({ children }: { children: ReactNode }) {
   return (
     <Box data-testid="ai-consent-gate">
       <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6 }}>
-        The AI Bridge stays closed until you have seen what it may reach on this device.
+        {t('ai.gateClosed')}
       </Typography>
       {deferred && (
         <Button
@@ -144,7 +143,7 @@ export function AiBridgeGate({ children }: { children: ReactNode }) {
           onClick={() => setDeferred(false)}
           sx={{ mt: 1, textTransform: 'none' }}
         >
-          Review access…
+          {t('ai.reviewAccess')}
         </Button>
       )}
       <AiBridgeConsentDialog
@@ -163,19 +162,18 @@ export function AiBridgeGate({ children }: { children: ReactNode }) {
  * affordance the CONNECT panel uses, versions included.
  */
 export function AiBridgeDownloadInfo() {
+  const { t } = useRvTranslation('shell');
   return (
     <Box sx={{ color: 'text.secondary' }} data-testid="ai-connect-download-info">
       <Typography sx={{ fontSize: 12, lineHeight: 1.6 }}>
-        The AI features need realvirtual CONNECT as their MCP server — it hosts the
-        bridge this viewer and your AI assistant both talk to. No CONNECT answered on
-        this machine.
+        {t('ai.downloadInfo')}
       </Typography>
       <Box sx={{ mt: 1 }}>
         <ConnectDownloadLinks />
       </Box>
       {/* Readable prose keeps the AA ink ramp — only the scope stamp goes dimmer. */}
       <Typography sx={{ fontSize: 11, lineHeight: 1.6, mt: 1, color: 'text.secondary' }}>
-        Already installed? Start CONNECT, then open this again.
+        {t('ai.alreadyInstalled')}
       </Typography>
     </Box>
   );
@@ -183,14 +181,15 @@ export function AiBridgeDownloadInfo() {
 
 /** The download dead end as a dialog — what the activity-bar entry raises. */
 export function AiBridgeDownloadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('shell');
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth data-testid="ai-download-dialog">
-      <DialogTitle sx={{ fontSize: 14 }}>AI Bridge needs realvirtual CONNECT</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14 }}>{t('ai.downloadTitle')}</DialogTitle>
       <DialogContent>
         <AiBridgeDownloadInfo />
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>Close</Button>
+        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>{t('ai.close')}</Button>
       </DialogActions>
     </Dialog>
   );

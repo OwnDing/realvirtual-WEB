@@ -78,6 +78,38 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/settings/CameraStartTab.tsx',
   'src/core/rv-render-modes.ts',
   'src/plugins/camera-startpos-plugin.tsx',
+  // Always-visible HMI shell (Milestone 4b, batch 3)
+  'src/core/hmi/App.tsx',
+  'src/core/hmi/TopBar.tsx',
+  'src/core/hmi/BottomBar.tsx',
+  'src/core/hmi/ActivityBar.tsx',
+  'src/core/hmi/ButtonPanel.tsx',
+  'src/core/hmi/CameraBar.tsx',
+  'src/core/hmi/ModeDropdown.tsx',
+  'src/core/hmi/LeftPanel.tsx',
+  'src/core/hmi/FloatingPanel.tsx',
+  'src/core/hmi/LazyPanelBoundary.tsx',
+  'src/core/hmi/WelcomeModal.tsx',
+  'src/core/hmi/LicenseSection.tsx',
+  'src/core/hmi/license-store.ts',
+  'src/core/hmi/CommissioningTrustBanner.tsx',
+  'src/core/hmi/SharedViewBanner.tsx',
+  'src/core/hmi/GPUWarningBanner.tsx',
+  'src/core/hmi/StorageNoticeBanner.tsx',
+  'src/core/hmi/SigWarningBanner.tsx',
+  'src/core/hmi/consent-gate.tsx',
+  'src/core/hmi/password-gate.tsx',
+  'src/core/hmi/ProjectCodeConsentDialog.tsx',
+  'src/core/hmi/AiBridgeGate.tsx',
+  'src/core/hmi/NewsDialog.tsx',
+  'src/core/hmi/ServeSessionBadge.tsx',
+  'src/core/hmi/AiActivityOverlay.tsx',
+  'src/core/hmi/AskAiButton.tsx',
+  'src/core/hmi/SearchAiDialog.tsx',
+  'src/core/hmi/AutoQualityDialog.tsx',
+  'src/core/hmi/MessagePanel.tsx',
+  'src/core/hmi/InstructionLayer.tsx',
+  'src/core/hmi/ConnectUpdateNotice.tsx',
 ];
 
 /**
@@ -98,7 +130,20 @@ const CAPITALISED_AT_RENDER = 'Produced by `id.charAt(0).toUpperCase() + id.slic
   + 'option id, so the capitalised word was never in the source text — only the lowercase id was. '
   + 'Moving the capitalisation into the catalog is what lets the label be translated at all.';
 
+const GERMAN_SOURCE = 'There is no English original to move: `NewsDialog.tsx` shipped GERMAN copy '
+  + '("Neu in realvirtual WEB", "News schließen", "Mehr erfahren", "Weiter", "Schließen", "N von M") '
+  + 'in an otherwise English product. The English here is therefore newly written, and the German is '
+  + 'gone from the source. Listed in full — including the values that happen to match a word used '
+  + 'elsewhere — because the fact worth recording is that this whole dialog had no English, not '
+  + 'whether a three-letter button label collides with another file.';
+
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['shell.news.eyebrow', GERMAN_SOURCE],
+  ['shell.news.close', GERMAN_SOURCE],
+  ['shell.news.learnMore', GERMAN_SOURCE],
+  ['shell.news.progress', GERMAN_SOURCE],
+  ['shell.news.next', GERMAN_SOURCE],
+  ['shell.news.done', GERMAN_SOURCE],
   ['projects.status.moved', 'Sentence-frame split. The source built one string with the verb interpolated '
     + '(`"${doc.name}" ${mode === "move" ? "moved" : "copied"} to "${ws.name}".`), which hands a '
     + 'translator a frame they cannot inflect. The English words are unchanged; only the seam moved.'],
@@ -146,7 +191,13 @@ export function readBaseSources(ref = MIGRATION_BASE_REF, root = ROOT) {
  *
  *   - `{{name}}` spans the `${…}` expression it replaced;
  *   - `<0>`/`</0>` span the JSX element they replaced (a `<code>` span, say),
- *     since a `<Trans>` key numbers its children instead of naming them;
+ *     since a `<Trans>` key numbers its children instead of naming them. The
+ *     marker also absorbs whitespace on both sides: a `<Link>` with props wraps
+ *     across lines, so its content starts on the NEXT line while the catalog
+ *     holds the sentence flat;
+ *   - a character that JSX often spells as an HTML entity (`'`, `&`, `—`, `©`)
+ *     also matches that entity, because `&apos;` and `'` are the same character
+ *     once rendered — the catalog holds what the user reads;
  *   - a run of spaces matches any whitespace OR one of the three things that
  *     RENDER as whitespace but are not: a JavaScript concatenation seam
  *     (`' + '` or a backtick seam), because long messages were wrapped across
@@ -162,13 +213,31 @@ export function readBaseSources(ref = MIGRATION_BASE_REF, root = ROOT) {
  * anything. The anchor is conditional because `\b` is meaningless next to a
  * non-word character, and plenty of labels start with `·` or end with `.`.
  */
+/**
+ * Characters JSX commonly writes as an entity, and the entities that spell them.
+ * One pass over the escaped string, so an entity's own `&` is never re-expanded.
+ */
+const ENTITY_FORMS = new Map([
+  ["'", '&apos;|&#39;'],
+  ['&', '&amp;'],
+  ['"', '&quot;'],
+  ['—', '&mdash;'],
+  ['–', '&ndash;'],
+  ['©', '&copy;'],
+  ['…', '&hellip;'],
+]);
+
 export function verbatimPattern(value) {
   const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const body = escaped
+    .replace(/['&"—–©…]/g, (char) => `(?:${char.replace(/[&]/g, '\\&')}|${ENTITY_FORMS.get(char)})`)
     .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
-    .replace(/<\/?\d>/g, '<[^>]*>')
+    .replace(/<\/?\d>/g, '\\s*<[^>]*>\\s*')
     .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`]|\\{\' \'\\}|&nbsp;)+');
-  const lead = /^\w/.test(value) ? '\\b' : '';
+  // `\n` in a template literal is two SOURCE characters, so `\nBranch:` has no
+  // word boundary before `Branch` in the text this check reads — even though the
+  // rendered string does. An escape sequence counts as a boundary.
+  const lead = /^\w/.test(value) ? '(?:\\b|\\\\[nrt])' : '';
   const tail = /\w$/.test(value) ? '\\b' : '';
   return new RegExp(lead + body + tail);
 }

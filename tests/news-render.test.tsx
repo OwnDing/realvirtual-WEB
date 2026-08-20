@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { NewsDialogHost } from '../src/core/hmi/NewsDialog';
 import {
   fetchConnectNews,
@@ -18,6 +18,20 @@ import {
   setAppConfigForTest,
   stubNewsResponse,
 } from './helpers/news-test-utils';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * This file used to assert GERMAN labels, because the dialog shipped German copy
+ * in an otherwise English product. Batch 3 moved it into the catalog, so the
+ * assertions below are the same checks against the English the dialog now has.
+ *
+ * The shell copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 describe('NewsDialog rendering', () => {
   beforeEach(() => {
@@ -85,7 +99,7 @@ describe('NewsDialog rendering', () => {
 
   it('marks the current item seen and closes via the X button', async () => {
     const { onSeen } = renderNews({ id: 'x', title: 'T', body: '' });
-    fireEvent.click(screen.getByRole('button', { name: 'News schließen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close news' }));
     expect(onSeen).toHaveBeenCalledWith('x');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
@@ -114,12 +128,12 @@ describe('NewsDialog rendering', () => {
       { id: 'one', title: 'One', body: '' },
       { id: 'two', title: 'Two', body: '' },
     ]);
-    expect(screen.getByText('1 von 2')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    expect(screen.getByText('1 of 2')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(onSeen).toHaveBeenCalledWith('one');
     expect(screen.getByText('Two')).toBeTruthy();
-    expect(screen.getByText('2 von 2')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(screen.getByText('2 of 2')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onSeen).toHaveBeenLastCalledWith('two');
   });
 
@@ -132,7 +146,7 @@ describe('NewsDialog rendering', () => {
 
   it('autofocuses the primary action inside the dialog', async () => {
     renderNews({ id: 'focus', title: 'Focus', body: '' });
-    const button = screen.getByRole('button', { name: 'Schließen' });
+    const button = screen.getByRole('button', { name: 'Close' });
     await waitFor(() => expect(document.activeElement).toBe(button));
     expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
   });
@@ -151,7 +165,7 @@ describe('NewsDialog rendering', () => {
 
     render(<NewsDialogHost includeWeb />);
     expect(screen.getByText('WEB item')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Schließen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(await screen.findByText('CONNECT item')).toBeTruthy();
   });
 

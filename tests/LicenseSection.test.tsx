@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { LicenseSection } from '../src/core/hmi/LicenseSection';
 import { _setLicenseSnapshotForTests, type LicenseState, type LicenseStatus } from '../src/core/hmi/license-store';
 import { rvDarkTheme } from '../src/core/hmi/theme';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The shell copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 function status(state: LicenseState, patch: Partial<LicenseStatus> = {}): LicenseStatus {
   return {

@@ -20,6 +20,8 @@ import {
   useMayShowStartupModal,
   useStartupModalRegistration,
 } from './startup-modal-coordinator';
+import { useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 
 function messageFor(reason: AutoQualityReason, presetName: string): string {
   switch (reason) {
@@ -31,6 +33,7 @@ function messageFor(reason: AutoQualityReason, presetName: string): string {
 }
 
 export function AutoQualityDialog() {
+  const { t } = useRvTranslation('shell');
   const notice = useAutoQualityNotice();
   const mayShow = useMayShowStartupModal('autoquality');
   const open = !!notice && mayShow;
@@ -71,7 +74,7 @@ export function AutoQualityDialog() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <SpeedIcon sx={{ color: '#4fc3f7', fontSize: 22 }} />
           <Typography id="rv-auto-quality-title" variant="h6" sx={{ fontWeight: 700, fontSize: 16 }}>
-            Performance mode enabled
+            {t('autoQuality.title')}
           </Typography>
         </Box>
 
@@ -79,7 +82,7 @@ export function AutoQualityDialog() {
           {messageFor(notice.reason, notice.presetName)}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          You can change this anytime under <strong style={{ color: '#fff' }}>Settings → Visual → Preset</strong>.
+          <Trans ns="shell" i18nKey="autoQuality.where" components={[<strong key="path" style={{ color: '#fff' }} />]} />
         </Typography>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
@@ -90,7 +93,7 @@ export function AutoQualityDialog() {
             data-testid="auto-quality-ok"
             sx={{ textTransform: 'none', fontWeight: 600, minWidth: 80 }}
           >
-            OK
+            {t('autoQuality.ok')}
           </Button>
         </Box>
       </Paper>

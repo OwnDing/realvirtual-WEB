@@ -31,6 +31,7 @@ import {
   formatServeRoot,
   formatSessionLabel,
 } from '../rv-serve-info';
+import { useRvTranslation } from '../i18n';
 
 /**
  * Above every product layer, including the welcome overlay (10000).
@@ -45,6 +46,7 @@ import {
 const BANNER_ZINDEX = 10001;
 
 export function ServeSessionBadge() {
+  const { t } = useRvTranslation('shell');
   const info = RV_SERVE_INFO;
   const [dismissed, setDismissed] = useState(false);
   const canonical = isCanonicalCheckout(info);
@@ -71,7 +73,8 @@ export function ServeSessionBadge() {
       data-ui-panel
       data-testid="serve-session-badge"
       role="status"
-      title={`Serving ${info.root}${info.branch ? `\nBranch: ${info.branch}` : ''}`}
+      title={t('serve.title', { root: info.root })
+        + (info.branch ? `\n${t('serve.branch', { branch: info.branch })}` : '')}
       sx={{
         position: 'fixed',
         top: 0,
@@ -141,7 +144,7 @@ export function ServeSessionBadge() {
       <IconButton
         size="small"
         onClick={() => setDismissed(true)}
-        aria-label="Hide dev server banner until reload"
+        aria-label={t('serve.dismiss')}
         sx={{
           p: 0.15,
           flexShrink: 0,

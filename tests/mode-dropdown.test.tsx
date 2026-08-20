@@ -5,13 +5,23 @@
  * ModeDropdown tests (plan-198) — renders the dropdown, opens the menu, and
  * verifies it lists every registered mode and switches on selection.
  */
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, beforeAll } from 'vitest';
 import { createElement, type ReactNode } from 'react';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { ModeDropdown } from '../src/core/hmi/ModeDropdown';
 import { ModeManager, type ModeHost, type ModePluginSets } from '../src/core/rv-mode-manager';
 import type { RVViewer } from '../src/core/rv-viewer';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The shell copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const EMPTY: ModePluginSets = { enable: [], disable: [], activateHooks: [], deactivateHooks: [] };
 

@@ -26,6 +26,7 @@ import {
   verifyKey,
   decryptEnvelope,
 } from '../persistence/rv-crypto-utils';
+import { useRvTranslation } from '../i18n';
 
 // ─── Fragment secret (URL factor) ──────────────────────────────────────────
 
@@ -124,14 +125,14 @@ function GateShell({ children }: { children: React.ReactNode }) {
 
 /** Terminal state: link is missing the `#k=` secret — cannot decrypt at all. */
 function IncompleteOverlay() {
+  const { t } = useRvTranslation('shell');
   return (
     <GateShell>
       <Typography sx={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600, fontSize: 18 }}>
-        Incomplete link
+        {t('password.incompleteTitle')}
       </Typography>
       <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' }}>
-        This protected model needs the full link you were given. The part after
-        the “#” is missing, so it cannot be opened.
+        {t('password.incompleteText')}
       </Typography>
     </GateShell>
   );
@@ -142,6 +143,7 @@ interface PasswordOverlayProps {
 }
 
 function PasswordOverlay({ onSubmit }: PasswordOverlayProps) {
+  const { t } = useRvTranslation('shell');
   const [pass, setPass] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -164,20 +166,20 @@ function PasswordOverlay({ onSubmit }: PasswordOverlayProps) {
   return (
     <GateShell>
       <Typography sx={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600, fontSize: 18 }}>
-        Password protected
+        {t('password.title')}
       </Typography>
       <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' }}>
-        This model is encrypted. Enter the password to open it.
+        {t('password.text')}
       </Typography>
       <TextField
-        type={show ? 'text' : 'password'} label="Password" value={pass} autoFocus fullWidth size="small" sx={fieldSx}
+        type={show ? 'text' : 'password'} label={t('password.label')} value={pass} autoFocus fullWidth size="small" sx={fieldSx}
         onChange={(e) => setPass(e.target.value)} onKeyDown={onKey} disabled={busy}
         slotProps={{
           input: {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  aria-label={show ? 'Hide password' : 'Show password'}
+                  aria-label={t(show ? 'password.hide' : 'password.show')}
                   onClick={() => setShow((s) => !s)}
                   edge="end" size="small" tabIndex={-1}
                   sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: 'rgba(255,255,255,0.8)' } }}

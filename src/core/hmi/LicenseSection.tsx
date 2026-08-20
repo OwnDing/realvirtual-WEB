@@ -36,6 +36,8 @@ import {
   type LicenseRegistrationStatus,
   type LicenseStatus,
 } from './license-store';
+import { rvT, useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 
 interface LicenseSectionProps {
   serverUrl: string;
@@ -48,24 +50,21 @@ function registrationMessage(registration: LicenseRegistrationStatus | null | un
     case 'waitingForEmailConfirmation':
       return {
         severity: 'info' as const,
-        message: `Waiting for confirmation - check your inbox${registration.email ? ` (${registration.email})` : ''}.`,
+        message: rvT('shell', 'license.waitingConfirm', {
+          mailbox: registration.email ? ` (${registration.email})` : '',
+        }),
       };
     case 'portalUnreachable':
-      return {
-        severity: 'warning' as const,
-        message: 'The registration portal is currently unreachable. CONNECT will keep trying. For an air-gapped machine, import a signed license with --license-file <path>.',
-      };
+      return { severity: 'warning' as const, message: rvT('shell', 'license.portalUnreachable') };
     case 'expired':
-      return {
-        severity: 'warning' as const,
-        message: 'This registration request expired. Enter your email again to request a new link, or use --license-file <path> for an offline license.',
-      };
+      return { severity: 'warning' as const, message: rvT('shell', 'license.expired') };
     default:
       return null;
   }
 }
 
 export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProps) {
+  const { t } = useRvTranslation('shell');
   const snapshot = useSyncExternalStore(subscribeLicenseStore, getLicenseSnapshot);
   const status = statusOverride === undefined ? snapshot.status : statusOverride;
   const supported = statusOverride === undefined ? snapshot.supported : true;
@@ -84,8 +83,8 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
   if (!status) {
     return snapshot.loading ? (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-        <CircularProgress size={10} aria-label="Checking license" />
-        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>License: Checking...</Typography>
+        <CircularProgress size={10} aria-label={t('license.checking')} />
+        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('license.checkingLabel')}</Typography>
       </Box>
     ) : null;
   }
@@ -118,11 +117,11 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
         sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mt: 0.5, minWidth: 0 }}
       >
         {warning ? (
-          <WarningAmber role="img" aria-label="License warning" sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
+          <WarningAmber role="img" aria-label={t('license.warningIcon')} sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
         ) : pending ? (
-          <HourglassTop role="img" aria-label="License pending" sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
+          <HourglassTop role="img" aria-label={t('license.pendingIcon')} sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
         ) : (
-          <VerifiedUserOutlined role="img" aria-label="License active" sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
+          <VerifiedUserOutlined role="img" aria-label={t('license.activeIcon')} sx={{ fontSize: 13, color: iconColor, mt: 0.1 }} />
         )}
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography sx={{ fontSize: 11, fontWeight: 500, color, lineHeight: 1.35 }}>
@@ -165,31 +164,29 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
         }}
       >
         <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>
-          {licensed ? 'realvirtual CONNECT license' : 'Activate realvirtual CONNECT'}
+          {t(licensed ? 'license.dialogLicensed' : 'license.dialogActivate')}
         </DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {!licensed && (
             <Alert severity="info" sx={{ '& .MuiAlert-message': { fontSize: 11, lineHeight: 1.5 } }}>
-              realvirtual CONNECT and its interfaces are currently in <strong>beta</strong>.
-              If you run into problems or have questions, please contact{' '}
-              <Link href="mailto:info@realvirtual.io" sx={{ fontSize: 11 }}>
-                info@realvirtual.io
-              </Link>
-              .
+              <Trans
+                ns="shell"
+                i18nKey="license.betaNotice"
+                components={[<strong key="beta" />, <Link key="mail" href="mailto:info@realvirtual.io" sx={{ fontSize: 11 }} />]}
+              />
             </Alert>
           )}
 
           {licensed && (
             <Box>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>Deactivate this device</Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>{t('license.deactivateTitle')}</Typography>
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1 }}>
-                Releases this machine&apos;s seat so the license can be activated on another device.
-                Enter your license key to confirm.
+                {t('license.deactivateHint')}
               </Typography>
               <TextField
                 fullWidth
                 size="small"
-                label="License key"
+                label={t('license.licenseKey')}
                 value={deactivateKey}
                 onChange={(event) => setDeactivateKey(event.target.value)}
                 disabled={busy}
@@ -204,22 +201,22 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
                 disabled={busy || !deactivateKey.trim()}
                 sx={{ mt: 1, textTransform: 'none', fontSize: 11 }}
               >
-                {snapshot.action === 'deactivating' ? 'Deactivating...' : 'Deactivate license'}
+                {t(snapshot.action === 'deactivating' ? 'license.deactivating' : 'license.deactivate')}
               </Button>
             </Box>
           )}
 
           {!licensed && (
           <Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>Start free with 20 signals</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>{t('license.freeTitle')}</Typography>
             <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1 }}>
-              Enter your email. We will send a confirmation link; no password is required.
+              {t('license.freeHint')}
             </Typography>
             <TextField
               fullWidth
               size="small"
               type="email"
-              label="Email"
+              label={t('license.email')}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               disabled={busy}
@@ -238,7 +235,7 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
               }
               label={
                 <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.4, pt: 0.4 }}>
-                  Also keep me informed about product updates and news (optional, revocable at any time)
+                  {t('license.updatesConsent')}
                 </Typography>
               }
             />
@@ -249,7 +246,7 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
               disabled={busy || !email.trim()}
               sx={{ mt: 1, textTransform: 'none', fontSize: 11 }}
             >
-              {snapshot.action === 'registering' ? 'Sending...' : 'Send confirmation link'}
+              {t(snapshot.action === 'registering' ? 'license.sending' : 'license.sendLink')}
             </Button>
           </Box>
           )}
@@ -273,11 +270,11 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
           <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
 
           <Box>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>Activate a license key</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.5 }}>{t('license.activateTitle')}</Typography>
             <TextField
               fullWidth
               size="small"
-              label="License key"
+              label={t('license.licenseKey')}
               value={licenseKey}
               onChange={(event) => setLicenseKey(event.target.value)}
               disabled={busy}
@@ -291,36 +288,25 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
               disabled={busy || !licenseKey.trim()}
               sx={{ mt: 1, textTransform: 'none', fontSize: 11 }}
             >
-              {snapshot.action === 'activating' ? 'Activating...' : 'Activate license'}
+              {t(snapshot.action === 'activating' ? 'license.activating' : 'license.activate')}
             </Button>
           </Box>
 
           <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.4 }}>
-            By activating you agree to the{' '}
-            <Link
-              href={LICENSE_TERMS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ fontSize: 10 }}
-            >
-              realvirtual license terms
-            </Link>
-            . See our{' '}
-            <Link
-              href="https://realvirtual.io/en/privacy/"
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ fontSize: 10 }}
-            >
-              privacy policy
-            </Link>
-            {' '}for how we handle your email.
+            <Trans
+              ns="shell"
+              i18nKey="license.terms"
+              components={[
+                <Link key="terms" href={LICENSE_TERMS_URL} target="_blank" rel="noopener noreferrer" sx={{ fontSize: 10 }} />,
+                <Link key="privacy" href="https://realvirtual.io/en/privacy/" target="_blank" rel="noopener noreferrer" sx={{ fontSize: 10 }} />,
+              ]}
+            />
           </Typography>
           </>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDialog} disabled={busy} sx={{ textTransform: 'none' }}>Close</Button>
+          <Button onClick={closeDialog} disabled={busy} sx={{ textTransform: 'none' }}>{t('license.close')}</Button>
         </DialogActions>
       </Dialog>
     </>

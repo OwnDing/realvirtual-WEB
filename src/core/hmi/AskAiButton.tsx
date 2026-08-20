@@ -3,9 +3,11 @@
 
 import { AutoAwesome } from '@mui/icons-material';
 import { Button } from '@mui/material';
+import { useRvTranslation } from '../i18n';
 
 /** Canonical compact Ask-AI action used by runtime message surfaces. */
 export function AskAiButton({ onClick }: { onClick: () => void }) {
+  const { t } = useRvTranslation('shell');
   return (
     <Button
       size="small"
@@ -16,7 +18,7 @@ export function AskAiButton({ onClick }: { onClick: () => void }) {
       }}
       sx={{ ml: 'auto' }}
     >
-      Ask AI
+      {t('search.askAi')}
     </Button>
   );
 }

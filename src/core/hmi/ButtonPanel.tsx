@@ -5,6 +5,7 @@ import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Paper } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useViewer } from '../../hooks/use-viewer';
+import { useRvTranslation } from '../i18n';
 import { useSlot } from '../../hooks/use-slot';
 import { ACTIVITY_BAR_WIDTH, FLOATING_TOP_MARGIN, LEFT_PANEL_ZINDEX } from './layout-constants';
 import { useLeftWindowWidth } from '../../hooks/use-left-window-width';
@@ -50,6 +51,7 @@ function BrandingContent() {
 const WELCOME_DISMISSED_KEY = 'rv-welcome-dismissed';
 
 export function LogoBadge() {
+  const { t } = useRvTranslation('shell');
   // Two openings, kept in separate state on purpose:
   //  - `manualOpen`  — the user clicked the logo. Honoured in every workspace.
   //  - `autoPending` — first visit in this browser; the dialog shows itself.
@@ -82,7 +84,7 @@ export function LogoBadge() {
           '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
         }}
         onClick={() => setManualOpen(true)}
-        title="About"
+        title={t('bar.about')}
       >
         <BrandingContent />
       </Box>
@@ -122,6 +124,7 @@ function WelcomeModalHost({ open, onClose }: { open: boolean; onClose: () => voi
  * NOT the activity bar — window-opener buttons live in ActivityBar.tsx.
  */
 export function ButtonPanel({ dock = false }: { dock?: boolean } = {}) {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const allEntries = useSlot('button-group');
 
@@ -218,7 +221,7 @@ export function ButtonPanel({ dock = false }: { dock?: boolean } = {}) {
           {scrollHint.left && (
             <Box
               onClick={() => scrollRef.current?.scrollBy({ left: -120, behavior: 'smooth' })}
-              aria-label="Scroll tools left"
+              aria-label={t('bar.scrollLeft')}
               sx={{
                 position: 'absolute', left: 0, top: 0, bottom: 0, width: 40,
                 display: 'flex', alignItems: 'center', justifyContent: 'flex-start', pl: 0.25,
@@ -232,7 +235,7 @@ export function ButtonPanel({ dock = false }: { dock?: boolean } = {}) {
           {scrollHint.right && (
             <Box
               onClick={() => scrollRef.current?.scrollBy({ left: 120, behavior: 'smooth' })}
-              aria-label="Scroll tools right"
+              aria-label={t('bar.scrollRight')}
               sx={{
                 position: 'absolute', right: 0, top: 0, bottom: 0, width: 40,
                 display: 'flex', alignItems: 'center', justifyContent: 'flex-end', pr: 0.25,

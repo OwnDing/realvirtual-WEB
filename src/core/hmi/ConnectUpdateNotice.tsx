@@ -30,6 +30,7 @@ import { subscribeConnectStore, getConnectSnapshot } from './connect-store';
 import { useConnectDownloads } from './use-connect-downloads';
 import { resolveUpdateAvailability } from './connect-update-available';
 import { ISA_AMBER } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 // The action reads as a button, not as a link in a sentence: a hairline amber outline in the same
 // amber as the notice, sized to the 10px header row so the row keeps its single-line height.
@@ -49,6 +50,7 @@ const ACTION_SX = {
 } as const;
 
 export function ConnectUpdateNotice({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { t } = useRvTranslation('shell');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
   const { stable } = useConnectDownloads();
 
@@ -94,7 +96,7 @@ export function ConnectUpdateNotice({ onOpenSettings }: { onOpenSettings: () => 
           size="small"
           variant="outlined"
           startIcon={<SystemUpdateAlt sx={{ fontSize: 12 }} />}
-          title={`${versions} - download`}
+          title={t('connectUpdate.download', { versions })}
           sx={ACTION_SX}
         >
           {versions}

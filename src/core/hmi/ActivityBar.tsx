@@ -26,6 +26,7 @@ import { probeConnectReachable } from './ai-consent-store';
 import { AiBridgeDownloadDialog } from './AiBridgeGate';
 import { requestSettingsTab } from './settings-tab-store';
 import { useViewer } from '../../hooks/use-viewer';
+import { useRvTranslation } from '../i18n';
 import { useSlot } from '../../hooks/use-slot';
 import { useEditorPlugin } from '../../hooks/use-editor-plugin';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
@@ -167,6 +168,7 @@ interface ActivityBarProps {
  * (__RV_INTERNAL__ builds) — customer builds never see it.
  */
 function OmniverseButton({ placement }: { placement: 'right' | 'top' }) {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const [backend, setBackend] = useState(viewer.renderBackend);
   useEffect(() => viewer.onRenderBackendChange(setBackend), [viewer]);
@@ -174,7 +176,7 @@ function OmniverseButton({ placement }: { placement: 'right' | 'top' }) {
   const active = backend === 'omniverse';
   return (
     <ActivityButton
-      title={active ? 'Omniverse RTX Stream (on) — click for Three.js' : 'Omniverse RTX Stream'}
+      title={t(active ? 'activity.omniverseOn' : 'activity.omniverseOff')}
       active={active}
       onClick={() => { void viewer.setRenderBackend(active ? 'three' : 'omniverse'); }}
       placement={placement}
@@ -185,6 +187,7 @@ function OmniverseButton({ placement }: { placement: 'right' | 'top' }) {
 }
 
 export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
+  const { t } = useRvTranslation('shell');
   const viewer = useViewer();
   const { plugin, state: editorState } = useEditorPlugin();
   const isMobile = useMobileLayout();
@@ -359,12 +362,12 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
         </ActivityButton>
       )}
       {isEntryShown('hierarchy') && plugin && !isMobile && (
-        <ActivityButton title="Hierarchy" active={editorState.panelOpen} onClick={toggleHierarchy} placement={placement}>
+        <ActivityButton title={t('activity.hierarchy')} active={editorState.panelOpen} onClick={toggleHierarchy} placement={placement}>
           <AccountTree />
         </ActivityButton>
       )}
       {isEntryShown('annotations') && (
-        <ActivityButton title="Annotations" active={panelSnapshot.activePanel === 'annotations'} onClick={toggleAnnotations} placement={placement}>
+        <ActivityButton title={t('activity.annotations')} active={panelSnapshot.activePanel === 'annotations'} onClick={toggleAnnotations} placement={placement}>
           <PushPin />
         </ActivityButton>
       )}
@@ -372,7 +375,7 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
   );
 
   const settingsButton = isEntryAllowed('settings') && !isSettingsLocked() && plugin && (
-    <ActivityButton title="Settings" active={editorState.settingsOpen} onClick={toggleSettings} placement={placement}>
+    <ActivityButton title={t('activity.settings')} active={editorState.settingsOpen} onClick={toggleSettings} placement={placement}>
       <Settings />
     </ActivityButton>
   );
@@ -382,7 +385,7 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
   const xrPlugin = viewer.getPlugin<WebXRPluginAPI>('webxr');
   const hasTouchInput = isMobile || navigator.maxTouchPoints > 0;
   const arButton = isEntryAllowed('ar') && hasTouchInput && xrPlugin?.arSupported && (
-    <ActivityButton title="Start AR" active={false} onClick={() => xrPlugin?.startAR()} placement={placement}>
+    <ActivityButton title={t('activity.startAr')} active={false} onClick={() => xrPlugin?.startAR()} placement={placement}>
       <ViewInAr />
     </ActivityButton>
   );
@@ -419,7 +422,7 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
         >
           {isEntryShown('multiuser') && <MultiuserButton placement="top" />}
           {arButton}
-          <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} aria-label="Menu">
+          <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} aria-label={t('activity.menu')}>
             <MoreVert />
           </IconButton>
         </Paper>
@@ -427,25 +430,25 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
           {isEntryShown('models') && sceneStore && (
             <MenuItem onClick={run(toggleScene)} sx={{ fontSize: 13 }}>
               <ListItemIcon><FolderOpen fontSize="small" /></ListItemIcon>
-              <ListItemText>Projects</ListItemText>
+              <ListItemText>{t('activity.projects')}</ListItemText>
             </MenuItem>
           )}
           {isEntryShown('annotations') && (
             <MenuItem onClick={run(toggleAnnotations)} sx={{ fontSize: 13 }}>
               <ListItemIcon><PushPin fontSize="small" /></ListItemIcon>
-              <ListItemText>Annotations</ListItemText>
+              <ListItemText>{t('activity.annotations')}</ListItemText>
             </MenuItem>
           )}
           {settingsButton && (
             <MenuItem onClick={run(toggleSettings)} sx={{ fontSize: 13 }}>
               <ListItemIcon><Settings fontSize="small" /></ListItemIcon>
-              <ListItemText>Settings</ListItemText>
+              <ListItemText>{t('activity.settings')}</ListItemText>
             </MenuItem>
           )}
           {showHelp && (
             <MenuItem onClick={run(() => openCurrentHelp(viewer))} sx={{ fontSize: 13 }}>
               <ListItemIcon><HelpOutline fontSize="small" /></ListItemIcon>
-              <ListItemText>Help</ListItemText>
+              <ListItemText>{t('activity.help')}</ListItemText>
             </MenuItem>
           )}
         </Menu>
