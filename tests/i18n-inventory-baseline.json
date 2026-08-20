@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 973,
-    "a11y-name": 58,
-    "plugin-registry": 129,
-    "dynamic-text": 140,
+    "react-copy": 670,
+    "a11y-name": 47,
+    "plugin-registry": 102,
+    "dynamic-text": 97,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
-    "ui-state-text": 14
+    "ui-state-text": 4
   },
-  "total": 1342,
-  "fileCount": 170,
+  "total": 948,
+  "fileCount": 164,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -68,21 +68,6 @@
     },
     "src/core/hmi/ClippingPanel.tsx": {
       "react-copy": 3
-    },
-    "src/core/hmi/ConnectOptionsWindow.tsx": {
-      "react-copy": 28,
-      "dynamic-text": 4,
-      "ui-state-text": 3
-    },
-    "src/core/hmi/ConnectPanel.tsx": {
-      "react-copy": 241,
-      "a11y-name": 6,
-      "dynamic-text": 28,
-      "ui-state-text": 7
-    },
-    "src/core/hmi/ConnectUpdateSection.tsx": {
-      "react-copy": 10,
-      "dynamic-text": 3
     },
     "src/core/hmi/DocViewerOverlay.tsx": {
       "react-copy": 5
@@ -150,9 +135,6 @@
       "react-copy": 5,
       "dynamic-text": 1
     },
-    "src/core/hmi/connect-store.ts": {
-      "plugin-registry": 27
-    },
     "src/core/hmi/hierarchy-badge-components.tsx": {
       "react-copy": 1
     },
@@ -168,11 +150,6 @@
     "src/core/hmi/rv-component-section.tsx": {
       "react-copy": 5,
       "dynamic-text": 2
-    },
-    "src/core/hmi/rv-connections-section.tsx": {
-      "react-copy": 11,
-      "a11y-name": 4,
-      "dynamic-text": 8
     },
     "src/core/hmi/rv-custom-runtime-instruction-field-renderer.tsx": {
       "react-copy": 2,
@@ -369,10 +346,6 @@
     "src/plugins/collision-alert-plugin.tsx": {
       "react-copy": 1,
       "dynamic-text": 1
-    },
-    "src/plugins/connect-embed/ConnectEmbedGate.tsx": {
-      "react-copy": 13,
-      "a11y-name": 1
     },
     "src/plugins/custom-runtime-instruction-plugin.tsx": {
       "react-copy": 12

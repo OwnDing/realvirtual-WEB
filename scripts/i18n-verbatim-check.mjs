@@ -110,6 +110,13 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/MessagePanel.tsx',
   'src/core/hmi/InstructionLayer.tsx',
   'src/core/hmi/ConnectUpdateNotice.tsx',
+  // realvirtual CONNECT flow (Milestone 4b, batch 4)
+  'src/core/hmi/ConnectPanel.tsx',
+  'src/core/hmi/ConnectOptionsWindow.tsx',
+  'src/core/hmi/connect-store.ts',
+  'src/core/hmi/rv-connections-section.tsx',
+  'src/core/hmi/ConnectUpdateSection.tsx',
+  'src/plugins/connect-embed/ConnectEmbedGate.tsx',
 ];
 
 /**
@@ -137,7 +144,14 @@ const GERMAN_SOURCE = 'There is no English original to move: `NewsDialog.tsx` sh
   + 'elsewhere — because the fact worth recording is that this whole dialog had no English, not '
   + 'whether a three-letter button label collides with another file.';
 
+const NESTED_TEMPLATE = 'The separator lived INSIDE a nested ternary — `Browse${iface ? ` — ${type}` : \'\'}` '
+  + 'and `CONNECTIONS${n > 0 ? ` (${n})` : \'\'}` — so the joined form never existed as one run of '
+  + 'characters in the source. Both halves are unchanged; joining them is what makes the title one '
+  + 'translatable string instead of a stem a translator cannot reorder.';
+
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['connect.browse.titleTyped', NESTED_TEMPLATE],
+  ['connect.connections.sectionCount', NESTED_TEMPLATE],
   ['shell.news.eyebrow', GERMAN_SOURCE],
   ['shell.news.close', GERMAN_SOURCE],
   ['shell.news.learnMore', GERMAN_SOURCE],
@@ -221,18 +235,28 @@ const ENTITY_FORMS = new Map([
   ["'", '&apos;|&#39;'],
   ['&', '&amp;'],
   ['"', '&quot;'],
+  ['<', '&lt;'],
+  ['>', '&gt;'],
   ['—', '&mdash;'],
   ['–', '&ndash;'],
   ['©', '&copy;'],
   ['…', '&hellip;'],
 ]);
 
+/** Placeholder for a `<Trans>` slot while the entity pass runs — see verbatimPattern. */
+const SLOT = '\u0000slot\u0000';
+
 export function verbatimPattern(value) {
   const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Order matters. The `<0>` markers are lifted out FIRST, because `<` and `>`
+  // are themselves entity-able: expanding them in place would rewrite the marker
+  // (and, a step later, the `<[^>]*>` it turns into) into something that matches
+  // no tag at all.
   const body = escaped
-    .replace(/['&"—–©…]/g, (char) => `(?:${char.replace(/[&]/g, '\\&')}|${ENTITY_FORMS.get(char)})`)
+    .replace(/<\/?\d>/g, SLOT)
     .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
-    .replace(/<\/?\d>/g, '\\s*<[^>]*>\\s*')
+    .replace(/['&"<>—–©…]/g, (char) => `(?:${char.replace(/[&]/g, '\\&')}|${ENTITY_FORMS.get(char)})`)
+    .split(SLOT).join('\\s*<[^>]*>\\s*')
     .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`]|\\{\' \'\\}|&nbsp;)+');
   // `\n` in a template literal is two SOURCE characters, so `\nBranch:` has no
   // word boundary before `Branch` in the text this check reads — even though the

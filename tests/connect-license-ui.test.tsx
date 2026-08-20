@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import connectPanelSource from '../src/core/hmi/ConnectPanel.tsx?raw';
@@ -29,6 +29,16 @@ import { humanizeConnectError, humanizeConnectWorkerStatus } from '../src/core/h
 import type { LicenseStatus } from '../src/core/hmi/license-store';
 import { ISA_AMBER } from '../src/core/hmi/isa-colors';
 import { rvDarkTheme } from '../src/core/hmi/theme';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The CONNECT copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 afterEach(() => {
   cleanup();
@@ -197,7 +207,10 @@ describe('CONNECT license gate UI integration', () => {
     // Free tier is stated once, as a fact - never a plea ("for free" x2 was the old copy).
     expect(screen.getByText(/The free tier includes 20 PLC signals\./)).toBeTruthy();
     // Never-linked shows the neutral opener path, not the amber/red error path.
-    expect(connectPanelSource).toContain("label: 'Not connected'");
+    // The label went through the catalog (EP-I18N-001 batch 4); what this case
+    // asserts is that the never-linked path takes the NEUTRAL branch, so match
+    // the key it now resolves, not the English it used to hardcode.
+    expect(connectPanelSource).toContain("rvT('connect', 'status.notConnected')");
     expect(connectPanelSource).toContain('snap.errorMessage && !gatewaySetupNeeded');
   });
 
@@ -227,8 +240,8 @@ describe('CONNECT license gate UI integration', () => {
 
   it('keeps connection states tokenized, labeled, accessible, and at the 11px type floor', () => {
     expect(connectionsSectionSource).not.toMatch(/#66bb6a|#ef5350|#4fc3f7/i);
-    expect(connectionsSectionSource).toContain("' · Unresolved'");
-    expect(connectionsSectionSource).toContain('aria-label="Remove connection"');
+    expect(connectionsSectionSource).toContain("t('connections.unresolvedChip')");
+    expect(connectionsSectionSource).toContain("aria-label={t('connections.removeEdge')}");
     expect(connectionsSectionSource).toContain('role="button"');
     expect(connectionsSectionSource).toContain('tabIndex={0}');
     expect(connectionsSectionSource).toContain('aria-expanded={open}');

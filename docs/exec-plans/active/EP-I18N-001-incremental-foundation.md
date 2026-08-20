@@ -73,7 +73,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 1342 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳）。
+- [ ] Milestone 4b：按风险分批迁移其余 948 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板；批次 3：常驻 HMI 外壳；批次 4：CONNECT 工业连接流程）。
 
 ## Surprises & Discoveries
 
@@ -86,6 +86,21 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### Milestone 4b 批次 4：CONNECT 工业连接流程（2026-08-20）
+
+- 覆盖 6 个文件、394 处：`ConnectPanel.tsx`（282 处 / 5004 行）、`ConnectOptionsWindow.tsx`、`connect-store.ts`、`rv-connections-section.tsx`、`ConnectUpdateSection.tsx`、`ConnectEmbedGate.tsx`。该面归零，全仓 1342 → **948**；`connect` namespace 新增 **约 330** 个 key。这也是第一次实质性地动 `plugin-registry`（129 → 102）。
+- **产品所有者明确确认**：PLC 型号与协议名保持英文，不翻译（与 `PS-I18N-001` §2 / `ADR-0001` 第 6 条一致）。由此确立了本批次贯穿始终的一条规则：**标识符不动，围绕它的句子翻译**。例如能力说明「S7、TwinCAT ADS、OPC UA、Modbus TCP、EtherNet/IP、ctrlX 和 MQTT，以及机器人接口（FANUC、Denso、ABB）。」— 十个协议名原样保留，连接词是中文。
+- 该规则在代码里用三种方式钉住，因为它在 diff 里看不见、一年后很容易被「顺手修好」：
+  1. `ConnectInterfaceTypeDef.label` **改名为 `productName`**。叫 `label` 会让人以为是漏翻的文案；叫 `productName` 说的就是它本来的意思。网关线上格式仍是 `label`，只在 `fetchInterfaceTypes` 里做一次映射。
+  2. 同一结构里 `description` 拆成 **`descriptionKey`（我们的静态注册表）与 `description`（网关自带的散文）**，两者只有一个会被设置。网关的文字是服务端的值，不该由我们编译时翻译。
+  3. `connect.spec.*` 分组存放 `AMS NetId`、`DiscardOldest`、`Micro800` 这类厂商/规范术语，两种语言取值**完全相同**，并在目录里写明这是有意为之而非漏翻。反例验证过：把 `AMS NetId` 译成中文，`tests/i18n-connect.test.tsx` 的全量比对立刻失败。
+- Milestone 1 登记的 4 条 Allen-Bradley 例外（`ControlLogix / CompactLogix`、`PLC-5`、`SLC 500`、`MicroLogix`）**已删除** — 这些串现在走 `connect.spec.*`，例外守卫会拒绝匹配不到任何东西的条目。
+- **逐字迁入门禁第三次补漏**：JSX 里 `<` 和 `>` 必须写成 `&lt;`/`&gt;`（`IO&lt;n&gt;`、`Axes &gt; 0`），而目录里存的是真实字符。加进实体等价表时发现一个顺序陷阱：`<0>` 占位标记本身由尖括号组成，如果先展开实体就会把标记连同它随后变成的 `<[^>]*>` 一起改坏。因此标记先被替换成哨兵，实体展开之后再还原。反例验证过这不是放水 — 把 `VRC symbols` 改写成 `VRC tokens` 仍会被指名。
+- 受检 `en-US` 值 839 → **1267**。
+- 6 处占位符登记为例外，它们是**示例值而不是文案**：CIP 路由路径 `1,0 (empty for Micro800)`、Keba 浏览根 `SYS, PLC`、Denso 控制器名 `Robot1`、WinCaps 工程路径、SIMIT 共享内存默认名。翻译它们会让用户照抄一个不存在的值。
+- 6 个既有浏览器测试补 pin `en-US`；`connect-license-ui.test.tsx` 有两处**读源码文本**的断言（`toContain("label: 'Not connected'")`）随迁移改为断言现在解析的 key — 断言的对象仍是「走中性分支」，不是英文本身。
+- 后续批次剩 948 处，最大的几块是 `src/plugins/**`（agents、sim-controller、layout-planner、demo）、`src/core/share`、`src/core/project`、以及 HMI 里的各类领域面板（属性检查器、层级浏览器、信号编辑）。
 
 ### Milestone 4b 批次 3：常驻 HMI 外壳（2026-08-20）
 
@@ -230,9 +245,32 @@ Milestone 4b 批次 3 已验证（2026-08-20，本地）：
 
 反例：撤掉 `<Trans>` 标记的空白容错 → 3 条跨行 `<Link>` 文案失败；改写 `shell.bar.followPart` → 指名失败；改写含 `&apos;` 的 `sharedView.following` → 指名失败；从 `en-US` 删掉一个 key → `tests/i18n-shell.test.tsx` 与目录 parity 测试失败。
 
+Milestone 4b 批次 4 已验证（2026-08-20，本地）：
+
+| 项 | 结果 |
+| --- | --- |
+| `./scripts/verify.sh static` | 通过（exit 0） |
+| `npm run test:node` | 55 文件 **500** 例通过 |
+| `npx vitest run tests/i18n-connect.test.tsx` | **7 例通过**（spec 术语两语言一致、`productName` 而非 `label`、名称不动而描述随语言变、描述来源二选一、opener 切换、协议名在中文句子里保持英文、约 330 key 全量扫描） |
+| 受影响 Browser 测试单独运行 | 6 文件通过（`connect-license-ui` 16 例等） |
+| `npm run build` | 通过 |
+| 入口 chunk | 3_418_493 → **3_455_142 B**，净增 **35.8 KB**；预算余 **63.3 KB**，`tests/bundle-splitting.test.ts` 9 例通过 |
+| `node scripts/i18n-inventory.mjs` | 受门禁 1342 → **948**（164 文件）；`plugin-registry` 129 → 102 |
+| `node scripts/i18n-verbatim-check.mjs` | **1267** 条值全部逐字追溯 |
+| 完整 `npm test` | 953 文件 **10,305** 例通过；失败 22 文件 / 82 例，与批次 4 之前的本机基线**逐文件一致** |
+
+反例：把 `AMS NetId` 译成中文 → spec 全量比对失败；把 `label` 加回类型定义 → 注册表守卫失败；把 `VRC symbols` 改写成 `VRC tokens` → 逐字门禁指名失败。
+
+**入口包体积提醒**：累计净增已达 165.5 KB，预算 `ENTRY_BUDGET_BYTES = 3_520_000` 仅余 **63.3 KB**。剩余 948 处债务若按当前密度全部迁入静态目录，很可能撞上预算 —— `ADR-0001` 第 2 条要求非启动 namespace 的异步分包必须先修订 ADR。**这是后续批次开始前必须处理的闸口，不能等到构建失败才发现。**
+
 **未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 951 文件中 **22 文件 / 82 用例**失败，逐条核对均根因于 `THREE.WebGLRenderer: Error creating WebGL context.`（78 例直接报此错，1 例 `embed-boot` 超时与 1 例 `dispose` TypeError 是同一渲染器创建失败的下游）。失败输出中中文出现次数为 **0**，且已逐文件核对无一与本批次相关。完整浏览器门禁仍需在可用 GPU 的环境重跑后才能声称通过。
 
 后续里程碑至少仍需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
+
+### Decision Log — 批次 4
+
+- 2026-08-20：用户明确确认「PLC 型号与协议名不需要翻译成中文，保持英文就行」，与 `PS-I18N-001` §2 / `ADR-0001` 第 6 条一致。据此在 `ConnectInterfaceTypeDef` 上把 `label` 改名为 `productName`、拆出 `descriptionKey`，并建立 `connect.spec.*` 分组。这三处是内部类型与目录结构调整，不改变网关线上格式，不需要新 ADR。
+- 2026-08-20：入口 chunk 预算余量降至 63.3 KB。后续批次开始前必须先就「非启动 namespace 异步分包」做 ADR 修订决定（`ADR-0001` 第 2 条），否则继续迁移会撞预算。此闸口记录在此，不由 Agent 自行拍板。
 
 ### Decision Log — 批次 3
 

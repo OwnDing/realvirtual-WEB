@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import type { RVViewer } from '../src/core/rv-viewer';
@@ -10,6 +10,16 @@ import { computeFilterAutoOpen, SignalListView } from '../src/core/hmi/ConnectPa
 import { rvDarkTheme } from '../src/core/hmi/theme';
 import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { findSignalRowLabel, getSignalRowLabel, querySignalRowLabel } from './helpers/signal-row-label';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The CONNECT copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const viewerStub = {
   signalStore: null,

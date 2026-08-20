@@ -56,6 +56,7 @@ import { ISA_GREEN, ISA_RED, ISA_AMBER, connectionStateColor } from './isa-color
 import { LicenseSection } from './LicenseSection';
 import { ConnectUpdateSection } from './ConnectUpdateSection';
 import { ConfirmActionDialog, type ConfirmAction } from './ConfirmActionDialog';
+import { useRvTranslation } from '../i18n';
 
 // ── Shared section chrome ──────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ const fieldSx = { '& .MuiInputBase-input': { fontSize: 11 }, '& .MuiInputLabel-r
 // ── Section 1: Connection ──────────────────────────────────────────────────
 
 function ConnectionSection() {
+  const { t } = useRvTranslation('connect');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
   const [urlInput, setUrlInput] = useState(snap.serverUrl);
   const isConnected = snap.state === 'connected';
@@ -85,18 +87,18 @@ function ConnectionSection() {
   }, [urlInput]);
 
   const statusLabel = snap.state === 'connected' ? 'Connected'
-    : snap.state === 'connecting' ? 'Connecting...'
-    : snap.state === 'error' ? 'Error'
-    : 'Disconnected';
+    : snap.state === 'connecting' ? t('options.connecting')
+    : snap.state === 'error' ? t('options.error')
+    : t('options.disconnected');
   const statusColor = connectionStateColor(snap.state) ?? 'rgba(255,255,255,0.5)';
 
   return (
     <Box>
-      <SectionTitle>Connection</SectionTitle>
+      <SectionTitle>{t('options.connection')}</SectionTitle>
       <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
         <TextField
           size="small"
-          label="Server"
+          label={t('options.server')}
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
           onKeyDown={(e) => {
@@ -120,7 +122,7 @@ function ConnectionSection() {
             onClick={() => disconnectFromServer()}
             sx={{ fontSize: 10, textTransform: 'none', minWidth: 80, color: 'text.secondary', borderColor: 'rgba(255,255,255,0.23)' }}
           >
-            Disconnect
+            {t('options.disconnect')}
           </Button>
         ) : (
           <Button
@@ -169,6 +171,7 @@ function ConnectionSection() {
 // live set back into the previous profile first.
 
 function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
+  const { t } = useRvTranslation('connect');
   const [profiles, setProfiles] = useState<ConnectProfileInfo[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [supported, setSupported] = useState(false);
@@ -199,7 +202,7 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
       await reload();
       onSwitched(); // bridges etc. changed with the swapped config
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to activate profile.');
+      setError(err instanceof Error ? err.message : t('options.activateFailed'));
     } finally {
       setBusy(false);
     }
@@ -208,15 +211,15 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
   const handleDelete = useCallback(() => {
     if (!active) return;
     setConfirmAction({
-      title: `Delete profile '${active}'?`,
-      message: 'Removes the saved configuration snapshot. The current live configuration keeps running.',
-      confirmLabel: 'Delete profile',
+      title: t('options.deleteTitle', { name: active }),
+      message: t('options.deleteMessage'),
+      confirmLabel: t('options.deleteConfirm'),
       onConfirm: async () => {
         try {
           await deleteProfile(active);
           await reload();
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to delete profile.');
+          setError(err instanceof Error ? err.message : t('options.deleteFailed'));
         }
       },
     });
@@ -226,7 +229,7 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
 
   return (
     <Box>
-      <SectionTitle>Configuration profile</SectionTitle>
+      <SectionTitle>{t('options.profileSection')}</SectionTitle>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
         <FormControl size="small" variant="standard" sx={{ flex: 1, minWidth: 0 }}>
           <Select
@@ -235,9 +238,9 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
             disabled={busy}
             onChange={(e) => void handleActivate(e.target.value)}
             sx={{ fontSize: 11 }}
-            inputProps={{ 'aria-label': 'Active configuration profile' }}
+            inputProps={{ 'aria-label': t('options.activeProfile') }}
             renderValue={(v) => {
-              if (!v) return <em style={{ opacity: 0.7 }}>unsaved live configuration</em>;
+              if (!v) return <em style={{ opacity: 0.7 }}>{t('options.unsavedLive')}</em>;
               const p = profiles.find(x => x.name === v);
               // plan-718: prefer the manifest binding (documents / connectRef) and fall back to the
               // deprecated model name, so both gateway generations render something meaningful.
@@ -246,13 +249,13 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
             }}
           >
             {profiles.length === 0 && (
-              <MenuItem value="" disabled sx={{ fontSize: 12 }}>No profiles yet — save one first</MenuItem>
+              <MenuItem value="" disabled sx={{ fontSize: 12 }}>{t('options.noProfiles')}</MenuItem>
             )}
             {profiles.map((p) => (
               <MenuItem key={p.name} value={p.name} sx={{ fontSize: 12 }}>
                 {p.name}
                 <Typography component="span" sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', ml: 0.75 }}>
-                  {p.interfaceCount} interface{p.interfaceCount === 1 ? '' : 's'}
+                  {t('options.interfaceCount', { count: p.interfaceCount })}
                   {describeProfileBinding(p) ? ` · ${describeProfileBinding(p)}` : ''}
                 </Typography>
               </MenuItem>
@@ -260,22 +263,21 @@ function ProfileSection({ onSwitched }: { onSwitched: () => void }) {
           </Select>
         </FormControl>
         {busy && <CircularProgress size={12} />}
-        <Tooltip title="Save current configuration as profile (optionally bound to a model)">
+        <Tooltip title={t('options.saveTooltip')}>
           <Button size="small" startIcon={<Add sx={{ fontSize: 12 }} />} onClick={() => setSaveOpen(true)} sx={{ fontSize: 11, textTransform: 'none', minWidth: 0 }}>
-            Save
+            {t('options.save')}
           </Button>
         </Tooltip>
         {active && (
-          <Tooltip title={`Delete profile '${active}'`}>
-            <IconButton size="small" aria-label={`Delete profile '${active}'`} onClick={handleDelete} sx={{ p: 0.25, color: 'rgba(255,255,255,0.5)', '&:hover': { color: ISA_RED } }}>
+          <Tooltip title={t('options.deleteTooltip', { name: active })}>
+            <IconButton size="small" aria-label={t('options.deleteTooltip', { name: active })} onClick={handleDelete} sx={{ p: 0.25, color: 'rgba(255,255,255,0.5)', '&:hover': { color: ISA_RED } }}>
               <Delete sx={{ fontSize: 13 }} />
             </IconButton>
           </Tooltip>
         )}
       </Box>
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', mt: 0.75, lineHeight: 1.5 }}>
-        A profile is a named snapshot of all interfaces and bridges (including per-signal
-        historian recording). A model-bound profile activates automatically with its model.
+        {t('options.profileHint')}
       </Typography>
       {error && <Typography sx={{ fontSize: 11, color: ISA_RED, mt: 0.5 }}>{error}</Typography>}
 
@@ -307,6 +309,7 @@ function SaveProfileDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [name, setName] = useState(initialName);
   const [model, setModel] = useState(initialModel);
   const [error, setError] = useState<string | null>(null);
@@ -329,7 +332,7 @@ function SaveProfileDialog({
       await saveProfile(n, model.trim() || undefined);
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save profile.');
+      setError(err instanceof Error ? err.message : t('options.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -337,31 +340,29 @@ function SaveProfileDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontSize: 14 }}>Save Configuration Profile</DialogTitle>
+      <DialogTitle sx={{ fontSize: 14 }}>{t('options.saveDialogTitle')}</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', mb: 1.5 }}>
-          Snapshots the current interfaces and bridges under a name. With a model binding, the
-          profile activates automatically whenever that model becomes active — the model always
-          runs with its profile.
+          {t('options.saveDialogHint')}
         </Typography>
         {error && <Typography sx={{ fontSize: 11, color: ISA_RED, mb: 1 }}>{error}</Typography>}
         <TextField
-          fullWidth size="small" label="Profile name" value={name}
+          fullWidth size="small" label={t('options.profileName')} value={name}
           onChange={(e) => setName(e.target.value)}
           sx={{ mb: 1.5, mt: 0.5 }}
         />
         <TextField
-          fullWidth size="small" label="Bound model (GLB name, optional)" value={model}
+          fullWidth size="small" label={t('options.boundModel')} value={model}
           onChange={(e) => setModel(e.target.value)}
-          placeholder="e.g. CellA or CellA.glb"
-          helperText="Leave empty for a manual-only profile"
+          placeholder={t('options.boundModelPlaceholder')}
+          helperText={t('options.boundModelHelp')}
           FormHelperTextProps={{ sx: { fontSize: 9 } }}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('options.cancel')}</Button>
         <Button variant="contained" disabled={!name.trim() || saving} onClick={() => void handleSave()} sx={{ textTransform: 'none' }}>
-          {saving ? 'Saving…' : 'Save Profile'}
+          {t(saving ? 'options.saving' : 'options.saveProfile')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -376,6 +377,7 @@ function SaveProfileDialog({
  * token keeps the stored one.
  */
 function HistorianSettingsSection() {
+  const { t } = useRvTranslation('connect');
   const historian = useSyncExternalStore(historianStore.subscribe, historianStore.getSnapshot, historianStore.getSnapshot);
   const [settings, setSettings] = useState<InfluxDbSettings | null>(null);
   const [token, setToken] = useState('');
@@ -437,7 +439,7 @@ function HistorianSettingsSection() {
           </>
         )}
       >
-        Historian (InfluxDB)
+        {t('options.historian')}
       </SectionTitle>
       <FormControlLabel
         control={(
@@ -448,36 +450,38 @@ function HistorianSettingsSection() {
             onChange={(e) => patch({ enabled: e.target.checked })}
           />
         )}
-        label="Record flagged signals to InfluxDB"
+        label={t('options.historianEnable')}
         slotProps={{ typography: { sx: { fontSize: 11, color: 'rgba(255,255,255,0.8)' } } }}
         sx={{ ml: -0.5, mb: 0.25 }}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         <TextField
-          variant="standard" size="small" label="InfluxDB URL" sx={fieldSx}
+          variant="standard" size="small" label={t('options.influxUrl')} sx={fieldSx}
           value={settings?.url ?? ''} disabled={!settings || busy}
           onChange={(e) => patch({ url: e.target.value })}
         />
         <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField
-            variant="standard" size="small" label="Org" sx={{ ...fieldSx, flex: 1 }}
+            variant="standard" size="small" label={t('options.org')} sx={{ ...fieldSx, flex: 1 }}
             value={settings?.org ?? ''} disabled={!settings || busy}
             onChange={(e) => patch({ org: e.target.value })}
           />
           <TextField
-            variant="standard" size="small" label="Project" sx={{ ...fieldSx, flex: 1 }}
+            variant="standard" size="small" label={t('options.project')} sx={{ ...fieldSx, flex: 1 }}
             value={settings?.project ?? ''} disabled={!settings || busy}
             onChange={(e) => patch({ project: e.target.value })}
-            helperText={settings?.project ? `Buckets: ${settings.project.toLowerCase()}_raw / _1m / _1h` : 'Empty = Diagnosis project or "default"'}
+            helperText={settings?.project
+              ? t('options.buckets', { raw: `${settings.project.toLowerCase()}_raw` })
+              : t('options.projectEmpty')}
             slotProps={{ formHelperText: { sx: { fontSize: 9, mt: 0.25 } } }}
           />
         </Box>
         <TextField
-          variant="standard" size="small" type="password" label="Token" sx={fieldSx}
+          variant="standard" size="small" type="password" label={t('options.token')} sx={fieldSx}
           value={token} disabled={!settings || busy}
-          placeholder={settings?.tokenConfigured ? 'Configured — leave empty to keep' : 'Paste write+read token'}
+          placeholder={t(settings?.tokenConfigured ? 'options.tokenConfigured' : 'options.tokenPlaceholder')}
           onChange={(e) => { setToken(e.target.value); setDirty(true); }}
-          slotProps={{ htmlInput: { 'aria-label': 'InfluxDB token (write-only, never displayed)', autoComplete: 'new-password' } }}
+          slotProps={{ htmlInput: { 'aria-label': t('options.tokenAria'), autoComplete: 'new-password' } }}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.75 }}>
@@ -488,7 +492,7 @@ function HistorianSettingsSection() {
           size="small" onClick={() => void handleSave()} disabled={!settings || busy || !dirty}
           sx={{ fontSize: 11, textTransform: 'none', minWidth: 0 }}
         >
-          Save
+          {t('options.save')}
         </Button>
       </Box>
     </Box>
@@ -505,6 +509,7 @@ export interface ConnectOptionsWindowProps {
 }
 
 export function ConnectOptionsWindow({ open, onClose, onProfileSwitched }: ConnectOptionsWindowProps) {
+  const { t } = useRvTranslation('connect');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
   const isConnected = snap.state === 'connected';
 
@@ -512,7 +517,7 @@ export function ConnectOptionsWindow({ open, onClose, onProfileSwitched }: Conne
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="CONNECT Settings"
+      title={t('options.windowTitle')}
       panelId="connect-options"
       minWidth={340}
       defaultWidth={400}
@@ -524,7 +529,7 @@ export function ConnectOptionsWindow({ open, onClose, onProfileSwitched }: Conne
         {isConnected ? (
           <>
             <Box>
-              <SectionTitle>License</SectionTitle>
+              <SectionTitle>{t('options.license')}</SectionTitle>
               {/* LicenseSection carries status, grace detail and the activation dialog. */}
               <LicenseSection serverUrl={snap.serverUrl} />
             </Box>
@@ -535,7 +540,7 @@ export function ConnectOptionsWindow({ open, onClose, onProfileSwitched }: Conne
           </>
         ) : (
           <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-            Connect to a gateway to manage its license, configuration profiles and historian.
+            {t('options.notConnected')}
           </Typography>
         )}
       </Box>

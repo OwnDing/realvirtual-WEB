@@ -222,6 +222,8 @@ import { ConnectUpdateNotice } from './ConnectUpdateNotice';
 import { CONNECT_STABLE_DOWNLOAD_URL } from './connect-downloads';
 import { useConnectDownloads } from './use-connect-downloads';
 import { statusAge } from './connect-staleness';
+import { rvT, useRvTranslation } from '../i18n';
+import { Trans } from 'react-i18next';
 
 // ── Signal-count helper (counts ProcessImage topic signals + legacy signals) ──
 
@@ -249,25 +251,26 @@ function statusDisplay(
   gatewaySetupNeeded: boolean,
 ): { color: string; label: string; warn: boolean } {
   if (state === 'connected' && unreachable) {
-    return { color: ISA_AMBER, label: 'Gateway unreachable', warn: true };
+    return { color: ISA_AMBER, label: rvT('connect', 'status.gatewayUnreachable'), warn: true };
   }
   if (state === 'error' && gatewaySetupNeeded) {
     // Never-linked is the CONNECT acquisition moment, not a fault — neutral
     // status; amber stays reserved for a live link that broke (unreachable).
-    return { color: 'rgba(255,255,255,0.5)', label: 'Not connected', warn: false };
+    return { color: 'rgba(255,255,255,0.5)', label: rvT('connect', 'status.notConnected'), warn: false };
   }
   switch (state) {
-    case 'connected': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: 'Connected', warn: false };
-    case 'connecting': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: 'Connecting...', warn: false };
-    case 'error': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: 'Error', warn: true };
-    default: return { color: 'rgba(255,255,255,0.5)', label: 'Disconnected', warn: false };
+    case 'connected': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: rvT('connect', 'status.connected'), warn: false };
+    case 'connecting': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: rvT('connect', 'status.connecting'), warn: false };
+    case 'error': return { color: connectionStateColor(state) ?? 'rgba(255,255,255,0.5)', label: rvT('connect', 'status.error'), warn: true };
+    default: return { color: 'rgba(255,255,255,0.5)', label: rvT('connect', 'status.disconnected'), warn: false };
   }
 }
 
-/** Human-readable label for an interface type — gateway catalog first, static registry as fallback. */
+/** Product name for an interface type — gateway catalog first, static registry as fallback.
+ *  Never translated: these are industrial identifiers (ADR-0001 §6). */
 function interfaceTypeLabel(type: ConnectInterfaceType): string {
-  return getAvailableInterfaceTypes().find(d => d.type === type)?.label
-    ?? CONNECT_INTERFACE_TYPES.find(d => d.type === type)?.label
+  return getAvailableInterfaceTypes().find(d => d.type === type)?.productName
+    ?? CONNECT_INTERFACE_TYPES.find(d => d.type === type)?.productName
     ?? type;
 }
 
@@ -315,7 +318,7 @@ export function signalBudgetPresentation(status: LicenseStatus | null): SignalBu
   if (!showBudget) return null;
 
   return {
-    label: `Signals ${status.admittedSignals} / ${status.maxSignals}`,
+    label: rvT('connect', 'status.signalBudget', { used: status.admittedSignals, max: status.maxSignals }),
     warning: status.admittedSignals / status.maxSignals >= 0.8,
   };
 }
@@ -417,15 +420,15 @@ function OpenerCapability({ icon, title, text }: { icon: ReactNode; title: strin
 /** Opener content: value proposition + download as primary CTA + the quiet
  *  technical cause (only after a connect attempt actually failed). */
 export function ConnectOpener({ failedUrl }: { failedUrl: string | null }) {
+  const { t } = useRvTranslation('connect');
   const { stable, beta } = useConnectDownloads();
   return (
     <Box sx={{ mt: 0.75, color: 'text.secondary' }}>
       <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.5 }}>
-        Live PLC data in this viewer
+        {t('opener.title')}
       </Typography>
       <Typography sx={{ fontSize: 11, lineHeight: 1.5, mt: 0.25 }}>
-        realvirtual CONNECT is the local gateway that links this viewer to real
-        controllers and robots. The free tier includes 20 PLC signals.
+        {t('opener.intro')}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mt: 1 }}>
         <Button
@@ -451,34 +454,34 @@ export function ConnectOpener({ failedUrl }: { failedUrl: string | null }) {
             title={channelBuildTitle(beta.build, beta.buildDate)}
             sx={{ minWidth: 0, p: 0, fontSize: 10, color: 'text.secondary', textTransform: 'none' }}
           >
-            {beta.version ? `beta ${beta.version}` : 'beta'}
+            {beta.version ? t('opener.beta', { version: beta.version }) : t('opener.betaPlain')}
           </Button>
         )}
       </Box>
       <Typography sx={{ fontSize: 11, lineHeight: 1.5, mt: 0.75 }}>
-        Already installed? Start CONNECT on that machine, then press Connect.
+        {t('opener.alreadyInstalled')}
       </Typography>
       {failedUrl && (
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', mt: 0.25 }}>
-          no gateway at {failedUrl.replace(/^https?:\/\//, '')}
+          {t('opener.noGateway', { host: failedUrl.replace(/^https?:\/\//, '') })}
         </Typography>
       )}
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 1 }} />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         <OpenerCapability
           icon={<Sensors sx={{ fontSize: 14 }} />}
-          title="Live signals"
-          text="bind real PLC I/O to drives, sensors and HMI elements in this scene."
+          title={t('opener.capSignals')}
+          text={t('opener.capSignalsText')}
         />
         <OpenerCapability
           icon={<PrecisionManufacturing sx={{ fontSize: 14 }} />}
-          title="Virtual commissioning"
-          text="validate the real PLC program against the 3D machine, before or without the hardware."
+          title={t('opener.capCommissioning')}
+          text={t('opener.capCommissioningText')}
         />
         <OpenerCapability
           icon={<Hub sx={{ fontSize: 14 }} />}
-          title="Real controllers"
-          text="S7, TwinCAT ADS, OPC UA, Modbus TCP, EtherNet/IP, ctrlX and MQTT, plus robot interfaces (FANUC, Denso, ABB)."
+          title={t('opener.capControllers')}
+          text={t('opener.capControllersText')}
         />
       </Box>
     </Box>
@@ -486,14 +489,15 @@ export function ConnectOpener({ failedUrl }: { failedUrl: string | null }) {
 }
 
 export function SignalLimitNotice({ signals, limit }: { signals: readonly string[]; limit?: number | null }) {
+  const { t } = useRvTranslation('connect');
   const served = typeof limit === 'number' && limit > 0 && limit < 2_147_483_647
-    ? `Only the first ${limit} signals are served`
-    : 'Only the signals within the license limit are served';
+    ? t('limit.servedFirst', { limit })
+    : t('limit.servedWithin');
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, px: 1, pb: 0.75 }}>
       <InfoOutlined aria-hidden sx={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', mt: 0.1, flexShrink: 0 }} />
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
-        {served} - {signals.length} more are configured. Activate a license to serve all signals.
+        {t('limit.notice', { served, count: signals.length })}
       </Typography>
     </Box>
   );
@@ -506,15 +510,14 @@ export function SignalLimitNotice({ signals, limit }: { signals: readonly string
  * one-line card stays one line. Previously this lived only in the gateway log.
  */
 export function SignalIssueBadge({ issues }: { issues: readonly ConnectSignalIssue[] }) {
+  const { t } = useRvTranslation('connect');
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const MAX_SHOWN = 8;
   const shown = issues.slice(0, MAX_SHOWN);
-  const summary = issues.length === 1
-    ? '1 signal is configured but never receives values'
-    : `${issues.length} signals are configured but never receive values`;
+  const summary = t('issues.summary', { count: issues.length });
   return (
     <>
-      <Tooltip title={`${summary} — click for details`}>
+      <Tooltip title={t('issues.tooltip', { summary })}>
         <IconButton
           size="small"
           aria-label={summary}
@@ -553,7 +556,7 @@ export function SignalIssueBadge({ issues }: { issues: readonly ConnectSignalIss
         ))}
         {issues.length > MAX_SHOWN && (
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, pl: 2.25 }}>
-            +{issues.length - MAX_SHOWN} more — see the gateway log for the full list.
+            {t('issues.more', { count: issues.length - MAX_SHOWN })}
           </Typography>
         )}
       </Popover>
@@ -656,6 +659,7 @@ function saveSignalScroll(ifaceId: string, offset: number): void {
 // ── ConnectPanel ───────────────────────────────────────────────────────
 
 export function ConnectPanel() {
+  const { t } = useRvTranslation('connect');
   const viewer = useViewer();
   const lpm = viewer.leftPanelManager;
   const panelSnap = useSyncExternalStore(lpm.subscribe, lpm.getSnapshot);
@@ -706,9 +710,12 @@ export function ConnectPanel() {
   const handleRemoveInterface = useCallback((iface: ConnectInterface) => {
     const count = interfaceSignalCount(iface);
     setConfirmAction({
-      title: `Delete interface '${iface.id}'?`,
-      message: `Removes the ${interfaceTypeLabel(iface.type)} interface${count > 0 ? ` and its ${count} signal${count === 1 ? '' : 's'}` : ''} from the gateway configuration. This can't be undone.`,
-      confirmLabel: 'Delete interface',
+      title: t('iface.deleteTitle', { id: iface.id }),
+      message: t('iface.deleteMessage', {
+        type: interfaceTypeLabel(iface.type),
+        signals: count > 0 ? t('iface.deleteSignals', { count }) : '',
+      }),
+      confirmLabel: t('iface.deleteConfirm'),
       onConfirm: () => removeInterface(iface.id),
     });
   }, []);
@@ -855,7 +862,7 @@ export function ConnectPanel() {
           onClick={() => setLogOpen(true)}
           sx={{ fontSize: 11, textTransform: 'none', py: 0.5, color: 'text.secondary' }}
         >
-          Log
+          {t('panel.log')}
         </Button>
       ) : undefined}
     >
@@ -887,7 +894,7 @@ export function ConnectPanel() {
             )}
             {unreachable && snap.lastStatusUpdate > 0 && (
               <Typography sx={{ fontSize: 10, color: status.color, fontFamily: 'monospace', flexShrink: 0 }}>
-                · last response {statusAge(snap.lastStatusUpdate, Date.now())} ago
+                {t('status.lastResponse', { age: statusAge(snap.lastStatusUpdate, Date.now()) })}
               </Typography>
             )}
             <Box sx={{ flex: 1 }} />
@@ -900,16 +907,16 @@ export function ConnectPanel() {
                 onClick={() => setOptionsOpen(true)}
                 sx={{ fontSize: 10, textTransform: 'none', flexShrink: 0 }}
               >
-                Connect...
+                {t('panel.connectAction')}
               </Button>
             )}
             <Tooltip title={settingsProblem
-              ? `CONNECT settings — ${settingsProblemHint}`
-              : 'CONNECT settings — connection, license, profiles, historian'}
+              ? t('panel.settingsProblem', { hint: settingsProblemHint })
+              : t('panel.settingsTooltip')}
             >
               <IconButton
                 size="small"
-                aria-label={settingsProblem ? `CONNECT settings (${settingsProblemHint})` : 'CONNECT settings'}
+                aria-label={settingsProblem ? t('panel.settingsAriaProblem', { hint: settingsProblemHint }) : t('panel.settingsAria')}
                 onClick={() => setOptionsOpen(true)}
                 sx={{ color: 'rgba(255,255,255,0.6)', flexShrink: 0, p: 0.4 }}
               >
@@ -930,11 +937,14 @@ export function ConnectPanel() {
           {isConnected && !unreachable && snap.activeProfile && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25, minWidth: 0 }}>
               <Typography sx={{ fontSize: 10, color: 'text.secondary', flexShrink: 0 }}>
-                Profile
+                {t('panel.profile')}
               </Typography>
               <Tooltip
-                title={`Active configuration profile${snap.activeProfileModel
-                  ? ` — bound to model ${snap.activeProfileModel}` : ''}. Switch profiles in CONNECT settings.`}
+                title={t('panel.profileTooltip', {
+                  binding: snap.activeProfileModel
+                    ? t('panel.profileBinding', { model: snap.activeProfileModel })
+                    : '',
+                })}
               >
                 <Typography
                   onClick={() => setOptionsOpen(true)}
@@ -944,7 +954,7 @@ export function ConnectPanel() {
                     cursor: 'pointer', '&:hover': { textDecoration: 'underline' },
                   }}
                 >
-                  {snap.activeProfile}{snap.activeProfileModel ? ` · model: ${snap.activeProfileModel}` : ''}
+                  {snap.activeProfile}{snap.activeProfileModel ? t('panel.profileModel', { model: snap.activeProfileModel }) : ''}
                 </Typography>
               </Tooltip>
             </Box>
@@ -963,12 +973,14 @@ export function ConnectPanel() {
               <FiberManualRecord sx={{ fontSize: 10, color: ISA_RED, flexShrink: 0 }} />
               <Typography sx={{ fontSize: 10, color: ISA_RED, lineHeight: 1.4, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                 title={historianSnap.status?.authError
-                  ? 'Historian not recording - auth error, check the InfluxDB token'
-                  : `Historian not recording - ${historianSnap.status?.disabledReason ?? 'InfluxDB unreachable'}`}
+                  ? t('panel.historianAuth')
+                  : t('panel.historianReason', { reason: historianSnap.status?.disabledReason ?? t('panel.historianUnreachable') })}
               >
-                Historian not recording - {historianSnap.status?.authError
-                  ? 'auth error, check token'
-                  : historianSnap.status?.disabledReason ?? 'InfluxDB unreachable'}
+                {t('tail.historianLine', {
+                  reason: historianSnap.status?.authError
+                    ? t('tail.historianAuthShort')
+                    : historianSnap.status?.disabledReason ?? t('panel.historianUnreachable'),
+                })}
               </Typography>
               <Button
                 size="small"
@@ -976,15 +988,14 @@ export function ConnectPanel() {
                 onClick={() => setOptionsOpen(true)}
                 sx={{ minWidth: 0, p: 0, fontSize: 10, textTransform: 'none', flexShrink: 0 }}
               >
-                Fix...
+                {t('tail.fix')}
               </Button>
             </Box>
           )}
           {unreachable && (
             <Box sx={{ mt: 0.25 }}>
               <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.5 }}>
-                The CONNECT gateway stopped responding - interface states are unknown.
-                Reconnects automatically as soon as it is back.
+                {t('tail.unreachable')}
               </Typography>
               <ConnectDownloadLinks />
             </Box>
@@ -1009,14 +1020,14 @@ export function ConnectPanel() {
           <Box sx={{ p: 1, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5, flexShrink: 0 }}>
               <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1 }}>
-                Interfaces ({snap.interfaces.length})
+                {t('list.header', { count: snap.interfaces.length })}
               </Typography>
               <SignalBudgetIndicator status={licenseSnap.status} />
             </Box>
 
             {snap.interfaces.length === 0 && (
               <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', textAlign: 'center', py: 2 }}>
-                No interfaces yet — Add one to link a PLC, robot or broker.
+                {t('list.empty')}
               </Typography>
             )}
 
@@ -1081,7 +1092,7 @@ export function ConnectPanel() {
                         must still say something instead of toggling nothing visible. */}
                     {expanded && !showSignals && (
                       <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', px: 1, py: 1 }}>
-                        No signals yet — use the ⋮ menu to Browse or Import.
+                        {t('list.noSignals')}
                       </Typography>
                     )}
                   </Box>
@@ -1097,7 +1108,7 @@ export function ConnectPanel() {
                   onClick={() => setAddDialogOpen(true)}
                   sx={{ fontSize: 11, textTransform: 'none' }}
                 >
-                  Add Interface
+                  {t('list.add')}
                 </Button>
               </Box>
             </Box>
@@ -1213,6 +1224,7 @@ function InterfaceCard({
   /** Mirror rules referencing this interface (plan-353 F11) — drives the badges. */
   mirrorRole?: { isSource: boolean; isTarget: boolean };
 }) {
+  const { t } = useRvTranslation('connect');
   // All per-interface actions live in one "⋮" menu so the card stays a single line.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const closeMenu = useCallback(() => setMenuAnchor(null), []);
@@ -1287,11 +1299,17 @@ function InterfaceCard({
         }}
       >
         {expanded ? <ExpandLess sx={{ fontSize: 14 }} /> : <ExpandMore sx={{ fontSize: 14 }} />}
-        <Tooltip title={`${statusText}${statusErrorText ? ` — ${statusErrorText}` : ''}`}>
+        <Tooltip title={t('card.statusTooltip', {
+          status: statusText,
+          detail: statusErrorText ? t('card.statusDetail', { detail: statusErrorText }) : '',
+        })}>
           <Box
             component="span"
             role="img"
-            aria-label={`Status: ${statusText}${statusErrorText ? ` — ${statusErrorText}` : ''}`}
+            aria-label={t('card.statusAria', {
+              status: statusText,
+              detail: statusErrorText ? t('card.statusDetail', { detail: statusErrorText }) : '',
+            })}
             sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4, flexShrink: 0 }}
           >
             <Circle sx={{ fontSize: 7, color: dotColor }} />
@@ -1320,20 +1338,20 @@ function InterfaceCard({
             was no way to see that this interface feeds — or is fed by — another
             one. Both can be true at once, hence two independent badges. */}
         {mirrorRole?.isSource && (
-          <Tooltip title="Mirror source — all signals of this interface are mirrored into a sink">
+          <Tooltip title={t('card.mirrorSourceTip')}>
             <Chip
               size="small"
-              label="Mirror source"
+              label={t('card.mirrorSource')}
               data-testid="mirror-source-badge"
               sx={MIRROR_BADGE_SX}
             />
           </Tooltip>
         )}
         {mirrorRole?.isTarget && (
-          <Tooltip title="Mirror target — this interface receives signals mirrored from another">
+          <Tooltip title={t('card.mirrorTargetTip')}>
             <Chip
               size="small"
-              label="Mirror target"
+              label={t('card.mirrorTarget')}
               data-testid="mirror-target-badge"
               sx={MIRROR_BADGE_SX}
             />
@@ -1344,10 +1362,10 @@ function InterfaceCard({
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', flexShrink: 0 }}>
           {signalCount}
         </Typography>
-        <Tooltip title="Interface actions">
+        <Tooltip title={t('card.actions')}>
           <IconButton
             size="small"
-            aria-label={`Actions for interface '${iface.id}'`}
+            aria-label={t('card.actionsAria', { id: iface.id })}
             onClick={(e) => { e.stopPropagation(); setMenuAnchor(e.currentTarget); }}
             sx={{ p: 0.25, color: 'rgba(255,255,255,0.6)', flexShrink: 0 }}
           >
@@ -1370,21 +1388,21 @@ function InterfaceCard({
         {/* Enable/disable decides whether the worker connects and signals flow. */}
         <MenuItem sx={{ fontSize: 12, gap: 1 }} onClick={() => { closeMenu(); onSetEnabled(!iface.enabled); }}>
           <PowerSettingsNew sx={{ fontSize: 14, color: iface.enabled ? 'rgba(255,255,255,0.6)' : ISA_GREEN }} />
-          {iface.enabled ? 'Disable' : 'Enable'}
+          {t(iface.enabled ? 'card.disable' : 'card.enable')}
         </MenuItem>
         <Divider />
         {canBrowse && (
           <MenuItem sx={{ fontSize: 12, gap: 1 }} onClick={() => { closeMenu(); onBrowse(); }}>
-            <Search sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> Browse signals…
+            <Search sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> {t('card.browse')}
           </MenuItem>
         )}
         {(iface.type === 'MQTT' || iface.type === 'S7') && (
           <MenuItem sx={{ fontSize: 12, gap: 1 }} onClick={() => { closeMenu(); onImport(); }}>
-            <Upload sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> Import tag table…
+            <Upload sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> {t('card.importTags')}
           </MenuItem>
         )}
         <MenuItem sx={{ fontSize: 12, gap: 1 }} onClick={() => { closeMenu(); onEdit(); }}>
-          <Edit sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> Edit…
+          <Edit sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> {t('card.edit')}
         </MenuItem>
         {/* One-click bridge: mirror ALL signals of this interface into an MQTT/SHM sink,
             direction-preserving (out stays out, in stays in). Sinks don't offer it.
@@ -1395,17 +1413,17 @@ function InterfaceCard({
             sx={{ fontSize: 12, gap: 1 }}
             onClick={(e) => { setMenuAnchor(null); setPrefixAnchor(e.currentTarget); }}
           >
-            <SwapHoriz sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> Mirror to MQTT…
+            <SwapHoriz sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> {t('card.mirrorMqtt')}
           </MenuItem>
         )}
         {canMirror && (
           <MenuItem sx={{ fontSize: 12, gap: 1 }} onClick={() => { closeMenu(); onMirror!('SHM'); }}>
-            <SwapHoriz sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> Mirror to SHM (shared memory)
+            <SwapHoriz sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} /> {t('card.mirrorShm')}
           </MenuItem>
         )}
         <Divider />
         <MenuItem sx={{ fontSize: 12, gap: 1, color: ISA_RED }} onClick={() => { closeMenu(); onDelete(); }}>
-          <Delete sx={{ fontSize: 14 }} /> Delete interface…
+          <Delete sx={{ fontSize: 14 }} /> {t('card.delete')}
         </MenuItem>
       </Menu>
 
@@ -1424,25 +1442,25 @@ function InterfaceCard({
       >
         <Box sx={{ p: 1.25, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 240 }}>
           <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-            Mirror all signals of <b>{iface.id}</b> to MQTT
+            <Trans ns="connect" i18nKey="card.prefixTitle" values={{ id: iface.id }} components={[<b key="id" />]} />
           </Typography>
           <TextField
             autoFocus
             size="small"
-            label="Topic prefix"
+            label={t('card.topicPrefix')}
             placeholder="plant1/"
             value={topicPrefix}
             onChange={(e) => setTopicPrefix(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') confirmPrefixMirror(); }}
-            inputProps={{ 'aria-label': 'MQTT topic prefix' }}
+            inputProps={{ 'aria-label': t('card.topicPrefixAria') }}
             sx={{ '& .MuiInputBase-input': { fontSize: 12 } }}
           />
           <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-            Prepended to each signal name. Leave empty to publish at the root.
+            {t('card.topicPrefixHint')}
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
             <Button size="small" sx={{ fontSize: 11, textTransform: 'none' }} onClick={closePrefix}>
-              Cancel
+              {t('card.cancel')}
             </Button>
             <Button
               size="small"
@@ -1450,7 +1468,7 @@ function InterfaceCard({
               sx={{ fontSize: 11, textTransform: 'none' }}
               onClick={confirmPrefixMirror}
             >
-              Mirror
+              {t('card.mirror')}
             </Button>
           </Box>
         </Box>
@@ -1482,6 +1500,7 @@ function AddInterfaceDialog({
   /** Called with the server-created interface so the parent can continue the flow (expand + Edit). */
   onCreated?: (iface: ConnectInterface) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [creatingType, setCreatingType] = useState<ConnectInterfaceType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -1502,7 +1521,7 @@ function AddInterfaceDialog({
       onCreated?.(created);
     } catch (err) {
       setCreatingType(null);
-      setError(err instanceof Error ? err.message : 'Failed to add interface.');
+      setError(err instanceof Error ? err.message : t('add.failed'));
     }
   }, [creatingType, onClose, onCreated]);
 
@@ -1510,7 +1529,7 @@ function AddInterfaceDialog({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14 }}>
         <Add sx={{ color: 'primary.main' }} />
-        Add Interface
+        {t('add.title')}
       </DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         {error && (
@@ -1540,10 +1559,12 @@ function AddInterfaceDialog({
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>
-                    {def.label}
+                    {def.productName}
                   </Typography>
                   <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>
-                    {def.description}
+                    {/* Ours resolves through the catalog; the gateway's own prose
+                        is a server value and renders as it arrived. */}
+                    {def.descriptionKey ? t(def.descriptionKey) : def.description}
                   </Typography>
                 </Box>
                 {isCreatingThis && <CircularProgress size={14} />}
@@ -1553,7 +1574,7 @@ function AddInterfaceDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('add.cancel')}</Button>
       </DialogActions>
     </Dialog>
   );
@@ -1569,40 +1590,41 @@ function TwinCatFieldsBlock({
   value: TwinCatSettings;
   onChange: (patch: Partial<TwinCatSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="AMS NetId" value={value.netId}
+        fullWidth size="small" label={t('spec.amsNetId')} value={value.netId}
         onChange={(e) => onChange({ netId: e.target.value })}
         placeholder="5.78.123.1.1.1" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="ADS Port" value={value.adsPort}
+          size="small" label={t('spec.adsPort')} value={value.adsPort}
           onChange={(e) => onChange({ adsPort: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
         <FormControl size="small" sx={{ flex: 1 }}>
-          <InputLabel id="twincat-mode-label">Mode</InputLabel>
+          <InputLabel id="twincat-mode-label">{t('field.mode')}</InputLabel>
           <Select
             labelId="twincat-mode-label"
-            label="Mode"
+            label={t('field.mode')}
             value={value.mode}
             onChange={(e) => onChange({ mode: e.target.value as TwinCatUpdateMode })}
           >
-            <MenuItem value="SumCommand">Sum Command</MenuItem>
-            <MenuItem value="OnChange">On Change</MenuItem>
-            <MenuItem value="Cyclic">Cyclic</MenuItem>
+            <MenuItem value="SumCommand">{t('spec.modeSumCommand')}</MenuItem>
+            <MenuItem value="OnChange">{t('spec.modeOnChange')}</MenuItem>
+            <MenuItem value="Cyclic">{t('spec.modeCyclic')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.useEmbeddedRouter} onChange={(e) => onChange({ useEmbeddedRouter: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Use embedded AMS router</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.useEmbeddedRouter')}</Typography>
       </Box>
       {value.useEmbeddedRouter && (
         <TextField
-          fullWidth size="small" label="Router local NetId (optional)"
+          fullWidth size="small" label={t('field.routerNetId')}
           value={value.routerLocalNetId ?? ''}
           onChange={(e) => onChange({ routerLocalNetId: e.target.value || null })}
           placeholder="127.0.0.1.1.1" sx={{ mb: 1 }}
@@ -1610,14 +1632,14 @@ function TwinCatFieldsBlock({
       )}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.writeAllInputsOnStart} onChange={(e) => onChange({ writeAllInputsOnStart: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Write all inputs on start</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.writeInputsOnStart')}</Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Checkbox size="small" checked={value.readAllOutputsOnStart} onChange={(e) => onChange({ readAllOutputsOnStart: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Read all outputs on start</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.readOutputsOnStart')}</Typography>
       </Box>
       <TextField
-        fullWidth size="small" label="Max sub-commands (Sum Command mode)"
+        fullWidth size="small" label={t('field.maxSubCommands')}
         value={value.maxSubCommands}
         onChange={(e) => onChange({ maxSubCommands: parseInt(e.target.value, 10) || 0 })}
         sx={{ mb: 1 }}
@@ -1636,11 +1658,12 @@ function ModbusFieldsBlock({
   onChange: (patch: Partial<ModbusSettings>) => void;
   isServerMode: boolean;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
         fullWidth size="small"
-        label={isServerMode ? 'Bind Address (0.0.0.0 = all interfaces)' : 'Host'}
+        label={t(isServerMode ? 'field.bindAddress' : 'field.host')}
         value={value.host}
         onChange={(e) => onChange({ host: e.target.value })}
         placeholder={isServerMode ? '0.0.0.0' : '192.168.1.60'}
@@ -1648,39 +1671,39 @@ function ModbusFieldsBlock({
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Port" value={value.port}
+          size="small" label={t('field.port')} value={value.port}
           onChange={(e) => onChange({ port: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Unit Id" value={value.unitId}
+          size="small" label={t('spec.unitId')} value={value.unitId}
           onChange={(e) => onChange({ unitId: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <FormControl size="small" sx={{ flex: 1 }}>
-          <InputLabel id="modbus-wordorder-label">Word Order</InputLabel>
+          <InputLabel id="modbus-wordorder-label">{t('field.wordOrder')}</InputLabel>
           <Select
-            labelId="modbus-wordorder-label" label="Word Order"
+            labelId="modbus-wordorder-label" label={t('field.wordOrder')}
             value={value.wordOrder}
             onChange={(e) => onChange({ wordOrder: e.target.value as ModbusWordOrder })}
           >
-            <MenuItem value="ABCD">ABCD (big-endian)</MenuItem>
-            <MenuItem value="CDAB">CDAB (word-swapped)</MenuItem>
-            <MenuItem value="BADC">BADC (byte-swapped)</MenuItem>
-            <MenuItem value="DCBA">DCBA (little-endian)</MenuItem>
+            <MenuItem value="ABCD">{t('field.modbusAbcd')}</MenuItem>
+            <MenuItem value="CDAB">{t('field.modbusCdab')}</MenuItem>
+            <MenuItem value="BADC">{t('field.modbusBadc')}</MenuItem>
+            <MenuItem value="DCBA">{t('field.modbusDcba')}</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ flex: 1 }}>
-          <InputLabel id="modbus-transport-label">Transport</InputLabel>
+          <InputLabel id="modbus-transport-label">{t('field.transport')}</InputLabel>
           <Select
-            labelId="modbus-transport-label" label="Transport"
+            labelId="modbus-transport-label" label={t('field.transport')}
             value={value.transport}
             onChange={(e) => onChange({ transport: e.target.value as ModbusTransport })}
           >
-            <MenuItem value="Tcp">TCP</MenuItem>
-            <MenuItem value="Rtu" disabled>RTU (not yet implemented)</MenuItem>
+            <MenuItem value="Tcp">{t('spec.transportTcp')}</MenuItem>
+            <MenuItem value="Rtu" disabled>{t('field.transportRtu')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -1696,39 +1719,40 @@ function EthernetIpFieldsBlock({
   value: EthernetIpSettings;
   onChange: (patch: Partial<EthernetIpSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Gateway" value={value.gateway}
+        fullWidth size="small" label={t('field.gateway')} value={value.gateway}
         onChange={(e) => onChange({ gateway: e.target.value })}
         placeholder="10.10.10.10" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Path" value={value.path}
+          size="small" label={t('field.path')} value={value.path}
           onChange={(e) => onChange({ path: e.target.value })}
           placeholder="1,0 (empty for Micro800)" sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Timeout (ms)" value={value.timeoutMs}
+          size="small" label={t('field.timeoutMs')} value={value.timeoutMs}
           onChange={(e) => onChange({ timeoutMs: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
       </Box>
       <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-        <InputLabel id="eip-plctype-label">PLC Type</InputLabel>
+        <InputLabel id="eip-plctype-label">{t('field.plcType')}</InputLabel>
         <Select
-          labelId="eip-plctype-label" label="PLC Type"
+          labelId="eip-plctype-label" label={t('field.plcType')}
           value={value.plcType}
           onChange={(e) => onChange({ plcType: e.target.value as EipPlcType })}
         >
-          <MenuItem value="ControlLogix">ControlLogix / CompactLogix</MenuItem>
-          <MenuItem value="Plc5">PLC-5</MenuItem>
-          <MenuItem value="Slc500">SLC 500</MenuItem>
-          <MenuItem value="LogixPccc">Logix (PCCC)</MenuItem>
-          <MenuItem value="Micro800">Micro800</MenuItem>
-          <MenuItem value="MicroLogix">MicroLogix</MenuItem>
-          <MenuItem value="Omron">Omron</MenuItem>
+          <MenuItem value="ControlLogix">{t('spec.plcControlLogix')}</MenuItem>
+          <MenuItem value="Plc5">{t('spec.plcPlc5')}</MenuItem>
+          <MenuItem value="Slc500">{t('spec.plcSlc500')}</MenuItem>
+          <MenuItem value="LogixPccc">{t('spec.plcLogixPccc')}</MenuItem>
+          <MenuItem value="Micro800">{t('spec.plcMicro800')}</MenuItem>
+          <MenuItem value="MicroLogix">{t('spec.plcMicroLogix')}</MenuItem>
+          <MenuItem value="Omron">{t('spec.plcOmron')}</MenuItem>
         </Select>
       </FormControl>
     </>
@@ -1743,38 +1767,39 @@ function CtrlXFieldsBlock({
   value: CtrlXSettings;
   onChange: (patch: Partial<CtrlXSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Address" value={value.address}
+        fullWidth size="small" label={t('field.address')} value={value.address}
         onChange={(e) => onChange({ address: e.target.value })}
         placeholder="192.168.1.30" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Checkbox size="small" checked={value.useSsl} onChange={(e) => onChange({ useSsl: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Use SSL (reverse proxy + auth)</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.useSslProxy')}</Typography>
       </Box>
       {value.useSsl ? (
         <>
           <TextField
-            fullWidth size="small" label="Bridge Path" value={value.bridgePath}
+            fullWidth size="small" label={t('field.bridgePath')} value={value.bridgePath}
             onChange={(e) => onChange({ bridgePath: e.target.value })}
             sx={{ mb: 1 }}
           />
           <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
             <TextField
-              size="small" label="Username" value={value.username ?? ''}
+              size="small" label={t('field.username')} value={value.username ?? ''}
               onChange={(e) => onChange({ username: e.target.value || null })}
               sx={{ flex: 1 }}
             />
             <TextField
-              size="small" label="Password" type="password" value={value.password ?? ''}
+              size="small" label={t('field.password')} type="password" value={value.password ?? ''}
               onChange={(e) => onChange({ password: e.target.value || null })}
               sx={{ flex: 1 }}
             />
           </Box>
           <TextField
-            fullWidth size="small" label="Token TTL fallback (minutes)"
+            fullWidth size="small" label={t('field.tokenTtl')}
             value={value.tokenTtlMinutes}
             onChange={(e) => onChange({ tokenTtlMinutes: parseInt(e.target.value, 10) || 0 })}
             sx={{ mb: 1 }}
@@ -1782,7 +1807,7 @@ function CtrlXFieldsBlock({
         </>
       ) : (
         <TextField
-          fullWidth size="small" label="Direct Port" value={value.directPort}
+          fullWidth size="small" label={t('field.directPort')} value={value.directPort}
           onChange={(e) => onChange({ directPort: parseInt(e.target.value, 10) || 0 })}
           sx={{ mb: 1 }}
         />
@@ -1799,33 +1824,34 @@ function CtrlXDataLayerFieldsBlock({
   value: CtrlXDataLayerSettings;
   onChange: (patch: Partial<CtrlXDataLayerSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
     <>
       <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-        Connection
+        {t('field.connection')}
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Address" value={value.address}
+          size="small" label={t('field.address')} value={value.address}
           onChange={(e) => onChange({ address: e.target.value })}
           placeholder="192.168.1.32" sx={{ flex: 2, minWidth: 0 }}
         />
         <TextField
-          size="small" label="Port" type="number" value={value.port}
+          size="small" label={t('field.port')} type="number" value={value.port}
           onChange={(e) => onChange({ port: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1, minWidth: 0 }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Username" value={value.username ?? ''}
+          size="small" label={t('field.username')} value={value.username ?? ''}
           onChange={(e) => onChange({ username: e.target.value || null })}
           sx={{ flex: 1, minWidth: 0 }}
         />
         <TextField
-          size="small" label="Password" type="password" value={value.password ?? ''}
+          size="small" label={t('field.password')} type="password" value={value.password ?? ''}
           onChange={(e) => onChange({ password: e.target.value || null })}
           sx={{ flex: 1, minWidth: 0 }}
         />
@@ -1839,15 +1865,15 @@ function CtrlXDataLayerFieldsBlock({
             onChange={(e) => onChange({ allowUntrustedCertificate: e.target.checked })}
           />
         )}
-        label={<Typography sx={{ fontSize: 12 }}>Allow untrusted certificate</Typography>}
+        label={<Typography sx={{ fontSize: 12 }}>{t('field.allowUntrusted')}</Typography>}
       />
       <Typography sx={{ fontSize: 10, color: 'text.secondary', ml: 4.5, mb: 1.5, lineHeight: 1.5 }}>
-        A factory-default ctrlX uses a self-signed certificate; enable this to connect until a trusted certificate is installed.
+        {t('field.allowUntrustedHint')}
       </Typography>
 
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 1.25 }} />
       <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>
-        Subscription
+        {t('field.subscription')}
       </Typography>
       <FormControlLabel
         sx={{ m: 0, mb: 0.5 }}
@@ -1858,10 +1884,10 @@ function CtrlXDataLayerFieldsBlock({
             onChange={(e) => onChange({ useStatelessSubscription: e.target.checked })}
           />
         )}
-        label={<Typography sx={{ fontSize: 12 }}>Use stateless subscription</Typography>}
+        label={<Typography sx={{ fontSize: 12 }}>{t('field.statelessSubscription')}</Typography>}
       />
       <TextField
-        fullWidth size="small" label="Publish Interval (ms)" type="number"
+        fullWidth size="small" label={t('field.publishInterval')} type="number"
         value={value.publishIntervalMs}
         onChange={(e) => onChange({ publishIntervalMs: parseInt(e.target.value, 10) || 0 })}
         sx={{ mb: 0.5 }}
@@ -1876,7 +1902,7 @@ function CtrlXDataLayerFieldsBlock({
         onClick={() => setAdvancedOpen(open => !open)}
         sx={{ px: 0.5, mb: 0.5, color: 'text.secondary', fontSize: 11, textTransform: 'none' }}
       >
-        Advanced
+        {t('field.advanced')}
       </Button>
       <Collapse in={advancedOpen}>
         <Box id="ctrlx-datalayer-advanced-fields">
@@ -1884,13 +1910,13 @@ function CtrlXDataLayerFieldsBlock({
             <>
               <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 <TextField
-                  size="small" label="Keepalive Interval (ms)" type="number"
+                  size="small" label={t('field.keepaliveInterval')} type="number"
                   value={value.keepaliveIntervalMs}
                   onChange={(e) => onChange({ keepaliveIntervalMs: parseInt(e.target.value, 10) || 0 })}
                   sx={{ flex: 1, minWidth: 0 }}
                 />
                 <TextField
-                  size="small" label="Error Interval (ms)" type="number"
+                  size="small" label={t('field.errorInterval')} type="number"
                   value={value.errorIntervalMs}
                   onChange={(e) => onChange({ errorIntervalMs: parseInt(e.target.value, 10) || 0 })}
                   sx={{ flex: 1, minWidth: 0 }}
@@ -1898,13 +1924,13 @@ function CtrlXDataLayerFieldsBlock({
               </Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 <TextField
-                  size="small" label="Sampling Interval (µs)" type="number"
+                  size="small" label={t('field.samplingInterval')} type="number"
                   value={value.samplingIntervalUs}
                   onChange={(e) => onChange({ samplingIntervalUs: parseInt(e.target.value, 10) || 0 })}
                   sx={{ flex: 1, minWidth: 0 }}
                 />
                 <TextField
-                  size="small" label="Queue Size" type="number"
+                  size="small" label={t('field.queueSize')} type="number"
                   value={value.queueSize}
                   onChange={(e) => onChange({ queueSize: parseInt(e.target.value, 10) || 0 })}
                   sx={{ flex: 1, minWidth: 0 }}
@@ -1912,32 +1938,32 @@ function CtrlXDataLayerFieldsBlock({
               </Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
                 <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-                  <InputLabel id="ctrlx-datalayer-queue-behaviour-label">Queue Behaviour</InputLabel>
+                  <InputLabel id="ctrlx-datalayer-queue-behaviour-label">{t('field.queueBehaviour')}</InputLabel>
                   <Select
                     labelId="ctrlx-datalayer-queue-behaviour-label"
-                    label="Queue Behaviour"
+                    label={t('field.queueBehaviour')}
                     value={value.queueBehaviour}
                     onChange={(e) => onChange({
                       queueBehaviour: e.target.value as CtrlXDataLayerSettings['queueBehaviour'],
                     })}
                   >
-                    <MenuItem value="DiscardOldest">DiscardOldest</MenuItem>
-                    <MenuItem value="DiscardNewest">DiscardNewest</MenuItem>
+                    <MenuItem value="DiscardOldest">{t('spec.queueDiscardOldest')}</MenuItem>
+                    <MenuItem value="DiscardNewest">{t('spec.queueDiscardNewest')}</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-                  <InputLabel id="ctrlx-datalayer-value-change-label">Value Change</InputLabel>
+                  <InputLabel id="ctrlx-datalayer-value-change-label">{t('field.valueChange')}</InputLabel>
                   <Select
                     labelId="ctrlx-datalayer-value-change-label"
-                    label="Value Change"
+                    label={t('field.valueChange')}
                     value={value.valueChange}
                     onChange={(e) => onChange({
                       valueChange: e.target.value as CtrlXDataLayerSettings['valueChange'],
                     })}
                   >
-                    <MenuItem value="Status">Status</MenuItem>
-                    <MenuItem value="StatusValue">StatusValue</MenuItem>
-                    <MenuItem value="StatusValueTimestamp">StatusValueTimestamp</MenuItem>
+                    <MenuItem value="Status">{t('spec.changeStatus')}</MenuItem>
+                    <MenuItem value="StatusValue">{t('spec.changeStatusValue')}</MenuItem>
+                    <MenuItem value="StatusValueTimestamp">{t('spec.changeStatusValueTimestamp')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -1946,10 +1972,10 @@ function CtrlXDataLayerFieldsBlock({
 
           <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 1.25 }} />
           <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-            Discovery
+            {t('field.discovery')}
           </Typography>
           <TextField
-            fullWidth size="small" label="Browse Root Paths"
+            fullWidth size="small" label={t('field.browseRootPaths')}
             value={value.browseRootPaths.join(', ')}
             onChange={(e) => onChange({ browseRootPaths: e.target.value.split(',').map(path => path.trim()) })}
             onBlur={() => onChange({ browseRootPaths: value.browseRootPaths.filter(Boolean) })}
@@ -1957,10 +1983,10 @@ function CtrlXDataLayerFieldsBlock({
             sx={{ mb: 0.25 }}
           />
           <Typography sx={{ fontSize: 10, color: 'text.secondary', mx: 0.5, mb: 1, lineHeight: 1.5 }}>
-            Comma-separated browse roots. Leave empty to use configured signal parents and the Data Layer root.
+            {t('field.browseRootsHint')}
           </Typography>
           <TextField
-            fullWidth size="small" label="Max Subscription Nodes" type="number"
+            fullWidth size="small" label={t('field.maxSubscriptionNodes')} type="number"
             value={value.maxSubscriptionNodes}
             onChange={(e) => onChange({ maxSubscriptionNodes: parseInt(e.target.value, 10) || 0 })}
             sx={{ mb: 1 }}
@@ -1979,45 +2005,46 @@ function KebaFieldsBlock({
   value: KebaSettings;
   onChange: (patch: Partial<KebaSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Host" value={value.host}
+        fullWidth size="small" label={t('field.host')} value={value.host}
         onChange={(e) => onChange({ host: e.target.value })}
         placeholder="192.168.1.100" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="HTTP Port" value={value.httpPort}
+          size="small" label={t('field.httpPort')} value={value.httpPort}
           onChange={(e) => onChange({ httpPort: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="WebSocket Port" value={value.wsPort}
+          size="small" label={t('field.wsPort')} value={value.wsPort}
           onChange={(e) => onChange({ wsPort: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Username" value={value.username ?? ''}
+          size="small" label={t('field.username')} value={value.username ?? ''}
           onChange={(e) => onChange({ username: e.target.value || null })}
           sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Password" type="password" value={value.password ?? ''}
+          size="small" label={t('field.password')} type="password" value={value.password ?? ''}
           onChange={(e) => onChange({ password: e.target.value || null })}
           sx={{ flex: 1 }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Cycle Time (ms)" value={value.cycleTimeMs}
+          size="small" label={t('field.cycleTime')} value={value.cycleTimeMs}
           onChange={(e) => onChange({ cycleTimeMs: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Browse roots (comma-sep.)"
+          size="small" label={t('field.browseRoots')}
           value={value.importRootPaths.join(', ')}
           onChange={(e) => onChange({ importRootPaths: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
           placeholder="SYS, PLC" sx={{ flex: 1 }}
@@ -2025,22 +2052,22 @@ function KebaFieldsBlock({
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.useOnChange} onChange={(e) => onChange({ useOnChange: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Subscribe on-change (instead of periodic)</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.subscribeOnChange')}</Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.usePatternMatching} onChange={(e) => onChange({ usePatternMatching: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Infer direction from variable names (discovery)</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.inferDirection')}</Typography>
       </Box>
       {value.usePatternMatching && (
         <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
           <TextField
-            size="small" label="Input patterns"
+            size="small" label={t('field.inputPatterns')}
             value={value.inputPatterns.join(', ')}
             onChange={(e) => onChange({ inputPatterns: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
             placeholder="input" sx={{ flex: 1 }}
           />
           <TextField
-            size="small" label="Output patterns"
+            size="small" label={t('field.outputPatterns')}
             value={value.outputPatterns.join(', ')}
             onChange={(e) => onChange({ outputPatterns: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
             placeholder="output" sx={{ flex: 1 }}
@@ -2059,50 +2086,51 @@ function FestoFieldsBlock({
   value: FestoSettings;
   onChange: (patch: Partial<FestoSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Host" value={value.host}
+        fullWidth size="small" label={t('field.host')} value={value.host}
         onChange={(e) => onChange({ host: e.target.value })}
         placeholder="192.168.1.10" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="RSC Port" value={value.port}
+          size="small" label={t('field.rscPort')} value={value.port}
           onChange={(e) => onChange({ port: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
           <Checkbox size="small" checked={value.useTls} onChange={(e) => onChange({ useTls: e.target.checked })} />
-          <Typography sx={{ fontSize: 12 }}>Use TLS</Typography>
+          <Typography sx={{ fontSize: 12 }}>{t('field.useTls')}</Typography>
         </Box>
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Username" value={value.username ?? ''}
+          size="small" label={t('field.username')} value={value.username ?? ''}
           onChange={(e) => onChange({ username: e.target.value || null })}
           sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Password" type="password" value={value.password ?? ''}
+          size="small" label={t('field.password')} type="password" value={value.password ?? ''}
           onChange={(e) => onChange({ password: e.target.value || null })}
           sx={{ flex: 1 }}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.useSubscription} onChange={(e) => onChange({ useSubscription: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Use subscription (falls back to polling)</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('field.useSubscription')}</Typography>
       </Box>
       {value.useSubscription && (
         <TextField
-          fullWidth size="small" label="Subscription cycle (ms)"
+          fullWidth size="small" label={t('field.subscriptionCycle')}
           value={value.subscriptionCycleMs}
           onChange={(e) => onChange({ subscriptionCycleMs: parseInt(e.target.value, 10) || 0 })}
           sx={{ mb: 1 }}
         />
       )}
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', mb: 1 }}>
-        Only one Festo (PLCnext RSC) interface per CONNECT process — connect a second PLCnext via OPC UA.
+        {t('field.festoNote')}
       </Typography>
     </>
   );
@@ -2116,28 +2144,28 @@ function FanucFieldsBlock({
   value: FanucSettings;
   onChange: (patch: Partial<FanucSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Address (127.0.0.1 for RoboGuide on this PC)" value={value.address}
+        fullWidth size="small" label={t('robot.fanucAddress')} value={value.address}
         onChange={(e) => onChange({ address: e.target.value })}
         placeholder="127.0.0.1" sx={{ mb: 1 }}
       />
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Port (RoboGuide: robot 1 = 60008, robot 2 = 60009, …)" value={value.port}
+          size="small" label={t('robot.fanucPort')} value={value.port}
           onChange={(e) => onChange({ port: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 2 }}
         />
         <TextField
-          size="small" label="Axes" value={value.axisCount}
+          size="small" label={t('robot.axes')} value={value.axisCount}
           onChange={(e) => onChange({ axisCount: parseInt(e.target.value, 10) || 0 })}
           sx={{ flex: 1 }}
         />
       </Box>
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', mb: 1 }}>
-        Signal addresses are FANUC signal names (do4, di3, ui1, …). Axes &gt; 0 publishes joint positions
-        as axis1…axisN float signals.
+        {t('robot.fanucNote')}
       </Typography>
     </>
   );
@@ -2151,52 +2179,53 @@ function DensoFieldsBlock({
   value: DensoSettings;
   onChange: (patch: Partial<DensoSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Host" value={value.host}
+          size="small" label={t('field.host')} value={value.host}
           onChange={(e) => onChange({ host: e.target.value })}
           placeholder="127.0.0.1" sx={{ flex: 2 }}
         />
         <FormControl size="small" sx={{ flex: 1 }}>
-          <InputLabel id="denso-ct-label">Controller</InputLabel>
+          <InputLabel id="denso-ct-label">{t('robot.controller')}</InputLabel>
           <Select
-            labelId="denso-ct-label" label="Controller"
+            labelId="denso-ct-label" label={t('robot.controller')}
             value={value.controllerType}
             onChange={(e) => onChange({ controllerType: e.target.value as DensoControllerType })}
           >
-            <MenuItem value="RC8">RC8</MenuItem>
-            <MenuItem value="RC9">RC9</MenuItem>
+            <MenuItem value="RC8">{t('specRobot.rc8')}</MenuItem>
+            <MenuItem value="RC9">{t('specRobot.rc9')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
         <TextField
-          size="small" label="Controller Name" value={value.controllerName}
+          size="small" label={t('robot.controllerName')} value={value.controllerName}
           onChange={(e) => onChange({ controllerName: e.target.value })}
           placeholder="Robot1" sx={{ flex: 1 }}
         />
         <TextField
-          size="small" label="Axes" value={value.axisCount}
+          size="small" label={t('robot.axes')} value={value.axisCount}
           onChange={(e) => onChange({ axisCount: parseInt(e.target.value, 10) || 0 })}
           sx={{ width: 80 }}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Checkbox size="small" checked={value.connectRealRobot} onChange={(e) => onChange({ connectRealRobot: e.target.checked })} />
-        <Typography sx={{ fontSize: 12 }}>Connect to real robot (instead of WinCaps VRC)</Typography>
+        <Typography sx={{ fontSize: 12 }}>{t('robot.connectRealRobot')}</Typography>
       </Box>
       {!value.connectRealRobot && (
         <TextField
-          fullWidth size="small" label="WinCaps project (.WPJ path on the CONNECT machine)"
+          fullWidth size="small" label={t('robot.wincapsProject')}
           value={value.wincapsProject}
           onChange={(e) => onChange({ wincapsProject: e.target.value })}
           placeholder="C:\Projects\Cell1\Cell1.WPJ" sx={{ mb: 1 }}
         />
       )}
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', mb: 1 }}>
-        Signal addresses are VRC symbols: IO&lt;n&gt; (bool), I&lt;n&gt; (int), F&lt;n&gt; (float), S&lt;n&gt; (string).
+        {t('robot.densoNote')}
       </Typography>
     </>
   );
@@ -2210,22 +2239,23 @@ function AbbRobotStudioFieldsBlock({
   value: AbbRobotStudioSettings;
   onChange: (patch: Partial<AbbRobotStudioSettings>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <TextField
-        fullWidth size="small" label="Shared Memory Name" value={value.sharedMemoryName}
+        fullWidth size="small" label={t('robot.sharedMemoryName')} value={value.sharedMemoryName}
         onChange={(e) => onChange({ sharedMemoryName: e.target.value })}
         placeholder="SIMITShared Memory" sx={{ mb: 1 }}
       />
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', mb: 1 }}>
-        CONNECT creates the SIMIT shared memory; attach RobotStudio&apos;s SIMIT connection to it.
-        Same machine only. Joint* float outputs arrive in rad and are exposed in deg.
+        {t('robot.abbNote')}
       </Typography>
     </>
   );
 }
 
 function EditInterfaceDialog({ iface, open, onClose }: { iface: ConnectInterface; open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('connect');
   // ── Common fields — unchanged behavior (Enabled, UpdateCycleMs) plus AllowWebToPlc ──
   const [enabled, setEnabled] = useState(iface.enabled);
   const [updateCycleMs, setUpdateCycleMs] = useState(String(iface.updateCycleMs ?? 50));
@@ -2320,37 +2350,37 @@ function EditInterfaceDialog({ iface, open, onClose }: { iface: ConnectInterface
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14 }}>
         <Edit sx={{ color: 'primary.main' }} />
-        Edit {interfaceTypeLabel(iface.type)} Interface
+        {t('edit.title', { type: interfaceTypeLabel(iface.type) })}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 0.5 }}>
           <Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} size="small" />
-          <Typography sx={{ fontSize: 13 }}>Enabled</Typography>
+          <Typography sx={{ fontSize: 13 }}>{t('edit.enabled')}</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Checkbox checked={allowWebToPlc} onChange={(e) => setAllowWebToPlc(e.target.checked)} size="small" />
-          <Typography sx={{ fontSize: 13 }}>Allow Web → PLC writes</Typography>
+          <Typography sx={{ fontSize: 13 }}>{t('edit.allowWebToPlc')}</Typography>
         </Box>
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', ml: 4.5, mt: -0.5, mb: 1.5, lineHeight: 1.5 }}>
-          Lets viewer users write signal values back to the PLC. Leave off for monitor-only delivery.
+          {t('edit.allowWebToPlcHint')}
         </Typography>
 
         {iface.type === 'OpcUa' && (
-          <TextField fullWidth size="small" label="Endpoint URL" value={endpoint} onChange={(e) => setEndpoint(e.target.value)} sx={{ mb: 1 }} />
+          <TextField fullWidth size="small" label={t('edit.endpointUrl')} value={endpoint} onChange={(e) => setEndpoint(e.target.value)} sx={{ mb: 1 }} />
         )}
 
         {iface.type === 'S7' && (
           <>
-            <TextField fullWidth size="small" label="IP Address" value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} sx={{ mb: 1 }} />
+            <TextField fullWidth size="small" label={t('edit.ipAddress')} value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} sx={{ mb: 1 }} />
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField size="small" label="Rack" value={rack} onChange={(e) => setRack(e.target.value)} sx={{ flex: 1 }} />
-              <TextField size="small" label="Slot" value={slot} onChange={(e) => setSlot(e.target.value)} sx={{ flex: 1 }} />
+              <TextField size="small" label={t('edit.rack')} value={rack} onChange={(e) => setRack(e.target.value)} sx={{ flex: 1 }} />
+              <TextField size="small" label={t('edit.slot')} value={slot} onChange={(e) => setSlot(e.target.value)} sx={{ flex: 1 }} />
             </Box>
           </>
         )}
 
         {iface.type === 'MQTT' && (
-          <TextField fullWidth size="small" label="Broker URL" value={brokerUrl} onChange={(e) => setBrokerUrl(e.target.value)} sx={{ mb: 1 }} />
+          <TextField fullWidth size="small" label={t('edit.brokerUrl')} value={brokerUrl} onChange={(e) => setBrokerUrl(e.target.value)} sx={{ mb: 1 }} />
         )}
 
         {iface.type === 'TwinCat' && <TwinCatFieldsBlock value={twinCat} onChange={patchTwinCat} />}
@@ -2377,12 +2407,12 @@ function EditInterfaceDialog({ iface, open, onClose }: { iface: ConnectInterface
 
         {iface.type === 'AbbRobotStudio' && <AbbRobotStudioFieldsBlock value={abbRobotStudio} onChange={patchAbbRobotStudio} />}
 
-        <TextField fullWidth size="small" label="Update Cycle (ms)" value={updateCycleMs} onChange={(e) => setUpdateCycleMs(e.target.value)} sx={{ mt: 1 }} />
+        <TextField fullWidth size="small" label={t('edit.updateCycle')} value={updateCycleMs} onChange={(e) => setUpdateCycleMs(e.target.value)} sx={{ mt: 1 }} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('edit.cancel')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving} sx={{ textTransform: 'none' }}>
-          {saving ? 'Saving...' : 'Save'}
+          {t(saving ? 'edit.saving' : 'edit.save')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -2510,6 +2540,7 @@ const SignalRowItem = memo(function SignalRowItem({
   onEdit, onDelete, onBridge, onRecordChange, topic, interfaceId, recordPending, limitExceeded,
   selected, onSelect, onContextMenu,
 }: SignalRowItemProps) {
+  const { t } = useRvTranslation('connect');
   const signalStore = viewer.signalStore ?? null;
   // Live value — the row owns the subscription (plan-344 F1). `undefined` while
   // the store has never seen this symbol; SignalBadge renders that as "—".
@@ -2606,13 +2637,13 @@ const SignalRowItem = memo(function SignalRowItem({
       }}
     >
       {inModel && (
-        <Tooltip title="Used by the model — a component (drive / cylinder / sensor) references this signal, coupled by name" placement="left" disableInteractive>
+        <Tooltip title={t('signal.inModel')} placement="left" disableInteractive>
           <Hub sx={{ fontSize: 12, color: '#4fc3f7', flexShrink: 0 }} />
         </Tooltip>
       )}
       {limitExceeded && (
-        <Tooltip title="Signal limit - this signal is not being served" placement="left" disableInteractive>
-          <WarningAmber role="img" aria-label="Signal limit" sx={{ fontSize: 12, color: ISA_AMBER, flexShrink: 0 }} />
+        <Tooltip title={t('signal.limitTooltip')} placement="left" disableInteractive>
+          <WarningAmber role="img" aria-label={t('signal.limitAria')} sx={{ fontSize: 12, color: ISA_AMBER, flexShrink: 0 }} />
         </Tooltip>
       )}
       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -2649,10 +2680,10 @@ const SignalRowItem = memo(function SignalRowItem({
           Click = view history (opens the trend panel with this signal preselected);
           stopping the recording lives in the hover action cluster below. */}
       {onRecordChange && sig.record === true && (
-        <Tooltip title="Recording to historian — click to view history" disableInteractive>
+        <Tooltip title={t('signal.recordingTooltip')} disableInteractive>
           <IconButton
             size="small"
-            aria-label={`Show historian trend for ${sig.name}`}
+            aria-label={t('signal.showTrend', { name: sig.name })}
             disabled={recordPending}
             onClick={(event) => { event.stopPropagation(); historianStore.openPanel(sig.name); }}
             sx={{ p: 0.25, flexShrink: 0, opacity: recordPending ? 0.4 : 1 }}
@@ -2664,10 +2695,13 @@ const SignalRowItem = memo(function SignalRowItem({
       {(onEdit || onDelete || onBridge || onRecordChange) && (
         <Box className="rv-sig-actions" sx={{ display: 'flex', flexShrink: 0, opacity: 0, transition: 'opacity 0.15s' }}>
           {onRecordChange && (
-            <Tooltip title={sig.record ? 'Stop recording this signal in the historian' : 'Record this signal in the historian'} disableInteractive>
+            <Tooltip title={t(sig.record ? 'signal.stopRecording' : 'signal.startRecording')} disableInteractive>
               <IconButton
                 size="small"
-                aria-label={`${sig.record ? 'Disable' : 'Enable'} historian recording for ${sig.name}`}
+                aria-label={t('signal.toggleRecordingAria', {
+                  verb: t(sig.record ? 'signal.disable' : 'signal.enable'),
+                  name: sig.name,
+                })}
                 disabled={recordPending}
                 onClick={(e) => { e.stopPropagation(); onRecordChange(sig, sig.record !== true, topic); }}
                 sx={{ p: 0.25 }}
@@ -2681,22 +2715,22 @@ const SignalRowItem = memo(function SignalRowItem({
             </Tooltip>
           )}
           {onBridge && (
-            <Tooltip title="Bridge to another interface (1:1 signal mapping)" disableInteractive>
-              <IconButton size="small" aria-label={`Bridge signal '${sig.name}'`} onClick={(e) => { e.stopPropagation(); onBridge(sig); }} sx={{ p: 0.25 }}>
+            <Tooltip title={t('signal.bridgeTooltip')} disableInteractive>
+              <IconButton size="small" aria-label={t('signal.bridgeAria', { name: sig.name })} onClick={(e) => { e.stopPropagation(); onBridge(sig); }} sx={{ p: 0.25 }}>
                 <SwapHoriz sx={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }} />
               </IconButton>
             </Tooltip>
           )}
           {onEdit && (
-            <Tooltip title="Edit signal" disableInteractive>
-              <IconButton size="small" aria-label={`Edit signal '${sig.name}'`} onClick={(e) => { e.stopPropagation(); onEdit(sig); }} sx={{ p: 0.25 }}>
+            <Tooltip title={t('signal.editTooltip')} disableInteractive>
+              <IconButton size="small" aria-label={t('signal.editAria', { name: sig.name })} onClick={(e) => { e.stopPropagation(); onEdit(sig); }} sx={{ p: 0.25 }}>
                 <Edit sx={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }} />
               </IconButton>
             </Tooltip>
           )}
           {onDelete && (
-            <Tooltip title="Delete signal" disableInteractive>
-              <IconButton size="small" aria-label={`Delete signal '${sig.name}'`} onClick={(e) => { e.stopPropagation(); onDelete(sig); }} sx={{ p: 0.25, '&:hover': { color: ISA_RED } }}>
+            <Tooltip title={t('signal.deleteTooltip')} disableInteractive>
+              <IconButton size="small" aria-label={t('signal.deleteAria', { name: sig.name })} onClick={(e) => { e.stopPropagation(); onDelete(sig); }} sx={{ p: 0.25, '&:hover': { color: ISA_RED } }}>
                 <Delete sx={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }} />
               </IconButton>
             </Tooltip>
@@ -2743,6 +2777,7 @@ function SignalFilterPopover({
   toggleType: (k: PlcTypeKind) => void;
   onReset: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const labelSx = { fontSize: 10, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 0.4 } as const;
   const groupSx = {
     '& .MuiToggleButton-root': {
@@ -2792,7 +2827,7 @@ function SignalFilterPopover({
           fullWidth
           value={filterState.text}
           onChange={(e) => setFilterState((prev) => ({ ...prev, text: e.target.value }))}
-          placeholder="Filter signals..."
+          placeholder={t('filter.placeholder')}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -2813,7 +2848,7 @@ function SignalFilterPopover({
 
         {/* Type facet (multi-select) */}
         <Box>
-          <Typography sx={labelSx}>Type</Typography>
+          <Typography sx={labelSx}>{t('filter.type')}</Typography>
           <ToggleButtonGroup
             size="small"
             fullWidth
@@ -2858,7 +2893,7 @@ function SignalFilterPopover({
             disabled={activeFilterCount(filterState) === 0}
             sx={{ fontSize: 10, textTransform: 'none', minWidth: 0, color: 'rgba(255,255,255,0.7)' }}
           >
-            Reset
+            {t('filter.reset')}
           </Button>
         </Box>
       </Box>
@@ -2877,6 +2912,7 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
   /** Bridge a signal 1:1 into another interface (plan-257) — undefined hides the hover action. */
   onBridgeSignal?: (signalName: string) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const viewer = useViewer();
   const signalStore = viewer.signalStore ?? null;
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -2924,9 +2960,11 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const handleDeleteSignal = useCallback((sig: ConnectInterfaceSignal) => {
     setConfirmAction({
-      title: `Delete signal '${sig.name}'?`,
-      message: `Removes '${sig.name}' (${sig.protocolAddress}) from interface '${iface.id}'. This can't be undone.`,
-      confirmLabel: 'Delete signal',
+      title: t('signals.deleteOneTitle', { name: sig.name }),
+      message: t('signals.deleteOneMessage', {
+        name: sig.name, address: sig.protocolAddress, iface: iface.id,
+      }),
+      confirmLabel: t('signals.deleteOneConfirm'),
       onConfirm: () => removeSignal(iface.id, sig.name).catch((err) =>
         console.error('[ConnectPanel] Failed to delete signal:', err)),
     });
@@ -3268,15 +3306,18 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
     const only = count === 1 ? [...keys].map(k => k.slice(k.indexOf(' ') + 1))[0] : null;
     const nested = count - flat.size;
     setConfirmAction({
-      title: only ? `Delete signal '${only}'?` : `Delete ${count} signals?`,
+      title: only
+        ? t('signals.deleteOneTitle', { name: only })
+        : t('signals.deleteManyTitle', { count }),
       message: only
-        ? `Removes '${only}' from interface '${iface.id}'. This can't be undone.`
-        : `Removes ${count} selected signals from interface '${iface.id}'`
-          + (nested > 0
-            ? `, ${nested} of them from imported process-image topics — the remaining byte offsets stay as they are.`
-            : '.')
-          + " This can't be undone.",
-      confirmLabel: only ? 'Delete signal' : `Delete ${count} signals`,
+        ? t('signals.deleteOnlyMessage', { name: only, iface: iface.id })
+        : t('signals.deleteManyMessage', {
+            count, iface: iface.id,
+            nested: nested > 0 ? t('signals.deleteNested', { count: nested }) : '.',
+          }),
+      confirmLabel: only
+        ? t('signals.deleteOneConfirm')
+        : t('signals.deleteManyConfirm', { count }),
       onConfirm: () => {
         const patch: { signals?: ConnectInterfaceSignal[]; topics?: ConnectInterface['topics'] } = {};
         if (flat.size > 0) patch.signals = (iface.signals ?? []).filter(s => !flat.has(s.name));
@@ -3393,14 +3434,14 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
           {couplingCounter(
             'auto', Hub, binding.autoCount,
-            `${binding.autoCount} signal(s) used by a model component (drive / cylinder / sensor), coupled by signal name. Click to show only these.`,
+            t('signals.couplingAuto', { count: binding.autoCount }),
           )}
           {(viewer.signalBindingManager || binding.manualCount > 0) && couplingCounter(
             'manual', LinkIcon, binding.manualCount,
-            `${binding.manualCount} signal(s) manually linked to a placed element in the Planner. Click to show only these.`,
+            t('signals.couplingManual', { count: binding.manualCount }),
           )}
           {recordedCount > 0 && (
-            <Tooltip title={`${recordedCount} signal(s) recorded in the historian. Click to show only these.`}>
+            <Tooltip title={t('signals.couplingRecorded', { count: recordedCount })}>
               <Box
                 onClick={() => setFilterState((p) => ({ ...p, recorded: p.recorded === 'recorded' ? 'all' : 'recorded' }))}
                 sx={{
@@ -3419,10 +3460,10 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
           )}
         </Box>
         {manualEdit && (
-          <Tooltip title={`Add signal manually (${schema?.addressLabel ?? 'address'} + name)`}>
+          <Tooltip title={t('signals.addManual', { address: schema?.addressLabel ?? t('signals.addressFallback') })}>
             <IconButton
               size="small"
-              aria-label="Add signal"
+              aria-label={t('signals.addAria')}
               onClick={() => setSignalDialog({ sig: null })}
               sx={{ color: 'rgba(255,255,255,0.6)', flexShrink: 0 }}
             >
@@ -3430,10 +3471,10 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title="Filter signals">
+        <Tooltip title={t('filter.tooltip')}>
           <IconButton
             size="small"
-            aria-label={facetCount > 0 ? `Filter signals (${facetCount} active)` : 'Filter signals'}
+            aria-label={facetCount > 0 ? t('filter.ariaActive', { count: facetCount }) : t('filter.tooltip')}
             onClick={(e) => setFilterAnchor(e.currentTarget)}
             sx={{ color: facetCount > 0 ? ISA_GREEN : 'rgba(255,255,255,0.6)', flexShrink: 0 }}
           >
@@ -3446,10 +3487,10 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
             </Badge>
           </IconButton>
         </Tooltip>
-        <Tooltip title={indicatorOn ? 'Hide active/stale indicators' : 'Show active/stale indicators'}>
+        <Tooltip title={t(indicatorOn ? 'signals.hideIndicators' : 'signals.showIndicators')}>
           <IconButton
             size="small"
-            aria-label={indicatorOn ? 'Hide active/stale indicators' : 'Show active/stale indicators'}
+            aria-label={t(indicatorOn ? 'signals.hideIndicators' : 'signals.showIndicators')}
             onClick={() => setSignalActivityIndicator(!indicatorOn)}
             sx={{ color: indicatorOn ? ISA_GREEN : 'rgba(255,255,255,0.45)', flexShrink: 0 }}
           >
@@ -3597,7 +3638,7 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
 
       <Snackbar open={recordError !== null} autoHideDuration={6000} onClose={() => setRecordError(null)}>
         <Alert severity="error" variant="filled" onClose={() => setRecordError(null)}>
-          Historian recording could not be updated: {recordError}
+          {t('signals.recordError', { error: recordError })}
         </Alert>
       </Snackbar>
 
@@ -3621,14 +3662,16 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
           }}
         >
           <Delete sx={{ fontSize: 14 }} />
-          {selectedSignals.size > 1 ? `Delete ${selectedSignals.size} signals…` : 'Delete signal…'}
+          {selectedSignals.size > 1
+            ? t('signals.deleteManyMenu', { count: selectedSignals.size })
+            : t('signals.deleteOneMenu')}
         </MenuItem>
         {selectedSignals.size > 1 && (
           <MenuItem
             sx={{ fontSize: 12, gap: 1 }}
             onClick={() => { setSignalMenu(null); setSelectedSignals(new Set()); setSelectionAnchor(null); }}
           >
-            Clear selection ({selectedSignals.size})
+            {t('signals.clearSelection', { count: selectedSignals.size })}
           </MenuItem>
         )}
       </Menu>
@@ -3677,6 +3720,7 @@ export function signalBudgetGate(
 
 /** Floating window showing discovery results; selected signals can be added to the interface. */
 function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('connect');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
   const licenseSnap = useSyncExternalStore(subscribeLicenseStore, getLicenseSnapshot);
   const iface = snap.interfaces.find(i => i.id === snap.activeInterfaceId) ?? null;
@@ -3715,7 +3759,7 @@ function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void })
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title={`Browse${iface ? ` — ${iface.type}` : ''}`}
+      title={iface ? t('browse.titleTyped', { type: iface.type }) : t('browse.title')}
       panelId="connect-browse"
       defaultWidth={440}
       defaultHeight={460}
@@ -3729,15 +3773,15 @@ function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void })
 
         {!snap.discoveryLoading && snap.discoveredSignals.length === 0 && (
           <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', textAlign: 'center', py: 2, px: 1 }}>
-            No signals discovered — check that the interface is enabled and its source is reachable.
+            {t('browse.empty')}
           </Typography>
         )}
 
         {!snap.discoveryLoading && snap.discoveredSignals.length > 0 && (
           <>
             <Box sx={{ display: 'flex', gap: 0.5, mb: 0.5, flexShrink: 0 }}>
-              <Button size="small" startIcon={<SelectAll sx={{ fontSize: 12 }} />} onClick={() => selectAllSignals(true)} sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}>All</Button>
-              <Button size="small" startIcon={<Deselect sx={{ fontSize: 12 }} />} onClick={() => selectAllSignals(false)} sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}>None</Button>
+              <Button size="small" startIcon={<SelectAll sx={{ fontSize: 12 }} />} onClick={() => selectAllSignals(true)} sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}>{t('browse.all')}</Button>
+              <Button size="small" startIcon={<Deselect sx={{ fontSize: 12 }} />} onClick={() => selectAllSignals(false)} sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}>{t('browse.none')}</Button>
             </Box>
 
             <Box className={RV_SCROLL_CLASS} sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
@@ -3756,8 +3800,10 @@ function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void })
 
             {gate.overBudget && (
               <Typography sx={{ mt: 1, flexShrink: 0, fontSize: 10, color: ISA_AMBER }}>
-                Signal limit: {gate.newSignals} new signals selected, only {gate.free} of {gate.limit} free.
-                Deselect {gate.newSignals - (gate.free ?? 0)} or activate a license.
+                {t('browse.overBudget', {
+                  selected: gate.newSignals, free: gate.free, limit: gate.limit,
+                  excess: gate.newSignals - (gate.free ?? 0),
+                })}
               </Typography>
             )}
 
@@ -3768,7 +3814,7 @@ function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void })
             )}
 
             <Button variant="contained" size="small" startIcon={<Add sx={{ fontSize: 14 }} />} onClick={handleAdd} disabled={selectedCount === 0 || gate.overBudget} sx={{ mt: 1, flexShrink: 0, fontSize: 10, textTransform: 'none', width: '100%' }}>
-              Add to signals ({selectedCount})
+              {t('browse.add', { count: selectedCount })}
             </Button>
           </>
         )}
@@ -3830,6 +3876,7 @@ function logEntriesToText(entries: ConnectLogEntry[]): string {
  * copy-to-clipboard, and auto-scroll.
  */
 function ConnectLogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useRvTranslation('connect');
   const [entries, setEntries] = useState<ConnectLogEntry[]>([]);
   const [level, setLevel] = useState<string>('Debug');
   const [iface, setIface] = useState<string>('');
@@ -3898,13 +3945,13 @@ function ConnectLogDialog({ open, onClose }: { open: boolean; onClose: () => voi
           value={level}
           onChange={(e) => setLevel(e.target.value)}
           disableUnderline
-          inputProps={{ 'aria-label': 'Minimum log level' }}
+          inputProps={{ 'aria-label': t('log.levelAria') }}
           sx={{ fontSize: 11, '& .MuiSelect-select': { py: 0.25 } }}
           MenuProps={{ sx: { zIndex: LOG_MENU_Z } }}
         >
-          <MenuItem value="Debug" sx={{ fontSize: 12 }}>Debug</MenuItem>
-          <MenuItem value="Warning" sx={{ fontSize: 12 }}>Warning</MenuItem>
-          <MenuItem value="Error" sx={{ fontSize: 12 }}>Error</MenuItem>
+          <MenuItem value="Debug" sx={{ fontSize: 12 }}>{t('log.levelDebug')}</MenuItem>
+          <MenuItem value="Warning" sx={{ fontSize: 12 }}>{t('log.levelWarning')}</MenuItem>
+          <MenuItem value="Error" sx={{ fontSize: 12 }}>{t('log.levelError')}</MenuItem>
         </Select>
       </FormControl>
       <FormControl size="small" variant="standard" sx={{ maxWidth: 160 }}>
@@ -3913,30 +3960,30 @@ function ConnectLogDialog({ open, onClose }: { open: boolean; onClose: () => voi
           onChange={(e) => setIface(e.target.value)}
           displayEmpty
           disableUnderline
-          inputProps={{ 'aria-label': 'Filter log by interface' }}
+          inputProps={{ 'aria-label': t('log.ifaceAria') }}
           sx={{ fontSize: 11, '& .MuiSelect-select': { py: 0.25 } }}
           MenuProps={{ sx: { zIndex: LOG_MENU_Z } }}
         >
-          <MenuItem value="" sx={{ fontSize: 12 }}>All interfaces</MenuItem>
+          <MenuItem value="" sx={{ fontSize: 12 }}>{t('log.allInterfaces')}</MenuItem>
           {ifaces.map((name) => (
             <MenuItem key={name} value={name} sx={{ fontSize: 12 }}>{name}</MenuItem>
           ))}
         </Select>
       </FormControl>
-      <Tooltip title={copied ? 'Copied' : 'Copy log to clipboard'}>
+      <Tooltip title={t(copied ? 'log.copied' : 'log.copy')}>
         <span>
-          <IconButton size="small" aria-label="Copy log to clipboard" onClick={handleCopy} disabled={entries.length === 0} sx={{ p: 0.3 }}>
+          <IconButton size="small" aria-label={t('log.copy')} onClick={handleCopy} disabled={entries.length === 0} sx={{ p: 0.3 }}>
             {copied ? <Check sx={{ fontSize: 16, color: ISA_GREEN }} /> : <ContentCopy sx={{ fontSize: 16 }} />}
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title={paused ? 'Resume' : 'Pause'}>
-        <IconButton size="small" aria-label={paused ? 'Resume log tail' : 'Pause log tail'} onClick={() => setPaused(p => !p)} sx={{ p: 0.3 }}>
+      <Tooltip title={t(paused ? 'log.resume' : 'log.pause')}>
+        <IconButton size="small" aria-label={t(paused ? 'log.resumeAria' : 'log.pauseAria')} onClick={() => setPaused(p => !p)} sx={{ p: 0.3 }}>
           {paused ? <PlayArrow sx={{ fontSize: 16 }} /> : <Pause sx={{ fontSize: 16 }} />}
         </IconButton>
       </Tooltip>
-      <Tooltip title="Clear view">
-        <IconButton size="small" aria-label="Clear log view" onClick={() => setEntries([])} sx={{ p: 0.3 }}>
+      <Tooltip title={t('log.clear')}>
+        <IconButton size="small" aria-label={t('log.clearAria')} onClick={() => setEntries([])} sx={{ p: 0.3 }}>
           <ClearAll sx={{ fontSize: 16 }} />
         </IconButton>
       </Tooltip>
@@ -3947,7 +3994,7 @@ function ConnectLogDialog({ open, onClose }: { open: boolean; onClose: () => voi
     <FloatingPanel
       open={open}
       onClose={onClose}
-      title="Log"
+      title={t('log.title')}
       panelId="connect-log"
       defaultWidth={640}
       defaultHeight={360}
@@ -4004,6 +4051,7 @@ function ImportTagTableDialog({
   initialTargetId: string | null;
   onClose: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const mqttInterfaces = useMemo(() => interfaces.filter(i => i.type === 'MQTT'), [interfaces]);
   const s7Interfaces = useMemo(() => interfaces.filter(i => i.type === 'S7'), [interfaces]);
 
@@ -4157,9 +4205,9 @@ function ImportTagTableDialog({
     } catch (err) {
       setParsed(null);
       setMultiTab(null);
-      setParseError(err instanceof Error ? err.message : 'Import failed.');
+      setParseError(err instanceof Error ? err.message : t('import.failed'));
     }
-  }, [sheetPattern, forceAllAsOutput, topicPrefix, targetIsS7]);
+  }, [sheetPattern, forceAllAsOutput, topicPrefix, targetIsS7, t]);
 
   const handlePickFile = useCallback(async () => {
     setParseError(null);
@@ -4169,7 +4217,7 @@ function ImportTagTableDialog({
       try {
         const [handle] = await window.showOpenFilePicker!({
           types: [{
-            description: 'Signal table',
+            description: t('import.fileType'),
             accept: {
               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
               'text/csv': ['.csv'],
@@ -4186,7 +4234,7 @@ function ImportTagTableDialog({
       } catch (err) {
         // User cancelled the native dialog — not an error.
         if (err instanceof DOMException && err.name === 'AbortError') return;
-        setParseError(err instanceof Error ? err.message : 'Import failed.');
+        setParseError(err instanceof Error ? err.message : t('import.failed'));
       }
       return;
     }
@@ -4271,7 +4319,7 @@ function ImportTagTableDialog({
       }
       onClose();
     } catch (err) {
-      setPushError(err instanceof Error ? err.message : 'Push to CONNECT failed.');
+      setPushError(err instanceof Error ? err.message : t('import.pushFailed'));
     }
     setPushing(false);
   }, [targetIsS7, isMultiTab, multiTab, chosenTopics, parsed, brokerUrl, topic, target, onClose]);
@@ -4289,27 +4337,27 @@ function ImportTagTableDialog({
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14 }}>
         <Upload sx={{ color: 'primary.main' }} />
         {fixedTarget
-          ? `Import Tag Table → ${target} (${targetIsS7 ? 'S7' : 'MQTT'})`
-          : (targetIsS7 ? 'Import S7 Tag Table → S7 Interface' : 'Import S7 Tag Table → Topic')}
+          ? t('import.titleFixed', { target, protocol: targetIsS7 ? 'S7' : 'MQTT' })
+          : t(targetIsS7 ? 'import.titleS7' : 'import.titleTopic')}
       </DialogTitle>
       <DialogContent>
         {/* Target selector only for the global Import button — a per-interface
             import always targets that interface. */}
         {!fixedTarget && (
           <FormControl fullWidth size="small" sx={{ mt: 1, mb: 1.5 }}>
-            <InputLabel id="import-target-label">Target</InputLabel>
+            <InputLabel id="import-target-label">{t('import.target')}</InputLabel>
             <Select
               labelId="import-target-label"
               value={target}
-              label="Target"
+              label={t('import.target')}
               onChange={(e) => setTarget(e.target.value)}
             >
-              <MenuItem value="__new__">New MQTT Interface</MenuItem>
+              <MenuItem value="__new__">{t('import.newMqtt')}</MenuItem>
               {mqttInterfaces.map(i => (
-                <MenuItem key={i.id} value={i.id}>{i.id} (MQTT)</MenuItem>
+                <MenuItem key={i.id} value={i.id}>{t('import.targetOption', { id: i.id, protocol: 'MQTT' })}</MenuItem>
               ))}
               {s7Interfaces.map(i => (
-                <MenuItem key={i.id} value={i.id}>{i.id} (S7)</MenuItem>
+                <MenuItem key={i.id} value={i.id}>{t('import.targetOption', { id: i.id, protocol: 'S7' })}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -4317,8 +4365,7 @@ function ImportTagTableDialog({
 
         {targetIsS7 && (
           <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1.5 }}>
-            Tags are imported directly onto the S7 interface. Their process-image / flag
-            addresses (%Q, %M, %I) are read from the PLC; %I signals are written back.
+            {t('import.s7Note')}
           </Typography>
         )}
 
@@ -4327,7 +4374,7 @@ function ImportTagTableDialog({
           <TextField
             fullWidth
             size="small"
-            label="Broker URL"
+            label={t('import.brokerUrl')}
             value={brokerUrl}
             onChange={(e) => setBrokerUrl(e.target.value)}
             placeholder="mqtt://localhost:1883"
@@ -4340,7 +4387,7 @@ function ImportTagTableDialog({
             <TextField
               fullWidth
               size="small"
-              label="Topic"
+              label={t('import.topic')}
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="rv/plc/process-image/raw"
@@ -4348,9 +4395,9 @@ function ImportTagTableDialog({
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Tooltip title={target === '__new__'
-                      ? 'Select an existing MQTT interface to browse topics'
-                      : 'Browse topics on the broker (MQTT discovery)'}>
+                    <Tooltip title={t(target === '__new__'
+                      ? 'import.browseNeedsIface'
+                      : 'import.browseTopics')}>
                       <span>
                         <IconButton
                           size="small"
@@ -4373,7 +4420,7 @@ function ImportTagTableDialog({
               slotProps={{ paper: { sx: { maxHeight: 320 } } }}
             >
               {discoveredTopics.length === 0 && (
-                <MenuItem disabled sx={{ fontSize: 12 }}>No topics discovered</MenuItem>
+                <MenuItem disabled sx={{ fontSize: 12 }}>{t('import.noTopics')}</MenuItem>
               )}
               {discoveredTopics.map(t => (
                 <MenuItem
@@ -4395,10 +4442,10 @@ function ImportTagTableDialog({
             <TextField
               fullWidth
               size="small"
-              label="Tab filter (pattern)"
+              label={t('import.tabFilter')}
               value={sheetPattern}
               onChange={(e) => setSheetPattern(e.target.value)}
-              placeholder="Data_Q*  (empty = all tabs)"
+              placeholder={t('import.tabFilterPlaceholder')}
               sx={{ mb: 1 }}
             />
             <FormControlLabel
@@ -4409,13 +4456,13 @@ function ImportTagTableDialog({
                   onChange={(e) => setForceAllAsOutput(e.target.checked)}
                 />
               }
-              label={<Typography sx={{ fontSize: 12 }}>Treat all signals as PLC Output (incl. %I)</Typography>}
+              label={<Typography sx={{ fontSize: 12 }}>{t('import.forceOutput')}</Typography>}
               sx={{ mb: 0.5, ml: 0, display: 'flex', alignItems: 'center' }}
             />
             <TextField
               fullWidth
               size="small"
-              label="Topic prefix (optional)"
+              label={t('import.topicPrefix')}
               value={topicPrefix}
               onChange={(e) => setTopicPrefix(e.target.value)}
               placeholder="rv/plc/"
@@ -4428,7 +4475,7 @@ function ImportTagTableDialog({
         {lastHandleName && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Last: {lastHandleName}
+              {t('import.last', { name: lastHandleName })}
             </Typography>
             <Button
               variant="outlined"
@@ -4437,7 +4484,7 @@ function ImportTagTableDialog({
               onClick={handleReopenLast}
               sx={{ textTransform: 'none', flexShrink: 0 }}
             >
-              Re-open
+              {t('import.reopen')}
             </Button>
           </Box>
         )}
@@ -4449,7 +4496,7 @@ function ImportTagTableDialog({
           onClick={handlePickFile}
           sx={{ textTransform: 'none', mb: 1 }}
         >
-          Choose file (.xlsx / .csv / .sdf)
+          {t('import.chooseFile')}
         </Button>
         {fileName && (
           <Typography sx={{ fontSize: 10, color: 'text.secondary', mb: 1 }}>
@@ -4473,13 +4520,13 @@ function ImportTagTableDialog({
           <Box sx={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 1, p: 1 }}>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
               <Typography sx={{ fontSize: 11, color: 'text.primary' }}>
-                {parsed.tags.length} Tags
+                {t('import.tags', { count: parsed.tags.length })}
               </Typography>
               <Typography sx={{ fontSize: 11, color: parsed.warnings.length > 0 ? ISA_RED : 'text.secondary' }}>
-                · {parsed.warnings.length} Errors
+                {t('import.errors', { count: parsed.warnings.length })}
               </Typography>
               <Typography sx={{ fontSize: 11, color: parsed.overlaps.length > 0 ? ISA_AMBER : 'text.secondary' }}>
-                · {parsed.overlaps.length} Overlaps
+                {t('import.overlaps', { count: parsed.overlaps.length })}
               </Typography>
             </Box>
 
@@ -4529,13 +4576,13 @@ function ImportTagTableDialog({
           <Box sx={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 1, p: 1 }}>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', mb: 0.5 }}>
               <Typography sx={{ fontSize: 11, color: 'text.primary' }}>
-                {chosenTopics.length}/{multiTab.topics.length} Topics
+                {t('import.topicsCount', { chosen: chosenTopics.length, total: multiTab.topics.length })}
               </Typography>
               <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                · {chosenSignalCount} Signals
+                {t('import.signalsCount', { count: chosenSignalCount })}
               </Typography>
               <Typography sx={{ fontSize: 11, color: multiTab.warnings.length > 0 ? ISA_AMBER : 'text.secondary' }}>
-                · {multiTab.warnings.length} Warnings
+                {t('import.warnings', { count: multiTab.warnings.length })}
               </Typography>
               <Box sx={{ flex: 1 }} />
               {multiTab.topics.length > 0 && (
@@ -4546,7 +4593,7 @@ function ImportTagTableDialog({
                     onClick={() => setSelectedSheets(new Set(multiTab.topics.map(t => t.sheetName)))}
                     sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}
                   >
-                    All
+                    {t('import.all')}
                   </Button>
                   <Button
                     size="small"
@@ -4554,7 +4601,7 @@ function ImportTagTableDialog({
                     onClick={() => setSelectedSheets(new Set())}
                     sx={{ fontSize: 9, textTransform: 'none', minWidth: 0 }}
                   >
-                    None
+                    {t('import.none')}
                   </Button>
                 </>
               )}
@@ -4584,14 +4631,14 @@ function ImportTagTableDialog({
               ))}
               {multiTab.topics.length === 0 && (
                 <Typography sx={{ fontSize: 10, color: ISA_AMBER, py: 0.5 }}>
-                  No tabs match the pattern.
+                  {t('import.noTabs')}
                 </Typography>
               )}
             </Box>
 
             {multiTab.ignoredSheets.length > 0 && (
               <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', mb: 0.5 }}>
-                ignored: {multiTab.ignoredSheets.join(', ')}
+                {t('import.ignored', { sheets: multiTab.ignoredSheets.join(', ') })}
               </Typography>
             )}
 
@@ -4613,14 +4660,14 @@ function ImportTagTableDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('import.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handlePush}
           disabled={!canPush}
           sx={{ textTransform: 'none' }}
         >
-          {pushing ? 'Pushing...' : 'Push to CONNECT'}
+          {t(pushing ? 'import.pushing' : 'import.push')}
         </Button>
       </DialogActions>
 
@@ -4690,7 +4737,7 @@ function useBridges(isConnected: boolean): BridgesApi {
       setMirrors(next);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save mirror rules.');
+      setError(err instanceof Error ? err.message : rvT('connect', 'bridges.saveMirrorsFailed'));
       throw err;
     }
   }, []);
@@ -4701,7 +4748,7 @@ function useBridges(isConnected: boolean): BridgesApi {
       setMappings(next);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save signal mappings.');
+      setError(err instanceof Error ? err.message : rvT('connect', 'bridges.saveMappingsFailed'));
       throw err;
     }
   }, []);
@@ -4761,6 +4808,7 @@ function BridgeSection({
   bridges: BridgesApi;
   onAddMapping: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [addOpen, setAddOpen] = useState(false);
   const [srcId, setSrcId] = useState('');
   const [dstId, setDstId] = useState('');
@@ -4793,26 +4841,26 @@ function BridgeSection({
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 0.5 }} />
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
         <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1 }}>
-          Bridges ({count})
+          {t('bridges.header', { count })}
         </Typography>
-        <Tooltip title="Mirror all signals of an interface into an MQTT/SHM sink">
+        <Tooltip title={t('bridges.mirrorTooltip')}>
           <Button
             size="small"
             startIcon={<Add sx={{ fontSize: 12 }} />}
             onClick={() => setAddOpen(o => !o)}
             sx={{ fontSize: 11, textTransform: 'none', minWidth: 0 }}
           >
-            Mirror
+            {t('bridges.mirror')}
           </Button>
         </Tooltip>
-        <Tooltip title="Bridge a single signal 1:1 into another interface">
+        <Tooltip title={t('bridges.mappingTooltip')}>
           <Button
             size="small"
             startIcon={<Add sx={{ fontSize: 12 }} />}
             onClick={onAddMapping}
             sx={{ fontSize: 11, textTransform: 'none', minWidth: 0 }}
           >
-            Mapping
+            {t('bridges.mapping')}
           </Button>
         </Tooltip>
       </Box>
@@ -4826,7 +4874,7 @@ function BridgeSection({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5, flexWrap: 'wrap' }}>
           <FormControl size="small" variant="standard" sx={{ minWidth: 90 }}>
             <Select displayEmpty value={srcId} onChange={(e) => setSrcId(e.target.value)} sx={{ fontSize: 11 }}>
-              <MenuItem value="" disabled sx={{ fontSize: 12 }}>Source…</MenuItem>
+              <MenuItem value="" disabled sx={{ fontSize: 12 }}>{t('bridges.source')}</MenuItem>
               {interfaces.filter(i => i.id !== dstId).map(i => (
                 <MenuItem key={i.id} value={i.id} sx={{ fontSize: 12 }}>{i.id}</MenuItem>
               ))}
@@ -4835,7 +4883,7 @@ function BridgeSection({
           <SwapHoriz sx={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }} />
           <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
             <Select displayEmpty value={dstId} onChange={(e) => setDstId(e.target.value)} sx={{ fontSize: 11 }}>
-              <MenuItem value="" disabled sx={{ fontSize: 12 }}>Target (MQTT/SHM)…</MenuItem>
+              <MenuItem value="" disabled sx={{ fontSize: 12 }}>{t('bridges.target')}</MenuItem>
               {sinks.filter(i => i.id !== srcId).map(i => (
                 <MenuItem key={i.id} value={i.id} sx={{ fontSize: 12 }}>{i.id}</MenuItem>
               ))}
@@ -4848,12 +4896,12 @@ function BridgeSection({
             sx={{ width: 64, '& .MuiInputBase-input': { fontSize: 11 } }}
           />
           <Button size="small" disabled={!srcId || !dstId} onClick={() => void handleAddMirror()} sx={{ fontSize: 10, textTransform: 'none', minWidth: 0 }}>
-            Add
+            {t('bridges.add')}
           </Button>
         </Box>
         {sinks.length === 0 && (
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', mb: 0.5 }}>
-            No MQTT/SHM sink interface yet — use an interface's Mirror button to create one automatically.
+            {t('bridges.noSinks')}
           </Typography>
         )}
       </Collapse>
@@ -4875,7 +4923,7 @@ function BridgeSection({
           <Chip label="mirror" size="small" sx={{ height: 14, fontSize: 9, bgcolor: 'rgba(79,195,247,0.15)', color: '#4fc3f7' }} />
           <IconButton
             size="small"
-            aria-label={`Delete mirror ${m.sourceInterfaceId} to ${m.targetInterfaceId}`}
+            aria-label={t('bridges.deleteMirror', { source: m.sourceInterfaceId, target: m.targetInterfaceId })}
             onClick={() => void bridges.saveMirrors(mirrors.filter((_, i) => i !== idx)).catch(() => {})}
             sx={{ p: 0.2, color: 'rgba(255,255,255,0.5)', '&:hover': { color: ISA_RED } }}
           >
@@ -4894,10 +4942,10 @@ function BridgeSection({
           <Typography sx={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.8)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {m.sourceSignal} → {m.destSignal}
           </Typography>
-          <Chip label={m.coercion === 'Coerce' ? '1:1 coerce' : '1:1'} size="small" sx={{ height: 14, fontSize: 9, bgcolor: 'rgba(102,187,106,0.15)', color: ISA_GREEN }} />
+          <Chip label={t(m.coercion === 'Coerce' ? 'tail.coerce' : 'tail.plain')} size="small" sx={{ height: 14, fontSize: 9, bgcolor: 'rgba(102,187,106,0.15)', color: ISA_GREEN }} />
           <IconButton
             size="small"
-            aria-label={`Delete mapping ${m.sourceSignal} to ${m.destSignal}`}
+            aria-label={t('bridges.deleteMapping', { source: m.sourceSignal, target: m.destSignal })}
             onClick={() => void bridges.saveMappings(mappings.filter((_, i) => i !== idx)).catch(() => {})}
             sx={{ p: 0.2, color: 'rgba(255,255,255,0.5)', '&:hover': { color: ISA_RED } }}
           >
@@ -4929,6 +4977,7 @@ function AddMappingDialog({
   bridges: BridgesApi;
   onClose: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [source, setSource] = useState(sourceSignal);
   const [dest, setDest] = useState('');
   const [coerce, setCoerce] = useState(false);
@@ -4952,7 +5001,7 @@ function AddMappingDialog({
       }]);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add mapping.');
+      setError(err instanceof Error ? err.message : t('bridges.addMappingFailed'));
     }
   }, [bridges, source, dest, coerce, onClose]);
 
@@ -4960,22 +5009,21 @@ function AddMappingDialog({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: 14 }}>
         <SwapHoriz sx={{ color: 'primary.main' }} />
-        Bridge Signal
+        {t('bridges.dialogTitle')}
       </DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', mb: 1.5 }}>
-          Writes the value of the source signal to the destination signal of another interface.
-          Direction-preserving — no direction flip, a pure protocol bridge.
+          {t('bridges.dialogHint')}
         </Typography>
         {error && <Typography sx={{ fontSize: 11, color: ISA_RED, mb: 1 }}>{error}</Typography>}
         <TextField
-          fullWidth size="small" label="Source signal" value={source}
+          fullWidth size="small" label={t('bridges.sourceSignal')} value={source}
           onChange={(e) => setSource(e.target.value)}
           inputProps={{ list: 'rv-bridge-signal-names' }}
           sx={{ mb: 1.5, mt: 0.5 }}
         />
         <TextField
-          fullWidth size="small" label="Destination signal" value={dest}
+          fullWidth size="small" label={t('bridges.destSignal')} value={dest}
           onChange={(e) => setDest(e.target.value)}
           inputProps={{ list: 'rv-bridge-signal-names' }}
           sx={{ mb: 1 }}
@@ -4985,18 +5033,18 @@ function AddMappingDialog({
         </datalist>
         <FormControlLabel
           control={<Checkbox size="small" checked={coerce} onChange={(e) => setCoerce(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: 11 }}>Allow type coercion (bool↔int, int→float)</Typography>}
+          label={<Typography sx={{ fontSize: 11 }}>{t('bridges.coerce')}</Typography>}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none' }}>{t('bridges.cancel')}</Button>
         <Button
           variant="contained"
           disabled={!source.trim() || !dest.trim() || source.trim() === dest.trim()}
           onClick={() => void handleAdd()}
           sx={{ textTransform: 'none' }}
         >
-          Add Bridge
+          {t('bridges.addBridge')}
         </Button>
       </DialogActions>
     </Dialog>

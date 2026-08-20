@@ -36,6 +36,7 @@ import {
 } from './connect-update-store';
 import { getConnectSnapshot } from './connect-store';
 import { ISA_RED, ISA_GREEN, ISA_AMBER } from './isa-colors';
+import { rvT, useRvTranslation } from '../i18n';
 
 /** One offered action. `emphasis` is true only for a genuine stable upgrade — never for a beta. */
 interface UpdateRow {
@@ -62,16 +63,16 @@ export function buildUpdateRows(snap: ConnectUpdateSnapshot): UpdateRow[] {
     if (runningBeta) {
       rows.push({
         key: 'stable',
-        label: `Back to Stable ${stable.candidate.semver}`,
-        action: 'Download',
+        label: rvT('connect', 'update.backToStable', { version: stable.candidate.semver }),
+        action: rvT('connect', 'update.download'),
         offer: stable,
         emphasis: false,
       });
     } else if (stable.isNewer) {
       rows.push({
         key: 'stable',
-        label: `Stable ${stable.candidate.semver} available`,
-        action: 'Download',
+        label: rvT('connect', 'update.stableAvailable', { version: stable.candidate.semver }),
+        action: rvT('connect', 'update.download'),
         offer: stable,
         emphasis: true,
       });
@@ -81,8 +82,8 @@ export function buildUpdateRows(snap: ConnectUpdateSnapshot): UpdateRow[] {
   if (beta && !beta.isCurrent && (beta.isNewer || beta.isChannelSwitch)) {
     rows.push({
       key: 'beta',
-      label: `Beta ${beta.candidate.semver}`,
-      action: 'Download',
+      label: rvT('connect', 'update.beta', { version: beta.candidate.semver }),
+      action: rvT('connect', 'update.download'),
       offer: beta,
       emphasis: false,
     });
@@ -112,6 +113,7 @@ function progressLabel(snap: ConnectUpdateSnapshot): string {
 }
 
 export function ConnectUpdateSection() {
+  const { t } = useRvTranslation('connect');
   const snap = useSyncExternalStore(connectUpdateStore.subscribe, connectUpdateStore.getSnapshot);
   const [confirm, setConfirm] = useState<UpdateRow | null>(null);
 
@@ -160,10 +162,14 @@ export function ConnectUpdateSection() {
   const downloaded = snap.phase === 'downloaded';
   const rolledBack = snap.phase === 'rolled-back';
   const outcome = downloaded
-    ? `New version downloaded${snap.downloadedPath ? ` to ${snap.downloadedPath}` : ''}. `
-      + 'Stop CONNECT and start the downloaded file to install it.'
+    ? t('update.downloaded', {
+        path: snap.downloadedPath ? t('update.downloadedTo', { path: snap.downloadedPath }) : '',
+      })
     : succeeded
-      ? `Updated to ${snap.current?.semver ?? ''} (${channelLabel(snap.current?.channel ?? 'stable')})`
+      ? t('update.updatedTo', {
+          version: snap.current?.semver ?? '',
+          channel: channelLabel(snap.current?.channel ?? 'stable'),
+        })
       : updateReasonSentence(snap.jobReason);
 
   // A terminal job offers nothing further; anything else may still carry an open offer.
@@ -180,7 +186,7 @@ export function ConnectUpdateSection() {
       )}
       {runningBeta && (
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>
-          Running as Beta {snap.current?.semver}
+          {t('update.runningBeta', { version: snap.current?.semver ?? '' })}
         </Typography>
       )}
       {rows.map((row) => (
@@ -237,50 +243,50 @@ function UpdateConfirmDialog({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const { offer } = row;
   const isBeta = offer.candidate.channel === 'beta';
   const isOlder = offer.isDowngrade;
 
-  const title = isBeta ? 'Download beta build' : isOlder ? 'Download stable build' : 'Download CONNECT update';
+  const title = t(isBeta ? 'update.titleBeta' : isOlder ? 'update.titleOlder' : 'update.titleUpdate');
 
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontSize: 14 }}>{title}</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.5 }}>
-          <Row label="Currently running">
+          <Row label={t('update.currentlyRunning')}>
             {/* The running build's date is not part of /update/status — it comes from the same
                 /health the version line above already shows. */}
             {formatUpdateRelease(snap.current?.semver ?? '', snap.current?.build ?? null, getConnectSnapshot().serverBuildDate)} ({channelLabel(snap.current?.channel ?? 'stable')})
           </Row>
-          <Row label="Will be downloaded">
+          <Row label={t('update.willBeDownloaded')}>
             {formatUpdateRelease(offer.candidate.semver, offer.candidate.build, offer.buildDate)} ({channelLabel(offer.candidate.channel)})
           </Row>
-          <Row label="Download">{formatUpdateSize(offer.sizeBytes)}</Row>
+          <Row label={t('update.downloadRow')}>{formatUpdateSize(offer.sizeBytes)}</Row>
         </Box>
 
         {isBeta && (
           <Typography sx={{ fontSize: 11, color: ISA_AMBER, mb: 0.75, lineHeight: 1.5 }}>
-            This is a pre-release build.
+            {t('update.preRelease')}
           </Typography>
         )}
         {isOlder && (
           <Typography sx={{ fontSize: 11, color: ISA_AMBER, mb: 0.75, lineHeight: 1.5 }}>
-            This is an older version than the one running.
+            {t('update.olderVersion')}
           </Typography>
         )}
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
-          CONNECT downloads the new version next to the current installation and keeps running
-          unchanged. To install it, stop CONNECT and start the downloaded file yourself.
+          {t('update.howItInstalls')}
         </Typography>
         {snap.pinWillChange && (
           <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', mt: 0.75, lineHeight: 1.5 }}>
-            The project file connect.lock.json{snap.pinPath ? ` (${snap.pinPath})` : ''} will be changed.
+            {t('update.pinWillChange', { path: snap.pinPath ? ` (${snap.pinPath})` : '' })}
           </Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+        <Button autoFocus onClick={onClose} sx={{ textTransform: 'none' }}>{t('update.cancel')}</Button>
         <Button variant="contained" onClick={onConfirm} sx={{ textTransform: 'none' }}>{row.action}</Button>
       </DialogActions>
     </Dialog>

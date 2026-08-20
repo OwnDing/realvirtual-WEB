@@ -10,12 +10,22 @@
  * cut of this feature had green logic tests and a dead click path, so the wiring is asserted here.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import type { RVViewer } from '../src/core/rv-viewer';
 import type { ConnectInterface, ConnectInterfaceSignal } from '../src/core/hmi/connect-store';
 import { findSignalRowLabel, getSignalRowLabel, querySignalRowLabel } from './helpers/signal-row-label';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The CONNECT copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const updateInterfaceMock = vi.fn(async () => {});
 

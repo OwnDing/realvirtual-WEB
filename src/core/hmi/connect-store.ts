@@ -15,6 +15,7 @@ import { deriveWireType, type S7Tag, type ParsedTopic } from '../import/s7-tag-t
 import { connectRestFetch } from './connect-rest';
 import { clearLicenseStatus, fetchLicenseStatus } from './license-store';
 import { fetchConnectNews } from '../news-store';
+import type { RVTranslationKey } from '../i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -1081,7 +1082,10 @@ export async function fetchInterfaceTypes(): Promise<void> {
       _store.set({
         availableTypes: resp.types.map(t => ({
           type: t.type as ConnectInterfaceType,
-          label: t.label,
+          // The wire format still says `label`; ours is `productName` because
+          // that is what the value is. The gateway's `description` is its own
+          // prose, so it stays raw rather than becoming a key.
+          productName: t.label,
           description: t.description,
           defaults: t.defaults ?? {},
           ...(t.signals ? { signals: t.signals } : {}),
@@ -1340,8 +1344,24 @@ export async function addInterface(
 
 export interface ConnectInterfaceTypeDef {
   type: ConnectInterfaceType;
-  label: string;
-  description: string;
+  /**
+   * Product / protocol identifier — `Siemens S7`, `Modbus TCP Client`, `ctrlX`.
+   *
+   * Named `productName` rather than `label` on purpose: these are industrial
+   * identifiers and stay English in every language (PS-I18N-001 §2, ADR-0001
+   * §6). Calling it a label invites exactly the "why is this untranslated?"
+   * question the name is here to answer.
+   */
+  productName: string;
+  /**
+   * One-line description of the type.
+   *
+   * Exactly one of these is set. `descriptionKey` is ours (the static registry
+   * below); `description` is the gateway's own prose from `GET /interface-types`,
+   * which is a server value and not ours to translate.
+   */
+  descriptionKey?: RVTranslationKey<'connect'>;
+  description?: string;
   /** Minimal default fields for a freshly-added interface of this type (merged onto `{ id, type, enabled: false }`). */
   defaults: Record<string, unknown>;
   /**
@@ -1486,56 +1506,56 @@ export const ABB_ROBOTSTUDIO_SETTINGS_DEFAULTS: AbbRobotStudioSettings = {
 export const CONNECT_INTERFACE_TYPES: ConnectInterfaceTypeDef[] = [
   {
     type: 'MQTT',
-    label: 'MQTT Broker',
-    description: 'Topics or Siemens process image via broker',
+    productName: 'MQTT Broker',
+    descriptionKey: 'type.mqtt',
     defaults: { brokerUrl: 'mqtt://localhost:1883' },
   },
   {
     type: 'OpcUa',
-    label: 'OPC UA',
-    description: 'Browse and subscribe to an OPC UA server',
+    productName: 'OPC UA',
+    descriptionKey: 'type.opcUa',
     defaults: { endpoint: 'opc.tcp://localhost:4840' },
   },
   {
     type: 'S7',
-    label: 'Siemens S7',
-    description: 'S7comm to S7-300/400/1200/1500 and PLCSIM Advanced',
+    productName: 'Siemens S7',
+    descriptionKey: 'type.s7',
     defaults: { ipAddress: '192.168.1.50', rack: 0, slot: 1 },
   },
   {
     type: 'TwinCat',
-    label: 'Beckhoff TwinCAT ADS',
-    description: 'Symbolic access, embedded AMS router',
+    productName: 'Beckhoff TwinCAT ADS',
+    descriptionKey: 'type.twinCat',
     defaults: { twinCat: { ...TWINCAT_SETTINGS_DEFAULTS } },
   },
   {
     type: 'Modbus',
-    label: 'Modbus TCP Client',
-    description: 'Read/write coils and registers of a Modbus device',
+    productName: 'Modbus TCP Client',
+    descriptionKey: 'type.modbus',
     defaults: { modbus: { ...MODBUS_SETTINGS_DEFAULTS } },
   },
   {
     type: 'ModbusServer',
-    label: 'Modbus TCP Server',
-    description: 'CONNECT acts as slave; PLCs connect to CONNECT',
+    productName: 'Modbus TCP Server',
+    descriptionKey: 'type.modbusServer',
     defaults: { allowWebToPlc: true, modbus: { ...MODBUS_SERVER_SETTINGS_DEFAULTS } },
   },
   {
     type: 'EthernetIp',
-    label: 'EtherNet/IP',
-    description: 'Allen-Bradley ControlLogix/CompactLogix/Micro800 tags',
+    productName: 'EtherNet/IP',
+    descriptionKey: 'type.ethernetIp',
     defaults: { ethernetIp: { ...ETHERNETIP_SETTINGS_DEFAULTS } },
   },
   {
     type: 'CtrlX',
-    label: 'Bosch Rexroth ctrlX',
-    description: 'Tunnel to the ctrlx-rv-bridge snap on a ctrlX CORE',
+    productName: 'Bosch Rexroth ctrlX',
+    descriptionKey: 'type.ctrlX',
     defaults: { ctrlX: { ...CTRLX_SETTINGS_DEFAULTS } },
   },
   {
     type: 'CtrlXDataLayer',
-    label: 'Bosch Rexroth ctrlX (Data Layer)',
-    description: 'Native REST/SSE connection to the ctrlX Data Layer',
+    productName: 'Bosch Rexroth ctrlX (Data Layer)',
+    descriptionKey: 'type.ctrlXDataLayer',
     defaults: {
       ctrlXDataLayer: {
         ...CTRLXDATALAYER_SETTINGS_DEFAULTS,
@@ -1545,38 +1565,38 @@ export const CONNECT_INTERFACE_TYPES: ConnectInterfaceTypeDef[] = [
   },
   {
     type: 'Keba',
-    label: 'Keba Kemro X',
-    description: 'Variable service via WebSocket topics and write_vars',
+    productName: 'Keba Kemro X',
+    descriptionKey: 'type.keba',
     defaults: { keba: { ...KEBA_SETTINGS_DEFAULTS } },
   },
   {
     type: 'Festo',
-    label: 'Festo AX (PLCnext)',
-    description: 'RSC data access with subscription or polling',
+    productName: 'Festo AX (PLCnext)',
+    descriptionKey: 'type.festo',
     defaults: { festo: { ...FESTO_SETTINGS_DEFAULTS } },
   },
   {
     type: 'Fanuc',
-    label: 'FANUC (RoboGuide / Robot-IF)',
-    description: 'SNPX signals (do/di/ui/…) and joint positions',
+    productName: 'FANUC (RoboGuide / Robot-IF)',
+    descriptionKey: 'type.fanuc',
     defaults: { fanuc: { ...FANUC_SETTINGS_DEFAULTS } },
   },
   {
     type: 'Denso',
-    label: 'Denso (b-CAP / WinCaps VRC)',
-    description: 'IO/I/F/S variables and joint positions via b-CAP',
+    productName: 'Denso (b-CAP / WinCaps VRC)',
+    descriptionKey: 'type.denso',
     defaults: { denso: { ...DENSO_SETTINGS_DEFAULTS } },
   },
   {
     type: 'AbbRobotStudio',
-    label: 'ABB RobotStudio (SIMIT SHM)',
-    description: 'Shared-memory exchange with RobotStudio on this machine',
+    productName: 'ABB RobotStudio (SIMIT SHM)',
+    descriptionKey: 'type.abbRobotStudio',
     defaults: { abbRobotStudio: { ...ABB_ROBOTSTUDIO_SETTINGS_DEFAULTS } },
   },
   {
     type: 'SHM',
-    label: 'Shared Memory (SIMIT)',
-    description: 'SIMIT-layout shared memory for a Unity/SIMIT consumer on this machine',
+    productName: 'Shared Memory (SIMIT)',
+    descriptionKey: 'type.shm',
     defaults: { sharedMemory: { sharedMemoryName: 'realvirtualSHM', useGlobalNamespace: false } },
   },
 ];

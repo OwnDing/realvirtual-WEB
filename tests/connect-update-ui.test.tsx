@@ -14,7 +14,7 @@
  */
 
 import React from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, render, screen, waitFor, act } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { ConnectUpdateSection, buildUpdateRows } from '../src/core/hmi/ConnectUpdateSection';
@@ -31,6 +31,16 @@ import { LeftPanelManager } from '../src/core/hmi/left-panel-manager';
 import { rvDarkTheme } from '../src/core/hmi/theme';
 import { RVViewerProvider } from '../src/hooks/use-viewer';
 import type { RVViewer } from '../src/core/rv-viewer';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The CONNECT copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 const SERVER = 'http://update-ui.test:5100';
 

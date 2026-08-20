@@ -27,11 +27,14 @@ import {
   resetConnectEmbedDemo,
   subscribeConnectEmbedStore,
 } from './connect-embed-store';
+import { useRvTranslation } from '../../core/i18n';
+import { Trans } from 'react-i18next';
 
 const DEFAULT_SOURCE_URL = 'https://github.com/game4automation/realvirtual-WEB';
 
 /** Minimal-shell empty/loading/error surface for the CONNECT embedded demo. */
 export function ConnectEmbedGate() {
+  const { t } = useRvTranslation('connect');
   const viewer = useViewer();
   const snap = useSyncExternalStore(
     subscribeConnectEmbedStore,
@@ -70,7 +73,7 @@ export function ConnectEmbedGate() {
     >
       <Paper
         role="region"
-        aria-label="realvirtual CONNECT demo"
+        aria-label={t('embed.region')}
         sx={{
           width: 'min(520px, 100%)',
           p: { xs: 2, sm: 3 },
@@ -92,13 +95,14 @@ export function ConnectEmbedGate() {
 }
 
 function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: string }) {
+  const { t } = useRvTranslation('connect');
   return (
     <>
       <Typography component="h1" sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.45, textWrap: 'balance' }}>
-        Want to check your signals and experience a digital twin with realvirtual CONNECT?
+        {t('embed.emptyTitle')}
       </Typography>
       <Typography sx={{ mt: 1, color: 'text.secondary', fontSize: 13, lineHeight: 1.5 }}>
-        Start the included machine demo when you are ready. Your CONNECT interfaces and signal monitoring stay available in the panel.
+        {t('embed.emptyText')}
       </Typography>
       <Button
         data-testid="connect-embed-start"
@@ -107,7 +111,7 @@ function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: st
         onClick={onStart}
         sx={{ mt: 2.5, minWidth: 180, textTransform: 'none' }}
       >
-        Start the demo
+        {t('embed.start')}
       </Button>
       <Box sx={{ mt: 2 }}>
         <Link
@@ -117,7 +121,7 @@ function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: st
           underline="hover"
           sx={{ color: 'text.secondary', fontSize: 11 }}
         >
-          Source code (AGPL-3.0) <OpenInNew sx={{ ml: 0.25, fontSize: 11, verticalAlign: '-1px' }} />
+          {t('embed.sourceCode')} <OpenInNew sx={{ ml: 0.25, fontSize: 11, verticalAlign: '-1px' }} />
         </Link>
       </Box>
     </>
@@ -125,12 +129,13 @@ function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: st
 }
 
 function LoadingState() {
+  const { t } = useRvTranslation('connect');
   return (
     <Box data-testid="connect-embed-loading" role="status" aria-live="polite" sx={{ py: 1 }}>
       <CircularProgress size={28} thickness={4} />
-      <Typography sx={{ mt: 1.5, fontSize: 14, fontWeight: 600 }}>Loading the digital twin</Typography>
+      <Typography sx={{ mt: 1.5, fontSize: 14, fontWeight: 600 }}>{t('embed.loading')}</Typography>
       <Typography sx={{ mt: 0.5, color: 'text.secondary', fontSize: 12 }}>
-        Preparing the model and standalone simulation…
+        {t('embed.preparing')}
       </Typography>
     </Box>
   );
@@ -145,16 +150,17 @@ function ErrorState({
   onRetry: () => void;
   onBack: () => void;
 }) {
+  const { t } = useRvTranslation('connect');
   return (
     <Box data-testid="connect-embed-error" role="alert">
       <ErrorOutline color="error" sx={{ fontSize: 28 }} />
-      <Typography sx={{ mt: 1, fontSize: 14, fontWeight: 600 }}>The demo could not be loaded</Typography>
+      <Typography sx={{ mt: 1, fontSize: 14, fontWeight: 600 }}>{t('embed.errorTitle')}</Typography>
       <Typography sx={{ mt: 0.75, color: 'text.secondary', fontSize: 12, overflowWrap: 'anywhere' }}>
-        {error || 'Check the embedded model and try again.'}
+        {error || t('embed.errorText')}
       </Typography>
       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 1 }}>
-        <Button variant="text" onClick={onBack} sx={{ textTransform: 'none' }}>Back</Button>
-        <Button variant="contained" onClick={onRetry} sx={{ textTransform: 'none' }}>Retry</Button>
+        <Button variant="text" onClick={onBack} sx={{ textTransform: 'none' }}>{t('embed.back')}</Button>
+        <Button variant="contained" onClick={onRetry} sx={{ textTransform: 'none' }}>{t('embed.retry')}</Button>
       </Box>
     </Box>
   );
@@ -170,6 +176,7 @@ function ErrorState({
  * top-right corner of the 3D view stays clear.
  */
 export function ConnectEmbedDemoControls() {
+  const { t } = useRvTranslation('connect');
   const insets = useViewportInsets();
   const snap = useSyncExternalStore(
     subscribeConnectEmbedStore,
@@ -234,12 +241,9 @@ export function ConnectEmbedDemoControls() {
             }}
           >
             <AlertTitle sx={{ mb: 0.5, fontSize: 14, fontWeight: 600 }}>
-              Connect your live signals
+              {t('embed.hintTitle')}
             </AlertTitle>
-            Hold <strong>Shift</strong> and drag a signal from the CONNECT panel over a machine
-            component or drive — when its binding panel opens, drop the signal on the matching
-            signal slot. Once connected, the demo&apos;s internal logic for that component is
-            disabled and your live signal takes control.
+            <Trans ns="connect" i18nKey="embed.hintBody" components={[<strong key="shift" />]} />
           </Alert>
         </Box>
       )}

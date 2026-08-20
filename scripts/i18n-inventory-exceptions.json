@@ -2,30 +2,6 @@
   "$comment": "False positives and deliberate non-translatables for scripts/i18n-inventory.mjs. Every entry needs a reason; tests/i18n-inventory.node.test.ts rejects a missing reason and an entry that matches nothing. Match is substring on the finding text, exact on file and (when present) category.",
   "exceptions": [
     {
-      "file": "src/core/hmi/ConnectPanel.tsx",
-      "category": "react-copy",
-      "match": "ControlLogix / CompactLogix",
-      "reason": "Allen-Bradley controller family name — an industrial product identifier. PS-I18N-001 §2 and ADR-0001 §6 keep industrial units, signal names and stable IDs untranslated."
-    },
-    {
-      "file": "src/core/hmi/ConnectPanel.tsx",
-      "category": "react-copy",
-      "match": "PLC-5",
-      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
-    },
-    {
-      "file": "src/core/hmi/ConnectPanel.tsx",
-      "category": "react-copy",
-      "match": "SLC 500",
-      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
-    },
-    {
-      "file": "src/core/hmi/ConnectPanel.tsx",
-      "category": "react-copy",
-      "match": "MicroLogix",
-      "reason": "Allen-Bradley controller family name — industrial product identifier, not UI copy."
-    },
-    {
       "file": "src/behaviors/_shared/aas-link.ts",
       "category": "plugin-registry",
       "match": "SEW KA47-DRN90M4",
@@ -72,6 +48,54 @@
       "category": "react-copy",
       "match": "2025 realvirtual GmbH",
       "reason": "Copyright notice. The legal entity and year are not localisable, and the AGPL header requires them verbatim."
+    },
+    {
+      "file": "src/core/hmi/rv-connections-section.tsx",
+      "category": "dynamic-text",
+      "match": "req{",
+      "reason": "Structural dump of a connection type's parameter signature (`req{a:float, b:int}`), assembled from user-defined parameter names and types. It is a signature, not a sentence — translating the braces or the `req`/`res` markers would misrepresent the schema."
+    },
+    {
+      "file": "src/core/hmi/rv-connections-section.tsx",
+      "category": "dynamic-text",
+      "match": "res{",
+      "reason": "The response half of the same parameter signature — see the `req{` entry."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "realvirtual CONNECT",
+      "reason": "Product name in the panel header — the same brand exception as SettingsPanel.tsx and WelcomeModal.tsx. Every sentence around it is translated (connect:*)."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "1,0 (empty for Micro800)",
+      "reason": "Example CIP routing path for an EtherNet/IP gateway, shown as a field placeholder. The value is what the user types verbatim; the Micro800 reference is an Allen-Bradley product name (ADR-0001 §6)."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "SYS, PLC",
+      "reason": "Example Keba browse-root names, shown as a placeholder. They are namespace identifiers on the controller, not words."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "Robot1",
+      "reason": "Example Denso controller name, shown as a placeholder. It is an identifier configured on the robot controller."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "Cell1.WPJ",
+      "reason": "Example WinCaps project path, shown as a placeholder. A Windows path is not localisable."
+    },
+    {
+      "file": "src/core/hmi/ConnectPanel.tsx",
+      "category": "react-copy",
+      "match": "SIMITShared Memory",
+      "reason": "Default SIMIT shared-memory name, shown as a placeholder. It must match the name RobotStudio's SIMIT connection opens, byte for byte."
     }
   ]
 }

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { useSyncExternalStore, type ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { App } from '../src/core/hmi/App';
@@ -33,6 +33,16 @@ import {
   resetConnectEmbedDemo,
   subscribeConnectEmbedStore,
 } from '../src/plugins/connect-embed/connect-embed-store';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The CONNECT copy asserted below comes from the catalog and the product default
+ * is `zh-CN`, so without the pin these locators would be matching whatever the
+ * default happens to be rather than the behaviour under test.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 /**
  * Functional-enough SceneStore stand-in. The embed branch of `SceneWindow` only

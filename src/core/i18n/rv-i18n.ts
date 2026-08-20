@@ -32,7 +32,7 @@ import { reportI18nDiagnostic } from './rv-i18n-diagnostics';
 import { enUS } from './catalogs/en-US';
 import { zhCN } from './catalogs/zh-CN';
 
-export const RV_NAMESPACES = ['common', 'projects', 'settings', 'shell', 'preboot', 'plugins', 'viewer'] as const;
+export const RV_NAMESPACES = ['common', 'projects', 'settings', 'shell', 'connect', 'preboot', 'plugins', 'viewer'] as const;
 export type RVNamespace = (typeof RV_NAMESPACES)[number];
 
 /**

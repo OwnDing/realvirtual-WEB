@@ -46,6 +46,7 @@ import { navigateToRef } from './rv-reference-display';
 import { armNodeLinkDrag, useNodeLinkDropTarget } from './node-link-drag-store';
 import { DROP_TARGET_SX } from './drop-target-registry';
 import { ISA_GREEN, ISA_RED } from './isa-colors';
+import { useRvTranslation } from '../i18n';
 
 const PARAM_TYPE_OPTIONS: ConnectionParamType[] = ['bool', 'int', 'float', 'string'];
 
@@ -68,6 +69,7 @@ function EdgeRow({ edge, direction, viewer }: {
   direction: 'in' | 'out';
   viewer: RVViewer | null;
 }) {
+  const { t } = useRvTranslation('connect');
   const color = `#${connectionTypeColor(edge.type).toString(16).padStart(6, '0')}`;
   const otherPath = direction === 'in' ? edge.source : edge.target;
   const resolved = !!viewer?.registry?.getNode(otherPath);
@@ -89,9 +91,15 @@ function EdgeRow({ edge, direction, viewer }: {
             '& .MuiChip-label': { px: 0.5 },
           }}
         />
-        <Tooltip title={`${resolved ? 'Linked' : 'Unresolved'} → ${otherPath}\nClick to navigate`} placement="top">
+        <Tooltip
+          title={t('connections.navigateHint', {
+            state: t(resolved ? 'connections.linked' : 'connections.unresolved'),
+            path: otherPath,
+          })}
+          placement="top"
+        >
           <Chip
-            label={`${leaf(otherPath)}${resolved ? '' : ' · Unresolved'}`}
+            label={`${leaf(otherPath)}${resolved ? '' : t('connections.unresolvedChip')}`}
             size="small"
             onClick={() => navigateToRef(viewer, otherPath)}
             sx={{
@@ -104,10 +112,10 @@ function EdgeRow({ edge, direction, viewer }: {
           />
         </Tooltip>
         <Box sx={{ flex: 1 }} />
-        <Tooltip title="Remove connection" placement="top">
+        <Tooltip title={t('connections.removeEdge')} placement="top">
           <IconButton
             size="small"
-            aria-label="Remove connection"
+            aria-label={t('connections.removeEdge')}
             onClick={() => applyRemoveConnection(edge)}
             sx={{ p: 0.25 }}
           >
@@ -176,16 +184,17 @@ function ParamSchemaEditor({ label, params, onChange }: {
   params: Record<string, ConnectionParamType>;
   onChange: (next: Record<string, ConnectionParamType>) => void;
 }) {
+  const { t } = useRvTranslation('connect');
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState<ConnectionParamType>('float');
   return (
     <Box sx={{ pl: 1 }}>
       <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{label}</Typography>
-      {Object.entries(params).map(([n, t]) => (
+      {Object.entries(params).map(([n, paramType]) => (
         <Box key={n} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography sx={{ fontSize: 11, fontFamily: 'monospace', flex: 1 }}>{n}: {t}</Typography>
+          <Typography sx={{ fontSize: 11, fontFamily: 'monospace', flex: 1 }}>{n}: {paramType}</Typography>
           <IconButton
-            size="small" sx={{ p: 0.125 }} aria-label={`Remove ${label} parameter '${n}'`}
+            size="small" sx={{ p: 0.125 }} aria-label={t('connections.removeParam', { group: label, name: n })}
             onClick={() => {
               const next = { ...params };
               delete next[n];
@@ -208,11 +217,11 @@ function ParamSchemaEditor({ label, params, onChange }: {
           sx={{ width: 70, '& .MuiInputBase-input': { fontSize: 11, py: 0 } }}
           SelectProps={{ native: true }}
         >
-          {PARAM_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+          {PARAM_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
         </TextField>
         <IconButton
           size="small" sx={{ p: 0.25 }}
-          aria-label={`Add ${label} parameter`}
+          aria-label={t('connections.addParam', { group: label })}
           disabled={!newName.trim()}
           onClick={() => {
             onChange({ ...params, [newName.trim()]: newType });
@@ -227,6 +236,7 @@ function ParamSchemaEditor({ label, params, onChange }: {
 }
 
 function ConnectionTypesEditor() {
+  const { t } = useRvTranslation('connect');
   const registry = getConnectionSystem();
   const types = registry.allTypes();
   const [editing, setEditing] = useState<ConnectionType | null>(null);
@@ -237,12 +247,12 @@ function ConnectionTypesEditor() {
       <Box sx={{ px: 1, py: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
         <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{editing.type}</Typography>
         <ParamSchemaEditor
-          label="request"
+          label={t('connections.requestParams')}
           params={editing.request ?? {}}
           onChange={(request) => setEditing({ ...editing, request })}
         />
         <ParamSchemaEditor
-          label="response"
+          label={t('connections.responseParams')}
           params={editing.response ?? {}}
           onChange={(response) => setEditing({ ...editing, response })}
         />
@@ -254,10 +264,10 @@ function ConnectionTypesEditor() {
               setEditing(null);
             }}
           >
-            Save
+            {t('connections.save')}
           </Button>
           <Button size="small" sx={{ fontSize: 11, textTransform: 'none', py: 0 }} onClick={() => setEditing(null)}>
-            Cancel
+            {t('connections.cancel')}
           </Button>
         </Box>
       </Box>
@@ -266,20 +276,20 @@ function ConnectionTypesEditor() {
 
   return (
     <Box sx={{ px: 1, py: 0.5 }}>
-      {types.map((t) => (
-        <Box key={t.type} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      {types.map((entry) => (
+        <Box key={entry.type} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography sx={{ fontSize: 11, fontFamily: 'monospace', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {t.type}
-            {t.request ? ` req{${Object.entries(t.request).map(([k, v]) => `${k}:${v}`).join(', ')}}` : ''}
-            {t.response ? ` res{${Object.entries(t.response).map(([k, v]) => `${k}:${v}`).join(', ')}}` : ''}
+            {entry.type}
+            {entry.request ? ` req{${Object.entries(entry.request).map(([k, v]) => `${k}:${v}`).join(', ')}}` : ''}
+            {entry.response ? ` res{${Object.entries(entry.response).map(([k, v]) => `${k}:${v}`).join(', ')}}` : ''}
           </Typography>
-          <Tooltip title="Edit type" placement="top">
-            <IconButton aria-label={`Edit connection type '${t.type}'`} size="small" sx={{ p: 0.125 }} onClick={() => setEditing({ ...t, request: { ...t.request }, response: { ...t.response } })}>
+          <Tooltip title={t('connections.editType')} placement="top">
+            <IconButton aria-label={t('connections.editTypeNamed', { type: entry.type })} size="small" sx={{ p: 0.125 }} onClick={() => setEditing({ ...entry, request: { ...entry.request }, response: { ...entry.response } })}>
               <Edit sx={{ fontSize: 11, color: 'text.disabled' }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Remove type" placement="top">
-            <IconButton aria-label={`Remove connection type '${t.type}'`} size="small" sx={{ p: 0.125 }} onClick={() => applyRemoveConnectionType(t)}>
+          <Tooltip title={t('connections.removeType')} placement="top">
+            <IconButton aria-label={t('connections.removeTypeNamed', { type: entry.type })} size="small" sx={{ p: 0.125 }} onClick={() => applyRemoveConnectionType(entry)}>
               <Close sx={{ fontSize: 11, color: 'text.disabled' }} />
             </IconButton>
           </Tooltip>
@@ -287,13 +297,13 @@ function ConnectionTypesEditor() {
       ))}
       <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end' }}>
         <TextField
-          size="small" variant="standard" placeholder="New type name" value={newTypeName}
+          size="small" variant="standard" placeholder={t('connections.newTypeName')} value={newTypeName}
           onChange={(e) => setNewTypeName(e.target.value)}
           sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: 11, py: 0 } }}
         />
         <IconButton
           size="small" sx={{ p: 0.25 }}
-          aria-label="Add connection type"
+          aria-label={t('connections.addType')}
           disabled={!newTypeName.trim()}
           onClick={() => {
             const name = newTypeName.trim();
@@ -314,6 +324,7 @@ export function ConnectionsSection({ viewer, nodePath }: {
   viewer: RVViewer | null;
   nodePath: string;
 }) {
+  const { t } = useRvTranslation('connect');
   const [, force] = useReducer((x: number) => x + 1, 0);
   useEffect(() => getConnectionSystem().subscribe(force), []);
 
@@ -363,12 +374,12 @@ export function ConnectionsSection({ viewer, nodePath }: {
       >
         {open ? <ExpandLess sx={{ fontSize: 12, color: 'text.disabled' }} /> : <ExpandMore sx={{ fontSize: 12, color: 'text.disabled' }} />}
         <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'primary.main', flex: 1 }}>
-          CONNECTIONS{total > 0 ? ` (${total})` : ''}
+          {total > 0 ? t('connections.sectionCount', { count: total }) : t('connections.section')}
         </Typography>
-        <Tooltip title="Drag onto another node (3D scene) to connect" placement="top">
+        <Tooltip title={t('connections.dragHint')} placement="top">
           <IconButton
             size="small"
-            aria-label={`Start connection from '${nodePath}'`}
+            aria-label={t('connections.startFrom', { path: nodePath })}
             sx={{ p: 0.25, cursor: 'grab' }}
             onPointerDown={(e) => {
               e.stopPropagation();
@@ -389,22 +400,22 @@ export function ConnectionsSection({ viewer, nodePath }: {
           {showAdd ? (
             <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', px: 1, py: 0.5 }}>
               <TextField
-                size="small" variant="standard" select value={addType} label="Type"
+                size="small" variant="standard" select value={addType} label={t('connections.typeLabel')}
                 onChange={(e) => setAddType(e.target.value)}
                 sx={{ width: 110, '& .MuiInputBase-input': { fontSize: 11, py: 0 }, '& .MuiInputLabel-root': { fontSize: 11 } }}
                 SelectProps={{ native: true }}
               >
-                {typeNames.map((t) => <option key={t} value={t}>{t}</option>)}
+                {typeNames.map((name) => <option key={name} value={name}>{name}</option>)}
               </TextField>
               <TextField
-                size="small" variant="standard" placeholder="Target node path" value={addTarget}
-                label="Target"
+                size="small" variant="standard" placeholder={t('connections.targetPlaceholder')} value={addTarget}
+                label={t('connections.targetLabel')}
                 onChange={(e) => setAddTarget(e.target.value)}
                 sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: 11, py: 0 }, '& .MuiInputLabel-root': { fontSize: 11 } }}
               />
               <IconButton
                 size="small" sx={{ p: 0.25 }}
-                aria-label="Create connection"
+                aria-label={t('connections.create')}
                 disabled={!addTarget.trim()}
                 onClick={() => {
                   applyAddConnection({
@@ -416,7 +427,7 @@ export function ConnectionsSection({ viewer, nodePath }: {
               >
                 <Add sx={{ fontSize: 12 }} />
               </IconButton>
-              <IconButton aria-label="Cancel adding connection" size="small" sx={{ p: 0.25 }} onClick={() => setShowAdd(false)}>
+              <IconButton aria-label={t('connections.cancelAdd')} size="small" sx={{ p: 0.25 }} onClick={() => setShowAdd(false)}>
                 <Close sx={{ fontSize: 11, color: 'text.disabled' }} />
               </IconButton>
             </Box>
@@ -427,14 +438,14 @@ export function ConnectionsSection({ viewer, nodePath }: {
                 onClick={() => setShowAdd(true)}
                 sx={{ fontSize: 11, textTransform: 'none', py: 0, minWidth: 0, color: 'text.secondary' }}
               >
-                Connection
+                {t('connections.addConnection')}
               </Button>
               <Button
                 size="small"
                 onClick={() => setShowTypes(!showTypes)}
                 sx={{ fontSize: 11, textTransform: 'none', py: 0, minWidth: 0, color: 'text.disabled' }}
               >
-                {showTypes ? 'Hide types' : 'Connection types'}
+                {t(showTypes ? 'connections.hideTypes' : 'connections.showTypes')}
               </Button>
             </Box>
           )}
