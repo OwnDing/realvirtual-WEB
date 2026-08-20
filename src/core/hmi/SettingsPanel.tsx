@@ -21,6 +21,7 @@ import { usePluginSettingsTabs, PluginSettingsTabContent } from './PluginSetting
 import { useRequestedSettingsTab, clearRequestedSettingsTab } from './settings-tab-store';
 import { AiBridgeGate } from './AiBridgeGate';
 import { formatVersionFull } from '../rv-version';
+import { useRvTranslation } from '../i18n';
 
 // ── Code-split settings tabs (plan-344 Phase 4) ─────────────────────────────
 // Settings are a configuration surface, not a runtime one: a session may never
@@ -49,6 +50,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const isMobile = useMobileLayout();
   const [settingsTab, setSettingsTab] = useState(0);
@@ -85,7 +87,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   return (
     <LeftPanel
-      title="Settings"
+      title={t('title')}
       onClose={onClose}
       width={width}
       resizable
@@ -108,33 +110,40 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           '& .MuiTabs-scrollButtons.Mui-disabled': { opacity: 0.3 },
         }}
       >
-        {!isTabLocked('model') && <Tab label="Backup" value={0} />}
+        {!isTabLocked('model') && <Tab label={t('tab.backup')} value={0} />}
         {/* Plugin-registered settings-tab slots (value = 100..N), rendered right
             after Model so project-level tabs (e.g. "Start View") appear prominently.
             Rendered inline (not wrapped in a component) so MUI Tabs
             enumerates them via React.Children.map. */}
         {pluginSettingsTabs.map((entry, i) => (
-          <Tab key={entry.pluginId ?? i} label={entry.label ?? 'Tab'} value={100 + i} />
+          <Tab
+            key={entry.pluginId ?? i}
+            // Resolved HERE rather than at registration: a getter is how a
+            // plugin's label follows a language change (ADR-0001 §9), and slots
+            // are registered once, long before the user picks one.
+            label={(typeof entry.label === 'function' ? entry.label() : entry.label) ?? t('tab.plugin')}
+            value={100 + i}
+          />
         ))}
-        {!isTabLocked('mouse') && <Tab label="Mouse & Touch" value={9} />}
-        {!isTabLocked('visual') && <Tab label="Visual" value={1} />}
-        {!isTabLocked('simulation') && <Tab label="Simulation" value={12} />}
-        {!isTabLocked('interfaces') && <Tab label="Interfaces" value={3} />}
-        {!isTabLocked('multiuser') && muPlugin && <Tab label="Multiuser" value={4} />}
+        {!isTabLocked('mouse') && <Tab label={t('tab.mouse')} value={9} />}
+        {!isTabLocked('visual') && <Tab label={t('tab.visual')} value={1} />}
+        {!isTabLocked('simulation') && <Tab label={t('tab.simulation')} value={12} />}
+        {!isTabLocked('interfaces') && <Tab label={t('tab.interfaces')} value={3} />}
+        {!isTabLocked('multiuser') && muPlugin && <Tab label={t('tab.multiuser')} value={4} />}
         {/* Dev Tools / Tests are developer tabs — hidden on mobile. AI is not:
             the mobile activity bar has no room for the AI button, so this tab is
             the ONLY mobile entry to the bridge (plan-366, decision 7). */}
-        {!isTabLocked('mcp') && viewer.getPlugin('mcp-bridge') && <Tab label="AI" value={5} />}
-        {!isMobile && !isTabLocked('devtools') && <Tab label="Dev Tools" value={6} />}
-        {!isMobile && !isTabLocked('tests') && <Tab label="Tests" value={7} />}
-        {!isTabLocked('groups') && <Tab label="Groups" value={8} />}
+        {!isTabLocked('mcp') && viewer.getPlugin('mcp-bridge') && <Tab label={t('tab.ai')} value={5} />}
+        {!isMobile && !isTabLocked('devtools') && <Tab label={t('tab.devTools')} value={6} />}
+        {!isMobile && !isTabLocked('tests') && <Tab label={t('tab.tests')} value={7} />}
+        {!isTabLocked('groups') && <Tab label={t('tab.groups')} value={8} />}
       </Tabs>
 
       {/* Tab content - minHeight: 0 for correct flexbox scrolling.
           One boundary for all tabs: only ever one is mounted, and a chunk that
           fails to load must not take the surrounding Settings window with it. */}
       <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0, px: 0.75, py: 1 }}>
-        <LazyPanelBoundary label="Settings tab">
+        <LazyPanelBoundary label={t('tab.content')}>
         {settingsTab === 0 && !isTabLocked('model') && <BackupTab />}
         {settingsTab === 9 && !isTabLocked('mouse') && <MouseTab />}
         {settingsTab === 1 && !isTabLocked('visual') && <VisualTab />}
@@ -168,7 +177,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       >
         <Typography
           variant="caption"
-          title="realvirtual WEB build version"
+          title={t('version.title')}
           sx={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: 10 }}
         >
           realvirtual WEB {formatVersionFull()}

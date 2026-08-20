@@ -22,8 +22,15 @@ import { describe, expect, it } from 'vitest';
 const ROOT = resolve(__dirname, '..');
 const E2E = join(ROOT, 'e2e');
 
-/** A locator that resolves by human-readable text rather than by test id or role alone. */
-const TEXT_LOCATOR = /getBy(Text|Label|LabelText|Placeholder|AltText)\(|getByRole\([^)]*\bname\s*:/;
+/**
+ * A locator that resolves by human-readable text rather than by test id or role alone.
+ *
+ * `:has-text(` counts. It is the form that hides best: a CSS selector matching
+ * English text does not throw when the text moves, it matches nothing — and a
+ * spec written to `test.skip` on an empty match then stops testing instead of
+ * failing. `hmi-panels.spec.ts` is exactly that shape.
+ */
+const TEXT_LOCATOR = /getBy(Text|Label|LabelText|Placeholder|AltText)\(|getByRole\([^)]*\bname\s*:|:has-text\(/;
 
 function specFiles(): string[] {
   return readdirSync(E2E)

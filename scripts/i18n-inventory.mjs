@@ -76,11 +76,19 @@ export const ADVISORY_CATEGORIES = /** @type {const} */ (['error-message', 'intl
 
 export const CATEGORIES = /** @type {const} */ ([...GATED_CATEGORIES, ...ADVISORY_CATEGORIES]);
 
-/** JSX attributes whose string value is user-visible copy. */
+/**
+ * JSX attributes whose string value is user-visible copy.
+ *
+ * `hint` is this codebase's own: `FieldRow`/`SliderRow` render it as the small
+ * grey line under a settings row, which is copy by any definition. It was added
+ * with the Settings migration (Milestone 4b batch 2) — tightening the rule and
+ * paying the debt it exposes in the same change, so the number it moves is a
+ * migration rather than a re-baseline.
+ */
 const COPY_ATTRS = new Set([
   'label', 'placeholder', 'helperText', 'primary', 'secondary', 'tooltip',
   'caption', 'heading', 'subtitle', 'emptyText', 'confirmText', 'cancelText',
-  'submitLabel', 'noOptionsText', 'loadingText', 'message', 'text',
+  'submitLabel', 'noOptionsText', 'loadingText', 'message', 'text', 'hint',
 ]);
 
 /** JSX attributes that carry an accessible name. `title` is resolved by tag case — see classifyJsxAttribute. */

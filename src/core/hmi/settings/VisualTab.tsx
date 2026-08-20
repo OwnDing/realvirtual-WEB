@@ -26,6 +26,34 @@ import { RENDER_MODES, getRenderMode, type RenderMode } from '../../rv-render-mo
 import { STATIC_MERGE_LS_KEY, isStaticMeshMergingEnabled } from '../../engine/rv-static-merge-flag';
 import { SettingsSection, FieldRow, SliderRow } from './settings-helpers';
 import { LanguageSection } from './LanguageSection';
+import { useRvTranslation, type RVTranslationKey } from '../../i18n';
+
+/** Catalog key per render-mode id. The descriptor table in `rv-render-modes.ts`
+ *  stays the English default for non-UI consumers; `tests/i18n-settings.test.tsx`
+ *  pins the two to each other so they cannot drift apart unnoticed. */
+const RENDER_MODE_KEY = {
+  simple: { labelKey: 'visual.renderMode.simple', descriptionKey: 'visual.renderMode.simpleDesc' },
+  default: { labelKey: 'visual.renderMode.default', descriptionKey: 'visual.renderMode.defaultDesc' },
+  toon: { labelKey: 'visual.renderMode.toon', descriptionKey: 'visual.renderMode.toonDesc' },
+} as const satisfies Record<RenderMode, { labelKey: RVTranslationKey<'settings'>; descriptionKey: RVTranslationKey<'settings'> }>;
+
+/** Catalog key per tone-mapping id — the source capitalised the id at render time. */
+const TONE_MAPPING_KEY: Record<ToneMappingType, RVTranslationKey<'settings'>> = {
+  none: 'visual.toneMapping.option.none',
+  linear: 'visual.toneMapping.option.linear',
+  reinhard: 'visual.toneMapping.option.reinhard',
+  cineon: 'visual.toneMapping.option.cineon',
+  aces: 'visual.toneMapping.option.aces',
+  agx: 'visual.toneMapping.option.agx',
+  neutral: 'visual.toneMapping.option.neutral',
+};
+
+/** Catalog key per shadow-quality id — likewise capitalised at render time before. */
+const SHADOW_QUALITY_KEY: Record<ShadowQuality, RVTranslationKey<'settings'>> = {
+  low: 'visual.lighting.quality.low',
+  medium: 'visual.lighting.quality.medium',
+  high: 'visual.lighting.quality.high',
+};
 
 /** Outer wrapper: remounts the body (via `key`) after a preset is applied so all
  *  sliders/dropdowns re-read the freshly-applied visual settings. */
@@ -35,6 +63,7 @@ export function VisualTab() {
 }
 
 function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const settingsRef = useRef(loadVisualSettings());
   const initMs = settingsRef.current.modeSettings[settingsRef.current.renderMode];
@@ -363,9 +392,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
     setSavingPreset(false);
     setPresetDialogOpen(false);
     setPresetName('');
-    showInfoOverlay(where === 'file'
-      ? `Preset "${name}" saved to public/presets (part of the published source).`
-      : `Preset "${name}" saved locally (this browser only).`);
+    showInfoOverlay(t(where === 'file' ? 'visual.presets.savedToFile' : 'visual.presets.savedLocal', { name }));
     onPresetApplied(); // remount so the new preset appears in the dropdown
   };
 
@@ -388,15 +415,15 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
       </SettingsSection>
 
       {/* Visual Presets — full-look snapshots (render mode + environment + post). */}
-      <SettingsSection id="visual-presets" title="Visual Presets">
-        <FieldRow label="Preset">
+      <SettingsSection id="visual-presets" title={t('visual.presets.section')}>
+        <FieldRow label={t('visual.presets.preset')}>
           <Select
             size="small"
             fullWidth
             value={currentPresetName}
             displayEmpty
             onChange={(e) => applyPreset(e.target.value as string)}
-            renderValue={(v) => (v ? (v as string) : 'Custom')}
+            renderValue={(v) => (v ? (v as string) : t('visual.presets.custom'))}
             disabled={settingsLocked}
           >
             {presets.map((p) => (
@@ -404,7 +431,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
             ))}
           </Select>
         </FieldRow>
-        <Tooltip title="Capture the current visual settings (render mode, environment, lighting, post-processing, antialias) as a reusable preset." placement="bottom">
+        <Tooltip title={t('visual.presets.saveTooltip')} placement="bottom">
           <span>
             <Button
               size="small"
@@ -415,15 +442,15 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
               disabled={settingsLocked}
               sx={{ textTransform: 'none', fontSize: 12, mt: 0.5 }}
             >
-              Save settings as preset
+              {t('visual.presets.save')}
             </Button>
           </span>
         </Tooltip>
       </SettingsSection>
 
       {/* Render Mode + appearance basics */}
-      <SettingsSection id="visual-rendermode" title="Render Mode">
-        <FieldRow label="Mode" hint={getRenderMode(mode).description}>
+      <SettingsSection id="visual-rendermode" title={t('visual.renderMode.section')}>
+        <FieldRow label={t('visual.renderMode.mode')} hint={t(RENDER_MODE_KEY[mode].descriptionKey)}>
           <Select
             size="small"
             fullWidth
@@ -432,44 +459,44 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
             disabled={settingsLocked}
           >
             {RENDER_MODES.map((m) => (
-              <MenuItem key={m.id} value={m.id}>{m.label}</MenuItem>
+              <MenuItem key={m.id} value={m.id}>{t(RENDER_MODE_KEY[m.id].labelKey)}</MenuItem>
             ))}
           </Select>
         </FieldRow>
 
         {/* Brightness — shown in every mode (labelled by the environment capability) */}
-        <SliderRow label={caps.environment ? 'Environment' : 'Brightness'} min={0} max={2} step={0.05} value={lightInt} onChange={updateLightInt} />
+        <SliderRow label={t(caps.environment ? 'visual.renderMode.environment' : 'visual.renderMode.brightness')} min={0} max={2} step={0.05} value={lightInt} onChange={updateLightInt} />
 
         {/* Base color — flat-ambient ("unlit") modes only */}
         {caps.ambientLight && (
-          <FieldRow label="Base Color" hint="Flat tint applied across all surfaces.">
+          <FieldRow label={t('visual.renderMode.baseColor')} hint={t('visual.renderMode.baseColorHint')}>
             <input type="color" value={ambColor} onChange={(e) => updateAmbColor(e.target.value)} style={colorInputStyle} />
           </FieldRow>
         )}
       </SettingsSection>
 
       {/* Environment / Floor — moved from the former Environment tab. */}
-      <SettingsSection id="visual-environment" title="Environment / Floor">
-        <SliderRow label="Background" min={0} max={2} step={0.05} value={bgBright} onChange={updateBgBright} />
-        <FieldRow label="Floor">
+      <SettingsSection id="visual-environment" title={t('visual.environment.section')}>
+        <SliderRow label={t('visual.environment.background')} min={0} max={2} step={0.05} value={bgBright} onChange={updateBgBright} />
+        <FieldRow label={t('visual.environment.floor')}>
           <Switch size="small" checked={groundOn} onChange={updateGroundOn} />
         </FieldRow>
         {groundOn && (
           <>
-            <SliderRow label="Floor Brightness" min={0} max={2} step={0.05} value={groundBright} onChange={updateGroundBright} />
-            <FieldRow label="Floor Color">
+            <SliderRow label={t('visual.environment.floorBrightness')} min={0} max={2} step={0.05} value={groundBright} onChange={updateGroundBright} />
+            <FieldRow label={t('visual.environment.floorColor')}>
               <input type="color" value={groundColor} onChange={(e) => updateGroundColor(e.target.value)} style={colorInputStyle} />
             </FieldRow>
-            <SliderRow label="Checker Contrast" min={0} max={2} step={0.05} value={contrast} onChange={updateContrast} />
+            <SliderRow label={t('visual.environment.checkerContrast')} min={0} max={2} step={0.05} value={contrast} onChange={updateContrast} />
             {caps.reflection && (
               <>
-                <FieldRow label="Reflection">
+                <FieldRow label={t('visual.environment.reflection')}>
                   <Switch size="small" checked={reflectionOn} onChange={updateReflectionOn} />
                 </FieldRow>
                 {reflectionOn && (
                   <>
-                    <SliderRow label="Reflection Strength" min={0} max={1} step={0.05} value={reflectionStrength} onChange={updateReflectionStrength} />
-                    <SliderRow label="Reflection Blur" min={0} max={1} step={0.05} value={reflectionBlur} onChange={updateReflectionBlur} />
+                    <SliderRow label={t('visual.environment.reflectionStrength')} min={0} max={1} step={0.05} value={reflectionStrength} onChange={updateReflectionStrength} />
+                    <SliderRow label={t('visual.environment.reflectionBlur')} min={0} max={1} step={0.05} value={reflectionBlur} onChange={updateReflectionBlur} />
                   </>
                 )}
               </>
@@ -481,63 +508,63 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
       {/* Reflections — Unlit only. HDRI env reflections on metallic/glossy
           surfaces, decoupled from the flat ambient look. */}
       {mode === 'simple' && (
-        <SettingsSection id="visual-unlit-reflections" title="Reflections">
-          <FieldRow label="Environment" hint="Reflect the HDRI environment on metallic and glossy surfaces while keeping the flat unlit look.">
+        <SettingsSection id="visual-unlit-reflections" title={t('visual.unlitReflections.section')}>
+          <FieldRow label={t('visual.unlitReflections.environment')} hint={t('visual.unlitReflections.hint')}>
             <Switch size="small" checked={envReflOn} onChange={updateEnvReflOn} />
           </FieldRow>
           {envReflOn && (
-            <SliderRow label="Intensity" min={0} max={2} step={0.05} value={envReflInt} onChange={updateEnvReflInt} />
+            <SliderRow label={t('visual.unlitReflections.intensity')} min={0} max={2} step={0.05} value={envReflInt} onChange={updateEnvReflInt} />
           )}
         </SettingsSection>
       )}
 
       {/* Tone Mapping */}
       {caps.toneMapping && (
-        <SettingsSection id="visual-tonemapping" title="Tone Mapping">
-          <FieldRow label="Mode">
+        <SettingsSection id="visual-tonemapping" title={t('visual.toneMapping.section')}>
+          <FieldRow label={t('visual.toneMapping.mode')}>
             <Select
               size="small"
               fullWidth
               value={toneMap}
               onChange={(e) => updateToneMap(e.target.value as ToneMappingType)}
             >
-              {TONE_MAPPING_OPTIONS.map((t) => (
-                <MenuItem key={t} value={t}>{t === 'aces' ? 'ACES Filmic' : t === 'agx' ? 'AgX' : t.charAt(0).toUpperCase() + t.slice(1)}</MenuItem>
+              {TONE_MAPPING_OPTIONS.map((option) => (
+                <MenuItem key={option} value={option}>{t(TONE_MAPPING_KEY[option])}</MenuItem>
               ))}
             </Select>
           </FieldRow>
 
           {toneMap !== 'none' && (
-            <SliderRow label="Exposure" min={0} max={3} step={0.05} value={exposure} onChange={updateExposure} />
+            <SliderRow label={t('visual.toneMapping.exposure')} min={0} max={3} step={0.05} value={exposure} onChange={updateExposure} />
           )}
         </SettingsSection>
       )}
 
       {/* Lighting & Shadows */}
       {caps.directionalLight && (
-        <SettingsSection id="visual-lighting" title="Lighting & Shadows">
-          <FieldRow label="Directional Light">
+        <SettingsSection id="visual-lighting" title={t('visual.lighting.section')}>
+          <FieldRow label={t('visual.lighting.directional')}>
             <Switch size="small" checked={dirEnabled} onChange={updateDirEnabled} />
           </FieldRow>
 
           {dirEnabled && (
             <>
-              <SliderRow label="Light Intensity" min={0} max={3} step={0.05} value={dirInt} onChange={updateDirInt} />
-              <FieldRow label="Light Color">
+              <SliderRow label={t('visual.lighting.intensity')} min={0} max={3} step={0.05} value={dirInt} onChange={updateDirInt} />
+              <FieldRow label={t('visual.lighting.color')}>
                 <input type="color" value={dirColor} onChange={(e) => updateDirColor(e.target.value)} style={colorInputStyle} />
               </FieldRow>
 
               {/* Shadows — only for modes that support the shadow pass */}
               {caps.shadows && (
                 <>
-                  <FieldRow label="Shadows">
+                  <FieldRow label={t('visual.lighting.shadows')}>
                     <Switch size="small" checked={shadowOn} onChange={updateShadowOn} />
                   </FieldRow>
 
                   {shadowOn && (
                     <>
-                      <SliderRow label="Shadow Intensity" min={0} max={3} step={0.05} value={shadowInt} onChange={updateShadowInt} />
-                      <FieldRow label="Shadow Quality">
+                      <SliderRow label={t('visual.lighting.shadowIntensity')} min={0} max={3} step={0.05} value={shadowInt} onChange={updateShadowInt} />
+                      <FieldRow label={t('visual.lighting.shadowQuality')}>
                         <Select
                           size="small"
                           fullWidth
@@ -545,11 +572,11 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
                           onChange={(e) => updateShadowQual(e.target.value as ShadowQuality)}
                         >
                           {SHADOW_QUALITY_OPTIONS.map((q) => (
-                            <MenuItem key={q} value={q}>{q.charAt(0).toUpperCase() + q.slice(1)}</MenuItem>
+                            <MenuItem key={q} value={q}>{t(SHADOW_QUALITY_KEY[q])}</MenuItem>
                           ))}
                         </Select>
                       </FieldRow>
-                      <FieldRow label="Shadow Map">
+                      <FieldRow label={t('visual.lighting.shadowMap')}>
                         <Select
                           size="small"
                           fullWidth
@@ -561,7 +588,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
                           ))}
                         </Select>
                       </FieldRow>
-                      <SliderRow label="Shadow Radius" min={1} max={5} step={1} value={shadowRadiusVal} onChange={updateShadowRadius} format={(v) => String(v)} />
+                      <SliderRow label={t('visual.lighting.shadowRadius')} min={1} max={5} step={1} value={shadowRadiusVal} onChange={updateShadowRadius} format={(v) => String(v)} />
                     </>
                   )}
                 </>
@@ -573,26 +600,26 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
 
       {/* Post-Processing (ambient occlusion + bloom) — WebGL only */}
       {(caps.ambientOcclusion || caps.bloom) && !viewer.isWebGPU && (
-        <SettingsSection id="visual-postfx" title="Post-Processing">
+        <SettingsSection id="visual-postfx" title={t('visual.postfx.section')}>
           {/* Ambient Occlusion (Off / GTAO / N8AO) */}
           {caps.ambientOcclusion && (
             <>
-              <FieldRow label="Ambient Occl.">
+              <FieldRow label={t('visual.postfx.ao')}>
                 <Select
                   size="small"
                   fullWidth
                   value={aoMode}
                   onChange={(e) => updateAoMode(e.target.value as AOMode)}
                 >
-                  <MenuItem value="off">Off</MenuItem>
-                  <MenuItem value="gtao">GTAO · Built-in</MenuItem>
-                  <MenuItem value="n8ao">N8AO · High quality</MenuItem>
+                  <MenuItem value="off">{t('visual.postfx.aoOff')}</MenuItem>
+                  <MenuItem value="gtao">{t('visual.postfx.aoGtao')}</MenuItem>
+                  <MenuItem value="n8ao">{t('visual.postfx.aoN8ao')}</MenuItem>
                 </Select>
               </FieldRow>
               {aoMode !== 'off' && (
                 <>
-                  <SliderRow label="AO Intensity" min={0} max={2} step={0.05} value={ssaoInt} onChange={updateSsaoInt} />
-                  <SliderRow label="AO Radius" min={0.01} max={0.5} step={0.01} value={ssaoRad} onChange={updateSsaoRad} />
+                  <SliderRow label={t('visual.postfx.aoIntensity')} min={0} max={2} step={0.05} value={ssaoInt} onChange={updateSsaoInt} />
+                  <SliderRow label={t('visual.postfx.aoRadius')} min={0.01} max={0.5} step={0.01} value={ssaoRad} onChange={updateSsaoRad} />
                 </>
               )}
             </>
@@ -601,14 +628,14 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
           {/* Bloom */}
           {caps.bloom && (
             <>
-              <FieldRow label="Bloom">
+              <FieldRow label={t('visual.postfx.bloom')}>
                 <Switch size="small" checked={bloomOn} onChange={updateBloom} />
               </FieldRow>
               {bloomOn && (
                 <>
-                  <SliderRow label="Intensity" min={0} max={2} step={0.05} value={bloomInt} onChange={updateBloomInt} />
-                  <SliderRow label="Threshold" min={0} max={1} step={0.05} value={bloomThresh} onChange={updateBloomThresh} />
-                  <SliderRow label="Radius" min={0} max={1} step={0.05} value={bloomRad} onChange={updateBloomRad} />
+                  <SliderRow label={t('visual.postfx.intensity')} min={0} max={2} step={0.05} value={bloomInt} onChange={updateBloomInt} />
+                  <SliderRow label={t('visual.postfx.threshold')} min={0} max={1} step={0.05} value={bloomThresh} onChange={updateBloomThresh} />
+                  <SliderRow label={t('visual.postfx.radius')} min={0} max={1} step={0.05} value={bloomRad} onChange={updateBloomRad} />
                 </>
               )}
             </>
@@ -618,8 +645,8 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
 
       {/* Toon — direction-based shading (caps.toon only) */}
       {caps.toon && (
-        <SettingsSection id="visual-toon-shading" title="Toon">
-          <FieldRow label="Bands" hint="Number of discrete shading steps (banded by light direction).">
+        <SettingsSection id="visual-toon-shading" title={t('visual.toon.section')}>
+          <FieldRow label={t('visual.toon.bands')} hint={t('visual.toon.bandsHint')}>
             <ToggleButtonGroup
               exclusive
               size="small"
@@ -633,16 +660,16 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
             </ToggleButtonGroup>
           </FieldRow>
 
-          <FieldRow label="Cool shadows" hint="Tint the dark bands slightly blue for a more illustrated look.">
+          <FieldRow label={t('visual.toon.coolShadows')} hint={t('visual.toon.coolShadowsHint')}>
             <Switch size="small" checked={toonCoolShadows} onChange={updateToonCoolShadows} />
           </FieldRow>
 
-          <SliderRow label="Min Brightness" min={0} max={1} step={0.05} value={toonAlbedoMin} onChange={updateToonAlbedoMin} />
-          <SliderRow label="Max Brightness" min={0} max={1} step={0.05} value={toonAlbedoMax} onChange={updateToonAlbedoMax} />
-          <SliderRow label="Saturation" min={0} max={2} step={0.05} value={toonAlbedoSat} onChange={updateToonAlbedoSat} />
+          <SliderRow label={t('visual.toon.minBrightness')} min={0} max={1} step={0.05} value={toonAlbedoMin} onChange={updateToonAlbedoMin} />
+          <SliderRow label={t('visual.toon.maxBrightness')} min={0} max={1} step={0.05} value={toonAlbedoMax} onChange={updateToonAlbedoMax} />
+          <SliderRow label={t('visual.toon.saturation')} min={0} max={2} step={0.05} value={toonAlbedoSat} onChange={updateToonAlbedoSat} />
 
-          <SliderRow label="Metallic" min={0} max={1} step={0.05} value={toonMetallic} onChange={updateToonMetallic} />
-          <FieldRow label="Metallic Color" hint="Flat tint applied to metallic surfaces (kept cel-banded).">
+          <SliderRow label={t('visual.toon.metallic')} min={0} max={1} step={0.05} value={toonMetallic} onChange={updateToonMetallic} />
+          <FieldRow label={t('visual.toon.metallicColor')} hint={t('visual.toon.metallicColorHint')}>
             <input type="color" value={toonMetallicCol} onChange={(e) => updateToonMetallicColor(e.target.value)} style={colorInputStyle} />
           </FieldRow>
         </SettingsSection>
@@ -650,32 +677,32 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
 
       {/* Toon — edge / outline (caps.toon only; WebGL only) */}
       {caps.toon && (
-        <SettingsSection id="visual-toon-edge" title="Edge">
+        <SettingsSection id="visual-toon-edge" title={t('visual.edge.section')}>
           {!viewer.isWebGPU ? (
             <>
-              <SliderRow label="Amount" min={0} max={1} step={0.05} value={toonOutlineAmount} onChange={updateToonOutlineAmount} />
-              <SliderRow label="Thickness" min={0} max={5} step={0.5} value={toonOutlineThick} onChange={updateToonOutlineThick} />
-              <SliderRow label="Threshold" min={0} max={1} step={0.02} value={toonOutlineThreshold} onChange={updateToonOutlineThreshold} />
-              <SliderRow label="Distance (m)" min={0} max={100} step={1} value={toonOutlineDist} onChange={updateToonOutlineDist} />
-              <FieldRow label="Color" hint="Color of the silhouette + crease lines.">
+              <SliderRow label={t('visual.edge.amount')} min={0} max={1} step={0.05} value={toonOutlineAmount} onChange={updateToonOutlineAmount} />
+              <SliderRow label={t('visual.edge.thickness')} min={0} max={5} step={0.5} value={toonOutlineThick} onChange={updateToonOutlineThick} />
+              <SliderRow label={t('visual.edge.threshold')} min={0} max={1} step={0.02} value={toonOutlineThreshold} onChange={updateToonOutlineThreshold} />
+              <SliderRow label={t('visual.edge.distance')} min={0} max={100} step={1} value={toonOutlineDist} onChange={updateToonOutlineDist} />
+              <FieldRow label={t('visual.edge.color')} hint={t('visual.edge.colorHint')}>
                 <input type="color" value={toonOutlineCol} onChange={(e) => updateToonOutlineCol(e.target.value)} style={colorInputStyle} />
               </FieldRow>
-              <FieldRow label="Supersample x2" hint="Render the edge depth buffer at 2× for higher-quality, smoother edges (heavier on the GPU).">
+              <FieldRow label={t('visual.edge.supersample')} hint={t('visual.edge.supersampleHint')}>
                 <Switch size="small" checked={toonOutlineSS} onChange={updateToonOutlineSS} />
               </FieldRow>
             </>
           ) : (
             <Typography variant="caption" sx={{ color: '#999', fontSize: 11 }}>
-              Edge outlines require WebGL (not available on WebGPU).
+              {t('visual.edge.webglOnly')}
             </Typography>
           )}
         </SettingsSection>
       )}
 
       {/* Display (mode-independent) */}
-      <SettingsSection id="visual-display" title="Display">
+      <SettingsSection id="visual-display" title={t('visual.display.section')}>
         {/* UI Zoom */}
-        <FieldRow label="UI Zoom">
+        <FieldRow label={t('visual.display.uiZoom')}>
           <ToggleButtonGroup
             exclusive
             size="small"
@@ -690,7 +717,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
         </FieldRow>
 
         {/* Source markers (plan-181) — floor ring + label under each Source */}
-        <FieldRow label="Source markers" hint="Floor ring + label under each source to identify spawn locations.">
+        <FieldRow label={t('visual.display.sourceMarkers')} hint={t('visual.display.sourceMarkersHint')}>
           <Switch
             size="small"
             checked={sourceMarkersVisible}
@@ -700,7 +727,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
         </FieldRow>
 
         {/* Drive axis gizmo (plan-249) — motion axis overlay on selected drives */}
-        <FieldRow label="Drive axis gizmo" hint="Show the motion axis (double arrow / rotation ring) on selected drives.">
+        <FieldRow label={t('visual.display.driveAxisGizmo')} hint={t('visual.display.driveAxisGizmoHint')}>
           <Switch
             size="small"
             checked={driveAxisGizmoOn}
@@ -709,7 +736,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
         </FieldRow>
 
         {/* Toolbar button labels — show text next to icons in top-left toolbar */}
-        <FieldRow label="Toolbar labels" hint="Show text labels next to icons in the top-left toolbar. Always collapsed on mobile.">
+        <FieldRow label={t('visual.display.toolbarLabels')} hint={t('visual.display.toolbarLabelsHint')}>
           <Switch
             size="small"
             checked={toolbarShowLabels}
@@ -718,13 +745,13 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
         </FieldRow>
 
         {/* Antialiasing */}
-        <FieldRow label="Antialiasing">
+        <FieldRow label={t('visual.display.antialiasing')}>
           <Switch size="small" checked={antialiasDesired} onChange={updateAntialiasDesired} />
         </FieldRow>
         {antialiasMismatch && (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
             <Typography variant="caption" sx={{ color: '#ffb74d', fontSize: 11 }}>
-              Reload required
+              {t('visual.display.reloadRequired')}
             </Typography>
             <Button
               size="small"
@@ -733,37 +760,37 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
               startIcon={<RestartAlt />}
               sx={{ fontSize: 11, textTransform: 'none', py: 0, borderColor: '#ffb74d', color: '#ffb74d' }}
             >
-              Reload now
+              {t('visual.display.reloadNow')}
             </Button>
           </Box>
         )}
 
         {/* Render Resolution (DPR) */}
-        <SliderRow label="Resolution" min={0.5} max={2} step={0.25} value={maxDpr} onChange={updateMaxDpr}
-          valueText={maxDpr >= 2 ? 'Native' : `${maxDpr}x`} />
+        <SliderRow label={t('visual.display.resolution')} min={0.5} max={2} step={0.25} value={maxDpr} onChange={updateMaxDpr}
+          valueText={maxDpr >= 2 ? t('visual.display.native') : `${maxDpr}x`} />
       </SettingsSection>
 
       {/* Renderer */}
-      <SettingsSection id="visual-renderer" title="Renderer">
-        <FieldRow label="Backend">
+      <SettingsSection id="visual-renderer" title={t('visual.renderer.section')}>
+        <FieldRow label={t('visual.renderer.backend')}>
           <Select
             size="small"
             fullWidth
             value={viewer.rendererKind}
             onChange={(e) => { localStorage.setItem('rv-webviewer-renderer', e.target.value); window.location.reload(); }}
           >
-            <MenuItem value="webgl" sx={{ fontSize: 13 }}>WebGL</MenuItem>
+            <MenuItem value="webgl" sx={{ fontSize: 13 }}>{t('visual.renderer.webgl')}</MenuItem>
             <MenuItem value="webgpu" disabled={!navigator.gpu} sx={{ fontSize: 13 }}>
-              WebGPU (experimental)
+              {t('visual.renderer.webgpu')}
               {!navigator.gpu && (
-                <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>not available</Typography>
+                <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>{t('visual.renderer.webgpuUnavailable')}</Typography>
               )}
             </MenuItem>
             {/* Internal-only TSL test path (plan-271): WebGPURenderer({forceWebGL:true}).
                 Deliberately NEVER disabled on !navigator.gpu — this path exists exactly
                 for devices WITHOUT a WebGPU adapter (review finding 4). */}
             {__RV_INTERNAL__ && (
-              <MenuItem value="webgpu-gl" sx={{ fontSize: 13 }}>WebGPU (GL backend)</MenuItem>
+              <MenuItem value="webgpu-gl" sx={{ fontSize: 13 }}>{t('visual.renderer.webgpuGl')}</MenuItem>
             )}
           </Select>
         </FieldRow>
@@ -771,7 +798,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
             group/auto-filter hide and isolate work per instance. The switch
             remains as a kill-switch for render problems — off renders every
             static mesh individually (see rv-static-merge-flag.ts). */}
-        <FieldRow label="Static mesh batching" hint="Collapses static geometry into a few multi-draw batches. Disable only as a kill-switch for render problems. Reloads the viewer.">
+        <FieldRow label={t('visual.renderer.staticBatching')} hint={t('visual.renderer.staticBatchingHint')}>
           <Switch
             size="small"
             checked={isStaticMeshMergingEnabled()}
@@ -781,54 +808,52 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
       </SettingsSection>
 
       {/* Camera */}
-      <SettingsSection id="visual-camera" title="Camera">
-        <FieldRow label="Projection">
+      <SettingsSection id="visual-camera" title={t('visual.camera.section')}>
+        <FieldRow label={t('visual.camera.projection')}>
           <Select
             size="small"
             fullWidth
             value={proj}
             onChange={(e) => updateProj(e.target.value as ProjectionType)}
           >
-            <MenuItem value="perspective">Perspective</MenuItem>
-            <MenuItem value="orthographic">Orthographic</MenuItem>
+            <MenuItem value="perspective">{t('visual.camera.perspective')}</MenuItem>
+            <MenuItem value="orthographic">{t('visual.camera.orthographic')}</MenuItem>
           </Select>
         </FieldRow>
 
         {proj === 'perspective' && (
-          <SliderRow label="Field of View" min={10} max={120} step={1} value={fov} onChange={updateFov} valueText={`${fov}°`} />
+          <SliderRow label={t('visual.camera.fov')} min={10} max={120} step={1} value={fov} onChange={updateFov} valueText={`${fov}°`} />
         )}
       </SettingsSection>
 
       {/* Save-as-preset dialog */}
       <Dialog open={presetDialogOpen} onClose={() => setPresetDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontSize: 14 }}>Save settings as preset</DialogTitle>
+        <DialogTitle sx={{ fontSize: 14 }}>{t('visual.presets.save')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             fullWidth
             size="small"
-            label="Preset name"
-            placeholder="e.g. Showroom"
+            label={t('visual.presets.name')}
+            placeholder={t('visual.presets.namePlaceholder')}
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') void handleSavePreset(); }}
             sx={{ mt: 1 }}
           />
           <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
-            {import.meta.env.DEV
-              ? 'Saved into public/presets/ — commit it to ship the preset with the build.'
-              : 'Saved in this browser only (production cannot write to the published source).'}
+            {t(import.meta.env.DEV ? 'visual.presets.devHint' : 'visual.presets.prodHint')}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPresetDialogOpen(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button onClick={() => setPresetDialogOpen(false)} sx={{ textTransform: 'none' }}>{t('visual.presets.cancel')}</Button>
           <Button
             variant="contained"
             onClick={() => void handleSavePreset()}
             disabled={!presetName.trim() || savingPreset}
             sx={{ textTransform: 'none' }}
           >
-            {savingPreset ? 'Saving…' : 'Save'}
+            {savingPreset ? t('visual.presets.saving') : t('visual.presets.saveAction')}
           </Button>
         </DialogActions>
       </Dialog>

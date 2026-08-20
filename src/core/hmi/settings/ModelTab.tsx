@@ -11,6 +11,7 @@ import { isSettingsLocked } from '../../rv-app-config';
 import { isAnalyticsConfigured, useAnalyticsConsent, resetAnalyticsConsent } from '../../consent-store';
 import { SettingsSection } from './settings-helpers';
 import { WorkfolderMigrationSection } from './WorkfolderMigrationSection';
+import { useRvTranslation } from '../../i18n';
 
 /**
  * Enumerate legacy WebViewer localStorage keys that the unified Scene model
@@ -53,6 +54,7 @@ import type { RVSettingsBundle } from '../rv-settings-bundle';
  * exported component is `BackupTab` and the Settings tab label is "Backup".
  */
 export function BackupTab() {
+  const { t, locale } = useRvTranslation('settings');
   const viewer = useViewer();
 
   // Import confirmation state
@@ -77,15 +79,13 @@ export function BackupTab() {
   const handleClearLegacy = useCallback(() => {
     const keys = listLegacyWebViewerKeys();
     if (keys.length === 0) return;
-    if (!confirm(
-      `Clear ${keys.length} legacy WebViewer entr${keys.length === 1 ? 'y' : 'ies'} from local storage? This cannot be undone.`,
-    )) return;
+    if (!confirm(t('backup.clearLegacyConfirm', { count: keys.length }))) return;
     for (const k of keys) {
       try { localStorage.removeItem(k); } catch { /* ignore */ }
     }
     localStorage.setItem('rv-scenes-cleared-legacy', 'true');
     window.location.reload();
-  }, []);
+  }, [t]);
 
   // Imported CAD (STEP→GLB) cache size, for the "Clear CAD import cache" button.
   const [cadCacheBytes, setCadCacheBytes] = useState<number | null>(null);
@@ -94,12 +94,9 @@ export function BackupTab() {
   }, []);
   const handleClearCadCache = useCallback(() => {
     const mb = cadCacheBytes != null ? (cadCacheBytes / 1048576).toFixed(1) : '?';
-    if (!confirm(
-      `Clear the imported CAD cache (~${mb} MB of converted STEP/GLB meshes)? ` +
-      `Scene layouts are unaffected — a part re-converts on its next import.`,
-    )) return;
+    if (!confirm(t('backup.clearCadCacheConfirm', { mb }))) return;
     void clearCadGlbCache().then(() => window.location.reload());
-  }, [cadCacheBytes]);
+  }, [cadCacheBytes, t]);
 
   const handleExport = useCallback(() => {
     const bundle = collectSettingsBundle(viewer.currentModelUrl ?? null);
@@ -122,12 +119,12 @@ export function BackupTab() {
         setPendingImport(bundle);
         setImportError(null);
       } catch (err) {
-        setImportError(err instanceof Error ? err.message : 'Import failed.');
+        setImportError(err instanceof Error ? err.message : t('backup.importFailed'));
         setPendingImport(null);
       }
     };
     input.click();
-  }, []);
+  }, [t]);
 
   const handleApplyImport = useCallback(() => {
     if (!pendingImport) return;
@@ -145,7 +142,7 @@ export function BackupTab() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Export / Import Settings */}
       {!isSettingsLocked() && (
-        <SettingsSection id="model-settings" title="Settings">
+        <SettingsSection id="model-settings" title={t('backup.settings')}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="outlined"
@@ -154,7 +151,7 @@ export function BackupTab() {
               onClick={handleExport}
               sx={{ fontSize: 11, textTransform: 'none', flex: 1 }}
             >
-              Export Settings
+              {t('backup.export')}
             </Button>
             <Button
               variant="outlined"
@@ -163,7 +160,7 @@ export function BackupTab() {
               onClick={handleImportClick}
               sx={{ fontSize: 11, textTransform: 'none', flex: 1 }}
             >
-              Import
+              {t('backup.import')}
             </Button>
           </Box>
 
@@ -182,11 +179,14 @@ export function BackupTab() {
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
               <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600 }}>
-                Import from "{getModelBasename(pendingImport.modelUrl ?? null)}"?
+                {t('backup.importFrom', { name: getModelBasename(pendingImport.modelUrl ?? null) })}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, fontSize: 10 }}>
-                Exported {pendingImport.exportedAt ? new Date(pendingImport.exportedAt).toLocaleDateString() : 'unknown date'}.
-                Overwrites current settings.
+                {t('backup.importExported', {
+                  date: pendingImport.exportedAt
+                    ? new Date(pendingImport.exportedAt).toLocaleDateString(locale)
+                    : t('backup.unknownDate'),
+                })}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                 <Button
@@ -196,7 +196,7 @@ export function BackupTab() {
                   onClick={handleApplyImport}
                   sx={{ fontSize: 11, textTransform: 'none' }}
                 >
-                  Apply
+                  {t('backup.apply')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -204,7 +204,7 @@ export function BackupTab() {
                   onClick={handleCancelImport}
                   sx={{ fontSize: 11, textTransform: 'none' }}
                 >
-                  Cancel
+                  {t('backup.cancel')}
                 </Button>
               </Box>
             </Box>
@@ -214,7 +214,7 @@ export function BackupTab() {
 
       {/* Reset all settings (hidden when locked) */}
       {!isSettingsLocked() && (
-        <SettingsSection id="model-reset" title="Reset">
+        <SettingsSection id="model-reset" title={t('backup.reset')}>
           <Box>
             <Button
               variant="outlined"
@@ -224,10 +224,10 @@ export function BackupTab() {
               onClick={handleResetAll}
               sx={{ fontSize: 11, textTransform: 'none' }}
             >
-              Reset All Settings to Defaults
+              {t('backup.resetAll')}
             </Button>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, fontSize: 10 }}>
-              Clears all saved browser settings and reloads the page.
+              {t('backup.resetAllHint')}
             </Typography>
           </Box>
         </SettingsSection>
@@ -235,7 +235,7 @@ export function BackupTab() {
 
       {/* Legacy data cleanup — orphaned keys from before the unified Scene model */}
       {!isSettingsLocked() && legacyKeyCount > 0 && (
-        <SettingsSection id="model-legacy" title="Legacy Data">
+        <SettingsSection id="model-legacy" title={t('backup.legacy')}>
           <Box>
             <Button
               variant="outlined"
@@ -245,10 +245,10 @@ export function BackupTab() {
               onClick={handleClearLegacy}
               sx={{ fontSize: 11, textTransform: 'none' }}
             >
-              Clear legacy WebViewer data ({legacyKeyCount})
+              {t('backup.clearLegacy', { count: legacyKeyCount })}
             </Button>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, fontSize: 10 }}>
-              Removes orphaned entries from the previous Layout / overlay storage scheme. Saved scenes are unaffected.
+              {t('backup.clearLegacyHint')}
             </Typography>
           </Box>
         </SettingsSection>
@@ -256,7 +256,7 @@ export function BackupTab() {
 
       {/* Imported CAD cache — content-addressed converted GLBs from STEP import. */}
       {!isSettingsLocked() && (cadCacheBytes ?? 0) > 0 && (
-        <SettingsSection id="model-cad-cache" title="Imported CAD Data">
+        <SettingsSection id="model-cad-cache" title={t('backup.cadData')}>
           <Box>
             <Button
               variant="outlined"
@@ -266,10 +266,10 @@ export function BackupTab() {
               onClick={handleClearCadCache}
               sx={{ fontSize: 11, textTransform: 'none' }}
             >
-              Clear CAD import cache ({Math.max(1, Math.round((cadCacheBytes ?? 0) / 1048576))} MB)
+              {t('backup.clearCadCache', { mb: Math.max(1, Math.round((cadCacheBytes ?? 0) / 1048576)) })}
             </Button>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, fontSize: 10 }}>
-              Frees the browser store of converted STEP/CAD meshes. Parts re-convert on next import; scene layouts are unaffected.
+              {t('backup.clearCadCacheHint')}
             </Typography>
           </Box>
         </SettingsSection>
@@ -282,12 +282,10 @@ export function BackupTab() {
 
       {/* Analytics consent — only shown when a tracker is configured (GDPR withdrawal). */}
       {analyticsConfigured && (
-        <SettingsSection id="model-privacy" title="Privacy">
+        <SettingsSection id="model-privacy" title={t('backup.privacy')}>
           <Box>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontSize: 10 }}>
-              {analyticsConsented
-                ? 'Google Analytics is active — you opted in.'
-                : 'Google Analytics is disabled — you have not opted in.'}
+              {analyticsConsented ? t('backup.analyticsOn') : t('backup.analyticsOff')}
             </Typography>
             {analyticsConsented && (
               <>
@@ -299,10 +297,10 @@ export function BackupTab() {
                   onClick={handleWithdrawConsent}
                   sx={{ fontSize: 11, textTransform: 'none' }}
                 >
-                  Withdraw analytics consent
+                  {t('backup.withdraw')}
                 </Button>
                 <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5, fontSize: 10 }}>
-                  Stops Google Analytics and reloads the page.
+                  {t('backup.withdrawHint')}
                 </Typography>
               </>
             )}

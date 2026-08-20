@@ -28,6 +28,7 @@ import {
   loadStartPos, saveStartPos, clearStartPos, hasStartPos,
 } from '../core/hmi/camera-startpos-store';
 import { CameraStartTab } from '../core/hmi/settings/CameraStartTab';
+import { rvT } from '../core/i18n';
 
 const EPSILON_POS_EQ_TARGET = 1e-3;
 const MIN_DURATION = 0.05;
@@ -143,7 +144,9 @@ export class CameraStartPosPlugin implements RVViewerPlugin {
   readonly core = true;
 
   readonly slots: UISlotEntry[] = [
-    { slot: 'settings-tab', component: CameraStartTab, label: 'Start View', order: 290 },
+    // A getter, not a string: the slot list is built in the constructor, which
+    // runs before any language preference has been applied (ADR-0001 §9).
+    { slot: 'settings-tab', component: CameraStartTab, label: () => rvT('settings', 'cameraStart.tab'), order: 290 },
   ];
 
   /**

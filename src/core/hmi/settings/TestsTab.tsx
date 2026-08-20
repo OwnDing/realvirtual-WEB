@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import { Typography, Box, Button, CircularProgress } from '@mui/material';
 import { PlayArrow, CheckCircle, Error as ErrorIcon } from '@mui/icons-material';
 import { SettingsSection } from './settings-helpers';
+import { useRvTranslation } from '../../i18n';
 
 interface TestResult {
   numPassedTests?: number;
@@ -18,6 +19,7 @@ interface TestResult {
 }
 
 export function TestsTab() {
+  const { t } = useRvTranslation('settings');
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function TestsTab() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <SettingsSection id="tests" title="Tests">
+      <SettingsSection id="tests" title={t('tests.section')}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Button
           variant="contained"
@@ -57,7 +59,7 @@ export function TestsTab() {
           onClick={runTests}
           sx={{ textTransform: 'none', fontWeight: 600 }}
         >
-          {running ? 'Running...' : 'Run Tests'}
+          {running ? t('tests.running') : t('tests.run')}
         </Button>
         {result && !error && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -67,8 +69,8 @@ export function TestsTab() {
               <ErrorIcon sx={{ fontSize: 16, color: '#ef5350' }} />
             )}
             <Typography variant="caption" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
-              {passed}/{total} passed
-              {failed > 0 && <span style={{ color: '#ef5350' }}> ({failed} failed)</span>}
+              {t('tests.passed', { passed, total })}
+              {failed > 0 && <span style={{ color: '#ef5350' }}> {t('tests.failed', { count: failed })}</span>}
             </Typography>
           </Box>
         )}
@@ -101,7 +103,7 @@ export function TestsTab() {
 
       {!result && !error && !running && (
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          Click "Run Tests" to execute vitest browser tests. Only available on the Vite dev server.
+          {t('tests.hint')}
         </Typography>
       )}
       </SettingsSection>

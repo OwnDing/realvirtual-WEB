@@ -60,6 +60,24 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/projects/DestructiveConfirmDialog.tsx',
   'src/core/hmi/projects/document-filter.ts',
   'src/core/hmi/ConfirmActionDialog.tsx',
+  // Settings panel (Milestone 4b, batch 2)
+  'src/core/hmi/SettingsPanel.tsx',
+  'src/core/hmi/settings/ModelTab.tsx',
+  'src/core/hmi/settings/WorkfolderMigrationSection.tsx',
+  'src/core/hmi/settings/MouseTab.tsx',
+  'src/core/hmi/settings/VisualTab.tsx',
+  'src/core/hmi/settings/SimulationTab.tsx',
+  'src/core/hmi/settings/InterfacesTab.tsx',
+  'src/core/hmi/settings/MultiuserTab.tsx',
+  'src/core/hmi/settings/McpTab.tsx',
+  'src/core/hmi/settings/RagStatusSection.tsx',
+  'src/core/hmi/settings/rag-status.ts',
+  'src/core/hmi/settings/DevToolsTab.tsx',
+  'src/core/hmi/settings/TestsTab.tsx',
+  'src/core/hmi/settings/GroupsTab.tsx',
+  'src/core/hmi/settings/CameraStartTab.tsx',
+  'src/core/rv-render-modes.ts',
+  'src/plugins/camera-startpos-plugin.tsx',
 ];
 
 /**
@@ -70,11 +88,33 @@ export const MIGRATED_SOURCES = [
  * still has to be declared here rather than waved through by loosening the
  * matcher — that way the exceptions stay countable and reviewable.
  */
+const PLURAL_SPLICE = 'English plural inflection spliced into the expression, not into words: '
+  + 'the source wrote `entr${n === 1 ? "y" : "ies"}` / `object${n !== 1 ? "s" : ""}`, so neither '
+  + 'inflected form exists as a run of characters anywhere. i18next resolves `_one`/`_other` '
+  + 'per language instead, which is also the only shape zh-CN (one form) and en-US (two) can share. '
+  + 'Same words, different seam.';
+
+const CAPITALISED_AT_RENDER = 'Produced by `id.charAt(0).toUpperCase() + id.slice(1)` over the '
+  + 'option id, so the capitalised word was never in the source text — only the lowercase id was. '
+  + 'Moving the capitalisation into the catalog is what lets the label be translated at all.';
+
 export const NEW_STRING_EXEMPTIONS = new Map([
-  ['moved', 'Sentence-frame split. The source built one string with the verb interpolated '
+  ['projects.status.moved', 'Sentence-frame split. The source built one string with the verb interpolated '
     + '(`"${doc.name}" ${mode === "move" ? "moved" : "copied"} to "${ws.name}".`), which hands a '
     + 'translator a frame they cannot inflect. The English words are unchanged; only the seam moved.'],
-  ['copied', 'The other half of the same split — see `moved`.'],
+  ['projects.status.copied', 'The other half of the same split — see `projects.status.moved`.'],
+  ['settings.backup.clearLegacyConfirm_one', PLURAL_SPLICE],
+  ['settings.backup.clearLegacyConfirm_other', PLURAL_SPLICE],
+  ['settings.groups.objectCount_other', PLURAL_SPLICE],
+  ['settings.cameraStart.savedUserAt', 'The date suffix was a template literal NESTED inside another '
+    + '(`Saved (user)${savedAt ? ` — ${…}` : ""}`), so "Saved (user) — " never existed as one run of '
+    + 'characters. Both halves are unchanged; joining them is what makes the line one translatable '
+    + 'sentence instead of two fragments a translator cannot reorder.'],
+  ['settings.visual.toneMapping.option.linear', CAPITALISED_AT_RENDER],
+  ['settings.visual.toneMapping.option.reinhard', CAPITALISED_AT_RENDER],
+  ['settings.visual.toneMapping.option.cineon', CAPITALISED_AT_RENDER],
+  ['settings.visual.toneMapping.option.neutral', CAPITALISED_AT_RENDER],
+  ['settings.visual.lighting.quality.medium', CAPITALISED_AT_RENDER],
 ]);
 
 function flatten(node, prefix = '') {
@@ -107,21 +147,52 @@ export function readBaseSources(ref = MIGRATION_BASE_REF, root = ROOT) {
  *   - `{{name}}` spans the `${…}` expression it replaced;
  *   - `<0>`/`</0>` span the JSX element they replaced (a `<code>` span, say),
  *     since a `<Trans>` key numbers its children instead of naming them;
- *   - a run of spaces matches any whitespace OR a JavaScript concatenation seam
+ *   - a run of spaces matches any whitespace OR one of the three things that
+ *     RENDER as whitespace but are not: a JavaScript concatenation seam
  *     (`' + '` or a backtick seam), because long messages were wrapped across
- *     source lines and the
- *     catalog holds them flat.
+ *     source lines and the catalog holds them flat; a JSX space expression
+ *     `{' '}`; and an `&nbsp;` entity.
  *
  * Everything else is escaped, so no rewording slips through.
+ *
+ * Both ends are word-anchored when they can be. Without that a one-word value is
+ * a bare substring test, and short labels pass on coincidence: `Low` matches
+ * `Lower`, `Linear` matches `LinearProgress`, `High` matches `HighlightStyle`.
+ * A check that accepts a word because another word contains it is not checking
+ * anything. The anchor is conditional because `\b` is meaningless next to a
+ * non-word character, and plenty of labels start with `·` or end with `.`.
  */
 export function verbatimPattern(value) {
   const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(
-    escaped
-      .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
-      .replace(/<\/?\d>/g, '<[^>]*>')
-      .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`])+'),
-  );
+  const body = escaped
+    .replace(/\\\{\\\{\w+\\\}\\\}/g, '[\\s\\S]*?')
+    .replace(/<\/?\d>/g, '<[^>]*>')
+    .replace(/ +/g, '(?:\\s|[\'`]\\s*\\+\\s*[\'`]|\\{\' \'\\}|&nbsp;)+');
+  const lead = /^\w/.test(value) ? '\\b' : '';
+  const tail = /\w$/.test(value) ? '\\b' : '';
+  return new RegExp(lead + body + tail);
+}
+
+/**
+ * Flatten a hand-written catalog module to `namespace.a.b` -> value.
+ *
+ * A brace-depth walk rather than a single regex: the path is what makes a value
+ * addressable, and only nesting knows the path.
+ */
+export function readCatalogValues(catalogText) {
+  const values = {};
+  const stack = [];
+  for (const line of catalogText.split('\n')) {
+    const open = /^\s{2,}([A-Za-z][\w]*): \{\s*$/.exec(line);
+    if (open) { stack.push(open[1]); continue; }
+    if (/^\s{2,}\},?\s*$/.test(line)) { stack.pop(); continue; }
+    const leaf = /^\s{4,}([A-Za-z][\w]*): '((?:[^'\\]|\\.)*)',$/.exec(line);
+    if (leaf && stack.length > 0) {
+      const path = [...stack, leaf[1]].join('.');
+      values[path] = leaf[2].replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+    }
+  }
+  return values;
 }
 
 export function checkVerbatim(ref = MIGRATION_BASE_REF, root = ROOT) {
@@ -130,10 +201,12 @@ export function checkVerbatim(ref = MIGRATION_BASE_REF, root = ROOT) {
   const catalogText = readFileSync(catalogPath, 'utf8');
   // Read the values out of the module text rather than importing it: this script
   // has to run under plain node with no TypeScript loader.
-  const values = {};
-  for (const match of catalogText.matchAll(/^\s{4,}([A-Za-z][\w]*): '((?:[^'\\]|\\.)*)',$/gm)) {
-    values[match[1]] = match[2].replace(/\\'/g, "'").replace(/\\\\/g, '\\');
-  }
+  //
+  // Keyed by the FULL dotted path. Leaf names alone collide badly once the
+  // catalog has more than one namespace — `section`, `intensity` and `color`
+  // each occur a dozen times — and a collision does not fail loudly, it
+  // silently drops every value but the last from the check.
+  const values = readCatalogValues(catalogText);
   const missing = [];
   for (const [key, value] of Object.entries(values)) {
     if (NEW_STRING_EXEMPTIONS.has(key)) continue;

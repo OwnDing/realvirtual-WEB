@@ -4,7 +4,7 @@ title: 建立多语言增量治理与黄金切片
 status: approved
 plan_status: active
 owner: product
-last_reviewed: 2026-08-19
+last_reviewed: 2026-08-20
 authority: normative-process
 ---
 
@@ -73,7 +73,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 1858 处受门禁文案（批次 1 已交付：Projects 流程）。
+- [ ] Milestone 4b：按风险分批迁移其余 1537 处受门禁文案（批次 1：Projects 流程；批次 2：Settings 面板）。
 
 ## Surprises & Discoveries
 
@@ -86,6 +86,22 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 发现 5 处工业标识被扫描判为文案（Allen-Bradley 控制器系列名、SEW 齿轮电机型号），已按 `PS-I18N-001` §2 / `ADR-0001` 第 6 条附理由登记到 `scripts/i18n-inventory-exceptions.json`；例外必须写理由，且匹配不到任何东西的例外会被守卫测试拒绝。
 - 迁移风险：JSX 文案会被内联元素切成多个文本节点（例如 `ProjectCodeConsentDialog.tsx` 把一句话拆成三段）。这类文案不能按节点逐条替换，需要在黄金切片里确定富文本插值的写法。
 - `src/plugins/snap-point/strings.ts` 已是提取过的字符串表，扫描按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
+
+### Milestone 4b 批次 2：Settings 面板（2026-08-20）
+
+- 覆盖 `SettingsPanel.tsx` + `src/core/hmi/settings/**` 全部 14 个文件（含 `rag-status.ts` 的状态标签）。该面的受门禁命中归零，全仓 1858 → **1537**；`settings` namespace 新增 **458** 个 key。
+- **门禁收紧与还债同一次提交**：`hint` 是本仓 `FieldRow`/`SliderRow` 自己的属性，渲染成设置行下方的小灰字，但不在 `COPY_ATTRS` 里。这次把它加进分类规则，暴露出的 19 处全部在本批次内还清——所以门禁数字的移动是「迁移」，不是「重新划线」。反例：临时在 `MouseTab` 加一条硬编码 `hint`，基线守卫失败（`react-copy` 1128→1129）。
+- **逐字迁入门禁此前在静默漏检**。`i18n-verbatim-check` 用**叶子名**做 key，而 `section`、`intensity`、`color`、`mode` 这类叶子名在多 namespace 下大量重名——重名不会报错，只会让除最后一条以外的同名值**完全不被检查**。改成按完整点分路径取值后，受检值从 123 条变成 **604** 条。
+- 同一处还发现单词级的漏检：值里没有空格时，匹配退化成裸子串，`Low` 会被 `Lower` 匹配、`Linear` 被 `LinearProgress` 匹配、`High` 被 `HighlightStyle` 匹配。加了**条件词边界**（首尾是词字符时才加 `\b`）后，`Linear` 立刻被正确判为新串。
+- 匹配器另外承认两种「渲染后就是空白」的 JSX 产物：`{' '}` 和 `&nbsp;`。它们与既有的 `' + '` 拼接缝同类，都是把字符串搬出 JSX 的机械后果，不是措辞变化。
+- **复数是这批唯一的新机制，也是唯一的整类风险**。英文把词形变化拼进表达式（`entr${n===1?'y':'ies'}`、`object${n!==1?'s':''}`），中文只有一种形式，两边只能靠 i18next 的 `_one`/`_other` 共存（`zh-CN` 两条写同一句）。代价是：**plural key 在自己的名字下不存在**——`exists('settings:groups.objectCount')` 不带 `count` 返回 false。原来的 `probeLookup` 不转发 options，会把每一条复数文案报成 missing 并渲染成 key。已修正为转发 options；反例验证过：去掉转发后 `tests/i18n-settings.test.tsx` 4 例失败。
+- `UISlotEntry.label` 按 `ADR-0001` 第 9 条**加宽而不是替换**为 `string | (() => string)`。插槽在插件构造函数里注册，早于任何语言偏好存在，只有渲染时解析的 getter 能跟随语言切换；仍传字符串的插件一行不用改（测试同时覆盖两种形态）。
+- `rv-render-modes.ts` 的 `label`/`description` 保留英文原值给非 UI 调用方，UI 改从目录取。两份同样的字符串必然漂移，因此加了一条守卫测试把二者钉在一起；反例：把 `Shaded` 改成 `Lit` 后该测试失败。
+- **批次 1 的验证报告有一处需要更正**：当时称完整 Browser 套件的失败「没有一条涉及译文」。实际上 `tests/scene-name-dialog.test.tsx` 有 3 例是因为 `Scene name` 已在批次 1 迁移、而该文件没有 pin locale 而失败——它当时渲染的是**裸 key**（不含中文），所以被 CJK 计数漏过，混进了 WebGL 那一堆。本次已按 pin 策略修正。
+- 由此把 `tests/i18n-test-locale-pin.node.test.ts` 的文本定位器识别范围扩到 `:has-text(`。这是最会藏的一种：CSS 选择器匹配英文文本，文案一变不是抛错而是**匹配不到**，而 `hmi-panels.spec.ts` 写的是「匹配不到就 `test.skip`」——于是测试会安静地停止测试。该 spec 已补 pin，反例验证过守卫会失败。
+- 扫描器的三处误报按**改源码**而不是加例外处理：`&nbsp;` 文本节点（改成一句可插值的 `Status: {{value}}`）、`RENDER_MODE_KEY` 的 `label`/`description` 属性（改名 `labelKey`/`descriptionKey`，与本批次其它 key 表一致）。真正不可翻译的 4 项才登记例外（品牌名 `realvirtual WEB`、双语 `Language / 语言`、示例信号名 `Conveyor.Start …`、与 store 默认值必须一致的 `Browser` 占位符）。
+- 顺带清掉本面的 `intl-format` 建议项：19 处 `toLocaleString()`/`toLocaleDateString()` 全部显式传入当前 locale（`ADR-0001` 第 6 条），全仓建议数 38 → 22。
+- `RENDER_MODES`、`UISlotEntry` 之外没有触碰任何公共契约；`plugin-registry` 类别（131 处）与 `AiBridgeGate`、`ActivityBar` 等 Settings 面板之外的文案仍是后续批次。
 
 ### Milestone 4a/4b 批次 1（2026-08-19）
 
@@ -159,9 +175,38 @@ Milestone 3 已验证（2026-08-19，本地）：
 
 Milestone 4 已验证（2026-08-19，本地）：`./scripts/verify.sh static` 通过；`npm run test:node` 55 文件 **500** 例通过；Projects 相关浏览器测试 23 文件 **483** 例通过；`tests/i18n-golden-slice.test.tsx` **13** 例通过；`npm run build` 通过，入口 chunk 3_287_254 → **3_351_984 B**（净增 **64.7 KB**，预算余 **168.0 KB**）；`node scripts/i18n-verbatim-check.mjs` **123** 条值全部逐字追溯。
 
-**未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 950 文件中 25 文件 / 80 用例失败，全部为 `THREE.WebGLRenderer: Error creating WebGL context.`（本机 SwiftShader 无法创建 WebGL 上下文，隔离运行同样失败），**没有一条失败涉及译文**（失败信息中中文出现次数为 0）。受本次改动影响的 UI 测试单独运行 7 文件 64 例全部通过。完整浏览器门禁需要在可用 GPU 的环境重跑后才能声称通过。
+**未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 950 文件中 25 文件 / 80 用例失败，绝大多数为 `THREE.WebGLRenderer: Error creating WebGL context.`（本机 SwiftShader 无法创建 WebGL 上下文，隔离运行同样失败）。当时声称「没有一条失败涉及译文」，依据是失败信息中中文出现次数为 0；**该结论在批次 2 被证伪并已更正**——`tests/scene-name-dialog.test.tsx` 的 3 例正是批次 1 迁移的 `Scene name` 未 pin locale 导致，只因当时渲染的是裸 key 而非中文才躲过了 CJK 计数。受本次改动影响的 UI 测试单独运行 7 文件 64 例全部通过。完整浏览器门禁需要在可用 GPU 的环境重跑后才能声称通过。
+
+Milestone 4b 批次 2 已验证（2026-08-20，本地）：
+
+| 项 | 结果 |
+| --- | --- |
+| `./scripts/verify.sh static`（governance + ESLint 边界 + 社区 tsc） | 通过（exit 0） |
+| `npm run test:node` | 55 文件 **500** 例通过 |
+| `npx vitest run tests/i18n-settings.test.tsx` | **8 例通过**（默认中文、原地切换不重挂、无未解析 key、复数全量扫描、插件 getter 标签、渲染模式漂移、RAG 标签） |
+| 受影响 Browser 测试单独运行 | 12 文件 **165** 例通过 |
+| `npm run build` | 通过 |
+| 入口 chunk | 3_351_984 → **3_386_379 B**，净增 **33.6 KB**（458 key × 2 语言）；预算 `ENTRY_BUDGET_BYTES = 3_520_000` 仍余 **130.5 KB**，`tests/bundle-splitting.test.ts` 9 例通过 |
+| `node scripts/i18n-inventory.mjs` | 受门禁 1858 → **1537**（202 文件）；Settings 面归零；建议项 `intl-format` 38 → 22 |
+| `node scripts/i18n-verbatim-check.mjs` | **604** 条 `en-US` 值全部逐字追溯到 `d1949a5`（按完整路径取值，此前按叶子名只检了 123 条） |
+
+反例（证明门禁非空洞）：
+
+| 注入的缺陷 | 失败的门禁 |
+| --- | --- |
+| `probeLookup` 不转发 options | `tests/i18n-settings.test.tsx` 4 例失败（复数文案渲染成 key 并被报 missing） |
+| 改写既有英文措辞（`resetAllHint`） | `i18n-verbatim-check` 指名该 key 失败 |
+| 新增一条硬编码 `hint=` | `tests/i18n-inventory.node.test.ts` 基线漂移失败（`react-copy` 1128→1129） |
+| 把 `RENDER_MODES` 的 `Shaded` 改成 `Lit` | `tests/i18n-settings.test.tsx` 漂移守卫失败 |
+| 去掉 `hmi-panels.spec.ts` 的 pin | `tests/i18n-test-locale-pin.node.test.ts` 指名该 spec 失败 |
+
+**未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 951 文件中 **22 文件 / 82 用例**失败，逐条核对均根因于 `THREE.WebGLRenderer: Error creating WebGL context.`（78 例直接报此错，1 例 `embed-boot` 超时与 1 例 `dispose` TypeError 是同一渲染器创建失败的下游）。失败输出中中文出现次数为 **0**，且已逐文件核对无一与本批次相关。完整浏览器门禁仍需在可用 GPU 的环境重跑后才能声称通过。
 
 后续里程碑至少仍需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
+
+### Decision Log — 批次 2
+
+- 2026-08-20：用户明确指令继续 Milestone 4b，指定 Settings 面板为下一批。范围限于 `SettingsPanel.tsx` + `src/core/hmi/settings/**`；`UISlotEntry.label` 的向后兼容加宽依 `ADR-0001` 第 9 条授权，未新增 ADR。`rv-render-modes.ts` 的注册标签、`AiBridgeGate`/`ActivityBar` 等面板外文案，以及 `plugin-registry` 全类别仍属后续批次，本批次不扩大范围。
 
 ## Rollback
 

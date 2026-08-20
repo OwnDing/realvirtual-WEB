@@ -10,6 +10,7 @@ import { isMetadataLoadingEnabled, DISABLE_METADATA_LS_KEY } from '../../engine/
 import type { RenderBackendId, RenderBackendStatus } from '../../render-backend/rv-render-backend';
 import { ModelCache } from '../../../plugins/layout-planner/model-cache';
 import { clearCache as clearLibrarySnapCache } from '../../../plugins/snap-point/library-snap-index';
+import { useRvTranslation, type RVTranslationKey } from '../../i18n';
 
 interface DevStats {
   // Rendering
@@ -75,14 +76,14 @@ interface DevStats {
   hoverableRanges: number;
 }
 
-/** Display label per pick-path highlight strategy id. */
-const PICK_STRATEGY_LABEL: Record<string, string> = {
-  'outline': 'OutlinePass',
-  'fill-proxy': 'Fill Proxy',
-  'overlay-legacy': 'Overlay (legacy)',
-  'bbox': 'BBox fallback',
-  'mu-overlay': 'MU overlay',
-  'none': '—',
+/** Catalog key per pick-path highlight strategy id — resolved at render, not here. */
+const PICK_STRATEGY_KEY: Record<string, RVTranslationKey<'settings'>> = {
+  'outline': 'devtools.pickStrategy.outline',
+  'fill-proxy': 'devtools.pickStrategy.fillProxy',
+  'overlay-legacy': 'devtools.pickStrategy.overlayLegacy',
+  'bbox': 'devtools.pickStrategy.bbox',
+  'mu-overlay': 'devtools.pickStrategy.muOverlay',
+  'none': 'devtools.pickStrategy.none',
 };
 
 const PERF_BUDGETS = {
@@ -101,6 +102,7 @@ function GPUTierBadge({
   tier: DevStats['gpuTier'];
   severity: DevStats['gpuSeverity'];
 }) {
+  const { t } = useRvTranslation('settings');
   // Severity drives colour (green/yellow/red); tier drives the label.
   // Tier 'unknown' or no analysis → no badge at all (avoids noise).
   if (tier === 'unknown') return null;
@@ -110,10 +112,10 @@ function GPUTierBadge({
     critical: { fg: '#ef5350', bg: 'rgba(239,83,80,0.18)'   },
   };
   const LABELS: Record<DevStats['gpuTier'], string> = {
-    discrete:        'Discrete',
-    'apple-silicon': 'Apple Silicon',
-    integrated:      'Integrated',
-    software:        'Software (CPU)',
+    discrete:        t('devtools.gpu.tier.discrete'),
+    'apple-silicon': t('devtools.gpu.tier.appleSilicon'),
+    integrated:      t('devtools.gpu.tier.integrated'),
+    software:        t('devtools.gpu.tier.software'),
     unknown:         '',
   };
   const c = COLORS[severity];
@@ -180,14 +182,14 @@ function PipelineRow({ label, before, after }: { label: string; before: string; 
   );
 }
 
-/** Human-readable label for a render-backend status. */
-const RENDER_BACKEND_STATUS_LABEL: Record<RenderBackendStatus, string> = {
-  idle: 'Three.js active',
-  connecting: 'Connecting…',
-  streaming: 'Streaming',
-  loading: 'Loading scene…',
-  waiting: 'Waiting for Omniverse',
-  error: 'Error',
+/** Catalog key per render-backend status — resolved at render, not here. */
+const RENDER_BACKEND_STATUS_KEY: Record<RenderBackendStatus, RVTranslationKey<'settings'>> = {
+  idle: 'devtools.renderBackend.state.idle',
+  connecting: 'devtools.renderBackend.state.connecting',
+  streaming: 'devtools.renderBackend.state.streaming',
+  loading: 'devtools.renderBackend.state.loading',
+  waiting: 'devtools.renderBackend.state.waiting',
+  error: 'devtools.renderBackend.state.error',
 };
 
 /**
@@ -197,6 +199,7 @@ const RENDER_BACKEND_STATUS_LABEL: Record<RenderBackendStatus, string> = {
  * customer deploys. HMI panels are unaffected by the switch.
  */
 function RenderBackendSection() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const [backend, setBackend] = useState<RenderBackendId>(viewer.renderBackend);
   const [status, setStatus] = useState<RenderBackendStatus>(viewer.renderBackendStatus);
@@ -243,8 +246,8 @@ function RenderBackendSection() {
   }, [viewer]);
 
   return (
-    <SettingsSection id="devtools-render-backend" title="3D Backend (experimental)">
-      <FieldRow label="Omniverse RTX Stream">
+    <SettingsSection id="devtools-render-backend" title={t('devtools.renderBackend.section')}>
+      <FieldRow label={t('devtools.renderBackend.omniverse')}>
         <Switch
           size="small"
           checked={backend === 'omniverse'}
@@ -253,18 +256,18 @@ function RenderBackendSection() {
         />
       </FieldRow>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-        <StatRow label="Backend" value={backend === 'omniverse' ? 'Omniverse' : 'Three.js'} />
+        <StatRow label={t('devtools.renderBackend.backend')} value={backend === 'omniverse' ? 'Omniverse' : 'Three.js'} />
         {backend === 'omniverse' && (
           <StatRow
-            label="Status"
-            value={RENDER_BACKEND_STATUS_LABEL[status]}
+            label={t('devtools.renderBackend.status')}
+            value={t(RENDER_BACKEND_STATUS_KEY[status])}
             color={status === 'streaming' ? '#66bb6a' : status === 'error' ? '#ef5350' : '#ffa726'}
           />
         )}
       </Box>
       {omniverseAvailable && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: 0.75 }}>
-          <FieldRow label="Signaling Port">
+          <FieldRow label={t('devtools.renderBackend.signalingPort')}>
             <TextField
               size="small"
               type="number"
@@ -275,11 +278,11 @@ function RenderBackendSection() {
               inputProps={{ style: { fontSize: 11, padding: '2px 6px' } }}
             />
           </FieldRow>
-          <FieldRow label="Drive Signal">
+          <FieldRow label={t('devtools.renderBackend.driveSignal')}>
             <TextField
               size="small"
               value={signalName}
-              placeholder="first drive"
+              placeholder={t('devtools.renderBackend.firstDrive')}
               onChange={(e) => onSignalNameChange(e.target.value)}
               sx={{ width: 140 }}
               inputProps={{ style: { fontSize: 11, padding: '2px 6px' } }}
@@ -288,15 +291,14 @@ function RenderBackendSection() {
         </Box>
       )}
       <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', mt: 0.75 }}>
-        {omniverseAvailable
-          ? 'Replaces the Three.js 3D view with an Omniverse RTX WebRTC stream. HMI, signals and charts are unchanged. The port applies on the next connect; leave the signal empty to push the first drive’s position.'
-          : 'Omniverse backend not registered in this build (internal tier only).'}
+        {t(omniverseAvailable ? 'devtools.renderBackend.available' : 'devtools.renderBackend.unavailable')}
       </Typography>
     </SettingsSection>
   );
 }
 
 export function DevToolsTab() {
+  const { t, locale } = useRvTranslation('settings');
   const viewer = useViewer();
   const [stats, setStats] = useState<DevStats | null>(null);
   const [benchRunning, setBenchRunning] = useState(false);
@@ -414,7 +416,7 @@ export function DevToolsTab() {
         pickResolveMs: pickFmt.resolve,
         pickHighlightMs: pickFmt.highlight,
         pickHighlightLast: pickFmt.highlightLast,
-        pickStrategy: PICK_STRATEGY_LABEL[pick.strategy] ?? pick.strategy,
+        pickStrategy: pick.strategy,
         pickCount: pick.raycastCount,
         pickHits: pick.hitCount,
         pickBvhPending: pick.bvhPending,
@@ -430,6 +432,10 @@ export function DevToolsTab() {
 
   const s = stats;
   const heapNum = s ? parseFloat(s.heapMB) || 0 : 0;
+  // ADR-0001 §6: group digits by the UI language, not by whatever the OS is set
+  // to. A bare `toLocaleString()` reads the host locale, which is exactly the
+  // silent inconsistency the rule exists to stop.
+  const num = (value: number) => value.toLocaleString(locale);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -438,16 +444,16 @@ export function DevToolsTab() {
       {__RV_INTERNAL__ && <RenderBackendSection />}
 
       {/* Profiler toggles */}
-      <SettingsSection id="devtools-profiler" title="Profiler">
-        <FieldRow label="FPS / GPU Overlay">
+      <SettingsSection id="devtools-profiler" title={t('devtools.profiler.section')}>
+        <FieldRow label={t('devtools.profiler.overlay')}>
           <Switch size="small" checked={showStats} onChange={(_, v) => { viewer.showStats = v; setShowStats(v); }} />
         </FieldRow>
-        <FieldRow label="Console Perf Log">
+        <FieldRow label={t('devtools.profiler.consoleLog')}>
           <Switch size="small" checked={infoLogging} onChange={(_, v) => { viewer.setDebugLogging(v); setInfoLogging(v); }} />
         </FieldRow>
         {/* Perf-diagnosis kill-switch: load as if the GLB carried no
             Runtime* interaction components at all (rv-dev-load-flags.ts). */}
-        <FieldRow label="Metadata Components" hint="Off = strip RuntimeMetadata / Interactable / UI-Window extras at load — no hover, no select, no tooltips (perf test). Reloads the viewer.">
+        <FieldRow label={t('devtools.profiler.metadata')} hint={t('devtools.profiler.metadataHint')}>
           <Switch
             size="small"
             checked={isMetadataLoadingEnabled()}
@@ -457,111 +463,120 @@ export function DevToolsTab() {
       </SettingsSection>
 
       {/* Scene (from GLB) */}
-      <SettingsSection id="devtools-scene" title="Scene (from GLB)">
+      <SettingsSection id="devtools-scene" title={t('devtools.scene.section')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="Triangles" value={s ? s.triangles.toLocaleString() : '--'} />
-          <StatRow label="Meshes" value={s ? s.meshesInGlb.toLocaleString() : '--'} />
-          <StatRow label="Drives" value={s ? String(s.drives) : '--'} />
-          <StatRow label="GLB Size" value={s?.glbSize ?? '--'} />
-          <StatRow label="Load Time" value={s?.loadTime ?? '--'} />
-          <StatRow label="Metadata Nodes" value={s ? s.metadataNodes.toLocaleString() : '--'} />
-          <StatRow label="AABB Build" value={s ? `${s.metadataAabbCount.toLocaleString()} in ${s.metadataAabbMs} ms` : '--'} />
-          <StatRow label="Hoverable Ranges" value={s ? s.hoverableRanges.toLocaleString() : '--'} />
+          <StatRow label={t('devtools.scene.triangles')} value={s ? num(s.triangles) : '--'} />
+          <StatRow label={t('devtools.scene.meshes')} value={s ? num(s.meshesInGlb) : '--'} />
+          <StatRow label={t('devtools.scene.drives')} value={s ? String(s.drives) : '--'} />
+          <StatRow label={t('devtools.scene.glbSize')} value={s?.glbSize ?? '--'} />
+          <StatRow label={t('devtools.scene.loadTime')} value={s?.loadTime ?? '--'} />
+          <StatRow label={t('devtools.scene.metadataNodes')} value={s ? num(s.metadataNodes) : '--'} />
+          <StatRow label={t('devtools.scene.aabbBuild')} value={s ? t('devtools.scene.aabbValue', { count: num(s.metadataAabbCount), ms: s.metadataAabbMs }) : '--'} />
+          <StatRow label={t('devtools.scene.hoverableRanges')} value={s ? num(s.hoverableRanges) : '--'} />
         </Box>
       </SettingsSection>
 
       {/* Optimization */}
-      <SettingsSection id="devtools-optimization" title="Optimization">
+      <SettingsSection id="devtools-optimization" title={t('devtools.optimization.section')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <PipelineRow
-            label="Materials"
-            before={s ? s.materialsOriginal.toLocaleString() : '--'}
+            label={t('devtools.optimization.materials')}
+            before={s ? num(s.materialsOriginal) : '--'}
             after={s ? String(s.materialsDeduped) : '--'}
           />
           <StatRow
-            label="Uber Baked"
-            value={s ? `${s.uberBakedMeshCount.toLocaleString()} meshes` : '--'}
+            label={t('devtools.optimization.uberBaked')}
+            value={s ? t('devtools.optimization.meshCount', { count: num(s.uberBakedMeshCount) }) : '--'}
           />
           <PipelineRow
-            label="Geometry Dedup"
+            label={t('devtools.optimization.geometryDedup')}
             before={
               s
-                ? `${(s.uberSharedGeometryReuses + s.uberClonedGeometryCount).toLocaleString()} candidates`
+                ? t('devtools.optimization.candidates', { count: num(s.uberSharedGeometryReuses + s.uberClonedGeometryCount) })
                 : '--'
             }
             after={
               s
-                ? `${s.uberSharedGeometryReuses.toLocaleString()} shared / ${s.uberClonedGeometryCount.toLocaleString()} cloned`
+                ? t('devtools.optimization.sharedCloned', { shared: num(s.uberSharedGeometryReuses), cloned: num(s.uberClonedGeometryCount) })
                 : '--'
             }
           />
           <PipelineRow
-            label="Static Batch"
-            before={s ? s.staticMergeIn.toLocaleString() : '--'}
-            after={s ? `${s.staticMergeOut} batch` : '--'}
+            label={t('devtools.optimization.staticBatch')}
+            before={s ? num(s.staticMergeIn) : '--'}
+            after={s ? t('devtools.optimization.batch', { count: s.staticMergeOut }) : '--'}
           />
           <PipelineRow
-            label="Textured Batch"
-            before={s ? s.texBatchIn.toLocaleString() : '--'}
-            after={s ? `${s.texBatchOut} batches` : '--'}
+            label={t('devtools.optimization.texturedBatch')}
+            before={s ? num(s.texBatchIn) : '--'}
+            after={s ? t('devtools.optimization.batches', { count: s.texBatchOut }) : '--'}
           />
           <StatRow
-            label="Arena"
-            value={s ? `${s.batchUniqueGeometries.toLocaleString()} geoms / ${s.batchArenaVertices.toLocaleString()} verts` : '--'}
+            label={t('devtools.optimization.arena')}
+            value={s ? t('devtools.optimization.arenaValue', { geoms: num(s.batchUniqueGeometries), verts: num(s.batchArenaVertices) }) : '--'}
           />
           <PipelineRow
-            label="Kinematic Batch"
-            before={s ? `${s.kinMergeIn.toLocaleString()} (${s.kinMergeGroups} drives)` : '--'}
-            after={s ? `${s.kinMergeOut} batches` : '--'}
+            label={t('devtools.optimization.kinematicBatch')}
+            before={s ? t('devtools.optimization.kinematicIn', { count: num(s.kinMergeIn), drives: s.kinMergeGroups }) : '--'}
+            after={s ? t('devtools.optimization.batches', { count: s.kinMergeOut }) : '--'}
           />
         </Box>
       </SettingsSection>
 
       {/* Rendering */}
-      <SettingsSection id="devtools-rendering" title="Rendering">
+      <SettingsSection id="devtools-rendering" title={t('devtools.rendering.section')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="FPS" value={s ? String(s.fps) : '--'} />
-          <StatRow label="Frame" value={s ? `${s.frameTime} ms` : '--'} />
-          <StatRow label="Draw Calls" value={s ? String(s.drawCalls) : '--'} />
-          <StatRow label="Geometries" value={s ? String(s.geometries) : '--'} />
-          <StatRow label="Textures" value={s ? String(s.textures) : '--'} />
-          <StatRow label="Programs" value={s ? String(s.programs) : '--'} />
-          <StatRow label="JS Heap" value={s ? `${s.heapMB} MB` : '--'} />
-          <StatRow label="Renderer" value={s?.renderer ?? '--'} />
+          <StatRow label={t('devtools.rendering.fps')} value={s ? String(s.fps) : '--'} />
+          <StatRow label={t('devtools.rendering.frame')} value={s ? t('devtools.rendering.ms', { value: s.frameTime }) : '--'} />
+          <StatRow label={t('devtools.rendering.drawCalls')} value={s ? String(s.drawCalls) : '--'} />
+          <StatRow label={t('devtools.rendering.geometries')} value={s ? String(s.geometries) : '--'} />
+          <StatRow label={t('devtools.rendering.textures')} value={s ? String(s.textures) : '--'} />
+          <StatRow label={t('devtools.rendering.programs')} value={s ? String(s.programs) : '--'} />
+          <StatRow label={t('devtools.rendering.jsHeap')} value={s ? t('devtools.rendering.mb', { value: s.heapMB }) : '--'} />
+          <StatRow label={t('devtools.rendering.renderer')} value={s?.renderer ?? '--'} />
         </Box>
       </SettingsSection>
 
       {/* Picking & Highlight — pick-path timings (EMA over ~10 picks, "last" = raw sample) */}
-      <SettingsSection id="devtools-picking" title="Picking & Highlight">
+      <SettingsSection id="devtools-picking" title={t('devtools.picking.section')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="Raycast" value={s ? `${s.pickRaycastMs} ms (last ${s.pickRaycastLast})` : '--'} />
-          <StatRow label="· Static BVH" value={s ? `${s.pickStaticMs} ms` : '--'} />
-          <StatRow label="· Drive BVHs" value={s ? `${s.pickKinematicMs} ms` : '--'} />
-          <StatRow label="· MU / Aux" value={s ? `${s.pickOtherMs} ms` : '--'} />
-          <StatRow label="Resolve" value={s ? `${s.pickResolveMs} ms` : '--'} />
-          <StatRow label="Highlight Apply" value={s ? `${s.pickHighlightMs} ms (last ${s.pickHighlightLast})` : '--'} />
-          <StatRow label="Strategy" value={s?.pickStrategy ?? '--'} />
+          <StatRow label={t('devtools.picking.raycast')} value={s ? t('devtools.picking.msWithLast', { value: s.pickRaycastMs, last: s.pickRaycastLast }) : '--'} />
+          <StatRow label={t('devtools.picking.staticBvh')} value={s ? t('devtools.rendering.ms', { value: s.pickStaticMs }) : '--'} />
+          <StatRow label={t('devtools.picking.driveBvhs')} value={s ? t('devtools.rendering.ms', { value: s.pickKinematicMs }) : '--'} />
+          <StatRow label={t('devtools.picking.muAux')} value={s ? t('devtools.rendering.ms', { value: s.pickOtherMs }) : '--'} />
+          <StatRow label={t('devtools.picking.resolve')} value={s ? t('devtools.rendering.ms', { value: s.pickResolveMs }) : '--'} />
+          <StatRow label={t('devtools.picking.highlightApply')} value={s ? t('devtools.picking.msWithLast', { value: s.pickHighlightMs, last: s.pickHighlightLast }) : '--'} />
           <StatRow
-            label="BVH"
-            value={s ? (s.pickBvhPending > 0 ? `${s.pickBvhPending} pending (native fallback)` : 'ready') : '--'}
+            label={t('devtools.picking.strategy')}
+            // An unmapped id is a NEW strategy, not a missing translation: show
+            // the id rather than inventing a key the catalog cannot have.
+            value={s ? (PICK_STRATEGY_KEY[s.pickStrategy] ? t(PICK_STRATEGY_KEY[s.pickStrategy]) : s.pickStrategy) : '--'}
+          />
+          <StatRow
+            label={t('devtools.picking.bvh')}
+            value={s
+              ? (s.pickBvhPending > 0
+                ? t('devtools.picking.bvhPending', { count: s.pickBvhPending })
+                : t('devtools.picking.bvhReady'))
+              : '--'}
             color={s ? (s.pickBvhPending > 0 ? '#ffa726' : '#66bb6a') : undefined}
           />
-          <StatRow label="Picks / Hits" value={s ? `${s.pickCount.toLocaleString()} / ${s.pickHits.toLocaleString()}` : '--'} />
-          <StatRow label="Overlay Objects" value={s ? String(s.pickOverlayObjects) : '--'} />
+          <StatRow label={t('devtools.picking.picksHits')} value={s ? t('devtools.picking.picksHitsValue', { picks: num(s.pickCount), hits: num(s.pickHits) }) : '--'} />
+          <StatRow label={t('devtools.picking.overlayObjects')} value={s ? String(s.pickOverlayObjects) : '--'} />
         </Box>
       </SettingsSection>
 
       {/* GPU */}
-      <SettingsSection id="devtools-gpu" title="GPU">
+      <SettingsSection id="devtools-gpu" title={t('devtools.gpu.section')}>
         <Box sx={{ display: 'flex' }}>
           {s && <GPUTierBadge tier={s.gpuTier} severity={s.gpuSeverity} />}
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="Backend" value={s?.renderer ?? '--'} />
-          <StatRow label="Active" value={s?.gpuActive ?? '--'} />
-          {s?.gpuArchitecture && <StatRow label="Architecture" value={s.gpuArchitecture} />}
-          {s?.gpuHighPerf && <StatRow label="High-perf" value={s.gpuHighPerf} />}
-          {s?.gpuLowPower && <StatRow label="Low-power" value={s.gpuLowPower} />}
+          <StatRow label={t('devtools.gpu.backend')} value={s?.renderer ?? '--'} />
+          <StatRow label={t('devtools.gpu.active')} value={s?.gpuActive ?? '--'} />
+          {s?.gpuArchitecture && <StatRow label={t('devtools.gpu.architecture')} value={s.gpuArchitecture} />}
+          {s?.gpuHighPerf && <StatRow label={t('devtools.gpu.highPerf')} value={s.gpuHighPerf} />}
+          {s?.gpuLowPower && <StatRow label={t('devtools.gpu.lowPower')} value={s.gpuLowPower} />}
         </Box>
         {s?.gpuMessage && (
           <GPUDiagnosisCallout severity={s.gpuSeverity} message={s.gpuMessage} action={s.gpuAction} />
@@ -569,21 +584,21 @@ export function DevToolsTab() {
       </SettingsSection>
 
       {/* Performance Budget */}
-      <SettingsSection id="devtools-performance-budget" title="Performance Budget">
+      <SettingsSection id="devtools-performance-budget" title={t('devtools.budget.section')}>
         <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
           {s && <>
-            <BudgetRow label="Triangles" {...budgetPct(s.triangles, PERF_BUDGETS.triangles)} />
-            <BudgetRow label="Draw Calls" {...budgetPct(s.drawCalls, PERF_BUDGETS.drawCalls)} />
-            <BudgetRow label="Frame Time" {...budgetPct(s.frameTime, PERF_BUDGETS.frameTime)} />
-            <BudgetRow label="Textures" {...budgetPct(s.textures, PERF_BUDGETS.textures)} />
-            <BudgetRow label="Geometries" {...budgetPct(s.geometries, PERF_BUDGETS.geometries)} />
-            <BudgetRow label="JS Heap" {...budgetPct(heapNum, PERF_BUDGETS.heapMB)} />
+            <BudgetRow label={t('devtools.budget.triangles')} {...budgetPct(s.triangles, PERF_BUDGETS.triangles)} />
+            <BudgetRow label={t('devtools.budget.drawCalls')} {...budgetPct(s.drawCalls, PERF_BUDGETS.drawCalls)} />
+            <BudgetRow label={t('devtools.budget.frameTime')} {...budgetPct(s.frameTime, PERF_BUDGETS.frameTime)} />
+            <BudgetRow label={t('devtools.budget.textures')} {...budgetPct(s.textures, PERF_BUDGETS.textures)} />
+            <BudgetRow label={t('devtools.budget.geometries')} {...budgetPct(s.geometries, PERF_BUDGETS.geometries)} />
+            <BudgetRow label={t('devtools.budget.jsHeap')} {...budgetPct(heapNum, PERF_BUDGETS.heapMB)} />
           </>}
         </Box>
       </SettingsSection>
 
       {/* GPU Benchmark */}
-      <SettingsSection id="devtools-gpu-benchmark" title="GPU Benchmark">
+      <SettingsSection id="devtools-gpu-benchmark" title={t('devtools.benchmark.section')}>
         <Box>
           <Button
             variant="outlined"
@@ -593,21 +608,21 @@ export function DevToolsTab() {
             startIcon={benchRunning ? <CircularProgress size={12} /> : <PlayArrow sx={{ fontSize: 14 }} />}
             sx={{ fontSize: 11, textTransform: 'none', borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)' }}
           >
-            {benchRunning ? 'Running...' : 'Run Benchmark (120 frames)'}
+            {benchRunning ? t('devtools.benchmark.running') : t('devtools.benchmark.run')}
           </Button>
           {benchResult && (
             <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <StatRow label="Uncapped FPS" value={String(benchResult.uncappedFps)} color="#4fc3f7" />
-              <StatRow label="Avg Frame" value={`${benchResult.avgFrameMs} ms`} />
+              <StatRow label={t('devtools.benchmark.uncappedFps')} value={String(benchResult.uncappedFps)} color="#4fc3f7" />
+              <StatRow label={t('devtools.benchmark.avgFrame')} value={t('devtools.rendering.ms', { value: benchResult.avgFrameMs })} />
               <StatRow
-                label="Headroom"
+                label={t('devtools.benchmark.headroom')}
                 value={`${benchResult.headroom}%`}
                 color={benchResult.headroom > 200 ? '#66bb6a' : benchResult.headroom > 120 ? '#ffa726' : '#ef5350'}
               />
               <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', mt: 0.5 }}>
-                {benchResult.headroom > 200 ? 'Plenty of GPU headroom' :
-                 benchResult.headroom > 120 ? 'Moderate headroom — watch complexity' :
-                 'Near GPU limit — optimize scene'}
+                {benchResult.headroom > 200 ? t('devtools.benchmark.plenty') :
+                 benchResult.headroom > 120 ? t('devtools.benchmark.moderate') :
+                 t('devtools.benchmark.near')}
               </Typography>
             </Box>
           )}
@@ -615,7 +630,7 @@ export function DevToolsTab() {
       </SettingsSection>
 
       {/* Library Cache */}
-      <SettingsSection id="devtools-library-cache" title="Library Cache">
+      <SettingsSection id="devtools-library-cache" title={t('devtools.libraryCache.section')}>
         <Box>
           <Button
             variant="outlined"
@@ -625,11 +640,10 @@ export function DevToolsTab() {
             startIcon={clearingCache ? <CircularProgress size={12} /> : <CleaningServices sx={{ fontSize: 14 }} />}
             sx={{ fontSize: 11, textTransform: 'none', borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)' }}
           >
-            {clearingCache ? 'Clearing...' : 'Clear Library Cache'}
+            {clearingCache ? t('devtools.libraryCache.clearing') : t('devtools.libraryCache.clear')}
           </Button>
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', mt: 0.75 }}>
-            Wipes the cached library GLB bytes and snap index, then reloads. Use after swapping
-            library .glb files on disk (same filename) so the new assets are re-fetched.
+            {t('devtools.libraryCache.hint')}
           </Typography>
         </Box>
       </SettingsSection>

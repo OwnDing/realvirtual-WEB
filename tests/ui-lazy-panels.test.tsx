@@ -245,7 +245,10 @@ describe('lazy panels — the gating pattern is the one the plan requires', () =
       expect(settingsPanelSource).toMatch(new RegExp(`const ${tab} = lazy\\(\\(\\) => import\\('\\./settings/`));
     }
     expect(settingsPanelSource).toMatch(/settingsTab === 1 && !isTabLocked\('visual'\) && <VisualTab \/>/);
-    expect(settingsPanelSource).toContain('<LazyPanelBoundary label="Settings tab">');
+    // The boundary label went through the catalog with the rest of the panel
+    // (EP-I18N-001 batch 2); what this case is really asserting is that ONE
+    // boundary still wraps the tab bodies, so match the element, not the copy.
+    expect(settingsPanelSource).toMatch(/<LazyPanelBoundary label=\{t\('tab\.content'\)\}>/);
   });
 });
 

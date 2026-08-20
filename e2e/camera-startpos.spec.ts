@@ -5,8 +5,9 @@ import { test, expect } from '@playwright/test';
 import { pinLocale } from './helpers/pin-locale';
 
 test('save and restore camera start position across reload', async ({ page }) => {
-  // English is pinned rather than inherited: this spec asserts on English UI
-  // text that has not been migrated yet, while the product default is Chinese.
+  // English is pinned rather than inherited: the Settings panel this spec drives
+  // is migrated (batch 2) and the product default is Chinese, so the pin is what
+  // makes the English assertions below mean anything.
   await pinLocale(page, 'en-US');
   await page.goto('/?model=DemoRealvirtualWeb.glb');
   await page.waitForSelector('canvas');
@@ -34,8 +35,9 @@ test('save and restore camera start position across reload', async ({ page }) =>
 });
 
 test('Start View tab appears in Settings (EDIT 3)', async ({ page }) => {
-  // English is pinned rather than inherited: this spec asserts on English UI
-  // text that has not been migrated yet, while the product default is Chinese.
+  // English is pinned rather than inherited: the Settings panel this spec drives
+  // is migrated (batch 2) and the product default is Chinese, so the pin is what
+  // makes the English assertions below mean anything.
   await pinLocale(page, 'en-US');
   await page.goto('/?model=DemoRealvirtualWeb.glb');
   await page.waitForSelector('canvas');

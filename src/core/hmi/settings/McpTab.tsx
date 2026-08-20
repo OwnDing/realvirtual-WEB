@@ -9,6 +9,8 @@ import type { McpBridgePluginAPI } from '../../types/plugin-types';
 import { StatRow, SettingsSection, FieldRow } from './settings-helpers';
 import { ConnectDownloadLinks } from '../ConnectPanel';
 import { RagStatusSection } from './RagStatusSection';
+import { useRvTranslation } from '../../i18n';
+import { Trans } from 'react-i18next';
 
 /** The default transport: realvirtual CONNECT hosts the MCP endpoint itself, so any
  *  MCP client registers ONE http entry and needs neither Node nor Vite (plan-327 AP5). */
@@ -27,6 +29,7 @@ const BUILD_CMD = 'cd Assets/realvirtual-WebViewer~/mcp-bridge\nnpm run setup';
 
 /** Monospace block with a copy-to-clipboard button. */
 function CodeBlock({ text }: { text: string }) {
+  const { t } = useRvTranslation('settings');
   const [copied, setCopied] = useState(false);
   const copy = () => {
     void navigator.clipboard?.writeText(text).then(() => {
@@ -44,9 +47,18 @@ function CodeBlock({ text }: { text: string }) {
       </Typography>
       <Button size="small" variant="text" onClick={copy}
         sx={{ position: 'absolute', top: 2, right: 2, minWidth: 0, px: 0.75, textTransform: 'none', fontSize: 10 }}>
-        {copied ? '✓' : 'Copy'}
+        {copied ? '✓' : t('ai.copy')}
       </Button>
     </Box>
+  );
+}
+
+/** The caption styling every setup-step body shares. */
+function StepText({ children }: { children: ReactNode }) {
+  return (
+    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
+      {children}
+    </Typography>
   );
 }
 
@@ -63,6 +75,7 @@ function SetupStep({ n, title, children }: { n: number; title: string; children:
 }
 
 export function McpTab() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const mcp = useMcpBridge();
   const log = useMcpBridgeLog();
@@ -78,10 +91,10 @@ export function McpTab() {
     : mcp.enabled ? '#ef5350'
     : 'rgba(255,255,255,0.5)';
 
-  const stateLabel = mcp.connected ? 'Connected'
-    : mcp.reconnectAttempt > 0 ? `Reconnecting (${mcp.reconnectAttempt})...`
-    : mcp.enabled ? 'Disconnected'
-    : 'Disabled';
+  const stateLabel = mcp.connected ? t('ai.connected')
+    : mcp.reconnectAttempt > 0 ? t('ai.reconnecting', { attempt: mcp.reconnectAttempt })
+    : mcp.enabled ? t('ai.disconnected')
+    : t('ai.disabled');
 
   // Full-chain status: the bridge server pushes who's attached (which Claude)
   // and when it was last active. Both CONNECT and the Node bridge send this frame;
@@ -89,16 +102,16 @@ export function McpTab() {
   const ss = mcp.serverStatus;
   const aiConnected = !!ss?.clientConnected;
   const aiColor = aiConnected ? '#66bb6a' : '#ef5350';
-  const aiLabel = aiConnected ? (ss?.clientName ?? 'connected') : 'no AI client';
+  const aiLabel = aiConnected ? (ss?.clientName ?? t('ai.clientAttached')) : t('ai.noClient');
 
   const fmtAgo = (ms: number | null | undefined): string => {
-    if (ms == null) return 'idle';
-    if (ms < 1500) return 'just now';
+    if (ms == null) return t('ai.idle');
+    if (ms < 1500) return t('ai.justNow');
     const s = Math.round(ms / 1000);
-    if (s < 60) return `${s}s ago`;
+    if (s < 60) return t('ai.secondsAgo', { count: s });
     const m = Math.round(s / 60);
-    if (m < 60) return `${m}m ago`;
-    return `${Math.round(m / 60)}h ago`;
+    if (m < 60) return t('ai.minutesAgo', { count: m });
+    return t('ai.hoursAgo', { count: Math.round(m / 60) });
   };
   const fmtUptime = (ms: number | undefined): string => {
     if (ms == null) return '?';
@@ -108,7 +121,9 @@ export function McpTab() {
     if (m < 60) return `${m}m`;
     return `${Math.floor(m / 60)}h ${m % 60}m`;
   };
-  const bridgeLabel = ss ? `pid ${ss.pid} · :${ss.port} · up ${fmtUptime(ss.uptimeMs)}` : '—';
+  const bridgeLabel = ss
+    ? t('ai.bridgeInfo', { pid: ss.pid, port: ss.port, uptime: fmtUptime(ss.uptimeMs) })
+    : '—';
 
   const validatePort = (val: string): boolean => {
     const n = Number(val);
@@ -140,9 +155,9 @@ export function McpTab() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <SettingsSection id="mcp-bridge" title="AI Bridge">
+      <SettingsSection id="mcp-bridge" title={t('ai.bridge')}>
         {/* Enable toggle */}
-        <FieldRow label="AI Bridge">
+        <FieldRow label={t('ai.bridge')}>
           <Switch size="small" checked={mcp.enabled}
             onChange={(_, v) => mcpPlugin?.setEnabled(v)} />
         </FieldRow>
@@ -152,16 +167,16 @@ export function McpTab() {
             live Claude is actually attached (and which one), so a connected
             browser on a host-less bridge no longer looks healthy. */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="Browser → Bridge" value={stateLabel} color={stateColor} />
+          <StatRow label={t('ai.browserToBridge')} value={stateLabel} color={stateColor} />
           {mcp.connected && ss && (
             <>
-              <StatRow label="AI client" value={aiLabel} color={aiColor} />
-              <StatRow label="Last AI activity" value={fmtAgo(ss.lastRequestAgoMs)} />
+              <StatRow label={t('ai.client')} value={aiLabel} color={aiColor} />
+              <StatRow label={t('ai.lastActivity')} value={fmtAgo(ss.lastRequestAgoMs)} />
             </>
           )}
-          <StatRow label="Tools" value={String(mcp.toolCount)} />
-          <StatRow label="Port" value={mcp.port} />
-          {mcp.connected && ss && <StatRow label="Bridge" value={bridgeLabel} />}
+          <StatRow label={t('ai.tools')} value={String(mcp.toolCount)} />
+          <StatRow label={t('ai.port')} value={mcp.port} />
+          {mcp.connected && ss && <StatRow label={t('ai.bridgeProcess')} value={bridgeLabel} />}
         </Box>
 
         {/* No transport picker. CONNECT is the MCP server: it hosts the endpoint and owns the web_*
@@ -171,7 +186,7 @@ export function McpTab() {
             plan-348, which has a precondition of its own. */}
 
         {/* Port config */}
-        <FieldRow label="Port">
+        <FieldRow label={t('ai.port')}>
           <TextField
             size="small"
             type="number"
@@ -180,7 +195,7 @@ export function McpTab() {
             onBlur={handlePortBlur}
             onKeyDown={handlePortKeyDown}
             error={portError}
-            helperText={portError ? '1-65535' : undefined}
+            helperText={portError ? t('ai.portError') : undefined}
             slotProps={{ htmlInput: { min: 1, max: 65535 } }}
             sx={{ width: 110, '& input': { fontFamily: 'monospace', fontSize: 13 } }}
           />
@@ -190,7 +205,7 @@ export function McpTab() {
         {mcp.enabled && !mcp.connected && (
           <Button size="small" variant="outlined" onClick={() => mcpPlugin?.reconnect()}
             sx={{ alignSelf: 'flex-start', textTransform: 'none' }}>
-            Retry Now
+            {t('ai.retryNow')}
           </Button>
         )}
 
@@ -199,11 +214,11 @@ export function McpTab() {
         {mcp.connected && (
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button size="small" variant="outlined" onClick={() => mcpPlugin?.pauseServer()}
-              sx={{ textTransform: 'none' }}>Pause</Button>
+              sx={{ textTransform: 'none' }}>{t('ai.pause')}</Button>
             <Button size="small" variant="outlined" onClick={() => mcpPlugin?.resumeServer()}
-              sx={{ textTransform: 'none' }}>Resume</Button>
+              sx={{ textTransform: 'none' }}>{t('ai.resume')}</Button>
             <Button size="small" variant="outlined" color="error" onClick={() => mcpPlugin?.shutdownServer()}
-              sx={{ textTransform: 'none' }}>Shutdown</Button>
+              sx={{ textTransform: 'none' }}>{t('ai.shutdown')}</Button>
           </Box>
         )}
       </SettingsSection>
@@ -214,39 +229,36 @@ export function McpTab() {
 
       {/* Setup helper — shown until the bridge is connected. */}
       {!mcp.connected && (
-        <SettingsSection id="mcp-setup" title="Setup — enable the AI Bridge">
+        <SettingsSection id="mcp-setup" title={t('ai.setup')}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
-            realvirtual CONNECT hosts the AI Bridge itself — no Node, no extra install.
+            {t('ai.setupIntro')}
           </Typography>
           {/* Dead end without a gateway: mobile reaches this tab directly and never
               sees the activity-bar download dialog, so the same affordance sits here. */}
           <ConnectDownloadLinks />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 0.5 }}>
-            <SetupStep n={1} title="Run CONNECT with the MCP server enabled">
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
-                Tray icon ▸ <b>MCP server ▸ Enabled</b> (takes effect after a CONNECT restart).
-              </Typography>
+            {/* Each body is ONE key with numbered slots for its <b>/<code> spans:
+                splitting them into JSX fragments would freeze English word order
+                into the catalog, and every one of these sentences puts the code
+                span mid-clause. */}
+            <SetupStep n={1} title={t('ai.step1')}>
+              <StepText><Trans ns="settings" i18nKey="ai.step1Body" components={[<b key="menu" />]} /></StepText>
             </SetupStep>
-            <SetupStep n={2} title="Register CONNECT with Claude Code">
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
-                Add this to your <code>.mcp.json</code>. Claude Desktop (classic) has no native
-                HTTP client — start it through <code>npx -y mcp-remote http://localhost:5100/mcp
-                --allow-http</code> instead.
-              </Typography>
+            <SetupStep n={2} title={t('ai.step2')}>
+              <StepText>
+                <Trans ns="settings" i18nKey="ai.step2Body" components={[<code key="file" />, <code key="cmd" />]} />
+              </StepText>
               <CodeBlock text={CONNECT_MCP_SNIPPET} />
             </SetupStep>
-            <SetupStep n={3} title="Restart Claude, then turn the AI Bridge on (toggle above)">
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
-                Leave the port at <code>5100</code> — that is CONNECT. Running against the Vite dev
-                server works too: open it with <code>?mcpPort=5100</code>, or just leave the
-                default.
-              </Typography>
+            <SetupStep n={3} title={t('ai.step3')}>
+              <StepText>
+                <Trans ns="settings" i18nKey="ai.step3Body" components={[<code key="port" />, <code key="query" />]} />
+              </StepText>
             </SetupStep>
-            <SetupStep n={4} title="Fallback only — the local Node bridge">
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
-                Use this if CONNECT is unavailable. Build it once, register it, then set the port
-                above to <code>18714</code> (Claude Desktop) or <code>18715</code> (Claude Code).
-              </Typography>
+            <SetupStep n={4} title={t('ai.step4')}>
+              <StepText>
+                <Trans ns="settings" i18nKey="ai.step4Body" components={[<code key="desktop" />, <code key="code" />]} />
+              </StepText>
               <CodeBlock text={BUILD_CMD} />
               <CodeBlock text={NODE_FALLBACK_SNIPPET} />
             </SetupStep>
@@ -256,7 +268,7 @@ export function McpTab() {
 
       {/* Tool list */}
       {mcp.toolNames.length > 0 && (
-        <SettingsSection id="mcp-tools" title={`Registered Tools (${mcp.toolNames.length})`}>
+        <SettingsSection id="mcp-tools" title={t('ai.registeredTools', { count: mcp.toolNames.length })}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, pl: 1 }}>
             {mcp.toolNames.map(name => (
               <Typography key={name} variant="caption"
@@ -270,7 +282,7 @@ export function McpTab() {
 
       {/* Server log — streamed from the bridge server over the WebSocket. */}
       {log.length > 0 && (
-        <SettingsSection id="mcp-server-log" title={`Server Log (${log.length})`}>
+        <SettingsSection id="mcp-server-log" title={t('ai.serverLog', { count: log.length })}>
           <Box sx={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0.1, pl: 0.5 }}>
             {log.slice(-100).map((line, i) => (
               <Typography key={i} variant="caption"

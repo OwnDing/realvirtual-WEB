@@ -28,6 +28,7 @@
 
 import { useCallback, useState } from 'react';
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
+import { Trans } from 'react-i18next';
 import { DriveFileMove } from '@mui/icons-material';
 import { SettingsSection } from './settings-helpers';
 import { getWorkFolder, isSupported as isFsApiSupported } from '../../engine/rv-local-filesystem';
@@ -36,14 +37,25 @@ import {
   type MigrationProgress,
   type MigrationReport,
 } from '../../project/rv-workfolder-migration';
+import { useRvTranslation } from '../../i18n';
 
+/**
+ * `error` carries either a catalog key or a message the browser produced.
+ *
+ * Keeping the two apart matters: a stored English sentence would still be
+ * English after the user switches language, because nothing re-runs the
+ * migration to rebuild it. A key is re-resolved on every render; a
+ * `DOMException` message is not ours to translate.
+ */
 type Phase =
   | { kind: 'idle' }
   | { kind: 'running'; progress: MigrationProgress }
   | { kind: 'done'; report: MigrationReport }
-  | { kind: 'error'; message: string; retryable: boolean };
+  | { kind: 'error'; messageKey: 'workfolder.noFolder' | 'workfolder.permissionLost'; retryable: boolean }
+  | { kind: 'error'; messageText: string; retryable: boolean };
 
 export function WorkfolderMigrationSection() {
+  const { t } = useRvTranslation('settings');
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
 
   const run = useCallback(() => {
@@ -54,11 +66,7 @@ export function WorkfolderMigrationSection() {
       try {
         const source = await getWorkFolder(true);
         if (!source) {
-          setPhase({
-            kind: 'error',
-            message: 'No working folder is remembered, or access to it was refused.',
-            retryable: true,
-          });
+          setPhase({ kind: 'error', messageKey: 'workfolder.noFolder', retryable: true });
           return;
         }
         const report = await migrateWorkfolderIntoProject({
@@ -66,19 +74,14 @@ export function WorkfolderMigrationSection() {
           onProgress: (progress) => setPhase({ kind: 'running', progress }),
         });
         if (report.permissionDenied) {
-          setPhase({
-            kind: 'error',
-            message: 'The browser withdrew access to the folder part-way through. '
-              + 'Nothing was lost — press the button again to continue where it stopped.',
-            retryable: true,
-          });
+          setPhase({ kind: 'error', messageKey: 'workfolder.permissionLost', retryable: true });
           return;
         }
         setPhase({ kind: 'done', report });
       } catch (e) {
         setPhase({
           kind: 'error',
-          message: e instanceof Error ? e.message : String(e),
+          messageText: e instanceof Error ? e.message : String(e),
           retryable: true,
         });
       }
@@ -95,14 +98,12 @@ export function WorkfolderMigrationSection() {
     : 0;
 
   return (
-    <SettingsSection id="model-workfolder-migration" title="Old Working Folder" defaultExpanded={false}>
+    <SettingsSection id="model-workfolder-migration" title={t('workfolder.title')} defaultExpanded={false}>
       <Box>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontSize: 10 }}>
-          Earlier versions kept assets, knowledge files and captures in a working folder on this
-          computer. Everything lives in the project now. This copies the whole old folder into the
-          open project — libraries, thumbnails, knowledge and all. It is safe to run more than once:
-          files already brought over are skipped, and <strong>nothing in the old folder is changed
-          or deleted</strong>.
+          {/* One key, not two fragments around a <strong>: the emphasis sits mid-sentence
+              and a translator has to be able to move it. */}
+          <Trans ns="settings" i18nKey="workfolder.intro" components={[<strong key="untouched" />]} />
         </Typography>
 
         <Button
@@ -114,7 +115,7 @@ export function WorkfolderMigrationSection() {
           onClick={run}
           sx={{ fontSize: 11, textTransform: 'none' }}
         >
-          {running ? 'Copying…' : 'Copy into this project'}
+          {running ? t('workfolder.copying') : t('workfolder.copy')}
         </Button>
 
         {running && (
@@ -138,30 +139,36 @@ export function WorkfolderMigrationSection() {
 
         {phase.kind === 'error' && (
           <Typography variant="caption" sx={{ color: 'warning.main', display: 'block', mt: 0.75, fontSize: 10 }}>
-            {phase.message}
+            {'messageKey' in phase ? t(phase.messageKey) : phase.messageText}
           </Typography>
         )}
 
         {phase.kind === 'done' && (
           <Box sx={{ mt: 0.75 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: 10 }}>
-              {phase.report.copied} copied, {phase.report.skipped} already present
-              {phase.report.incomplete ? ' — stopped early, run it again to continue' : ''}.
-              “{phase.report.sourceName}” was left untouched; delete it yourself once you are happy.
+              {t('workfolder.done', {
+                copied: phase.report.copied,
+                skipped: phase.report.skipped,
+                tail: phase.report.incomplete ? t('workfolder.doneTail') : '',
+                name: phase.report.sourceName,
+              })}
             </Typography>
             {phase.report.conflicts.length > 0 && (
               <Typography variant="caption" sx={{ color: 'warning.main', display: 'block', mt: 0.5, fontSize: 10 }}>
-                {phase.report.conflicts.length} file(s) already existed here with different content
-                and were copied alongside instead of replacing anything:{' '}
-                {phase.report.conflicts.slice(0, 5).map(c => c.savedAs).join(', ')}
-                {phase.report.conflicts.length > 5 ? ', …' : ''}
+                {t('workfolder.conflicts', {
+                  count: phase.report.conflicts.length,
+                  files: phase.report.conflicts.slice(0, 5).map(c => c.savedAs).join(', ')
+                    + (phase.report.conflicts.length > 5 ? ', …' : ''),
+                })}
               </Typography>
             )}
             {phase.report.failures.length > 0 && (
               <Typography variant="caption" sx={{ color: 'error.main', display: 'block', mt: 0.5, fontSize: 10 }}>
-                {phase.report.failures.length} file(s) could not be copied:{' '}
-                {phase.report.failures.slice(0, 3).map(f => `${f.relPath} (${f.error})`).join('; ')}
-                {phase.report.failures.length > 3 ? ', …' : ''}
+                {t('workfolder.failures', {
+                  count: phase.report.failures.length,
+                  files: phase.report.failures.slice(0, 3).map(f => `${f.relPath} (${f.error})`).join('; ')
+                    + (phase.report.failures.length > 3 ? ', …' : ''),
+                })}
               </Typography>
             )}
           </Box>

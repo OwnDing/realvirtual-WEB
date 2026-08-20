@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import type { ConnectSnapshot, RagStatus } from '../src/core/hmi/connect-store';
 
@@ -16,6 +16,18 @@ vi.mock('../src/core/hmi/connect-store', () => ({
 
 // Imported AFTER the mock so it binds the mocked store.
 import { RagStatusSection } from '../src/core/hmi/settings/RagStatusSection';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the copy asserted below renders in Chinese
+ * unless this file says which language it is testing. Pinning keeps these
+ * assertions about BEHAVIOUR rather than about whatever the default happens to
+ * be on the day.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 function snap(state: ConnectSnapshot['state'], rag?: RagStatus): ConnectSnapshot {
   return {

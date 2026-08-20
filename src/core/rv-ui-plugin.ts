@@ -49,8 +49,16 @@ export interface UISlotEntry {
   component: ComponentType<UISlotProps>;
   /** Sort order within the slot (lower = further left/top). Default: 100. */
   order?: number;
-  /** For settings-tab: tab label text. */
-  label?: string;
+  /**
+   * For settings-tab: tab label text.
+   *
+   * A plain string still works and is still the common case (ADR-0001 §9 keeps
+   * that contract). The function form exists so a label can be RE-resolved on
+   * `languageChanged` instead of being frozen at registration time — a slot is
+   * registered once, at plugin construction, which is long before the user
+   * picks a language. Callers must resolve it during render, not on register.
+   */
+  label?: string | (() => string);
   /** Optional visibility element ID for context-aware hiding. */
   visibilityId?: string;
   /** Optional visibility rule — when provided, the entry is hidden/shown per active contexts.

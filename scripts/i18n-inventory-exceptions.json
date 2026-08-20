@@ -30,6 +30,30 @@
       "category": "plugin-registry",
       "match": "SEW KA47-DRN90M4",
       "reason": "SEW gearmotor type designation from the bundled AASX digital nameplate — a device model number that must match the asset, so translating it would break the link to the datasheet."
+    },
+    {
+      "file": "src/core/hmi/SettingsPanel.tsx",
+      "category": "react-copy",
+      "match": "realvirtual WEB",
+      "reason": "Product name in the version footer. Translating a brand would make the build string unsearchable in support threads and release notes; the surrounding tooltip IS translated (settings:version.title)."
+    },
+    {
+      "file": "src/core/hmi/settings/VisualTab.tsx",
+      "category": "react-copy",
+      "match": "Language / 语言",
+      "reason": "Deliberately bilingual, for the same reason the locale list uses endonyms (LanguageSection.tsx): whoever needs this control cannot read the language the UI is currently in. Routing it through the catalog would render it in one language only — and would put CJK in en-US, which tests/i18n-catalog.node.test.ts rejects."
+    },
+    {
+      "file": "src/core/hmi/settings/InterfacesTab.tsx",
+      "category": "react-copy",
+      "match": "Conveyor.Start",
+      "reason": "Sample signal path shown as a preview of each chip variant. PS-I18N-001 §2 / ADR-0001 §6 keep signal names untranslated, so a translated example would show a form no PLC ever emits."
+    },
+    {
+      "file": "src/core/hmi/settings/MultiuserTab.tsx",
+      "category": "react-copy",
+      "match": "Browser",
+      "reason": "Placeholder mirroring MULTIUSER_DEFAULTS.displayName ('Browser' in multiuser-settings-store.ts). It has to match the value that is actually sent to peers, so translating it would advertise a name the session never uses."
     }
   ]
 }

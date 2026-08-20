@@ -16,8 +16,10 @@ import {
 } from '../group-visibility-store';
 import type { GroupInfo } from '../../engine/rv-group-registry';
 import { SettingsSection } from './settings-helpers';
+import { useRvTranslation } from '../../i18n';
 
 export function GroupsTab() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const settingsRef = useRef(loadGroupVisibilitySettings());
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -66,7 +68,7 @@ export function GroupsTab() {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          No model loaded — load a model to see available groups.
+          {t('groups.noModel')}
         </Typography>
       </Box>
     );
@@ -75,9 +77,9 @@ export function GroupsTab() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Default Visibility */}
-      <SettingsSection id="groups-default-visibility" title="Default Visibility">
+      <SettingsSection id="groups-default-visibility" title={t('groups.defaultVisibility')}>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: 10 }}>
-          Groups hidden when model loads
+          {t('groups.defaultVisibilityHint')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {groups.map(g => (
@@ -95,7 +97,7 @@ export function GroupsTab() {
                 <Typography variant="body2" sx={{ fontSize: 12 }}>
                   {g.name}
                   <Typography component="span" sx={{ color: 'text.secondary', fontSize: 10, ml: 0.5 }}>
-                    ({g.nodes.length} object{g.nodes.length !== 1 ? 's' : ''})
+                    {t('groups.objectCount', { count: g.nodes.length })}
                   </Typography>
                 </Typography>
               }
@@ -106,9 +108,9 @@ export function GroupsTab() {
       </SettingsSection>
 
       {/* Excluded from Overlay */}
-      <SettingsSection id="groups-excluded-from-overlay" title="Excluded from Overlay">
+      <SettingsSection id="groups-excluded-from-overlay" title={t('groups.excluded')}>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: 10 }}>
-          Groups not shown in Groups panel
+          {t('groups.excludedHint')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {groups.map(g => (

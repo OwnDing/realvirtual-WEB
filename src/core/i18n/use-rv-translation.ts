@@ -15,7 +15,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_LOCALE, type RVLocale } from './rv-locale';
-import { probeLookup, setLocale, type RVNamespace, type RVTranslationKey } from './rv-i18n';
+import { getI18n, probeLookup, setLocale, type RVNamespace, type RVTranslationKey } from './rv-i18n';
 
 
 export interface RvTranslation<N extends RVNamespace> {
@@ -28,6 +28,12 @@ export interface RvTranslation<N extends RVNamespace> {
 }
 
 export function useRvTranslation<N extends RVNamespace>(namespace: N): RvTranslation<N> {
+  // Idempotent, and the same guard `rvT` already runs. `main.ts` initialises
+  // before React mounts, so in the product this is a no-op — but a component
+  // test that renders a migrated panel without booting the app would otherwise
+  // get react-i18next's uninitialised `t`, which returns every key as its own
+  // text. That failure reads like a missing translation and is not one.
+  getI18n();
   const { t, i18n } = useTranslation(namespace);
   const locale = (i18n.resolvedLanguage as RVLocale) ?? DEFAULT_LOCALE;
 
@@ -40,7 +46,7 @@ export function useRvTranslation<N extends RVNamespace>(namespace: N): RvTransla
   return useMemo(() => ({
     t: (key: RVTranslationKey<N>, options?: Record<string, unknown>): string => {
       // See rv-i18n.ts: the strictness is in the signature, the cast is the bridge.
-      const missing = probeLookup(`${namespace}:${String(key)}`, locale);
+      const missing = probeLookup(`${namespace}:${String(key)}`, locale, options);
       if (missing !== null) return missing;
       return t(key as never, options as never) as unknown as string;
     },

@@ -9,17 +9,26 @@ import { InterfaceManager } from '../../../interfaces/interface-manager';
 import { StatRow, tfSx, SettingsSection, FieldRow } from './settings-helpers';
 import { connectionStateColor } from '../isa-colors';
 import { useSignalDisplaySettings, setChipVariant, setTooltipField, type SignalChipVariant } from '../signal-display-store';
+import { useRvTranslation, type RVTranslationKey } from '../../i18n';
 
-const INTERFACE_OPTIONS: { value: InterfaceType; label: string; available: boolean }[] = [
-  { value: 'none', label: 'None', available: true },
-  { value: 'websocket-realtime', label: 'WebSocket Realtime', available: true },
-  { value: 'ctrlx', label: 'ctrlX (Bosch Rexroth)', available: true },
-  { value: 'twincat-hmi', label: 'TwinCAT HMI (Beckhoff)', available: true },
-  { value: 'mqtt', label: 'MQTT', available: true },
-  { value: 'keba', label: 'KEBA', available: false },
+/** The protocol list. `labelKey` rather than `label`: this table is module-level,
+ *  so a resolved string here would be frozen at import time — before any language
+ *  preference exists (ADR-0001 §9). */
+const INTERFACE_OPTIONS: {
+  value: InterfaceType;
+  labelKey: RVTranslationKey<'settings'>;
+  available: boolean;
+}[] = [
+  { value: 'none', labelKey: 'interfaces.option.none', available: true },
+  { value: 'websocket-realtime', labelKey: 'interfaces.option.wsRealtime', available: true },
+  { value: 'ctrlx', labelKey: 'interfaces.option.ctrlx', available: true },
+  { value: 'twincat-hmi', labelKey: 'interfaces.option.twincat', available: true },
+  { value: 'mqtt', labelKey: 'interfaces.option.mqtt', available: true },
+  { value: 'keba', labelKey: 'interfaces.option.keba', available: false },
 ];
 
 export function InterfacesTab() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const manager = viewer.getPlugin<InterfaceManager>('interface-manager');
   const [settings, setSettings] = useState<InterfaceSettings>(loadInterfaceSettings);
@@ -83,12 +92,13 @@ export function InterfacesTab() {
   };
 
   const stateColor = connectionStateColor(connectionState) ?? 'rgba(255,255,255,0.5)';
+  const activeProtocolKey = INTERFACE_OPTIONS.find(o => o.value === settings.activeType)?.labelKey;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Interface selector */}
-      <SettingsSection id="interfaces-protocol" title="Interface Protocol">
-        <FieldRow label="Protocol">
+      <SettingsSection id="interfaces-protocol" title={t('interfaces.protocolSection')}>
+        <FieldRow label={t('interfaces.protocol')}>
           <Select
             size="small"
             fullWidth
@@ -101,9 +111,9 @@ export function InterfacesTab() {
           >
             {INTERFACE_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value} disabled={!opt.available} sx={{ fontSize: 13 }}>
-                {opt.label}
+                {t(opt.labelKey)}
                 {!opt.available && (
-                  <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>coming soon</Typography>
+                  <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>{t('interfaces.comingSoon')}</Typography>
                 )}
               </MenuItem>
             ))}
@@ -113,8 +123,8 @@ export function InterfacesTab() {
 
       {/* WebSocket-based settings */}
       {showSettings && isWsBased && (
-        <SettingsSection id="interfaces-connection" title="Connection">
-          <FieldRow label="Address">
+        <SettingsSection id="interfaces-connection" title={t('interfaces.connection')}>
+          <FieldRow label={t('interfaces.address')}>
             <Box sx={{ display: 'flex', gap: 1, flex: 1, minWidth: 0 }}>
               <TextField
                 size="small"
@@ -129,12 +139,12 @@ export function InterfacesTab() {
                 type="number"
                 value={settings.wsPort}
                 onChange={(e) => persist({ wsPort: Number(e.target.value) || INTERFACE_DEFAULTS.wsPort })}
-                placeholder="Port"
+                placeholder={t('interfaces.port')}
                 sx={{ ...tfSx, width: 90, flexShrink: 0 }}
               />
             </Box>
           </FieldRow>
-          <FieldRow label="Path">
+          <FieldRow label={t('interfaces.path')}>
             <TextField
               size="small"
               fullWidth
@@ -144,18 +154,18 @@ export function InterfacesTab() {
               sx={tfSx}
             />
           </FieldRow>
-          <FieldRow label="Use SSL (wss://)">
+          <FieldRow label={t('interfaces.useSsl')}>
             <Switch size="small" checked={settings.wsUseSSL} onChange={(_, v) => persist({ wsUseSSL: v })} />
           </FieldRow>
           {(settings.wsUseSSL || settings.activeType === 'ctrlx' || settings.activeType === 'twincat-hmi') && (
-            <FieldRow label="Auth Token">
+            <FieldRow label={t('interfaces.authToken')}>
               <TextField
                 size="small"
                 fullWidth
                 type="password"
                 value={settings.wsAuthToken}
                 onChange={(e) => persist({ wsAuthToken: e.target.value })}
-                placeholder={settings.activeType === 'twincat-hmi' ? 'Session token (cid)' : 'Bearer token (ctrlX SSL)'}
+                placeholder={settings.activeType === 'twincat-hmi' ? t('interfaces.twincatToken') : t('interfaces.ctrlxToken')}
                 sx={tfSx}
               />
             </FieldRow>
@@ -165,8 +175,8 @@ export function InterfacesTab() {
 
       {/* MQTT settings */}
       {showSettings && isMqtt && (
-        <SettingsSection id="interfaces-mqtt" title="MQTT Broker">
-          <FieldRow label="Broker URL">
+        <SettingsSection id="interfaces-mqtt" title={t('interfaces.mqttBroker')}>
+          <FieldRow label={t('interfaces.brokerUrl')}>
             <TextField
               size="small"
               fullWidth
@@ -176,7 +186,7 @@ export function InterfacesTab() {
               sx={tfSx}
             />
           </FieldRow>
-          <FieldRow label="Username">
+          <FieldRow label={t('interfaces.username')}>
             <TextField
               size="small"
               fullWidth
@@ -185,7 +195,7 @@ export function InterfacesTab() {
               sx={tfSx}
             />
           </FieldRow>
-          <FieldRow label="Password">
+          <FieldRow label={t('interfaces.password')}>
             <TextField
               size="small"
               fullWidth
@@ -195,7 +205,7 @@ export function InterfacesTab() {
               sx={tfSx}
             />
           </FieldRow>
-          <FieldRow label="Topic Prefix">
+          <FieldRow label={t('interfaces.topicPrefix')}>
             <TextField
               size="small"
               fullWidth
@@ -210,8 +220,8 @@ export function InterfacesTab() {
 
       {/* Connection control — auto-connect toggle + connect/disconnect */}
       {showSettings && (
-        <SettingsSection id="interfaces-control" title="Connection Control">
-          <FieldRow label="Auto-Connect" hint="Connect automatically when a model is loaded">
+        <SettingsSection id="interfaces-control" title={t('interfaces.control')}>
+          <FieldRow label={t('interfaces.autoConnect')} hint={t('interfaces.autoConnectHint')}>
             <Switch size="small" checked={settings.autoConnect} onChange={(_, v) => persist({ autoConnect: v })} />
           </FieldRow>
 
@@ -224,7 +234,7 @@ export function InterfacesTab() {
                 onClick={handleDisconnect}
                 sx={{ fontSize: 11, textTransform: 'none' }}
               >
-                Disconnect
+                {t('interfaces.disconnect')}
               </Button>
             ) : (
               <Button
@@ -235,7 +245,7 @@ export function InterfacesTab() {
                 startIcon={connecting ? <CircularProgress size={12} color="inherit" /> : undefined}
                 sx={{ fontSize: 11, textTransform: 'none' }}
               >
-                {connecting ? 'Connecting...' : 'Connect'}
+                {connecting ? t('interfaces.connecting') : t('interfaces.connect')}
               </Button>
             )}
           </Box>
@@ -244,56 +254,56 @@ export function InterfacesTab() {
 
       {/* Status */}
       {showSettings && (
-        <SettingsSection id="interfaces-status" title="Status">
+        <SettingsSection id="interfaces-status" title={t('interfaces.status')}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <StatRow label="State" value={connectionState} color={stateColor} />
-            <StatRow label="Signals" value={isConnected ? String(signalCount) : '--'} />
-            <StatRow label="Protocol" value={INTERFACE_OPTIONS.find(o => o.value === settings.activeType)?.label ?? '--'} />
+            <StatRow label={t('interfaces.state')} value={connectionState} color={stateColor} />
+            <StatRow label={t('interfaces.signals')} value={isConnected ? String(signalCount) : '--'} />
+            <StatRow label={t('interfaces.protocol')} value={activeProtocolKey ? t(activeProtocolKey) : '--'} />
           </Box>
         </SettingsSection>
       )}
 
       {/* Signal Display — how signal chips + tooltips render (persisted in the browser) */}
-      <SettingsSection id="interfaces-signal-display" title="Signal Display">
+      <SettingsSection id="interfaces-signal-display" title={t('interfaces.signalDisplay')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <FieldRow label="Signal chips" hint="Global default for how signal chips render (per-usage overrides win).">
+          <FieldRow label={t('interfaces.signalChips')} hint={t('interfaces.signalChipsHint')}>
             <Select
               size="small"
               value={display.chipVariant}
               onChange={(e) => setChipVariant(e.target.value as SignalChipVariant)}
-              renderValue={(v) => v === 'full' ? 'Full' : v === 'standard' ? 'Standard' : 'Minimal'}
+              renderValue={(v) => v === 'full' ? t('interfaces.chipFull') : v === 'standard' ? t('interfaces.chipStandard') : t('interfaces.chipMinimal')}
               sx={tfSx}
             >
               <MenuItem value="full">
-                Full
+                {t('interfaces.chipFull')}
                 <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>
                   Conveyor.Start OutBool ●
                 </Typography>
               </MenuItem>
               <MenuItem value="standard">
-                Standard
+                {t('interfaces.chipStandard')}
                 <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>
                   Conveyor.Start ●
                 </Typography>
               </MenuItem>
               <MenuItem value="minimal">
-                Minimal
+                {t('interfaces.chipMinimal')}
                 <Typography component="span" sx={{ ml: 1, fontSize: 10, color: 'text.disabled' }}>
                   O ●
                 </Typography>
               </MenuItem>
             </Select>
           </FieldRow>
-          <FieldRow label="Tooltip: value">
+          <FieldRow label={t('interfaces.tooltipValue')}>
             <Switch size="small" checked={display.tooltip.value} onChange={(e) => setTooltipField('value', e.target.checked)} />
           </FieldRow>
-          <FieldRow label="Tooltip: address / source">
+          <FieldRow label={t('interfaces.tooltipAddress')}>
             <Switch size="small" checked={display.tooltip.address} onChange={(e) => setTooltipField('address', e.target.checked)} />
           </FieldRow>
-          <FieldRow label="Tooltip: comment">
+          <FieldRow label={t('interfaces.tooltipComment')}>
             <Switch size="small" checked={display.tooltip.comment} onChange={(e) => setTooltipField('comment', e.target.checked)} />
           </FieldRow>
-          <FieldRow label="Tooltip: binding">
+          <FieldRow label={t('interfaces.tooltipBinding')}>
             <Switch size="small" checked={display.tooltip.binding} onChange={(e) => setTooltipField('binding', e.target.checked)} />
           </FieldRow>
         </Box>
@@ -301,7 +311,7 @@ export function InterfacesTab() {
 
       {!manager && (
         <Typography variant="caption" sx={{ color: '#ef5350' }}>
-          InterfaceManager not registered. Add it to the viewer plugins in main.ts.
+          {t('interfaces.managerMissing')}
         </Typography>
       )}
     </Box>

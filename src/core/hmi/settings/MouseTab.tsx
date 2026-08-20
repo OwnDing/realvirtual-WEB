@@ -12,6 +12,7 @@ import {
 } from '../visual-settings-store';
 import type { AdaptiveNavPlugin } from '../../../plugins/adaptive-nav-plugin';
 import { SettingsSection, FieldRow, SliderRow } from './settings-helpers';
+import { useRvTranslation } from '../../i18n';
 
 /**
  * Settings panel tab — "Mouse & Touch".
@@ -22,6 +23,7 @@ import { SettingsSection, FieldRow, SliderRow } from './settings-helpers';
  * via `settings.json` (key `visual.orbit*`).
  */
 export function MouseTab() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const settingsRef = useRef(loadVisualSettings());
   const [orbitRotateSpeed, setOrbitRotateSpeed] = useState<number>(settingsRef.current.orbitRotateSpeed);
@@ -100,7 +102,7 @@ export function MouseTab() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <SettingsSection id="mouse-navigation" title="Navigation Sensitivity">
+      <SettingsSection id="mouse-navigation" title={t('mouse.navigation')}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             size="small"
@@ -110,12 +112,12 @@ export function MouseTab() {
             startIcon={<RestartAlt />}
             sx={{ fontSize: 11, textTransform: 'none', py: 0, minWidth: 0 }}
           >
-            Reset defaults
+            {t('mouse.resetDefaults')}
           </Button>
         </Box>
 
         <SliderRow
-          label="Rotate Speed"
+          label={t('mouse.rotateSpeed')}
           min={NAVIGATION_RANGES.rotateSpeed.min}
           max={NAVIGATION_RANGES.rotateSpeed.max}
           step={NAVIGATION_RANGES.rotateSpeed.step}
@@ -125,7 +127,7 @@ export function MouseTab() {
         />
 
         <SliderRow
-          label="Pan Speed"
+          label={t('mouse.panSpeed')}
           min={NAVIGATION_RANGES.panSpeed.min}
           max={NAVIGATION_RANGES.panSpeed.max}
           step={NAVIGATION_RANGES.panSpeed.step}
@@ -135,7 +137,7 @@ export function MouseTab() {
         />
 
         <SliderRow
-          label="Zoom Speed"
+          label={t('mouse.zoomSpeed')}
           min={NAVIGATION_RANGES.zoomSpeed.min}
           max={NAVIGATION_RANGES.zoomSpeed.max}
           step={NAVIGATION_RANGES.zoomSpeed.step}
@@ -143,11 +145,11 @@ export function MouseTab() {
           onChange={updateOrbitZoomSpeed}
           disabled={settingsLocked}
           format={(v) => v.toFixed(1)}
-          hint="applies to mouse wheel, trackpad, pinch"
+          hint={t('mouse.zoomSpeedHint')}
         />
 
         <SliderRow
-          label="Inertia (Damping)"
+          label={t('mouse.damping')}
           min={NAVIGATION_RANGES.dampingFactor.min}
           max={NAVIGATION_RANGES.dampingFactor.max}
           step={NAVIGATION_RANGES.dampingFactor.step}
@@ -156,7 +158,7 @@ export function MouseTab() {
           disabled={settingsLocked}
         />
 
-        <FieldRow label="Adaptive Nav" hint={adaptiveNav ? 'Slider values are used as base multipliers.' : undefined}>
+        <FieldRow label={t('mouse.adaptiveNav')} hint={adaptiveNav ? t('mouse.adaptiveNavHint') : undefined}>
           <Checkbox
             size="small"
             checked={adaptiveNav}

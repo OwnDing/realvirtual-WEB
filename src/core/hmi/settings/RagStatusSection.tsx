@@ -10,18 +10,19 @@ import {
   fetchDiagnoseStatus,
 } from '../connect-store';
 import { hasReadyChatProvider, ragState } from './rag-status';
+import { useRvTranslation, type RvTranslation } from '../../i18n';
 
 /** Relative "Xs/m/h/d ago" for an ISO-8601 UTC timestamp. */
-function fmtIsoAgo(iso: string): string {
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return iso;
-  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s ago`;
+function fmtIsoAgo(iso: string, t: RvTranslation<'settings'>['t']): string {
+  const parsed = Date.parse(iso);
+  if (Number.isNaN(parsed)) return iso;
+  const s = Math.max(0, Math.round((Date.now() - parsed) / 1000));
+  if (s < 60) return t('rag.secondsAgo', { count: s });
   const m = Math.round(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return t('rag.minutesAgo', { count: m });
   const h = Math.round(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.round(h / 24)}d ago`;
+  if (h < 24) return t('rag.hoursAgo', { count: h });
+  return t('rag.daysAgo', { count: Math.round(h / 24) });
 }
 
 /**
@@ -30,6 +31,9 @@ function fmtIsoAgo(iso: string): string {
  * connect status dots while this section is mounted and the gateway is connected.
  */
 export function RagStatusSection() {
+  // Also the language subscription: `ragState` resolves its label against the
+  // active locale, so this component has to re-render when the locale moves.
+  const { t } = useRvTranslation('settings');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
 
   useEffect(() => {
@@ -45,18 +49,22 @@ export function RagStatusSection() {
   const chatReady = hasReadyChatProvider(snap);
 
   return (
-    <SettingsSection id="connect-rag" title="CONNECT RAG / LLM">
+    <SettingsSection id="connect-rag" title={t('rag.section')}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        <StatRow label="Status" value={st.label} color={st.color} />
+        <StatRow label={t('rag.status')} value={st.label} color={st.color} />
         {detailed && (
           <>
-            {rag.model && <StatRow label="Chat model" value={rag.model} />}
-            {rag.embeddingModel && <StatRow label="Embedding" value={rag.embeddingModel} />}
-            <StatRow label="Reranker" value={rag.rerankState} />
+            {rag.model && <StatRow label={t('rag.chatModel')} value={rag.model} />}
+            {rag.embeddingModel && <StatRow label={t('rag.embedding')} value={rag.embeddingModel} />}
+            <StatRow label={t('rag.reranker')} value={rag.rerankState} />
             {rag.providers && (
               <StatRow
-                label="Providers"
-                value={`emb ${rag.providers.embedding} · rerank ${rag.providers.rerank} · chat ${rag.providers.chat}`}
+                label={t('rag.providers')}
+                value={t('rag.providerValue', {
+                  embedding: rag.providers.embedding,
+                  rerank: rag.providers.rerank,
+                  chat: rag.providers.chat,
+                })}
               />
             )}
             {rag.chatProviders?.map((provider) => {
@@ -66,28 +74,30 @@ export function RagStatusSection() {
               return (
                 <StatRow
                   key={provider.name}
-                  label={`Chat · ${provider.name}`}
+                  label={t('rag.chatProvider', { name: provider.name })}
                   value={provider.detail ? `${provider.status} · ${provider.detail}` : provider.status}
                   color={ready ? '#66bb6a' : failed ? '#ef5350' : undefined}
                 />
               );
             })}
             {rag.chatTimeoutSeconds !== undefined && (
-              <StatRow label="Chat timeout" value={`${rag.chatTimeoutSeconds} s`} />
+              <StatRow label={t('rag.chatTimeout')} value={t('rag.seconds', { count: rag.chatTimeoutSeconds })} />
             )}
-            {rag.docs !== undefined && <StatRow label="Indexed docs" value={String(rag.docs)} />}
-            {rag.chunks !== undefined && <StatRow label="Indexed chunks" value={String(rag.chunks)} />}
+            {rag.docs !== undefined && <StatRow label={t('rag.indexedDocs')} value={String(rag.docs)} />}
+            {rag.chunks !== undefined && <StatRow label={t('rag.indexedChunks')} value={String(rag.chunks)} />}
             <StatRow
-              label="Requesty key"
-              value={rag.apiKeyConfigured ? 'configured' : chatReady ? 'not required' : 'missing'}
+              label={t('rag.requestyKey')}
+              value={rag.apiKeyConfigured
+                ? t('rag.keyConfigured')
+                : chatReady ? t('rag.keyNotRequired') : t('rag.keyMissing')}
               color={rag.apiKeyConfigured || chatReady ? undefined : '#ef5350'}
             />
-            <StatRow label="LLM backend" value="not checked" />
+            <StatRow label={t('rag.llmBackend')} value={t('rag.notChecked')} />
             {rag.lastSuccessfulSyncUtc && (
-              <StatRow label="Last indexed" value={fmtIsoAgo(rag.lastSuccessfulSyncUtc)} />
+              <StatRow label={t('rag.lastIndexed')} value={fmtIsoAgo(rag.lastSuccessfulSyncUtc, t)} />
             )}
             {rag.lastSyncError && (
-              <StatRow label="Last sync error" value={rag.lastSyncError} color="#ffa726" />
+              <StatRow label={t('rag.lastSyncError')} value={rag.lastSyncError} color="#ffa726" />
             )}
           </>
         )}

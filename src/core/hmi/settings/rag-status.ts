@@ -2,6 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import type { ConnectSnapshot } from '../connect-store';
+import { rvT } from '../../i18n';
 
 /** Derived presentation level for the CONNECT RAG/LLM status row (plan-284). */
 export type RagLevel =
@@ -18,6 +19,14 @@ export type RagLevel =
 
 export interface RagStateResult {
   level: RagLevel;
+  /**
+   * Resolved against the ACTIVE language at call time (ADR-0001 §1).
+   *
+   * Not a stored string: `ragState` runs during every render of
+   * `RagStatusSection`, which re-renders on `languageChanged`, so resolving here
+   * is what makes the row follow the language. `level` stays the stable value
+   * tests and callers branch on — only the wording moves.
+   */
   label: string;
   color: string;
 }
@@ -44,6 +53,11 @@ function mk(level: RagLevel, label: string): RagStateResult {
   return { level, label, color: LEVEL_COLOR[level] };
 }
 
+/** Shorthand for the common case: the label is `rag.level.<something>`. */
+function lvl(level: RagLevel, key: Parameters<typeof rvT<'settings'>>[1]): RagStateResult {
+  return mk(level, rvT('settings', key));
+}
+
 /** True when CONNECT reports at least one usable chat backend. */
 export function hasReadyChatProvider(snapshot: ConnectSnapshot): boolean {
   const rag = snapshot.rag;
@@ -62,25 +76,25 @@ export function hasReadyChatProvider(snapshot: ConnectSnapshot): boolean {
  */
 export function ragState(snapshot: ConnectSnapshot): RagStateResult {
   const connected = snapshot.state === 'connected' && !snapshot.gatewayUnreachable;
-  if (!connected) return mk('offline', 'CONNECT not connected');
+  if (!connected) return lvl('offline', 'rag.level.offline');
 
   const rag = snapshot.rag;
-  if (rag === undefined) return mk('loading', 'Checking…');
-  if (rag.supported === false) return mk('unsupported', 'Status unsupported');
-  if (!rag.enabled) return mk('disabled', 'Disabled');
+  if (rag === undefined) return lvl('loading', 'rag.level.checking');
+  if (rag.supported === false) return lvl('unsupported', 'rag.level.unsupported');
+  if (!rag.enabled) return lvl('disabled', 'rag.level.disabled');
 
   if (rag.rerankState === 'faulted' || rag.rerankState === 'missing')
-    return mk('error', `Reranker ${rag.rerankState}`);
+    return mk('error', rvT('settings', 'rag.level.reranker', { state: rag.rerankState }));
   if (rag.apiKeyConfigured === false && !hasReadyChatProvider(snapshot))
-    return mk('error', 'API key missing');
-  if (rag.indexState === 'faulted') return mk('error', 'Index faulted');
+    return lvl('error', 'rag.level.apiKeyMissing');
+  if (rag.indexState === 'faulted') return lvl('error', 'rag.level.indexFaulted');
 
   if (rag.indexState === 'loading' || rag.indexState === 'indexing' || rag.rerankState === 'loading')
-    return mk('busy', rag.indexState === 'indexing' ? 'Indexing…' : 'Loading…');
+    return lvl('busy', rag.indexState === 'indexing' ? 'rag.level.indexing' : 'rag.level.loading');
 
-  if (rag.indexState === 'uninitialized') return mk('idle', 'Not initialized');
-  if (rag.indexState === 'empty') return mk('empty', 'No documents');
-  if (rag.indexState === 'ready') return mk('ready', 'Ready');
+  if (rag.indexState === 'uninitialized') return lvl('idle', 'rag.level.notInitialized');
+  if (rag.indexState === 'empty') return lvl('empty', 'rag.level.noDocuments');
+  if (rag.indexState === 'ready') return lvl('ready', 'rag.level.ready');
 
-  return mk('unknown', 'Unknown');
+  return lvl('unknown', 'rag.level.unknown');
 }

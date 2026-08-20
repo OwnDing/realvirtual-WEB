@@ -10,9 +10,19 @@
  * "Untitled" would produce a scene indistinguishable from a user-named one.
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { SceneNameDialog } from '../src/core/hmi/projects/SceneNameDialog';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The field label comes from the catalog (`projects:assetPrompt.sceneName`) and
+ * the product default is `zh-CN`, so `getByLabelText('Scene name')` is only a
+ * meaningful locator once this file says which language it is testing.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 afterEach(() => cleanup());
 

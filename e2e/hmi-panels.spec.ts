@@ -2,6 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { test, expect } from 'playwright/test';
+import { pinLocale } from './helpers/pin-locale';
 
 /**
  * HMI panel interaction tests — verifies that UI panels open/close correctly.
@@ -11,6 +12,11 @@ import { test, expect } from 'playwright/test';
  */
 test.describe('HMI panel interactions', () => {
   test.beforeEach(async ({ page }) => {
+    // English is pinned rather than inherited (ADR-0001 Validation). These
+    // selectors match on English button text, and the product default is
+    // Chinese — without the pin they would match nothing and the cases would
+    // `test.skip` themselves into silence rather than fail.
+    await pinLocale(page, 'en-US');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     // Wait for UI to initialize
     await page.waitForSelector('canvas', { timeout: 30_000 });

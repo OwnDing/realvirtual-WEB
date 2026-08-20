@@ -1,11 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { Vector3 } from 'three';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { CameraStartTab } from '../src/core/hmi/settings/CameraStartTab';
 import { saveStartPos } from '../src/core/hmi/camera-startpos-store';
+import { setLocale } from '../src/core/i18n';
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation).
+ *
+ * The product default is `zh-CN`, so the copy asserted below renders in Chinese
+ * unless this file says which language it is testing. Pinning keeps these
+ * assertions about BEHAVIOUR rather than about whatever the default happens to
+ * be on the day.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
+
 
 function mockViewer(url: string | null = '/models/TabTest.glb') {
   const listeners = new Map<string, Set<(d?: unknown) => void>>();

@@ -8,8 +8,10 @@ import { useMultiuser } from '../../../hooks/use-multiuser';
 import { loadMultiuserSettings, saveMultiuserSettings, useMultiuserEnabled, type MultiuserSettings } from '../multiuser-settings-store';
 import type { MultiuserPluginAPI } from '../../types/plugin-types';
 import { StatRow, SettingsSection, FieldRow } from './settings-helpers';
+import { useRvTranslation } from '../../i18n';
 
 export function MultiuserTab() {
+  const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   // Reactive: drives the Switch here and the activity-bar Multiuser button.
   const muEnabled = useMultiuserEnabled();
@@ -38,7 +40,9 @@ export function MultiuserTab() {
   }, [mu.connected, mu.serverUrl, mu.localName, mu.localRole]);
 
   const stateColor = mu.connected ? '#66bb6a' : 'rgba(255,255,255,0.5)';
-  const stateLabel = mu.connected ? `Connected (${mu.playerCount + 1} users)` : 'Disconnected';
+  const stateLabel = mu.connected
+    ? t('multiuser.connectedCount', { count: mu.playerCount + 1 })
+    : t('multiuser.disconnected');
 
   const handleConnect = () => {
     muPlugin?.joinSession(serverUrl, name, undefined, role, joinCode || undefined);
@@ -58,23 +62,23 @@ export function MultiuserTab() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Enable toggle + status */}
-      <SettingsSection id="multiuser-general" title="Multiuser">
-        <FieldRow label="Multiuser" hint="Show multiuser button in toolbar">
+      <SettingsSection id="multiuser-general" title={t('multiuser.section')}>
+        <FieldRow label={t('multiuser.section')} hint={t('multiuser.enableHint')}>
           <Switch size="small" checked={muEnabled} onChange={handleEnabledToggle} />
         </FieldRow>
 
         {/* Status */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <StatRow label="State" value={stateLabel} color={stateColor} />
-          {mu.connected && <StatRow label="Server" value={mu.serverUrl} />}
-          {mu.connected && <StatRow label="Role" value={mu.localRole} />}
+          <StatRow label={t('multiuser.state')} value={stateLabel} color={stateColor} />
+          {mu.connected && <StatRow label={t('multiuser.server')} value={mu.serverUrl} />}
+          {mu.connected && <StatRow label={t('multiuser.role')} value={mu.localRole} />}
         </Box>
       </SettingsSection>
 
       {/* Connection settings */}
-      <SettingsSection id="multiuser-connection" title="Connection">
+      <SettingsSection id="multiuser-connection" title={t('multiuser.connection')}>
         {/* Server URL */}
-        <FieldRow label="Server URL">
+        <FieldRow label={t('multiuser.serverUrl')}>
           <TextField
             fullWidth size="small"
             placeholder="ws://192.168.1.5:7000"
@@ -86,10 +90,10 @@ export function MultiuserTab() {
         </FieldRow>
 
         {/* Join Code (optional session/room identifier) */}
-        <FieldRow label="Join Code" hint="Identifies the session on a relay server hosting multiple models">
+        <FieldRow label={t('multiuser.joinCode')} hint={t('multiuser.joinCodeHint')}>
           <TextField
             fullWidth size="small"
-            placeholder="e.g. ABC123"
+            placeholder={t('multiuser.joinCodePlaceholder')}
             value={joinCode}
             onChange={(e) => { setJoinCode(e.target.value); persist({ joinCode: e.target.value }); }}
             disabled={mu.connected}
@@ -98,7 +102,7 @@ export function MultiuserTab() {
         </FieldRow>
 
         {/* Display Name */}
-        <FieldRow label="Display Name">
+        <FieldRow label={t('multiuser.displayName')}>
           <TextField
             fullWidth size="small"
             placeholder="Browser"
@@ -110,7 +114,7 @@ export function MultiuserTab() {
         </FieldRow>
 
         {/* Role */}
-        <FieldRow label="Role">
+        <FieldRow label={t('multiuser.role')}>
           <Select
             fullWidth size="small"
             value={role}
@@ -118,8 +122,8 @@ export function MultiuserTab() {
             disabled={mu.connected}
             sx={{ fontSize: 12 }}
           >
-            <MenuItem value="observer" sx={{ fontSize: 12 }}>Observer (watch only)</MenuItem>
-            <MenuItem value="operator" sx={{ fontSize: 12 }}>Operator (full control)</MenuItem>
+            <MenuItem value="observer" sx={{ fontSize: 12 }}>{t('multiuser.observer')}</MenuItem>
+            <MenuItem value="operator" sx={{ fontSize: 12 }}>{t('multiuser.operator')}</MenuItem>
           </Select>
         </FieldRow>
 
@@ -128,7 +132,7 @@ export function MultiuserTab() {
         <Button size="small" variant="contained" onClick={handleConnect}
           disabled={!serverUrl.trim()}
           sx={{ alignSelf: 'flex-start', textTransform: 'none', bgcolor: '#1565c0', '&:hover': { bgcolor: '#1976d2' } }}>
-          Connect
+          {t('multiuser.connect')}
         </Button>
       ) : (
         <Button size="small" variant="outlined" onClick={handleDisconnect}
@@ -137,16 +141,16 @@ export function MultiuserTab() {
             borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.65)',
             '&:hover': { borderColor: '#ef5350', color: '#ef5350', bgcolor: 'rgba(239,83,80,0.06)' },
           }}>
-          Disconnect
+          {t('multiuser.disconnect')}
         </Button>
       )}
       </SettingsSection>
 
       {/* Connected players */}
       {mu.connected && mu.players.length > 0 && (
-        <SettingsSection id="multiuser-players" title="Connected Users">
+        <SettingsSection id="multiuser-players" title={t('multiuser.connectedUsers')}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 11 }}>
-            {mu.players.length + 1} users connected
+            {t('multiuser.usersConnected', { count: mu.players.length + 1 })}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
             {mu.players.map(p => (

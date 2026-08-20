@@ -4,17 +4,17 @@
   "command": "node scripts/i18n-inventory.mjs --write",
   "note": "Gated categories only. ADVISORY_CATEGORIES are reported by the script, never committed — see scripts/i18n-inventory.mjs.",
   "totals": {
-    "react-copy": 1443,
+    "react-copy": 1128,
     "a11y-name": 83,
     "plugin-registry": 131,
-    "dynamic-text": 158,
+    "dynamic-text": 153,
     "canvas-texture": 2,
     "pre-boot": 16,
     "dom-text": 10,
-    "ui-state-text": 15
+    "ui-state-text": 14
   },
-  "total": 1858,
-  "fileCount": 217,
+  "total": 1537,
+  "fileCount": 202,
   "files": {
     "index.html": {
       "pre-boot": 15
@@ -227,9 +227,6 @@
     "src/core/hmi/SetPositionDialog.tsx": {
       "react-copy": 6
     },
-    "src/core/hmi/SettingsPanel.tsx": {
-      "react-copy": 13
-    },
     "src/core/hmi/SharedViewBanner.tsx": {
       "react-copy": 3
     },
@@ -360,49 +357,6 @@
       "plugin-registry": 2,
       "dynamic-text": 2
     },
-    "src/core/hmi/settings/CameraStartTab.tsx": {
-      "react-copy": 4,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/settings/DevToolsTab.tsx": {
-      "react-copy": 64
-    },
-    "src/core/hmi/settings/GroupsTab.tsx": {
-      "react-copy": 5
-    },
-    "src/core/hmi/settings/InterfacesTab.tsx": {
-      "react-copy": 38
-    },
-    "src/core/hmi/settings/McpTab.tsx": {
-      "react-copy": 32,
-      "dynamic-text": 2
-    },
-    "src/core/hmi/settings/ModelTab.tsx": {
-      "react-copy": 20,
-      "ui-state-text": 1
-    },
-    "src/core/hmi/settings/MouseTab.tsx": {
-      "react-copy": 7
-    },
-    "src/core/hmi/settings/MultiuserTab.tsx": {
-      "react-copy": 18
-    },
-    "src/core/hmi/settings/RagStatusSection.tsx": {
-      "react-copy": 13,
-      "dynamic-text": 1
-    },
-    "src/core/hmi/settings/SimulationTab.tsx": {
-      "react-copy": 4
-    },
-    "src/core/hmi/settings/TestsTab.tsx": {
-      "react-copy": 2
-    },
-    "src/core/hmi/settings/VisualTab.tsx": {
-      "react-copy": 86
-    },
-    "src/core/hmi/settings/WorkfolderMigrationSection.tsx": {
-      "react-copy": 8
-    },
     "src/core/hmi/tooltip/DriveTooltipContent.tsx": {
       "react-copy": 4
     },
@@ -525,9 +479,6 @@
     },
     "src/plugins/annotation-plugin.ts": {
       "plugin-registry": 1
-    },
-    "src/plugins/camera-startpos-plugin.tsx": {
-      "react-copy": 1
     },
     "src/plugins/collision-alert-plugin.tsx": {
       "react-copy": 1,

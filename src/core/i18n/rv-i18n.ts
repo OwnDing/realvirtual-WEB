@@ -32,7 +32,7 @@ import { reportI18nDiagnostic } from './rv-i18n-diagnostics';
 import { enUS } from './catalogs/en-US';
 import { zhCN } from './catalogs/zh-CN';
 
-export const RV_NAMESPACES = ['common', 'projects', 'preboot', 'plugins', 'viewer'] as const;
+export const RV_NAMESPACES = ['common', 'projects', 'settings', 'preboot', 'plugins', 'viewer'] as const;
 export type RVNamespace = (typeof RV_NAMESPACES)[number];
 
 /**
@@ -162,14 +162,25 @@ export function onLocaleChange(listener: (locale: RVLocale) => void): () => void
  *
  * Returning the qualified key here makes the missing case locatable and makes
  * the contract ours rather than a detail of i18next's resolver.
+ *
+ * `options` is forwarded because a plural key does not exist under its own name:
+ * `settings:groups.objectCount` is stored as `…_one` / `…_other`, and only a
+ * probe that sees the `count` resolves to the form `t()` will actually read.
+ * Without it every pluralised string would report itself missing and render as
+ * its own key — the failure mode this function exists to prevent.
  */
-export function probeLookup(qualified: string, locale: RVLocale): string | null {
+export function probeLookup(
+  qualified: string,
+  locale: RVLocale,
+  options?: Record<string, unknown>,
+): string | null {
   const i18n = getI18n();
-  if (!i18n.exists(qualified as never)) {
+  if (!i18n.exists(qualified as never, options as never)) {
     reportI18nDiagnostic({ kind: 'missing', key: qualified, locale });
     return qualified;
   }
-  if (locale !== DEFAULT_LOCALE && !i18n.exists(qualified as never, { lng: locale, fallbackLng: false })) {
+  if (locale !== DEFAULT_LOCALE
+    && !i18n.exists(qualified as never, { ...options, lng: locale, fallbackLng: false } as never)) {
     reportI18nDiagnostic({ kind: 'fallback', key: qualified, locale });
   }
   return null;
@@ -186,7 +197,7 @@ export function translate<N extends RVNamespace>(
   const i18n = getI18n();
   const locale = getLocale();
   const qualified = `${namespace}:${String(key)}`;
-  const missing = probeLookup(qualified, locale);
+  const missing = probeLookup(qualified, locale, options);
   if (missing !== null) return missing;
   return i18n.t(qualified as never, options as never) as unknown as string;
 }

@@ -12,7 +12,7 @@
  */
 
 import { type ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { ActivityBar } from '../src/core/hmi/ActivityBar';
@@ -23,6 +23,7 @@ import { LeftPanelManager } from '../src/core/hmi/left-panel-manager';
 import { UIPluginRegistry } from '../src/core/rv-ui-registry';
 import { RVViewerProvider } from '../src/hooks/use-viewer';
 import { AI_BRIDGE_CONSENT_KEY } from '../src/core/hmi/rv-storage-keys';
+import { setLocale } from '../src/core/i18n';
 import {
   AI_BRIDGE_CONSENT_VERSION,
   hasAiBridgeConsent,
@@ -125,6 +126,13 @@ function renderWithViewer(node: ReactNode, viewer: ReturnType<typeof createViewe
 // "— connecting…" / "— connected (N tools)"), so match on the stem.
 const AI_BUTTON_NAME = /^AI Bridge/;
 const aiButton = () => screen.getByRole('button', { name: AI_BUTTON_NAME });
+
+/**
+ * English is pinned rather than inherited (ADR-0001 Validation): the Settings
+ * tab strip this file clicks through is translated, and the product default is
+ * `zh-CN`.
+ */
+beforeAll(async () => { await setLocale('en-US'); });
 
 beforeEach(() => {
   layout.mobile = false;

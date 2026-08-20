@@ -28,6 +28,7 @@ export {
   setLocale,
   translate,
   type RVNamespace,
+  type RVTranslationKey,
 } from './rv-i18n';
 export { useRvTranslation, type RvTranslation } from './use-rv-translation';
 export { enUS } from './catalogs/en-US';

@@ -25,6 +25,7 @@ import {
 } from '../visual-settings-store';
 import { getAppConfig } from '../rv-app-config';
 import { physicsDiagnostics } from '../../engine/rv-physics-registry';
+import { useRvTranslation } from '../../i18n';
 
 /**
  * Read-only physics diagnostics line (plan-276 Phase 6): "N zones / M bodies /
@@ -33,6 +34,7 @@ import { physicsDiagnostics } from '../../engine/rv-physics-registry';
  * singleton in place per tick); polled at 2 Hz while the tab is open.
  */
 function PhysicsDiagnosticsLine() {
+  const { t } = useRvTranslation('settings');
   const [diag, setDiag] = useState(() => ({ ...physicsDiagnostics }));
   useEffect(() => {
     const id = window.setInterval(() => setDiag({ ...physicsDiagnostics }), 500);
@@ -41,16 +43,21 @@ function PhysicsDiagnosticsLine() {
   if (!diag.active) return null;
   return (
     <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', mt: 0.5, fontVariantNumeric: 'tabular-nums' }}>
-      {`${diag.zones} ${diag.zones === 1 ? 'zone' : 'zones'} / ${diag.bodies} ${diag.bodies === 1 ? 'body' : 'bodies'} / ${diag.stepMs.toFixed(1)} ms step`}
+      {t('simulation.diagnostics', {
+        zones: t('simulation.zones', { count: diag.zones }),
+        bodies: t('simulation.bodies', { count: diag.bodies }),
+        step: diag.stepMs.toFixed(1),
+      })}
     </Typography>
   );
 }
 
 /** Small inline "Beta" badge for experimental settings rows. */
 function BetaChip() {
+  const { t } = useRvTranslation('settings');
   return (
     <Chip
-      label="Beta"
+      label={t('simulation.beta')}
       size="small"
       sx={{
         ml: 0.5,
@@ -68,6 +75,7 @@ function BetaChip() {
 }
 
 export function SimulationTab() {
+  const { t } = useRvTranslation('settings');
   const physicsOn = usePhysicsWholeScene();
   const fullOn = usePhysicsFull();
   // Deployment kill-switch (settings.json simulation.physicsEnabled: false)
@@ -77,8 +85,8 @@ export function SimulationTab() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <SettingsSection id="simulation-physics" title="Physics">
-        <FieldRow label="Physics (whole scene)" hint="takes effect on next model load">
+      <SettingsSection id="simulation-physics" title={t('simulation.physics')}>
+        <FieldRow label={t('simulation.wholeScene')} hint={t('simulation.wholeSceneHint')}>
           <Switch
             size="small"
             checked={physicsActive}
@@ -89,11 +97,11 @@ export function SimulationTab() {
         <FieldRow
           label={
             <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
-              Full physics — all conveyors
+              {t('simulation.full')}
               <BetaChip />
             </Box>
           }
-          hint="Simulates ALL conveyors physically — experimental, takes effect on next model load"
+          hint={t('simulation.fullHint')}
         >
           <Switch
             size="small"
@@ -103,11 +111,7 @@ export function SimulationTab() {
           />
         </FieldRow>
         <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', mt: 0.75 }}>
-          {physicsAllowed
-            ? 'MUs that run off a conveyor end become free rigid bodies — falling, sliding and stacking. ' +
-              'Without explicit physics zones in the model the whole scene is treated as one zone. ' +
-              'Full physics (Beta) additionally runs every non-radial conveyor as a physical belt.'
-            : 'Physics is disabled deployment-wide (settings.json simulation.physicsEnabled).'}
+          {physicsAllowed ? t('simulation.description') : t('simulation.disabled')}
         </Typography>
         <PhysicsDiagnosticsLine />
       </SettingsSection>
