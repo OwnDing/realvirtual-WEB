@@ -3,7 +3,7 @@ doc_id: ADR-INDEX
 title: 架构决策记录
 status: approved
 owner: architecture
-last_reviewed: 2026-08-19
+last_reviewed: 2026-08-21
 authority: normative-process
 ---
 
@@ -15,4 +15,4 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 
 - [`ADR-0001-i18n-runtime.md`](ADR-0001-i18n-runtime.md)：Accepted（2026-08-19），选择多语言运行时、静态目录、偏好存储与回退边界。
 
-`ADR-0001` 是当前唯一 Accepted ADR；实施授权来自 Active [`EP-I18N-001`](../exec-plans/active/EP-I18N-001-incremental-foundation.md)，ADR 本身不单独授权全仓迁移。创建场景见 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)，模板见 [`TEMPLATE.md`](TEMPLATE.md)。
+`ADR-0001` 是当前唯一 Accepted ADR；实施已由 Completed [`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 交付并留证，ADR 本身仍不单独授权新的全仓迁移。创建场景见 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)，模板见 [`TEMPLATE.md`](TEMPLATE.md)。

@@ -3,7 +3,7 @@ doc_id: ACCEPTANCE-MATRIX
 title: 全局验收追踪矩阵
 status: draft
 owner: qa
-last_reviewed: 2026-08-20
+last_reviewed: 2026-08-21
 authority: proposed
 ---
 
@@ -17,7 +17,7 @@ authority: proposed
 | rv-ODT 一致性 | `schema/v1` | schema/spec/conformance 现有测试 | `npm run test:node` / focused tests | existing-needs-formal-mapping |
 | MCP 文档漂移 | MCP decorators/generated fences | 现有 MCP docs drift tests | `npm run gen:mcp-docs` + focused tests | existing-automated |
 | rv-embed 依赖隔离 | `GOV-CONSTITUTION` AR-5/AR-6、KD-003 | `embed-spike.node.test.ts`（仅已有 `dist-embed/` 时运行） | 正式 embed build 当前会触发 React/MUI forbidden marker | known-deviation-not-ci-enforced |
-| 多语言 | Closed OD-002、Approved `PS-I18N-001`、Accepted `ADR-0001`；`zh-CN`/`en-US`、默认中文、AI 直接翻译 | 增量盘点与 locale pin Node 门禁；运行时/目录/pre-boot Node 套件；黄金切片、Settings、Shell、CONNECT、Operator、Authoring、Assets、Sim、Demo、Tools、目录分包 Browser 套件；`scripts/i18n-verbatim-check.mjs` | 批次 1–12 已覆盖 Projects、Settings、常驻外壳、CONNECT、操作员面、创作/检查器、资产生命周期、DES/物料流、演示 HMI/存储、AI 代理/布局规划器、AAS、运行时指令、信号绑定，以及登录门禁、剩余小型插件、加载遮罩、FPV 与 WebXR DOM/CanvasTexture 表面。工业型号、协议名、单位、通用缩写、编译器标识符、资源键与线上值按 ADR-0001 §6 保持原样，周围散文可切换。本地 static、Node（55 文件 / 503 例）、build、受影响 Browser（9 文件 / 99 例）和 bundle-splitting（14 例）通过；受门禁债务 1944 → **92 / 30 文件**，其中普通 React/DOM/Canvas 可见类别已归零，2343 条 `en-US` 值可逐字追溯。`ADR-0001` R1 已将 8 个非启动 `en-US` namespace 移入独立 chunk（82_101 B），`zh-CN` 全量留在入口；预算未放宽（3_460_988 / 3_520_000 B，余 **59_012 B / 57.6 KiB**），按当前密度可在预算内收尾，但提高预算或重新权衡中文是否整体留在入口的决定仍未消失。pre-boot 首帧已按 §11 修复；完整 Browser 门禁仍受本机无头 Chromium 的 WebGL 上下文耗尽阻塞，尚未在有 GPU 的环境复验 | batch-12-local-browser-gate-blocked |
+| 多语言 | Closed OD-002、Approved `PS-I18N-001`、Accepted `ADR-0001`、Completed `EP-I18N-001`；`zh-CN`/`en-US`、默认中文、AI 直接翻译 | 零库存盘点与 locale pin Node 门禁；运行时/目录/pre-boot/分包 Node 套件；全迁移面 Browser 回归；`scripts/i18n-verbatim-check.mjs`；入口预算断言 | 批次 1–14 覆盖 Projects、Settings、Shell、CONNECT、Operator、Authoring、Assets、DES/物料流、Demo、Agents/Planner、AAS、运行时指令、信号绑定、插件注册、pre-boot、FPV 与 WebXR DOM/CanvasTexture。八类受门禁散落文案从 1944 / 231 文件降为 **0 / 0**，硬零守卫防止刷新非零基线；2415 条 `en-US` 值逐字追溯，22 个 Intl 格式化站点全部显式传 locale。工业型号、协议名、单位、稳定 ID、资源键与线上值按 ADR-0001 §6 保持原样。入口预算未放宽（**3_466_216 / 3_520_000 B**，余 **53_784 B / 52.5 KiB**），`zh-CN` 全量留在入口，8 个非启动 `en-US` namespace 位于 **87_532 B** deferred chunk。本地 static、Node、build 与聚焦 Browser 通过；GitHub Actions run [`32507825623`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32507825623) 五项全绿，Browser 合计 962 文件 / 10,491 例。本机全量仍受 WebGL 上下文耗尽限制；真实 PLC/客户模型/生产连接、精简 kiosk 字体镜像和人工全界面 UX 巡检未验证 | completed-automated-remote |
 | 分层配置 | OD-003，待建配置契约 | 待定 | 待定 | blocked-by-decision |
 | 稳定装配端口 | OD-004，待建 ADR/Schema | 现有 Snap 测试仅覆盖当前约定 | 待定 | current-behavior-only |
 | Quality Gates | `GOV-HARNESS`、`EP-GOV-003` | GitHub Actions workflow；名称探测终止、包体积与完整 Browser 回归 | 本地 governance/static/node/build 通过；Browser 944 files、10,366 tests 通过；远程 run 32222458677 的五个 Gate 全部通过，Chromium 安装 8 秒、Browser Harness 7 分 17 秒；`main`/`develop` 无 branch protection/ruleset | automated-local-and-remote-not-enforced |

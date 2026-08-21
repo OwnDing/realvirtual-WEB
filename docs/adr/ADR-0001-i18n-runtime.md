@@ -4,7 +4,7 @@ title: 选择 i18next 多语言运行时与静态目录架构
 status: approved
 adr_status: accepted
 owner: architecture
-last_reviewed: 2026-08-20
+last_reviewed: 2026-08-21
 authority: normative
 ---
 
@@ -65,7 +65,7 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 - 新增两个 MIT 依赖，并增加少量运行时和包体积；实施前后必须记录锁定版本和入口 chunk 变化。
 - 同一个 i18next 实例可服务 React Hook、独立 Root 和非 React 插件，但必须由核心 i18n 模块拥有初始化和生命周期，禁止各插件创建隐式实例。
 - 静态目录保证离线和确定性，代价是每次中文源文案变化都需要 AI 同步英文并通过漂移检查。
-- 第一阶段只迁移黄金切片；KD-001 在全仓增量迁移完成前保持 open。
+- 第一阶段只迁移黄金切片；后续全仓增量迁移已由 `EP-I18N-001` 批次 1–14 完成，KD-001 于 2026-08-21 关闭。
 
 ## Compatibility and Migration
 
@@ -114,3 +114,7 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 ## Rollback or Supersession
 
 黄金切片可回退到原硬编码文案，同时移除新增偏好 key 和依赖；不涉及项目数据迁移。回退不能删除字符串盘点或 KD-001 证据。未来替换框架必须通过新 ADR，证明目录、key、偏好和回退行为兼容或提供版本化迁移。
+
+## Implementation Status
+
+2026-08-21，Completed `EP-I18N-001` 证明本 ADR 的实现条件已经满足：八类受门禁散落文案为 0 / 0 文件、2415 条英文目录值逐字追溯、所有 22 个 Intl 站点显式传 locale、入口预算保持为 3_466_216 / 3_520_000 B，且远程 Quality Gates 留证。KD-001 因此关闭；真实设备、客户模型、生产连接、精简 kiosk 字体镜像和人工全界面 UX 验收不由本 ADR 的自动化证据覆盖。

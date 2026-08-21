@@ -2,9 +2,9 @@
 doc_id: EP-I18N-001
 title: 建立多语言增量治理与黄金切片
 status: approved
-plan_status: active
+plan_status: completed
 owner: product
-last_reviewed: 2026-08-20
+last_reviewed: 2026-08-21
 authority: normative-process
 ---
 
@@ -40,14 +40,14 @@ authority: normative-process
 
 本节记录**当前**仓库事实，随实现推进更新；不是计划创建时的快照。
 
-截至 2026-08-20（批次 12 之后）：
+截至 2026-08-21（批次 14 完成并关闭）：
 
 - `PS-I18N-001` 已批准，OD-002 已关闭，`ADR-0001` 已接受。
 - i18n 运行时**已存在**：`src/core/i18n/`（单一同步 i18next 实例、locale 归一化、偏好存储、诊断、React 绑定），依赖为 i18next 26.3.6 + react-i18next 17.0.11（锁定于 `package-lock.json`）。
-- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`demo`、`tools`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **2343** 条）。
+- namespace：`common`、`projects`、`settings`、`shell`、`connect`、`operator`、`authoring`、`assets`、`sim`、`demo`、`tools`、`preboot`、`plugins`、`viewer`；`zh-CN` 为源目录与最终回退，`en-US` 由迁移前源码逐字迁入（`scripts/i18n-verbatim-check.mjs`，当前受检 **2415** 条）。
 - 已接入的面：Projects 流程、Settings 面板、常驻 HMI 外壳、CONNECT 工业连接流程、操作员运行时面（机器/维护/历史趋势/传感器/测量/多人/分组/剖切/问题/批注/文档与 3D 悬浮提示）、创作与检查器工作面（层级浏览器/属性检查器/信号编辑/场景文档/脚本编辑器）、资产生命周期（项目创建/素材库/CAD 导入/分享链接）、离散事件仿真与物料流（DES 实验矩阵/仿真工具栏/模式切换/订单清单）、演示 HMI 与存储通知（KPI 条/消息卡片/机器人报警与 AI 助手/图表浮层/浏览器存储横幅/展台导览）、AI 代理管理与布局规划器（代理定义/运行面板/规划器工具栏/素材库面板）、AAS 数据面板、运行时指令与完整信号绑定流程，以及登录门禁、剩余小型插件、加载遮罩、第一人称提示和 WebXR DOM/CanvasTexture 表面。
-- 受门禁债务 **92 处 / 30 文件**（`node scripts/i18n-inventory.mjs`），已从 Milestone 1 的 1944 降到不足二十一分之一；`react-copy`、`a11y-name`、`dom-text`、`canvas-texture` 和 `ui-state-text` 均已归零，剩余为 `plugin-registry` 62、`dynamic-text` 14、`pre-boot` 16。建议项 `error-message` 311、`intl-format` 22，其中未显式传 locale 的站点 11。数字必须由脚本产生，不得手抄。
-- 入口 chunk 3_460_988 B，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，**余 59_012 B / 57.6 KiB**（`ADR-0001` R1 已把 `en-US` 的 8 个非启动 namespace 移入独立 chunk，当前构建产物 82_101 B；`zh-CN` 全量仍在入口）。批次 12 只增加 2_392 B，因为主要新增英文在 deferred chunk；剩余 92 处按当前密度预计仍可在预算内收尾，但余量已经有限，因此这个决定仍未消失：要么提高 `ENTRY_BUDGET_BYTES`，要么按 `ADR-0001` 第 3 条重新权衡 `zh-CN` 是否仍必须整体留在入口。
+- 受门禁债务 **0 处 / 0 文件**（`node scripts/i18n-inventory.mjs --json`，schema v3），从 Milestone 1 的 1944 全部归零；`react-copy`、`a11y-name`、`plugin-registry`、`dynamic-text`、`canvas-texture`、`pre-boot`、`dom-text`、`ui-state-text` 八类均为 0，并由测试硬断言不得回升。建议项 `error-message` 311 是内部不变量、协议/编译器错误和潜在用户可见错误的候选集合，保留为后续逐站点分诊报告，不把“建议项存在”等同于“受管 UI 文案未完成”；`intl-format` 22 处全部显式传入 locale，`intlWithoutExplicitLocale` 为 **0**。数字必须由脚本产生，不得手抄。
+- 入口 chunk **3_466_216 B**，预算 `ENTRY_BUDGET_BYTES = 3_520_000`，余 **53_784 B / 52.5 KiB**；预算没有放宽，`zh-CN` 全量仍在入口，8 个非启动 `en-US` namespace 位于 **87_532 B** 的 deferred chunk。既有入口预算闸口已在原边界内解决，无需提高预算或把中文移出入口。
 - `src/plugins/snap-point/strings.ts` 仍是提取过的局部英文字符串表，按 `ADR-0001` 的适配层路径显式跳过，不计入散落债务。
 
 计划创建时（2026-08-19）的原始事实：仓库没有 i18next、React Intl 或 Lingui 依赖，也没有正式 i18n 契约、运行时目录或语言切换实现；项目使用 React 19.2、TypeScript 5.7。
@@ -82,7 +82,7 @@ authority: normative-process
 - [x] Milestone 1：可重复盘点脚本、分类规则、基线文件、误报/例外 fixture 与增量门禁（2026-08-19）。
 - [x] Milestone 3：i18n 契约、目录、语言状态、回退链与端到端语言切换黄金切片（2026-08-19）。
 - [x] Milestone 4a：保存恢复、缺失 key、布局/可访问性与测试 locale 固定策略验证（2026-08-19）。
-- [ ] Milestone 4b：按风险分批迁移其余 92 处受门禁文案（批次 1–12 见下方各节）。
+- [x] Milestone 4b：按风险完成批次 1–14，全仓八类受门禁散落文案从 1944 处归零（2026-08-21）。
 
 ## Surprises & Discoveries
 
@@ -117,6 +117,19 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `main.ts` 的 `applyPrebootText()` 保留，但角色变了：它不再负责首帧，而是「唯一读真实目录的那一遍」，覆盖内联脚本被 CSP 拦掉的情况，并在会话中途 `setLocale` 之后保持遮罩正确。
 - 守卫相应加强：现在同时校验 markup（对 `zh-CN`）、内联脚本的英文映射（对 `en-US`）、存储 key 与版本号、`<html lang>` 等于 `DEFAULT_LOCALE`，以及**入口脚本仍是 module 而内联脚本在它之前**——如果哪天有人把内联脚本改成 module，闪烁会立刻回来而其它测试一个都不会响。
 - **顺带发现盘点脚本对中文是瞎的**：`NON_PROSE` 的「完全没有字母」规则写成 `/^[^a-zA-Z]*$/`，而 `hasProse` 的字母计数是认 CJK 的——两者互相矛盾，结果**全中文字符串对门禁完全不可见**。把 markup 改成中文后债务从 948 掉到 943，掉的不是还清的债，是看不见的债。已修正为 `/^[^a-zA-Z\u4e00-\u9fff]*$/`，数字回到 948（本次改动对债务是中性的，因为 markup 仍是目录之外的一份拷贝）。这个洞在 `src/` 还没有中文时无害，但 `zh-CN` 成为源语言之后就不是了：硬编码中文和硬编码英文是同一种债，一个看不见产品自身源语言的门禁不算门禁。反例验证过：注入一条硬编码中文文案后基线守卫失败（`react-copy` 670→671）。
+
+### Milestone 4b 批次 14：最终分类、Intl locale 与零债务门禁（2026-08-21）
+
+- 对剩余 **16** 处 `pre-boot` 候选逐项分类：首屏零 JavaScript 中英有意副本继续由目录漂移测试钉住；CSS/协议/兼容标识等不可翻译项以精确文本、文件和理由登记。例外守卫拒绝悬空或过宽条目，没有用目录级跳过掩盖债务。
+- 全仓 **11** 个未显式 locale 的 `Intl`/`toLocale*` 调用改为传入当前规范 locale；建议项保持 22 个格式化调用点，但 `intlWithoutExplicitLocale` 从 11 降为 **0**。
+- 门禁基线写为 schema v3 的硬零：八个受门禁类别、总数与文件数都必须为 0，防止将来通过刷新非零基线重新引入散落文案。GPU 信息和 DES 状态补充中英文原地切换回归。
+- 结论：全仓 16 → **0**，0 文件；`en-US` 逐字受检值增至 **2415**；入口 **3_466_216 / 3_520_000 B**，余 **53_784 B / 52.5 KiB**，deferred `en-US` chunk **87_532 B**。
+
+### Milestone 4b 批次 13：插件注册与动态文本扫尾（2026-08-21）
+
+- 覆盖剩余 **62** 处 `plugin-registry` 和 **14** 处 `dynamic-text`，包括 AAS link、自定义运行时指令、信号绑定总览、WebXR、`main.ts` 及小型插件注册面；用户可见文本在渲染/调用边界解析，避免模块初始化时冻结语言。
+- 协议名、API/编译器标识、稳定键和部署方数据保持原样；确属兼容契约或非文案的候选以精确例外登记并附理由。批次结束时全仓 92 → **16**，只剩 pre-boot 分类项。
+- 针对旧测试依赖英文默认值的问题，测试显式 pin `en-US`，不改产品默认中文、不放宽断言；MCP 帮助生成物通过生成源重新生成。
 
 ### Milestone 4b 批次 12：可见插件与 WebXR 扫尾（2026-08-20）
 
@@ -293,6 +306,7 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - 2026-08-19：用户明确由 AI 直接完成翻译并确认进入下一步；采用 `zh-CN`/`en-US`、中文最终回退和 locale 格式化方案，OD-002 关闭，建立 Proposed `ADR-0001` 评审运行时框架。
 - 2026-08-19：吸收外部评审中关于首次目录迁移、非 React/Canvas 传播、pre-boot、多个 Root、测试 locale、包体积和 CJK 字体的候选设计；修正异步分包与同步启动冲突，保留公开插件 `label` 契约兼容，并把全量盘点移到后续增量里程碑。该评审不构成 ADR 接受或计划激活。
 - 2026-08-19：Owner 接受 `ADR-0001` 并激活本计划，批准来源为用户当前明确指令。计划移入 `active/`，frontmatter 改为 `status: approved, plan_status: active, authority: normative-process`。执行范围限于 ADR 划定的黄金切片边界：非启动 namespace 的异步分包、全仓 Root、`Intl`/MUI、CanvasTexture 与其余用户可见文本仍属后续增量里程碑，扩大范围需要 ADR 修订或新的里程碑决定。依赖安装与锁文件变更放在 Milestone 1 的盘点和门禁设计之后，并按 Validation 逐项留证。
+- 2026-08-21：用户明确要求完成最后 1–2 批、运行并修复 CI、关闭 `EP-I18N-001`，并授权自动提交推送。批次 13–14 在 Accepted `ADR-0001` 与既有 Milestone 4b 边界内将受门禁库存归零；远程 Quality Gates 验证通过后，将本计划移入 `completed/` 并关闭 KD-001。
 
 ## Reproducible Inventory
 
@@ -402,7 +416,19 @@ Milestone 4b 批次 4 已验证（2026-08-20，本地）：
 
 **未通过项（必须披露）**：完整浏览器套件 `npm test` 本机 951 文件中 **22 文件 / 82 用例**失败，逐条核对均根因于 `THREE.WebGLRenderer: Error creating WebGL context.`（78 例直接报此错，1 例 `embed-boot` 超时与 1 例 `dispose` TypeError 是同一渲染器创建失败的下游）。失败输出中中文出现次数为 **0**，且已逐文件核对无一与本批次相关。完整浏览器门禁仍需在可用 GPU 的环境重跑后才能声称通过。
 
-后续里程碑至少仍需要 governance、static、focused Node/Browser、build、入口包体积和语言切换行为验证。黄金切片的测试装置必须显式 pin locale，并验证公开插件 `label` 的既有字符串与函数/getter 形式兼容、同步初始化/离线切换、非 React 标签、CanvasTexture 重建、pre-boot/`<html lang>` 与一个独立 Root；全量盘点项不作为第一阶段完成条件。
+批次 13–14 最终验证（2026-08-21）：
+
+| 项 | 结果 |
+| --- | --- |
+| `node scripts/i18n-inventory.mjs --json` | schema v3；八类受门禁库存、总数、文件数均为 **0**；建议项 `error-message` 311、`intl-format` 22、`intlWithoutExplicitLocale` **0** |
+| `node scripts/i18n-verbatim-check.mjs` | **2415** 条 `en-US` 值全部逐字追溯到 `d1949a5` |
+| `./scripts/verify.sh static` | 通过 |
+| `./scripts/verify.sh node` | 56 文件通过、2 文件跳过；**556** 例通过、7 例跳过（563） |
+| i18n/受影响 Browser 聚焦回归 | 最终迁移与 CI 修复相关套件通过；修复后的 8 文件 **191** 例通过，包含 bundle-splitting 预算断言 |
+| `./scripts/verify.sh build` | 通过；入口 **3_466_216 / 3_520_000 B**，余 **53_784 B / 52.5 KiB**；deferred `en-US` **87_532 B** |
+| GitHub Actions Quality Gates | CI 稳定性修复提交 `daa384c` 的 run [`32507825623`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32507825623) 五项全部通过；Browser 主套件 961 文件（956 通过、5 跳过）/ 10,480 例（10,466 通过、12 跳过、2 todo），隔离性能套件 1 文件 / 11 例通过，合计 962 文件 / 10,491 例；5000 节点预算保持 20 ms，远程最佳样本 2.9 ms |
+
+本机完整 Browser 套件仍会因无头 Chromium 的 WebGL 上下文耗尽出现与 i18n 无关的失败，因此不声称本机全套绿色；GitHub Actions 远程 runner 是完整 Browser 门禁证据。真实 PLC/设备、客户模型、生产连接、精简 kiosk 字体镜像和人工全界面 UX 巡检不在本次自动化验证范围内。
 
 ### Decision Log — 批次 4
 
@@ -419,8 +445,10 @@ Milestone 4b 批次 4 已验证（2026-08-20，本地）：
 
 ## Rollback
 
-基线门禁可以回退但不得丢失债务记录；运行时黄金切片必须说明用户偏好和目录的向前/向后兼容方案。
+若需要回滚功能，应整体回退 i18n 运行时、目录、偏好和对应 UI 调用，同时保留盘点脚本、零债务基线与 KD-001 历史证据；语言偏好只在版本化 `localStorage` 中，不涉及项目/GLB 数据迁移。不得通过恢复非零基线或删除例外守卫来回滚。
 
 ## Outcomes & Retrospective
 
-仅在交付后填写；激活不代表实现承诺或能力完成。
+`EP-I18N-001` 已交付：中文默认、英文切换、偏好恢复、中文最终回退、严格目录、非 React/多 Root/CanvasTexture/pre-boot 传播、显式 locale 格式化、入口分包与防回归门禁均已落地；八类受门禁散落文案从 **1944 / 231 文件**降为 **0 / 0 文件**，KD-001 可以关闭。
+
+主要经验是：目录 parity 不能替代 namespace/调用边界验证，测试必须显式 pin locale，pre-boot 必须在零 JavaScript 第一帧成立，包体积闸口要用构建产物而不是源码大小判断。311 个 `error-message` 建议项继续作为可见报告供后续产品化分诊，但不属于本计划定义的散落 UI 文案债务；若未来将其中某类升级为受门禁类别，应新建有范围和反例的增量计划。

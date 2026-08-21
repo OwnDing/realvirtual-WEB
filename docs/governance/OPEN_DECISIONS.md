@@ -3,7 +3,7 @@ doc_id: GOV-OPEN-DECISIONS
 title: 当前未决事项与实施闸口
 status: approved
 owner: architecture
-last_reviewed: 2026-08-19
+last_reviewed: 2026-08-21
 authority: normative-registry
 ---
 
@@ -32,4 +32,5 @@ authority: normative-registry
 - 2026-08-19，用户当前明确指令确认 OD-002 的部分产品输入：首批正式语言为中文、英文，默认语言为中文。
 - 2026-08-19，用户确认进入下一步并明确翻译直接由 AI 完成；结合上一轮待确认方案，规范 locale 为 `zh-CN`/`en-US`，回退链为当前语言 → `zh-CN` → 稳定 key 与诊断，日期和数字随当前 locale，工业单位和稳定 ID 不本地化。
 - OD-002 于 2026-08-19 关闭。批准来源为用户当前明确指令，落地文档为 Approved [`PS-I18N-001`](../product-specs/MULTILINGUAL_LOCALIZATION.md)；运行时框架、目录、偏好存储和测试由 Proposed `ADR-0001` 与 `EP-I18N-001` 继续约束，不把产品决策关闭解释为代码已经实现。
-- 2026-08-19：[`ADR-0001`](../adr/ADR-0001-i18n-runtime.md) 接受，[`EP-I18N-001`](../exec-plans/active/EP-I18N-001-incremental-foundation.md) 激活，批准来源为用户当前明确指令。上一条中的「Proposed `ADR-0001`」记录的是当时状态；当前约束以 Accepted `ADR-0001` 和 Active `EP-I18N-001` 为准，OD-002 仍为 closed，代码仍未实现。
+- 2026-08-19：[`ADR-0001`](../adr/ADR-0001-i18n-runtime.md) 接受，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 当时激活，批准来源为用户当前明确指令。上一条中的「Proposed `ADR-0001`」记录的是当时状态；该计划的后续完成状态见下一条，OD-002 始终保持 closed。
+- 2026-08-21：用户当前明确指令批准完成最后两批、运行并修复 CI、关闭 `EP-I18N-001`。八类受门禁库存归零、入口预算保持且远程 Quality Gates 留证后，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 转为 completed，KD-001 关闭；OD-002 继续保持 closed。
