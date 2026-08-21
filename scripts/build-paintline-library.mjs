@@ -51,26 +51,52 @@ const OUT_DIR = join(
 );
 
 // ─── Shared unit-cube geometry (centered at origin, size 1) ─────────────────
-// No NORMAL attribute: per the glTF spec a reader must then compute flat
-// normals, which is the faceted look these stylised shells want anyway.
+//
+// 24 vertices — four per face — so every face can carry its own NORMAL.
+//
+// An 8-vertex cube with POSITION only is smaller, and the glTF spec does say a
+// reader must then compute flat normals. Do not do it: the shipped library and
+// demo GLBs all ship NORMAL, and on a real GPU these shells rendered as solid
+// black silhouettes (correct floor, correct shadows, no surface lighting)
+// while still looking fine under the software renderer's "Fast" preset. The
+// bytes saved are not worth a demo that only lights up on some machines.
+// `scripts/build-physics-test-glb.mjs` still uses the 8-vertex form; it is an
+// invisible physics fixture, not a visual asset.
 
-const POSITIONS = new Float32Array([
-  -0.5, -0.5, -0.5,   0.5, -0.5, -0.5,   0.5, 0.5, -0.5,   -0.5, 0.5, -0.5,
-  -0.5, -0.5,  0.5,   0.5, -0.5,  0.5,   0.5, 0.5,  0.5,   -0.5, 0.5,  0.5,
-]);
+/** Faces as (axis, sign) with a right-handed (u, v) basis where u x v = normal. */
+const CUBE_FACES = [
+  { n: [1, 0, 0],  u: [0, 1, 0], v: [0, 0, 1] },
+  { n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0] },
+  { n: [0, 1, 0],  u: [0, 0, 1], v: [1, 0, 0] },
+  { n: [0, -1, 0], u: [1, 0, 0], v: [0, 0, 1] },
+  { n: [0, 0, 1],  u: [1, 0, 0], v: [0, 1, 0] },
+  { n: [0, 0, -1], u: [0, 1, 0], v: [1, 0, 0] },
+];
 
-const INDICES = new Uint16Array([
-  0, 3, 2,  0, 2, 1,   // back   (z = -0.5)
-  4, 5, 6,  4, 6, 7,   // front  (z = +0.5)
-  0, 4, 7,  0, 7, 3,   // left   (x = -0.5)
-  1, 2, 6,  1, 6, 5,   // right  (x = +0.5)
-  0, 1, 5,  0, 5, 4,   // bottom (y = -0.5)
-  3, 7, 6,  3, 6, 2,   // top    (y = +0.5)
-]);
+const positions = [];
+const normals = [];
+const indices = [];
+for (const { n, u, v } of CUBE_FACES) {
+  const base = positions.length / 3;
+  // Corner order (-u,-v) → (+u,-v) → (+u,+v) → (-u,+v) is counter-clockwise
+  // seen from outside, given u x v = n.
+  for (const [su, sv] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    for (let axis = 0; axis < 3; axis++) {
+      positions.push(n[axis] * 0.5 + u[axis] * su * 0.5 + v[axis] * sv * 0.5);
+      normals.push(n[axis]);
+    }
+  }
+  indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+}
+
+const POSITIONS = new Float32Array(positions);
+const NORMALS = new Float32Array(normals);
+const INDICES = new Uint16Array(indices);
 
 const POS_BYTES = Buffer.from(POSITIONS.buffer);
+const NRM_BYTES = Buffer.from(NORMALS.buffer);
 const IDX_BYTES = Buffer.from(INDICES.buffer);
-const BIN = Buffer.concat([POS_BYTES, IDX_BYTES]); // 96 + 72 bytes, 4-byte aligned
+const BIN = Buffer.concat([POS_BYTES, NRM_BYTES, IDX_BYTES]); // 288 + 288 + 72
 
 // ─── Material palette ───────────────────────────────────────────────────────
 // `a < 1` implies alphaMode BLEND + doubleSided (translucent process zones).
@@ -132,7 +158,7 @@ class GlbDoc {
     const meshIndex = this.meshes.length;
     this.meshes.push({
       name: `${key}Cube`,
-      primitives: [{ attributes: { POSITION: 0 }, indices: 1, material: materialIndex }],
+      primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: materialIndex }],
     });
     this.meshByMaterial.set(key, meshIndex);
     return meshIndex;
@@ -188,12 +214,14 @@ class GlbDoc {
       meshes: this.meshes,
       materials: this.materials,
       accessors: [
-        { bufferView: 0, componentType: 5126, count: 8, type: 'VEC3', min: [-0.5, -0.5, -0.5], max: [0.5, 0.5, 0.5] },
-        { bufferView: 1, componentType: 5123, count: INDICES.length, type: 'SCALAR' },
+        { bufferView: 0, componentType: 5126, count: POSITIONS.length / 3, type: 'VEC3', min: [-0.5, -0.5, -0.5], max: [0.5, 0.5, 0.5] },
+        { bufferView: 1, componentType: 5126, count: NORMALS.length / 3, type: 'VEC3', min: [-1, -1, -1], max: [1, 1, 1] },
+        { bufferView: 2, componentType: 5123, count: INDICES.length, type: 'SCALAR' },
       ],
       bufferViews: [
         { buffer: 0, byteOffset: 0, byteLength: POS_BYTES.length, target: 34962 },
-        { buffer: 0, byteOffset: POS_BYTES.length, byteLength: IDX_BYTES.length, target: 34963 },
+        { buffer: 0, byteOffset: POS_BYTES.length, byteLength: NRM_BYTES.length, target: 34962 },
+        { buffer: 0, byteOffset: POS_BYTES.length + NRM_BYTES.length, byteLength: IDX_BYTES.length, target: 34963 },
       ],
       buffers: [{ byteLength: BIN.length }],
     };

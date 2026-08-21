@@ -83,6 +83,36 @@ function readGlb(file: string): GltfDoc {
   return doc;
 }
 
+/** The BIN chunk bytes of a GLB. */
+function readGlbBin(file: string): Buffer {
+  const buf = readFileSync(resolve(LIB_DIR, file));
+  const jsonLen = buf.readUInt32LE(12);
+  const binHeaderAt = 20 + jsonLen;
+  const binLen = buf.readUInt32LE(binHeaderAt);
+  return buf.subarray(binHeaderAt + 8, binHeaderAt + 8 + binLen);
+}
+
+/** Float32 view of an accessor, via its bufferView. */
+function floats(doc: GltfDoc, bin: Buffer, accessorIndex: number): Float32Array {
+  const acc = (doc as unknown as { accessors: { bufferView: number; count: number; type: string }[] })
+    .accessors[accessorIndex];
+  const view = (doc as unknown as { bufferViews: { byteOffset: number; byteLength: number }[] })
+    .bufferViews[acc.bufferView];
+  const comps = acc.type === 'VEC3' ? 3 : 1;
+  const out = new Float32Array(acc.count * comps);
+  for (let i = 0; i < out.length; i++) out[i] = bin.readFloatLE(view.byteOffset + i * 4);
+  return out;
+}
+
+/** Uint16 view of an accessor. */
+function shorts(doc: GltfDoc, bin: Buffer, accessorIndex: number): Uint16Array {
+  const acc = (doc as unknown as { accessors: { bufferView: number; count: number }[] }).accessors[accessorIndex];
+  const view = (doc as unknown as { bufferViews: { byteOffset: number }[] }).bufferViews[acc.bufferView];
+  const out = new Uint16Array(acc.count);
+  for (let i = 0; i < out.length; i++) out[i] = bin.readUInt16LE(view.byteOffset + i * 2);
+  return out;
+}
+
 /** Every node index reachable as someone's child. */
 function childIndices(doc: GltfDoc): Set<number> {
   const claimed = new Set<number>();
@@ -239,6 +269,70 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
       expect(cfg.Direction).toBe('LinearY');
       expect(cfg.UseLimits).toBe(true);
       expect(cfg.UpperLimit).toBe(1200);
+    });
+  });
+
+  describe('surface normals (lighting regression)', () => {
+    // Without NORMAL these shells render as solid black silhouettes on a real
+    // GPU — correct floor, correct shadows, no surface lighting — while still
+    // looking fine under a software renderer's "Fast" preset. The glTF spec
+    // permits omitting normals; this product's renderers do not make it safe.
+    it.each(OBJECT_FILES)('%s declares NORMAL on every primitive', (file) => {
+      const doc = readGlb(file);
+      for (const mesh of (doc.meshes ?? []) as { primitives: { attributes: Record<string, number> }[] }[]) {
+        for (const prim of mesh.primitives) {
+          expect(prim.attributes.POSITION, 'POSITION').toBeDefined();
+          expect(prim.attributes.NORMAL, 'NORMAL — missing normals render unlit/black').toBeDefined();
+        }
+      }
+    });
+
+    it('points every normal outward and winds every triangle to match', () => {
+      const doc = readGlb('SprayBooth.glb');
+      const bin = readGlbBin('SprayBooth.glb');
+      const prim = (doc.meshes as unknown as { primitives: { attributes: Record<string, number>; indices: number }[] }[])[0].primitives[0];
+      const pos = floats(doc, bin, prim.attributes.POSITION);
+      const nrm = floats(doc, bin, prim.attributes.NORMAL);
+      const idx = shorts(doc, bin, prim.indices);
+
+      expect(pos.length / 3, 'four vertices per cube face').toBe(24);
+      expect(nrm.length).toBe(pos.length);
+
+      const at = (a: Float32Array, i: number) => [a[i * 3], a[i * 3 + 1], a[i * 3 + 2]] as const;
+
+      // Every normal is a unit axis vector.
+      for (let v = 0; v < 24; v++) {
+        const n = at(nrm, v);
+        expect(Math.hypot(...n), `vertex ${v} normal is not unit length`).toBeCloseTo(1, 6);
+      }
+
+      // Outward: on a cube centred at the origin, position · normal > 0.
+      for (let v = 0; v < 24; v++) {
+        const p = at(pos, v);
+        const n = at(nrm, v);
+        const dot = p[0] * n[0] + p[1] * n[1] + p[2] * n[2];
+        expect(dot, `vertex ${v} normal points inward`).toBeGreaterThan(0);
+      }
+
+      // Winding: the geometric normal of each triangle must agree with the
+      // vertex normal, or the face is backwards and culls away.
+      for (let t = 0; t < idx.length; t += 3) {
+        const a = at(pos, idx[t]);
+        const b = at(pos, idx[t + 1]);
+        const c = at(pos, idx[t + 2]);
+        const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+        const ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+        const cross = [
+          ab[1] * ac[2] - ab[2] * ac[1],
+          ab[2] * ac[0] - ab[0] * ac[2],
+          ab[0] * ac[1] - ab[1] * ac[0],
+        ];
+        const len = Math.hypot(...cross);
+        expect(len, `triangle ${t / 3} is degenerate`).toBeGreaterThan(0);
+        const n = at(nrm, idx[t]);
+        const agree = (cross[0] * n[0] + cross[1] * n[1] + cross[2] * n[2]) / len;
+        expect(agree, `triangle ${t / 3} is wound backwards`).toBeCloseTo(1, 6);
+      }
     });
   });
 

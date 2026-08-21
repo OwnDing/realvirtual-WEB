@@ -32,10 +32,18 @@ const BOOTH_LENGTH = 6;
 /** Return-side X of the loop; carriers beyond this are heading back. */
 const RETURN_SIDE_X = 3;
 
-/** Unpainted steel — the library's `PartRaw` colour. */
-const RAW = new Color(0.34, 0.35, 0.39);
-
-/** Two finishes, alternating per hanger, echoing a mixed-colour batch line. */
+/**
+ * Two finishes, alternating per hanger, echoing a mixed-colour batch line.
+ *
+ * There is deliberately no RAW constant beside them. The viewer does not keep
+ * the GLB's own materials: by the time a mesh is in the scene it carries a
+ * shared `__rvUberMaterial`, whose `.color` is WHITE — the asset's
+ * `baseColorFactor` reaches the surface through another channel. So "bare
+ * steel" is not (0.34, 0.35, 0.39) at this layer, and hardcoding that value
+ * repainted every part that completed one lap a dark grey it never had.
+ * Each mesh's own colour is captured before the first repaint and restored
+ * instead, which is correct whatever the material layer does underneath.
+ */
 const FINISHES = [new Color(0.78, 0.16, 0.16), new Color(0.16, 0.34, 0.72)];
 
 function baseName(name: string): string {
@@ -46,6 +54,8 @@ interface CoatedPart {
   mesh: Mesh;
   carrier: Object3D;
   finish: Color;
+  /** The asset's own colour, captured before the first repaint. */
+  raw: Color;
   painted: boolean;
 }
 
@@ -86,7 +96,8 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
         if (!mesh.material || Array.isArray(mesh.material)) return;
         // Per-instance clone: the shared material would recolour every part.
         mesh.material = mesh.material.clone();
-        this.parts.push({ mesh, carrier, finish, painted: false });
+        const raw = ((mesh.material as { color?: Color }).color ?? new Color(1, 1, 1)).clone();
+        this.parts.push({ mesh, carrier, finish, raw, painted: false });
       });
     }
 
@@ -107,7 +118,7 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
       if (painted === part.painted) continue;
       part.painted = painted;
       const mat = part.mesh.material as { color?: Color };
-      mat.color?.copy(painted ? part.finish : RAW);
+      mat.color?.copy(painted ? part.finish : part.raw);
       changed = true;
     }
     if (changed) this.viewer?.markRenderDirty();

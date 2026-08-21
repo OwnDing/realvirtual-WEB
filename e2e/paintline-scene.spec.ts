@@ -264,6 +264,33 @@ test.describe('paint-line demo scene', () => {
     expect(checkedReturn, 'carriers advancing -Z on the return side').toBeGreaterThan(3);
   });
 
+  test('loads every mesh with real surface normals', async ({ page }) => {
+    await openScene(page);
+    // Without a NORMAL attribute three.js falls back to flat shading, and on a
+    // real GPU these shells render as solid black silhouettes — the floor and
+    // the shadows stay correct, so nothing looks broken until you see it.
+    const geo = await page.evaluate(() => {
+      const scene = (window as unknown as { viewer?: { scene?: unknown } }).viewer?.scene as
+        { traverse(cb: (o: Record<string, never>) => void): void } | undefined;
+      let meshes = 0;
+      let withNormals = 0;
+      scene?.traverse((node: Record<string, never>) => {
+        const n = node as unknown as {
+          isMesh?: boolean; name: string; visible: boolean;
+          geometry?: { attributes?: Record<string, unknown> };
+        };
+        // `__`-prefixed nodes are the viewer's own invisible helpers (raycast
+        // BVH proxies and the like), not renderable assets.
+        if (!n.isMesh || n.name.startsWith('__')) return;
+        meshes++;
+        if (n.geometry?.attributes?.normal) withNormals++;
+      });
+      return { meshes, withNormals };
+    });
+    expect(geo.meshes, 'no meshes in the scene').toBeGreaterThan(100);
+    expect(geo.withNormals, 'meshes without normals render unlit/black').toBe(geo.meshes);
+  });
+
   test('restores identical placement transforms on reload', async ({ page }) => {
     await openScene(page);
     const first = await readPlacements(page);

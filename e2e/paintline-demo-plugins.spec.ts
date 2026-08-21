@@ -77,9 +77,14 @@ function readPack(page: Page) {
       if (/^Workpiece-[AB]$/.test(bn) && n.material?.color) {
         materials.add(n.material.uuid);
         const c = n.material.color;
-        // The library's raw `PartRaw` colour is (0.34, 0.35, 0.39).
-        if (Math.abs(c.r - 0.34) < 0.02 && Math.abs(c.g - 0.35) < 0.02) raw++;
-        else painted++;
+        // "Painted" is detected as one of the two finishes the plugin applies,
+        // NOT by comparing against a hardcoded bare-steel value: the viewer
+        // swaps in a shared `__rvUberMaterial` whose `.color` starts white, so
+        // the asset's own baseColorFactor is not what sits in `.color`.
+        const isFinish = (r: number, g: number, b: number) =>
+          Math.abs(c.r - r) < 0.02 && Math.abs(c.g - g) < 0.02 && Math.abs(c.b - b) < 0.02;
+        if (isFinish(0.78, 0.16, 0.16) || isFinish(0.16, 0.34, 0.72)) painted++;
+        else raw++;
       }
     });
     return {
