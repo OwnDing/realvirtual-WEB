@@ -107,7 +107,8 @@ authority: normative-process
 - `public/scenes/DemoPaintLine.glb`
 - `public/scenes/index.json`
 - `src/plugins/models/DemoPaintLine/`
-- `src/core/i18n/catalogs/en-US.ts`、`src/core/i18n/catalogs/zh-CN.ts`（仅新增 key）
+- `src/core/i18n/catalogs/en-US.ts`、`src/core/i18n/catalogs/zh-CN.ts`、`src/core/i18n/catalogs/en-US.deferred.ts`（仅新增 key；`demo` 命名空间的英文文案实际位于 deferred 目录，2026-08-21 追加）
+- `scripts/i18n-verbatim-check.mjs`（仅在 `NEW_STRING_EXEMPTIONS` 中声明本次新增文案，2026-08-21 追加，见 Decision Log）
 - `tests/`（本计划新增用例）
 - `e2e/`（本计划新增场景）
 - `package.json`（仅新增一条 `build:paintline` 脚本）
@@ -135,7 +136,7 @@ authority: normative-process
 | `PaintLineOverheadConveyor.glb` | 闭环轨道几何 + 40 个挂具 + 工件 | 文件名含 `OverheadConveyor` 以匹配 `*OverheadConveyor*`；挂具节点名 `Carrier-01`…`Carrier-40`；含 `closed: true` 的 Path 节点；根节点带 `OverheadConveyorBehavior` 配置 |
 | `PretreatTunnel-8m.glb` | 前处理隧道壳体（两端开口） | `Snap-ZN-paintseg` / `Snap-ZP-paintseg` |
 | `DryOven-6m.glb` | 烘干炉箱体 + 顶部风室 | 同上 |
-| `SprayBooth.glb` | 喷房壳体 + 喷涂机构 | 含 `Drive-Lin-Y-Reciprocator` 节点；同上 |
+| `SprayBooth.glb` | 喷房壳体 + 喷涂机构 | 含**恰好命名为** `Drive-Lin-Y` 的往复台车（驱动名解析锚定，不容后缀，见 Surprises 第 1 条）；同上 |
 | `CoolingZone-4m.glb` | 冷却段（半透明） | 同上 |
 | `LoadUnloadStation.glb` | 上下件房壳体 | `Snap-ZB-paintseg` |
 | `Workpiece-Bracket.glb` | 独立工件（可单独拖放） | — |
@@ -199,7 +200,7 @@ authority: normative-process
 
 - [x] M1 资产层 —— 2026-08-21 完成，证据见 Validation「M1 实际执行证据」
 - [x] M2 场景层 —— 2026-08-21 完成，证据见 Validation「M2 实际执行证据」
-- [ ] M3 叙事层
+- [x] M3 叙事层 —— 2026-08-21 完成，证据见 Validation「M3 实际执行证据」
 - [ ] Outcomes 与证据补齐
 
 ## Surprises & Discoveries
@@ -229,6 +230,18 @@ M2 执行期发现：
 
 8. **`*Conveyor*` 与 `*OverheadConveyor*` 的 glob 必然重叠（惰性，不修）**。任何匹配 `*OverheadConveyor*` 的资产名必然也匹配 `Conveyor` 的 `models: ['*Conveyor*']`，因此 ZPA `Conveyor` 行为也会绑到悬挂链上，多声明 4 个 `Flow.*` 信号。它在 `setup` 中因找不到 `Transport-*/Sensor-*` 而 `self.disable()`，功能上无影响，仅是信号命名空间的冗余。这是仓库既有 glob 设计的固有结果，收窄 `Conveyor` 的 glob 属于修改 `src/behaviors/`（Forbidden Path）且改动公共契约，需另立计划。如实披露，不在本计划处理。
 
+M3 执行期发现：
+
+9. **Tour 字幕会叠加，除非给一个稳定的 instruction id**。`t.instruction()` 默认生成 `kiosk-inst-auto-<n>` 这样的唯一 id，而 `showInstruction` 是按 id 覆盖的（`_instructions.set(id, …)`，`src/core/hmi/instruction-store.ts:172`）。默认行为下七段字幕会同时留在屏幕上——首次录屏即复现。改为全部使用固定 id `paintline-tour-caption` 后每段覆盖上一段。已由 e2e 断言字幕条数为 1 锁定。
+
+10. **工艺段是不透明闭合壳体，侧面平视镜头只能拍到一堵墙**。生成器给隧道/炉体/喷房都加了侧墙与顶板，只有两端开口。因此工位镜头改为抬高的四分之三视角（能同时看到段体与进出的挂具），喷房则把相机放到入口内部——这也正是参考动画在近景时的处理。喷房那一段同时关闭高亮：相机在壳体内部时，高亮描边会包住整个画面而不是标示对象，为此给 Stage 增加了 `outline` 开关。
+
+11. **`/__api/debug` 会跨页面串数据，不能用于断言**。该端点返回的是「最后一次被推送的快照」（约 1 Hz），而推送方是任意页面——包括上一个测试的页面。M2 的 e2e 一度因此读到 `undefined`，看起来像行为回归，实际是读到了别的页面的状态。已全部改为在页面内直接读 `viewer.signalStore`，并把固定 sleep 换成轮询到条件成立。
+
+12. **墙钟测速在软件渲染下不成立，必须用仿真时钟**。M3 插件加载后，SwiftShader 环境的定步长仿真只跑到实时的约 40%，同一条链用墙钟测出 120–155 mm/s。改用 `simTickCount / 60 Hz` 作分母后测得约 284 mm/s（目标 300，残差是 tick 计数与每 tick 一次的信号推送之间的采样偏移），而若回落到 500 默认值会测出约 473——两者可清晰区分。同时补了一条与帧率无关的精确不变量：挂具行进距离与链相位增量之比恒为 **1.0000**。
+
+13. **喷房占用判据在本场景中恒为真（未被反向验证）**。40 个挂具、间距 1.97 m、喷房长 6 m，任意时刻都有约 3 个挂具在喷房内，因此「无工件时停喷」这条分支从未触发。代码路径正确但本演示不构成对它的验证，如实记录。
+
 ## Decision Log
 
 | 日期 | 决定 | 批准依据 | 原因 |
@@ -241,7 +254,9 @@ M2 执行期发现：
 
 | 2026-08-21 | M2 的演示场景改为**程序化生成**（`scripts/build-paintline-scene.mjs`），不在 Planner 里手工拖放保存；Allowed Paths 相应追加该脚本 | Agent 在 M2 实施中的工程决定，不涉及产品或架构闸口 | 手工拖放产出的场景是无法 diff、无法复查、无法重跑的二进制；库对象已确定性生成，场景同源生成才能让整个演示可从源码复现。风险是生成物必须精确匹配 Planner 的持久化格式，已通过对照仓库自带的 `public/scenes/DemoPlanner.glb` 结构并在浏览器中端到端验证来控制 |
 
-前四条均为用户在会话中的明确选择或批准；最后一条是 Agent 的实施决定，已如实标注来源。
+| 2026-08-21 | M3 的英文新增文案在 `scripts/i18n-verbatim-check.mjs` 的 `NEW_STRING_EXEMPTIONS` 中逐条声明；Allowed Paths 相应追加该脚本与 `en-US.deferred.ts` | Agent 在 M3 实施中的工程决定；使用的是仓库既有的、为此目的设计的机制 | ADR-0001 §3 门禁要求英文文案能在迁移基线提交中逐字找到，用以证明「英文目录是搬运而非重写」。本次 7 条是上游不存在的新功能文案，按该机制逐条声明并写明理由，比移动基线更能保住门禁对其余 2000+ 条的证明力 |
+
+前四条均为用户在会话中的明确选择或批准；后两条是 Agent 的实施决定，已如实标注来源。
 
 ## Validation
 
@@ -302,6 +317,27 @@ M2 执行期发现：
 - 重载后 6 个放置变换逐分量一致。
 
 **M2 未验证项**：硬件加速环境下的渲染质量与性能（全部证据来自 SwiftShader 软件渲染）；Planner 内手工拖放放置这条交互路径（本计划的场景为程序化生成，未走该路径）；`npm run e2e` 全量套件（本机缺 `dist-embed`，共享 Playwright 配置的 `preview:embed` webServer 无法启动，故本次以等价的临时配置对同一 spec 执行，已删除该临时文件）。
+
+### M3 实际执行证据（2026-08-21）
+
+| 项 | 命令 | 实际结果 |
+| --- | --- | --- |
+| 类型检查 + Lint | `./scripts/verify.sh static` | 退出码 0 |
+| Node 测试 | `./scripts/verify.sh node` | 547 passed / 7 skipped，退出码 0 |
+| i18n 盘点 | `npm run i18n:inventory` | 退出码 0，无新增裸字符串 |
+| ADR-0001 §3 逐字门禁 | 同上 Node 套件内 `tests/i18n-preboot.node.test.ts` | 先失败（7 条新英文文案不在迁移基线中），在 `NEW_STRING_EXEMPTIONS` 逐条声明理由后通过 |
+| 治理门禁 | `./scripts/verify.sh governance` | 通过 |
+| 两个涂装线 E2E 套件 | `npx playwright test e2e/paintline-*.spec.ts` | **13 passed**（3.5 分钟） |
+
+浏览器实测（Playwright + SwiftShader）：
+
+- 插件包**按目录名绑定**（未声明已废弃的 `models[]`）：`DemoPaintLine` 目录名与解析出的模型名匹配成功。
+- 往复台车动作：`Drive-Lin-Y` 位置在 0–1200 mm 行程内往复，采样 14 次未越限，jog 方向发生翻转。
+- 工件变色：80 个工件各自持有**独立材质**（克隆成功），任一时刻同时存在已喷与未喷两组（实测 34 / 46）。
+- Kiosk Tour：`hasTour / hasCurrentModelTour` 均为 true，`tourName = DemoPaintLine`；启动后镜头依次推进，中文环境显示「连续输送式涂装线 —…」，英文环境显示「Continuous conveyorised paint line —…」，屏幕上**同时只有一条字幕**。
+- 无 pageerror。
+
+**M3 未验证项**：硬件加速环境下的画质与性能；喷房「无工件时停喷」分支（见 Surprises 第 13 条）；Tour 完整循环回到起点后的长时间稳定性（仅验证到第一轮各段）；真实触摸屏 Kiosk 设备上的空闲自动启动。
 
 ## Rollback
 

@@ -1389,6 +1389,15 @@ export const enUSDeferred = {
       exit: 'Exit Demo',
       touch: 'Touch to interact',
     },
+    paintline: {
+      tourOverview: 'Continuous conveyorised paint line — one closed overhead chain circulates the hangers through four process stages',
+      tourPretreat: 'Pre-treatment — degrease and rinse. Parts pass through the tunnel continuously and never stop',
+      tourOven: 'Drying oven — dwell time is the track length inside the oven divided by chain speed, not a station hold',
+      tourBooth: 'Spray booth — a reciprocator strokes the guns on both sides; parts leave the booth in their finish colour',
+      tourCooling: 'Cooling — the cured film cools down before the hangers return to the load station',
+      tourLoadUnload: 'Load / unload room — parts are hung and stripped here, closing the loop',
+      tourSpeedNote: 'This demo runs the chain at 300 mm/s so it is watchable; a real continuous paint line runs 2–6 m/min',
+    },
     hmi: {
       oeeTarget: 'Target: 90%',
       partsShiftTotal: 'Shift total: 186',

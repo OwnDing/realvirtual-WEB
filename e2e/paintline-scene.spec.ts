@@ -103,13 +103,38 @@ function readCarriers(page: Page) {
   });
 }
 
-async function signals(page: Page): Promise<Record<string, unknown>> {
-  const res = await page.request.get('/__api/debug');
-  expect(res.ok()).toBeTruthy();
-  return ((await res.json()) as { signals?: Record<string, unknown> }).signals ?? {};
+const PHASE = 'PaintLineOverheadConveyor.OverheadConveyor.Position';
+const RUN = 'PaintLineOverheadConveyor.OverheadConveyor.Run';
+const MOVING = 'PaintLineOverheadConveyor.OverheadConveyor.Moving';
+
+/**
+ * Read signals from the LIVE page, not from `/__api/debug`.
+ *
+ * That endpoint serves the last snapshot pushed by any page at ~1 Hz, so it
+ * can hand back state belonging to a previous test's page — which reads as a
+ * missing signal (or a stale value) that has nothing to do with this scene.
+ */
+function readSignals(page: Page, names: string[]) {
+  return page.evaluate((keys) => {
+    const store = (window as unknown as {
+      viewer?: { signalStore?: { getBool(n: string): boolean; getFloat(n: string): number } };
+    }).viewer?.signalStore;
+    if (!store) return null;
+    const out: Record<string, boolean | number> = {};
+    for (const k of keys) {
+      out[k] = k.endsWith('.Position') ? store.getFloat(k) : store.getBool(k);
+    }
+    return out;
+  }, names);
 }
 
-const PHASE = 'PaintLineOverheadConveyor.OverheadConveyor.Position';
+/** Poll until the chain behavior has bound and commanded the chain to run. */
+async function waitForChainRunning(page: Page): Promise<void> {
+  await expect.poll(
+    async () => (await readSignals(page, [RUN]))?.[RUN] ?? null,
+    { timeout: 45_000, message: 'the OverheadConveyor behavior never bound' },
+  ).toBe(true);
+}
 
 test.describe('paint-line demo scene', () => {
   test.describe.configure({ mode: 'serial' });
@@ -129,37 +154,65 @@ test.describe('paint-line demo scene', () => {
 
   test('binds the OverheadConveyor behavior and circulates the chain', async ({ page }) => {
     await openScene(page);
+    await waitForChainRunning(page);
 
-    const first = await signals(page);
-    expect(first['PaintLineOverheadConveyor.OverheadConveyor.Run'], 'chain command').toBe(true);
-    expect(first['PaintLineOverheadConveyor.OverheadConveyor.Moving'], 'chain moving').toBe(true);
+    const first = await readSignals(page, [RUN, MOVING, PHASE])!;
+    expect(first![MOVING], 'chain moving').toBe(true);
 
     await page.waitForTimeout(3_000);
-    const second = await signals(page);
-    expect(Number(second[PHASE]), 'chain phase must advance')
-      .toBeGreaterThan(Number(first[PHASE]));
+    const second = await readSignals(page, [PHASE])!;
+    expect(Number(second![PHASE]), 'chain phase must advance')
+      .toBeGreaterThan(Number(first![PHASE]));
   });
 
   test('runs at the configured 300 mm/s, not the component default', async ({ page }) => {
     await openScene(page);
+    await waitForChainRunning(page);
 
-    // Read the SAME node twice and time it by wall clock. The config that sets
-    // this lives on the placement node; authored one level down it is ignored
-    // and the chain silently runs at the 500 mm/s schema default instead.
-    const z = async () => (await readCarriers(page)).find((c) => c.name === 'Carrier-01')!.z;
-    const t0 = Date.now();
-    const z0 = await z();
-    await page.waitForTimeout(5_000);
-    const z1 = await z();
-    const speed = ((z1 - z0) / ((Date.now() - t0) / 1000)) * 1000;
+    // Measured against the SIMULATION clock, not the wall clock. Under software
+    // rendering the fixed-timestep loop runs well below real time (roughly 40%
+    // here), so wall-clock speed reports whatever the host managed rather than
+    // what the drive was told — the same measurement that first made the chain
+    // look like it ran at 500 mm/s. Ticks are the honest denominator.
+    const sample = () => page.evaluate(() => {
+      const v = (window as unknown as {
+        viewer?: { simTickCount?: number; signalStore?: { getFloat(n: string): number } };
+      }).viewer;
+      let z = 0;
+      (v as unknown as { scene?: { traverse(cb: (o: { name: string; position: { z: number } }) => void): void } })
+        .scene?.traverse((n) => { if (n.name === 'Carrier-01') z = n.position.z; });
+      return {
+        ticks: v?.simTickCount ?? 0,
+        phase: v?.signalStore?.getFloat('PaintLineOverheadConveyor.OverheadConveyor.Position') ?? 0,
+        z,
+      };
+    });
 
-    // Generous band: this must separate 300 from the 500 default, nothing finer.
-    expect(speed).toBeGreaterThan(240);
-    expect(speed).toBeLessThan(380);
+    const first = await sample();
+    await page.waitForTimeout(8_000);
+    const second = await sample();
+
+    const simSeconds = (second.ticks - first.ticks) / 60;   // 60 Hz fixed timestep
+    expect(simSeconds, 'the simulation did not advance').toBeGreaterThan(1);
+    const speed = (second.phase - first.phase) / simSeconds;
+
+    // The band only has to separate the configured 300 from the component's
+    // 500 mm/s schema default (which measures ~470 here). Sampling skew between
+    // the tick counter and the 1-per-tick signal costs a few percent.
+    expect(speed).toBeGreaterThan(250);
+    expect(speed).toBeLessThan(360);
+
+    // Frame-rate independent and exact: a carrier on the straight travels
+    // exactly as far as the chain phase advances. This is what proves the loop
+    // geometry and the pitch distribution agree with the arc-length parameter.
+    const travelMm = (second.z - first.z) * 1000;
+    expect(travelMm, 'carrier travel must equal the chain phase advance')
+      .toBeCloseTo(second.phase - first.phase, 3);
   });
 
   test('spaces carriers exactly one pitch apart', async ({ page }) => {
     await openScene(page);
+    await waitForChainRunning(page);
     const carriers = await readCarriers(page);
     expect(carriers).toHaveLength(CARRIER_COUNT);
 
@@ -182,6 +235,7 @@ test.describe('paint-line demo scene', () => {
 
   test('hangs every carrier plumb through both turns', async ({ page }) => {
     await openScene(page);
+    await waitForChainRunning(page);
     for (const c of await readCarriers(page)) {
       // A pure-yaw quaternion has zero X and Z parts. Anything else means the
       // hanger pitched or rolled — the Frenet flip the component avoids.
@@ -193,6 +247,7 @@ test.describe('paint-line demo scene', () => {
 
   test('travels the process side in +Z and the return side in -Z', async ({ page }) => {
     await openScene(page);
+    await waitForChainRunning(page);
     const before = new Map((await readCarriers(page)).map((c) => [c.name, c]));
     await page.waitForTimeout(3_000);
     const after = await readCarriers(page);

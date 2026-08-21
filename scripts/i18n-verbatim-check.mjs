@@ -314,7 +314,21 @@ const BRAND_RENAME = 'Deliberately no longer verbatim: the product was renamed f
   + 'and not re-derived. Diff any value below against the ref and the only delta is the name; if a '
   + 'sentence ever changes for another reason, it must earn its own entry.';
 
+const PAINTLINE_DEMO = 'No English original exists to move: these are the narration captions of the '
+  + 'paint-line demo scene (EP-DEMO-001), a feature added after the migration base ref — the scene, '
+  + 'its library objects and its Kiosk tour are all new. Declared one key at a time, per key, rather '
+  + 'than by moving the base ref, so the gate keeps proving that every PRE-EXISTING value was moved '
+  + 'and not re-derived. Any later edit to these sentences is an ordinary copy change and needs no '
+  + 'new entry; a NEW caption does.';
+
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['demo.paintline.tourOverview', PAINTLINE_DEMO],
+  ['demo.paintline.tourPretreat', PAINTLINE_DEMO],
+  ['demo.paintline.tourOven', PAINTLINE_DEMO],
+  ['demo.paintline.tourBooth', PAINTLINE_DEMO],
+  ['demo.paintline.tourCooling', PAINTLINE_DEMO],
+  ['demo.paintline.tourLoadUnload', PAINTLINE_DEMO],
+  ['demo.paintline.tourSpeedNote', PAINTLINE_DEMO],
   ['shell.ai.reachText', BRAND_RENAME],
   ['shell.ai.downloadInfo', BRAND_RENAME],
   ['shell.ai.downloadTitle', BRAND_RENAME],
