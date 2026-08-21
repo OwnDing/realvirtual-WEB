@@ -37,6 +37,7 @@
  */
 
 import type { Object3D } from 'three';
+import { isCarrierName } from '../library-component-loader';
 
 /**
  * rv_extras component keys whose node — together with its ancestors and its
@@ -56,6 +57,7 @@ import type { Object3D } from 'three';
  */
 const MOVER_KEY = /^(Drive|Kinematic|Grip|TransportSurface|Source|Sink|MU|Cam|SceneButtonMoveable)/i;
 
+
 export interface FreezeStaticResult {
   /** Nodes whose matrixWorldAutoUpdate was turned off. */
   frozen: number;
@@ -71,6 +73,17 @@ function isMoverNode(node: Object3D): boolean {
   // this marker on the animated mesh even when the extras live on a parent node,
   // and it survives a re-freeze after a runtime placement.
   if (node.userData?._rvSceneButtonMesh === true) return true;
+  // An OverheadConveyor carrier is a mover with NO component of its own: the
+  // behaviour finds it by the `Carrier` / `Carrier-<id>` name convention and
+  // writes its transform every tick, exactly as a KinematicMechanism moves its
+  // passive links. Tested with the component's own predicate rather than a
+  // fourth copy of the regex, so loader and behaviour cannot drift apart.
+  // Without it the whole hanger chain classifies as static: matrices stop
+  // updating here AND `rv-scene-loader`'s merge bakes it into the root-parented
+  // arena. Measured: `Carrier-01` travelled 5.05 m → 8.45 m in simulation while
+  // the canvas stayed byte-identical — the line runs, the picture is frozen.
+  // Same family as the mechanism bug documented above.
+  if (isCarrierName(node.name)) return true;
   const rv = node.userData?.realvirtual as Record<string, unknown> | undefined;
   if (!rv) return false;
   for (const key in rv) {

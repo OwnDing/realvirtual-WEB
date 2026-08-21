@@ -2,9 +2,9 @@
 doc_id: EP-DEMO-001
 title: 涂装线 3D 演示场景（黄金切片）
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 authority: normative-process
 ---
 
@@ -379,4 +379,23 @@ M3 执行期发现：
 
 ## Outcomes & Retrospective
 
-（执行完成后填写：实际结果、验证证据、偏差、未验证项、遗留债务与后续任务。）
+**结果**：M1–M3 全部交付。`?scene=published:DemoPaintLine` 打开即得一条运行中的连续输送式涂装线——闭合悬挂链带 40 个挂具循环穿过前处理、烘干、喷涂、冷却四段，喷房往复机动作，工件过喷房变色、回上件位复位，Kiosk Tour 中英双语分段讲解。用户已在真实 GPU 上确认画面与运动均正常。
+
+**最终验证**（2026-08-22）：governance 0 · static 0 · node 556 passed / 7 skipped · i18n 0 · 涂装线 E2E **15 passed**；两个生成器均字节可复现。
+
+**交付物**：`scripts/build-paintline-library.mjs`、`scripts/build-paintline-scene.mjs`、`public/library/PaintLine/` 7 个库对象、`public/scenes/DemoPaintLine.glb`、`src/plugins/models/DemoPaintLine/`（4 个插件 + Tour）、`tests/paintline-library.node.test.ts`、`e2e/paintline-scene.spec.ts`、`e2e/paintline-demo-plugins.spec.ts`、中英各 7 条 i18n 词条。
+
+**偏差**：M2 的场景由程序化生成而非 Planner 手工拖放（Decision Log 2026-08-21）；Allowed Paths 三次追加（场景生成器、`en-US.deferred.ts`、`i18n-verbatim-check.mjs`），均已逐条记录理由。
+
+**最值得记取的一条**：M1–M3 的全部断言测的都是**仿真状态**（信号、`position`、tick、四元数、间距），没有一条测渲染结果。因此两个只在真实渲染管线中才显形的缺陷完整穿过了三个里程碑的验证——法线缺失（画面全黑）与静态分类冻结（画面不动），两次都由用户在真机上发现。教训不是「断言写少了」，而是**验证层次选错了**：资产类工作必须有一条断言落在渲染输出上。已补 `loads every mesh with real surface normals` 与 `actually repaints the moving chain`（后者刻意先停掉喷房 drive，防止它替代性地让测试通过）。
+
+**遗留债务（未修，已交接）**：
+- `OverheadConveyor` 对加载器的两套静态分类（`rv-freeze-static.ts` 的 `MOVER_KEY`、`rv-scene-loader.ts` 的 `MOTION_KEY`）不可见，单独使用该库对象仍会画面冻结（实测 `?model=` 加载仍冻结）。演示场景已用挂具上的 `Kinematic` 标记 + `chain-redraw.ts` 绕开。核心修复移交 [`EP-CONV-001`](../active/EP-CONV-001-overhead-conveyor-accumulation.md)。
+- `Conveyor` 与 `OverheadConveyor` 的 glob 必然重叠，悬挂链上多 4 个惰性 `Flow.*` 信号（Surprises 第 8 条）。
+- 变色插件为 80 个工件各克隆一份 uber 材质，对批处理的影响未实测。
+- 喷房「无工件时停喷」分支从未被触发验证（Surprises 第 13 条）。
+- `doc-layout-planner.md` §4.1 关于库目录自动加载的漂移（Surprises 第 2 条）仍未修文档。
+
+**未验证项**：DES 模式；PLC/工业接口；移动端与低端 GPU 性能；真实涂装工艺参数的工程正确性（链速 300 mm/s 是演示取值）；Planner 内手工拖放放置路径。
+
+**后续任务**：M4 三项（喷房六轴机器人 IK、节拍与产量 KPI、蛇形积放缓冲段）均未在本计划承诺。积放已由 Accepted [`ADR-0002`](../../adr/ADR-0002-overhead-conveyor-accumulation.md) 定型并移交 `EP-CONV-001`。

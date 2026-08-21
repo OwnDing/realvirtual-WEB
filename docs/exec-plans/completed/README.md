@@ -3,7 +3,7 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 authority: normative-registry
 ---
 
@@ -15,3 +15,4 @@ authority: normative-registry
 - [`EP-I18N-001-incremental-foundation.md`](EP-I18N-001-incremental-foundation.md)：交付中英双语运行时、静态目录、偏好与回退、全界面增量迁移和零散落文案门禁，并关闭 KD-001。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。
+- [`EP-DEMO-001-paintline-demo.md`](EP-DEMO-001-paintline-demo.md)：连续输送式涂装线演示场景黄金切片，2026-08-22 完成；遗留的核心分类缺陷移交 `EP-CONV-001`。

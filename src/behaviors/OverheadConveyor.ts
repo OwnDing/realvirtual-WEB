@@ -155,6 +155,24 @@ function applyPoses(self: OverheadSelf): void {
   }
 }
 
+/**
+ * Ask for a redraw after the poses moved.
+ *
+ * The viewer renders ON DEMAND and, during a tick, only a RUNNING `RVDrive`
+ * raises that flag (`rv-core-subsystems.ts` → `drives()`). This chain has no
+ * drive — it integrates one phase scalar and writes the carrier transforms
+ * itself — so without this call a running chain repaints nothing and the line
+ * appears stopped. It only looked fine in scenes that happened to contain some
+ * OTHER moving drive.
+ *
+ * Guarded on actual motion so a stopped chain keeps the render-on-demand
+ * saving. `self.viewer` is the same opaque handle `attachDriveBehaviorByCode`
+ * casts, hence the narrow local type.
+ */
+function requestRedraw(self: OverheadSelf): void {
+  (self.viewer as { markRenderDirty?: () => void } | null | undefined)?.markRenderDirty?.();
+}
+
 const def = {
   type: 'OverheadConveyor' as const,
   kind: 'conveyor' as const,
@@ -290,7 +308,9 @@ const def = {
       l.sChainM = wrapPhase(l.sChainM + (l.v / 1000) * dt, l.path.length);
       applyPoses(self);
 
-      self.sig.Moving.set(Math.abs(l.v) > 1e-3);
+      const moving = Math.abs(l.v) > 1e-3;
+      if (moving) requestRedraw(self);
+      self.sig.Moving.set(moving);
       self.sig.Position.set(l.sChainM * 1000); // mm — drive parity
     },
   },

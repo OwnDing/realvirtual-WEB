@@ -110,7 +110,7 @@ import { attachAasLink, SEW_DRIVE_AAS, isDriveDatasheetNode } from '../../behavi
 import { markAasPending } from '../../plugins/aas-resolution';
 import { applyOverlayToNode, type RVExtrasOverlay } from './rv-extras-overlay-store';
 import { applyKinematicsSpec } from '../behavior-runtime';
-import { scanLibraryComponent } from '../library-component-loader';
+import { isCarrierName, scanLibraryComponent } from '../library-component-loader';
 import { deepCloneJSON } from '../ops/rv-op-utils';
 import {
   verifyRvSigBuffer,
@@ -517,6 +517,14 @@ export function processMeshes(root: Object3D): MeshProcessResult {
   const MOTION_KEY = /^Drive|^Kinematic(_\d+)?$/i;
 
   root.traverse((node: Object3D) => {
+    // An OverheadConveyor carrier is an anchor even though it carries NO
+    // component: the behaviour finds it by the `Carrier` / `Carrier-<id>` name
+    // convention and writes its transform every tick. Each carrier must be its
+    // OWN anchor — anchoring on the conveyor root instead would merge all forty
+    // hangers into one arena that moves as a block, which is precisely the
+    // mis-grouping the KinematicJoint/Mechanism exclusion above warns about.
+    if (isCarrierName(node.name)) driveNodeSet.add(node);
+
     const rv = node.userData?.realvirtual as Record<string, unknown> | undefined;
     if (!rv) return;
     for (const key in rv) {

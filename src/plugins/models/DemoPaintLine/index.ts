@@ -20,7 +20,6 @@ import type { RVViewer } from '../../../core/rv-viewer';
 import type { ModelPluginModule } from '../../../core/rv-model-plugin-manager';
 import type { KioskPlugin } from '../../kiosk-plugin';
 
-import { PaintLineChainRedrawPlugin } from './chain-redraw';
 import { PaintLineSprayMotionPlugin } from './spray-motion';
 import { PaintLineWorkpieceCoatingPlugin } from './workpiece-coating';
 import { paintLineKioskTour } from './paintline-kiosk-tour';
@@ -39,9 +38,6 @@ const registeredIds: string[] = [];
 
 export function registerModelPlugins(viewer: RVViewer): void {
   const instances = [
-    // First: without it the chain runs but the viewport never repaints (the
-    // viewer renders on demand and a driveless conveyor dirties nothing).
-    new PaintLineChainRedrawPlugin(),
     new PaintLineSprayMotionPlugin(),
     new PaintLineWorkpieceCoatingPlugin(),
   ];
