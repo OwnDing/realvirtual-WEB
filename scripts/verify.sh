@@ -71,7 +71,15 @@ run_browser_tests() {
   say "Browser test suite"
   (
     cd "$verify_repo_root"
-    npm test
+    # Keep the wall-clock performance budget out of the heavily parallel main
+    # suite. It still runs, with the same 20 ms assertion, in a fresh browser
+    # immediately afterward; only unrelated CPU scheduling noise is removed.
+    npm test -- --exclude tests/drop-target-overlay.test.ts
+  )
+  say "Isolated browser performance suite"
+  (
+    cd "$verify_repo_root"
+    npm test -- tests/drop-target-overlay.test.ts
   )
 }
 

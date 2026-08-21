@@ -471,8 +471,17 @@ describe('a tab holding the OLD identity when its save is refused', () => {
       id: `op_${aliased}`, ts: Date.now(), schemaV: 1, kind: 'setField',
       nodePath: 'Conv1', componentType: 'Drive', fieldName: 'TargetSpeed', value: 5, prev: 0,
     } as never);
-    await new Promise(resolve => setTimeout(resolve, 2400));
-    off();
+    try {
+      // Wait for the observable contract instead of sleeping 400 ms past the
+      // debounce. Under a loaded browser suite the timer callback can be
+      // scheduled later even though the save behavior is correct.
+      await vi.waitFor(() => expect(notices.length).toBeGreaterThan(0), {
+        timeout: 10_000,
+        interval: 25,
+      });
+    } finally {
+      off();
+    }
     expect(hasDocumentAlias(sceneId)).toBe(aliased);
     return notices;
   }

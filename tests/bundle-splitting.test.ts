@@ -324,14 +324,18 @@ describe('bundle splitting — panel chunks', () => {
 
   it('T11 …and are actually in a chunk, not merely deleted', async () => {
     // Half of this pair is the point. "Not in the entry" alone is also true of a
-    // catalog somebody dropped on the floor.
-    const entryName = entryPath.slice(entryPath.lastIndexOf('/') + 1);
-    let carriers = 0;
-    for (const [name, load] of Object.entries(distFiles)) {
-      if (!name.endsWith('.js') || name.endsWith(entryName)) continue;
-      if ((await load()).includes(DEFERRED_EN_MARKER)) carriers += 1;
-    }
-    expect(carriers, 'no chunk carries the deferred en-US catalog').toBeGreaterThan(0);
+    // catalog somebody dropped on the floor. Vite names the dynamic chunk from
+    // its source module, so inspect that exact artifact instead of serially
+    // fetching every emitted JS file (currently ~190) through the browser dev
+    // server. The exhaustive scan made this assertion depend on suite load and
+    // could consume the entire 15 s test timeout without testing more behavior.
+    const catalogChunks = assetNames.filter((name) => name.startsWith('en-US.deferred-'));
+    expect(catalogChunks, 'expected exactly one deferred en-US catalog chunk').toHaveLength(1);
+    const chunkKey = distKey(`/dist/assets/${catalogChunks[0]}`);
+    expect(chunkKey, 'deferred en-US catalog chunk is absent from distFiles').toBeTruthy();
+    const chunkText = await distFiles[chunkKey!]();
+    expect(chunkText).toContain(DEFERRED_EN_MARKER);
+    expect(chunkText).toContain(DEFERRED_EN_MARKER_2);
   });
 
   it('T12 zh-CN stays whole in the entry — it is the fallback', () => {
