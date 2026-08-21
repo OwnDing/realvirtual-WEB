@@ -112,12 +112,21 @@ test.describe('paint-line demo plugin pack', () => {
     expect(first.drive, 'the pack did not bind — no Drive-Lin-Y under its control').not.toBeNull();
     expect(first.fans, 'spray fans should exist in the booth asset').toBe(6);
 
-    await page.waitForTimeout(4_000);
-    const second = await readPack(page);
-    expect(second.drive!.position, 'the carriage must be stroking')
-      .not.toBeCloseTo(first.drive!.position, 1);
+    // Sample a SPREAD rather than two endpoints. A 1.2 m stroke at 700 mm/s is
+    // ~1.7 s each way, so any fixed two-point interval can alias onto a whole
+    // cycle and read the same position twice — which is a flaky test, not a
+    // stalled carriage.
+    const seen = [first.drive!.position];
+    for (let i = 0; i < 8; i++) {
+      await page.waitForTimeout(400);
+      seen.push((await readPack(page)).drive!.position);
+    }
+    expect(Math.max(...seen) - Math.min(...seen), 'the carriage never moved')
+      .toBeGreaterThan(50);
+
     // Exactly one jog direction is active at a time.
-    expect(second.drive!.jogForward).not.toBe(second.drive!.jogBackward);
+    const last = await readPack(page);
+    expect(last.drive!.jogForward).not.toBe(last.drive!.jogBackward);
   });
 
   test('reverses the stroke at the authored limits', async ({ page }) => {

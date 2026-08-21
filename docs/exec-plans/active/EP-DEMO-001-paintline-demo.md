@@ -252,6 +252,23 @@ M3 执行期发现：
 
 16. **性能未评估的一点**：变色插件为 80 个工件各克隆一份 `__rvUberMaterial`。uber 材质通常参与批处理，80 份克隆可能削弱批处理效果。本环境（软件渲染）无法给出有意义的性能结论，如实登记为未验证项。
 
+17. **链条在画面上从未真正动过——两道静态优化把挂具当成了布景**。用户报告「产线不运行」。实测：仿真推进 315 tick、`Carrier-01` 由 5.05 m 走到 8.45 m，而画布像素**逐字节相同**。根因是加载器的两套「是否会动」分类都不认识 `OverheadConveyor`：
+
+    - `src/core/engine/rv-freeze-static.ts` 的 `MOVER_KEY = /^(Drive|Kinematic|Grip|TransportSurface|Source|Sink|MU|Cam|SceneButtonMoveable)/i` —— 不匹配就把 `matrixWorldAutoUpdate` 关掉，整个子树被 `updateMatrixWorld` 跳过；
+    - `src/core/engine/rv-scene-loader.ts` 的 `MOTION_KEY = /^Drive|^Kinematic(_\d+)?$/i` —— 不匹配就把网格并进根挂载的静态 arena，该文件原话是 *"which cannot move by construction"*。
+
+    挂具不带任何 rv_extras 组件，输送链根节点带的 `OverheadConveyorBehavior` 也不匹配，于是两道都判它是布景。同一个文件里记录过同类旧 bug 的症状：*「信号翻转、灯亮了，但拨杆从来不动」*，以及 *「驱动臂在动，连杆和平台悬在半空不动」*，并注明 *「两套分类不一致就是那个 bug」*。
+
+    **完整演示场景一直掩盖着它**：M3 的喷房 `Drive-Lin-Y` 是真 drive，每帧顺带把场景标脏并驱动自身矩阵，所以画面确实在变——变的只有往复机。把它停掉，冻结立刻重现。
+
+    修复（均在 Allowed Paths 内）：① 挂具节点加 `rv_extras.realvirtual.Kinematic`——该键的语义正是「变换由求解器每 tick 写入的刚性组」，且是两套分类唯一都认的键；② 新增 `chain-redraw.ts` 演示插件，在挂具位姿变化时调用 `markRenderDirty()`，因为按需渲染只由运行中的 RVDrive 标脏。两者缺一不可。
+
+18. **这暴露了我的验证方法有系统性缺陷**。M1 到 M3 的全部断言——信号、`position`、tick 计数、四元数、间距——测的都是**仿真状态**，没有一条测渲染结果。上述三个里程碑因此全部「通过」，而画面里的链条从未动过。已补 `actually repaints the moving chain`：截取真实渲染画布两次并比较字节，且**先停掉喷房 drive**，防止它再次替代性地让测试通过。这类「资产在产品的渲染管线里是否真的动/亮」的断言，此前只有法线那一条（同样是交付后才补的）。
+
+19. **核心层缺口仍然存在，未修**：`OverheadConveyor` 对上述两套分类不可见，任何单独使用该库对象或把它放进自建布局的人都会遇到同样的冻结（实测：`?model=` 单独加载库对象仍冻结）。正确修法是在 `rv-freeze-static.ts` 与 `rv-scene-loader.ts` 中把 `OverheadConveyor`/`Carrier` 纳入分类，并让组件在相位推进时自行标脏——三处都在本计划的 Forbidden Paths（`src/core/`、`src/behaviors/`）内。按计划既定规则登记为**必须另立计划**的核心缺陷，本计划不越界修改。
+
+20. **一条自造的测试偶发**：「往复机在动」原本用相隔 4 秒的两点采样判定，而 1.2 m 行程在 700 mm/s 下往返约 3.4 秒——间隔与周期混叠，两次采样落回同一位置就误报停机。已改为多点采样判位移跨度，与周期无关。
+
 ## Decision Log
 
 | 日期 | 决定 | 批准依据 | 原因 |

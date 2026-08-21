@@ -414,6 +414,16 @@ function buildOverheadConveyor() {
       at: pos,
       rotation: yawQuat(yawFromTangent(tan)),
       children: parts,
+      // `Kinematic` marks a RIGID GROUP whose transform a solver writes every
+      // tick — exactly what OverheadConveyor does to a carrier. Without it the
+      // loader's two static classifications both treat the hanger as scenery:
+      // `MOVER_KEY` (rv-freeze-static.ts) freezes its matrices, and `MOTION_KEY`
+      // (rv-scene-loader.ts) merges its meshes into the root-parented static
+      // arena, "which cannot move by construction". The chain then runs
+      // perfectly in simulation while the picture never changes — measured as
+      // `Carrier-01.position.z` 2.75 → 4.39 m with byte-identical canvas pixels.
+      // `Kinematic` is the one key both classifications honour.
+      realvirtual: { Kinematic: {} },
     }));
   }
 

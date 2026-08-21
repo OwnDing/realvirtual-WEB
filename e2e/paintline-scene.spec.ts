@@ -291,6 +291,46 @@ test.describe('paint-line demo scene', () => {
     expect(geo.withNormals, 'meshes without normals render unlit/black').toBe(geo.meshes);
   });
 
+  test('actually repaints the moving chain', async ({ page }) => {
+    await openScene(page);
+    await waitForChainRunning(page);
+
+    // The assertion this suite was missing. Everything else here reads
+    // SIMULATION state — signals, `position`, tick counts — all of which
+    // advanced happily while the picture stayed frozen, because the loader
+    // classified the carriers as scenery: `rv-freeze-static` stopped their
+    // matrices updating and the mesh merge baked them into the root-parented
+    // static arena. Only comparing rendered pixels catches that.
+    await page.evaluate(() => {
+      const c = (window as unknown as { viewer: { renderer: { domElement: HTMLElement } } })
+        .viewer.renderer.domElement;
+      c.setAttribute('data-main-canvas', '1');
+    });
+    const canvas = page.locator('[data-main-canvas]');
+
+    // Neutralise the OTHER source of redraws so this cannot pass on the booth
+    // reciprocator's motion alone — that is exactly how the freeze stayed
+    // hidden through three milestones.
+    await page.evaluate(() => {
+      const drives = (window as unknown as { viewer: { drives?: { name: string;
+        jogForward: boolean; jogBackward: boolean; stop?: () => void }[] } }).viewer.drives ?? [];
+      for (const d of drives) {
+        if (d.name.replace(/_\d+$/, '') !== 'Drive-Lin-Y') continue;
+        d.jogForward = false;
+        d.jogBackward = false;
+        d.stop?.();
+      }
+    });
+    await page.waitForTimeout(1_500);
+
+    const before = await canvas.screenshot();
+    await page.waitForTimeout(5_000);
+    const after = await canvas.screenshot();
+
+    expect(Buffer.compare(before, after), 'the chain moved but the canvas never repainted')
+      .not.toBe(0);
+  });
+
   test('restores identical placement transforms on reload', async ({ page }) => {
     await openScene(page);
     const first = await readPlacements(page);
