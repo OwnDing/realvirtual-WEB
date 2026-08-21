@@ -43,7 +43,10 @@ import {
   notLinkedLabel,
   provenanceReferencedTitle,
 } from '../src/core/hmi/signal-vocabulary';
-import { resolveSlotStatusToken } from '../src/core/hmi/rv-signal-slot-row';
+import {
+  AUTHORITY_REASON_TEXT,
+  resolveSlotStatusToken,
+} from '../src/core/hmi/rv-signal-slot-row';
 import { validateScriptForSave } from '../src/core/hmi/script/rv-script-save-pipeline';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
 import {
@@ -69,10 +72,14 @@ describe('the shared signal vocabulary', () => {
     // module is loaded long before a language preference is known.
     expect(BINDING_STATE_LABEL.conflict).toBe('冲突');
     expect(AUTHORITY_SENTENCE.forced).toMatch(/[一-鿿]/);
+    expect(AUTHORITY_REASON_TEXT['authority-forced']).toBe(authorityExplanation('forced'));
+    expect(AUTHORITY_REASON_TEXT['authority-forced']).toMatch(/[一-鿿]/);
 
     await act(async () => { await setLocale('en-US'); });
     expect(BINDING_STATE_LABEL.conflict).toBe('Conflict');
     expect(AUTHORITY_SENTENCE.forced).toBe('An operator force pins this slot');
+    expect(AUTHORITY_REASON_TEXT['authority-forced']).toBe(authorityExplanation('forced'));
+    expect(AUTHORITY_REASON_TEXT['authority-forced']).not.toMatch(/[一-鿿]/);
   });
 
   it('keeps the one-lexeme invariant the module exists for', () => {

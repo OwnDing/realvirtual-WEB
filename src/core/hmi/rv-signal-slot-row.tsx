@@ -245,10 +245,10 @@ function useBindingPulse(
  * second phrasing of it.
  */
 export const AUTHORITY_REASON_TEXT: Record<string, string> = {
-  'ok': AUTHORITY_SENTENCE.ok,
-  'authority-bound': authorityExplanation('bound'),
-  'authority-forced': authorityExplanation('forced'),
-  'authority-remote': authorityExplanation('remote'),
+  get ok() { return AUTHORITY_SENTENCE.ok; },
+  get 'authority-bound'() { return authorityExplanation('bound'); },
+  get 'authority-forced'() { return authorityExplanation('forced'); },
+  get 'authority-remote'() { return authorityExplanation('remote'); },
 };
 
 // ── Status token (plan-341 §2.8 c) ───────────────────────────────────────────
