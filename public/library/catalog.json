@@ -1,7 +1,49 @@
 {
   "version": "1.0",
-  "name": "XYvirtual Library",
+  "name": "realvirtual Library",
   "entries": [
+    {
+      "id": "paintline-coolingzone-4m",
+      "name": "Cooling Zone 4m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/CoolingZone-4m.glb"
+    },
+    {
+      "id": "paintline-dryoven-6m",
+      "name": "Dry Oven 6m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/DryOven-6m.glb"
+    },
+    {
+      "id": "paintline-loadunloadstation",
+      "name": "Load Unload Station",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/LoadUnloadStation.glb"
+    },
+    {
+      "id": "paintline-paintlineoverheadconveyor",
+      "name": "Paint Line Overhead Conveyor",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintLineOverheadConveyor.glb"
+    },
+    {
+      "id": "paintline-pretreattunnel-8m",
+      "name": "Pretreat Tunnel 8m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PretreatTunnel-8m.glb"
+    },
+    {
+      "id": "paintline-spraybooth",
+      "name": "Spray Booth",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/SprayBooth.glb"
+    },
+    {
+      "id": "paintline-workpiece-bracket",
+      "name": "Workpiece Bracket",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/Workpiece-Bracket.glb"
+    },
     {
       "id": "pallethandling-cartonbox",
       "name": "Carton Box",

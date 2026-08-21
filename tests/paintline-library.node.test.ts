@@ -1,0 +1,259 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
+
+/**
+ * EP-DEMO-001 M1 — structural + contract tests for the generated `Paint Line`
+ * library objects (`scripts/build-paintline-library.mjs`).
+ *
+ * The point of this file is NOT to re-test glTF. It is to pin the three
+ * contracts the generated assets silently depend on, each of which fails
+ * invisibly at runtime (the asset loads, it just never moves):
+ *
+ *   1. The overhead conveyor's FILENAME and root name must match
+ *      `*OverheadConveyor*`, because behaviors match the asset name.
+ *   2. `Carrier-<id>` nodes must be DIRECT children of the component root —
+ *      OverheadConveyor writes their pose into the LOCAL frame assuming an
+ *      identity parent.
+ *   3. `Drive-*` names must satisfy the ANCHORED `^Drive-(Lin|Rot)-([XYZ])$`
+ *      parser, which tolerates no descriptive suffix.
+ *
+ * It also cross-checks the generator's baked preview poses against the RUNTIME
+ * path parser (`parsePathExtras`, the SSOT). The generator carries its own
+ * small arc evaluator to bake those poses; this test is what stops the two
+ * copies from drifting apart.
+ */
+
+import { describe, it, expect } from 'vitest';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { Vector3 } from 'three';
+import { parsePathExtras } from '@rv/core/engine/rv-path';
+import {
+  parseDriveName,
+  isCarrierName,
+} from '@rv/core/library-component-loader';
+import { parseSnapName } from '@rv/plugins/snap-point/snap-name-parser';
+
+const LIB_DIR = resolve(__dirname, '..', 'public', 'library', 'PaintLine');
+
+const OBJECT_FILES = [
+  'PaintLineOverheadConveyor.glb',
+  'PretreatTunnel-8m.glb',
+  'DryOven-6m.glb',
+  'SprayBooth.glb',
+  'CoolingZone-4m.glb',
+  'LoadUnloadStation.glb',
+  'Workpiece-Bracket.glb',
+];
+
+interface GltfNode {
+  name?: string;
+  mesh?: number;
+  translation?: [number, number, number];
+  rotation?: [number, number, number, number];
+  scale?: [number, number, number];
+  children?: number[];
+  extras?: { realvirtual?: Record<string, unknown> };
+}
+
+interface GltfDoc {
+  asset: { version: string };
+  scene: number;
+  scenes: { name?: string; nodes: number[] }[];
+  nodes: GltfNode[];
+  meshes: unknown[];
+  materials: unknown[];
+}
+
+/** Parse a GLB container and return its JSON chunk, asserting the framing. */
+function readGlb(file: string): GltfDoc {
+  const buf = readFileSync(resolve(LIB_DIR, file));
+  expect(buf.readUInt32LE(0), `${file}: glTF magic`).toBe(0x46546c67);
+  expect(buf.readUInt32LE(4), `${file}: glTF version`).toBe(2);
+  expect(buf.readUInt32LE(8), `${file}: declared length`).toBe(buf.length);
+
+  const jsonLen = buf.readUInt32LE(12);
+  expect(buf.readUInt32LE(16), `${file}: first chunk is JSON`).toBe(0x4e4f534a);
+  const doc = JSON.parse(buf.subarray(20, 20 + jsonLen).toString('utf8')) as GltfDoc;
+
+  // The BIN chunk must follow and be 4-byte aligned.
+  const binHeaderAt = 20 + jsonLen;
+  expect(buf.readUInt32LE(binHeaderAt + 4), `${file}: second chunk is BIN`).toBe(0x004e4942);
+  expect(jsonLen % 4, `${file}: JSON chunk padded to 4 bytes`).toBe(0);
+  return doc;
+}
+
+/** Every node index reachable as someone's child. */
+function childIndices(doc: GltfDoc): Set<number> {
+  const claimed = new Set<number>();
+  for (const node of doc.nodes) for (const c of node.children ?? []) claimed.add(c);
+  return claimed;
+}
+
+describe('paint-line library objects (EP-DEMO-001 M1)', () => {
+  it('generates all seven objects', () => {
+    for (const file of OBJECT_FILES) {
+      expect(existsSync(resolve(LIB_DIR, file)), `${file} missing — run scripts/build-paintline-library.mjs`).toBe(true);
+    }
+  });
+
+  describe.each(OBJECT_FILES)('%s', (file) => {
+    it('is a single-root GLB whose root is the only unclaimed node', () => {
+      const doc = readGlb(file);
+      expect(doc.scenes[doc.scene].nodes).toHaveLength(1);
+
+      const rootIndex = doc.scenes[doc.scene].nodes[0];
+      const claimed = childIndices(doc);
+      expect(claimed.has(rootIndex), 'root must not also be a child').toBe(false);
+
+      const unclaimed = doc.nodes.map((_, i) => i).filter((i) => !claimed.has(i));
+      expect(unclaimed, 'exactly one node may be parentless').toEqual([rootIndex]);
+    });
+
+    it('names its root after the asset (behaviors match the asset name)', () => {
+      const doc = readGlb(file);
+      expect(doc.nodes[doc.scenes[doc.scene].nodes[0]].name).toBe(file.replace(/\.glb$/, ''));
+    });
+
+    it('parses every Snap- node with the real snap-name parser', () => {
+      const doc = readGlb(file);
+      for (const node of doc.nodes) {
+        if (!node.name?.startsWith('Snap-')) continue;
+        expect(parseSnapName(node.name), `${node.name} must parse`).not.toBeNull();
+      }
+    });
+
+    it('parses every Drive- node with the anchored drive-name parser', () => {
+      const doc = readGlb(file);
+      for (const node of doc.nodes) {
+        if (!node.name?.startsWith('Drive-')) continue;
+        expect(parseDriveName(node.name), `${node.name} must parse`).not.toBeNull();
+      }
+    });
+  });
+
+  describe('PaintLineOverheadConveyor', () => {
+    const doc = readGlb('PaintLineOverheadConveyor.glb');
+    const rootIndex = doc.scenes[doc.scene].nodes[0];
+    const root = doc.nodes[rootIndex];
+
+    it('carries the OverheadConveyorBehavior configuration on its root', () => {
+      const cfg = root.extras?.realvirtual?.OverheadConveyorBehavior as Record<string, unknown>;
+      expect(cfg).toBeDefined();
+      expect(cfg.PathId).toBe('PaintLineLoop');
+      // Pitch 0 is meaningful: it asks the component to distribute L / N evenly.
+      expect(cfg.Pitch).toBe(0);
+      expect(cfg.TargetSpeed).toBeGreaterThan(0);
+    });
+
+    it('matches the behavior glob that binds the component', () => {
+      // src/behaviors/OverheadConveyor.ts declares models: ['*OverheadConveyor*']
+      expect(root.name).toContain('OverheadConveyor');
+    });
+
+    it('keeps all 40 carriers as DIRECT children of the root', () => {
+      const carriers = doc.nodes
+        .map((n, i) => ({ n, i }))
+        .filter(({ n }) => n.name !== undefined && isCarrierName(n.name));
+      expect(carriers).toHaveLength(40);
+
+      const directChildren = new Set(root.children ?? []);
+      for (const { n, i } of carriers) {
+        expect(directChildren.has(i), `${n.name} must be a direct child of the root`).toBe(true);
+      }
+    });
+
+    it('declares a closed path the runtime parser accepts', () => {
+      const pathNode = doc.nodes.find((n) => n.extras?.realvirtual?.Path !== undefined);
+      expect(pathNode).toBeDefined();
+
+      const path = parsePathExtras(pathNode!.extras!.realvirtual!.Path, 'PaintLineLoop');
+      expect(path).not.toBeNull();
+      expect(path!.closed).toBe(true);
+      // Racetrack: 2 straights of 30 m + 2 half-turns of radius 3.
+      expect(path!.length).toBeCloseTo(60 + 6 * Math.PI, 6);
+    });
+
+    it('bakes preview poses that agree with the runtime path parser', () => {
+      const pathNode = doc.nodes.find((n) => n.extras?.realvirtual?.Path !== undefined)!;
+      const path = parsePathExtras(pathNode.extras!.realvirtual!.Path, 'PaintLineLoop')!;
+
+      const carriers = doc.nodes
+        .filter((n) => n.name !== undefined && isCarrierName(n.name))
+        .sort((a, b) => a.name!.localeCompare(b.name!));
+      const pitch = path.length / carriers.length;
+
+      const expected = new Vector3();
+      for (let i = 0; i < carriers.length; i++) {
+        path.getAbsPosition(i * pitch, expected);
+        const baked = carriers[i].translation!;
+        expect(baked[0], `${carriers[i].name} x`).toBeCloseTo(expected.x, 5);
+        expect(baked[1], `${carriers[i].name} y`).toBeCloseTo(expected.y, 5);
+        expect(baked[2], `${carriers[i].name} z`).toBeCloseTo(expected.z, 5);
+      }
+    });
+
+    it('hangs every carrier gravity-oriented (yaw only, no roll)', () => {
+      const carriers = doc.nodes.filter((n) => n.name !== undefined && isCarrierName(n.name));
+      for (const c of carriers) {
+        const [x, , z, w] = c.rotation ?? [0, 0, 0, 1];
+        // A pure yaw quaternion has zero X and Z components; anything else
+        // would tilt the hanger off vertical.
+        expect(x, `${c.name} must not pitch`).toBeCloseTo(0, 9);
+        expect(z, `${c.name} must not roll`).toBeCloseTo(0, 9);
+        expect(Number.isFinite(w)).toBe(true);
+      }
+    });
+
+    it('gives every carrier the same hanger sub-structure', () => {
+      const carriers = doc.nodes.filter((n) => n.name !== undefined && isCarrierName(n.name));
+      for (const c of carriers) {
+        const names = (c.children ?? []).map((i) => doc.nodes[i].name);
+        expect(names).toEqual(['Trolley', 'Rod', 'Crossbar', 'Workpiece-A', 'Workpiece-B']);
+      }
+    });
+  });
+
+  describe('SprayBooth', () => {
+    const doc = readGlb('SprayBooth.glb');
+
+    it('carries exactly one reciprocator drive, named without a suffix', () => {
+      const drives = doc.nodes.filter((n) => n.name?.startsWith('Drive-'));
+      expect(drives).toHaveLength(1);
+      // The parser is anchored — `Drive-Lin-Y-Reciprocator` would NOT parse,
+      // and two nodes named `Drive-Lin-Y` would collide on GLB export.
+      expect(drives[0].name).toBe('Drive-Lin-Y');
+      expect(parseDriveName(drives[0].name!)).toBe('LinearY');
+    });
+
+    it('mounts both gun arms on that single carriage', () => {
+      const drive = doc.nodes.find((n) => n.name === 'Drive-Lin-Y')!;
+      const names = (drive.children ?? []).map((i) => doc.nodes[i].name ?? '');
+      expect(names.filter((n) => n.startsWith('Gun-Arm-'))).toEqual(['Gun-Arm-L', 'Gun-Arm-R']);
+      expect(names.filter((n) => n.startsWith('Spray-Fan-'))).toHaveLength(6);
+    });
+
+    it('declares drive limits in millimetres per schema/v1 §7a.1', () => {
+      const drive = doc.nodes.find((n) => n.name === 'Drive-Lin-Y')!;
+      const cfg = drive.extras!.realvirtual!.Drive as Record<string, unknown>;
+      expect(cfg.Direction).toBe('LinearY');
+      expect(cfg.UseLimits).toBe(true);
+      expect(cfg.UpperLimit).toBe(1200);
+    });
+  });
+
+  describe('process sections', () => {
+    it.each(['PretreatTunnel-8m.glb', 'DryOven-6m.glb', 'CoolingZone-4m.glb', 'SprayBooth.glb'])(
+      '%s exposes an in/out paintseg snap pair',
+      (file) => {
+        const doc = readGlb(file);
+        const snaps = doc.nodes
+          .filter((n) => n.name?.startsWith('Snap-'))
+          .map((n) => parseSnapName(n.name!)!);
+        expect(snaps).toHaveLength(2);
+        expect(snaps.every((s) => s.typeId === 'paintseg')).toBe(true);
+        expect(snaps.map((s) => s.flow).sort()).toEqual(['in', 'out']);
+      },
+    );
+  });
+});
