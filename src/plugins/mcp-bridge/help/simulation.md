@@ -43,7 +43,7 @@ _17 tools in this family, generated from the @McpTool decorators — do not edit
 | `web_signal_list` | read | — | List all PLC signals with current values. For direction/forced/live-vs-stale diagnosis use web_signal_status instead. |
 | `web_signal_set_bool` | write | `name` string **req**, `value` boolean **req** | Write a boolean PLC signal in the browser SignalStore. |
 | `web_signal_set_float` | write | `name` string **req**, `value` number **req** | Write a float PLC signal in the browser SignalStore. |
-| `web_signal_sources_list` | read | `filter` string, `limit` number | List signals available as binding sources: live XYvirtual CONNECT signals from every connected interface plus internal model signals, each with direction, data type, p… |
+| `web_signal_sources_list` | read | `filter` string, `limit` number | List signals available as binding sources: live XYvirtual CONNECT signals from every connected interface plus internal model signals, each with direction, data type, pro… |
 | `web_signal_status` | read | `filter` string, `activeOnly` boolean, `limit` number | List PLC signals with full status: value, type, direction, forced state, live/stale activity, address/comment metadata. |
 | `web_signal_unbind` | write | `targetId` string **req**, `componentPath` string **req**, `slot` string **req** | Remove the external signal from one component slot, identified by targetId plus componentPath plus slot. |
 | `web_sim_play_pause` | write | `paused` boolean | Play or pause the simulation. Pass paused=true/false, or omit to toggle. |

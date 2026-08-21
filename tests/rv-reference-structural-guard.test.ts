@@ -12,8 +12,9 @@
  * Renderer-free: `guardReferenceOp` takes its lookup as a closure, so the
  * situation is three `Object3D`s and a `Map`.
  */
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { Object3D } from 'three';
+import { initI18n, setLocale } from '../src/core/i18n';
 import {
   getAssetOverrides,
   setAssetReference,
@@ -32,6 +33,8 @@ import {
   writeOverride,
 } from '../src/core/ops/rv-reference-guard';
 import type { RvOp } from '../src/core/ops/rv-unified-ops';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ─── Fixture ────────────────────────────────────────────────────────────
 

@@ -20,8 +20,9 @@
  *    and is refused rather than queued while a transaction is open.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeAll, describe, it, expect, beforeEach, vi } from 'vitest';
 import { Group, Object3D, Scene } from 'three';
+import { initI18n, setLocale } from '../src/core/i18n';
 import { NodeRegistry } from '../src/core/engine/rv-node-registry';
 import { RvDocument } from '../src/core/ops/rv-document';
 import { RvUnifiedExecutor } from '../src/core/ops/rv-unified-executors';
@@ -33,6 +34,8 @@ import {
   undoViaRecompose,
 } from '../src/core/ops/rv-document-projection';
 import type { RvOp, RvPrimitiveOp } from '../src/core/ops/rv-unified-ops';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 import type { RVViewer } from '../src/core/rv-viewer';
 
 let opSeq = 0;

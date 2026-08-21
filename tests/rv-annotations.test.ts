@@ -7,9 +7,12 @@
  * Tests annotation CRUD, localStorage persistence, text truncation,
  * max count enforcement, disposal, and drawing support.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { AnnotationPlugin, getAnnotationSnapshot, subscribeAnnotations } from '../src/plugins/annotation-plugin';
 import type { Annotation } from '../src/core/types/plugin-types';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

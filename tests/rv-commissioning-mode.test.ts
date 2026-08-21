@@ -148,7 +148,7 @@ describe('commissioningMode_IsRegistered', () => {
     // store, thirty plugins), and a mode that is written and never registered
     // looks finished and shows nothing.
     expect(mainSource).toContain(
-      "register({ id: 'commissioning', label: 'Commissioning', icon: 'Handyman', order: 35 })",
+      "register({ id: 'commissioning', get label() { return rvT('tools', 'finalSweep.workspace.commissioning'); }, icon: 'Handyman', order: 35 })",
     );
   });
 

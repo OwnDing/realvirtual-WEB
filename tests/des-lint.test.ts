@@ -6,8 +6,11 @@
  * positive + negative cases, DesSafe escalation, comment/string immunity).
  */
 
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { lintDesSafety } from '../src/core/sdk/rv-des-lint';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const EVENT_ONLY = `
 function setup(self) {

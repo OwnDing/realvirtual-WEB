@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import {
   classifyGPU, classifyAdapter, analyzeGPU,
   type ActiveGPU, type GPUInfo,
 } from '../src/core/engine/rv-gpu-info';
+import { initI18n, setLocale } from '../src/core/i18n';
+
+beforeAll(async () => { initI18n(); await setLocale('en-US'); });
 
 const active = (renderer: string, vendor = 'unknown'): ActiveGPU => ({ vendor, renderer });
 
