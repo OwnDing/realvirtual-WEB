@@ -1,6 +1,6 @@
-# realvirtual WEB Industrial Interfaces
+# XYvirtual WEB Industrial Interfaces
 
-Connect realvirtual WEB to real PLCs and controllers via WebSocket or MQTT — independent of Unity. The interface system provides bidirectional signal exchange synchronized with the drive physics loop at 60 Hz.
+Connect XYvirtual WEB to real PLCs and controllers via WebSocket or MQTT — independent of Unity. The interface system provides bidirectional signal exchange synchronized with the drive physics loop at 60 Hz.
 
 ## Supported Protocols
 
@@ -94,7 +94,7 @@ Reconnect only activates when `autoConnect` is enabled in settings.
 
 The core design principle: **never write directly to SignalStore from async callbacks**. Instead, buffer incoming values and flush them synchronously with the fixed-timestep simulation loop.
 
-### Incoming Signals (PLC → realvirtual WEB)
+### Incoming Signals (PLC → XYvirtual WEB)
 
 ```
 PLC / Controller
@@ -120,7 +120,7 @@ SignalStore
 Drive physics, transport, LogicSteps run with updated signal values
 ```
 
-### Outgoing Signals (realvirtual WEB → PLC)
+### Outgoing Signals (XYvirtual WEB → PLC)
 
 ```
 HMI button press / LogicStep / Drive feedback
@@ -228,7 +228,7 @@ Client                              Server (Unity)
   │         }                            │
   │       }                              │
   │                                      │
-  │──── { type: "data",                  │  (outgoing from realvirtual WEB)
+  │──── { type: "data",                  │  (outgoing from XYvirtual WEB)
   │       version: 2,                    │
   │       signals: {                     │
   │         "StartButton": true          │
@@ -464,7 +464,7 @@ The wire protocol (init, import, subscribe, data) is identical to WebSocket Real
 
 ## CONNECT gateway endpoints
 
-Besides the signal protocols above, the viewer talks to a local realvirtual CONNECT gateway over
+Besides the signal protocols above, the viewer talks to a local XYvirtual CONNECT gateway over
 plain HTTP. Three of those endpoints describe the gateway itself and drive the CONNECT options
 window.
 
@@ -572,6 +572,6 @@ The Unity server:
 1. Listens for WebSocket connections
 2. Responds to `import_request` with all registered PLC signals
 3. Sends delta `data` messages when signal values change
-4. Receives `data` messages from realvirtual WEB and applies them to PLC signals
+4. Receives `data` messages from XYvirtual WEB and applies them to PLC signals
 
 No special configuration is needed per signal — the interface discovers and exchanges all defined signals automatically.

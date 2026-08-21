@@ -1,7 +1,7 @@
-# realvirtual WEB — MCP Bridge (Node/TS)
+# XYvirtual WEB — MCP Bridge (Node/TS)
 
 Local MCP server that connects an AI assistant (Claude Desktop / Claude Code) to a
-running **realvirtual WEB** browser session.
+running **XYvirtual WEB** browser session.
 
 - **stdio side:** exposes itself as an MCP server (low-level `@modelcontextprotocol/sdk` `Server`).
 - **WebSocket side:** hosts a server on `127.0.0.1:18714` (`/webviewer`); the browser connects as a client.

@@ -1,6 +1,6 @@
 # Component Behaviors
 
-realvirtual WEB is the open standard for browser-based 3D-HMI in manufacturing. Component Behaviors are the standard's wiring layer: they turn a generic GLB into a working machine — drives, sensors, transports, signals, AAS links and right-click menus — without touching the GLB or the engine.
+XYvirtual WEB is the open standard for browser-based 3D-HMI in manufacturing. Component Behaviors are the standard's wiring layer: they turn a generic GLB into a working machine — drives, sensors, transports, signals, AAS links and right-click menus — without touching the GLB or the engine.
 
 There are three ways to declare wiring; all of them feed the same low-level core (`applyKinematicsSpec`):
 

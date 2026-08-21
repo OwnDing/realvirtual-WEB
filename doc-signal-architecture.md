@@ -1,6 +1,6 @@
 # Signal Architecture — GLB Import to React UI
 
-This document describes the complete signal data flow in realvirtual WEB: how signals are imported from GLB files, wired between components, driven by behavior models, updated by external interfaces, and bound to React UI components.
+This document describes the complete signal data flow in XYvirtual WEB: how signals are imported from GLB files, wired between components, driven by behavior models, updated by external interfaces, and bound to React UI components.
 
 Signal references authored in Unity are stored as node paths. How those paths are written, how
 they are resolved, and how Three.js name deduplication can break them is covered separately in
@@ -1050,11 +1050,11 @@ subscribeToOutgoingSignals(signals) {
 
 ### 6.4 CONNECT Integration
 
-CONNECT uses the **existing WebSocket Realtime v2 protocol** — from realvirtual WEB's perspective, it's identical to connecting to Unity. realvirtual WEB doesn't know (or care) whether signals come from Unity or CONNECT:
+CONNECT uses the **existing WebSocket Realtime v2 protocol** — from XYvirtual WEB's perspective, it's identical to connecting to Unity. realvirtual WEB doesn't know (or care) whether signals come from Unity or CONNECT:
 
 ```
-Unity + PLC:     PLC → Unity → WebSocket v2 → realvirtual WEB
-CONNECT + PLC:   PLC → CONNECT → WebSocket v2 → realvirtual WEB
+Unity + PLC:     PLC → Unity → WebSocket v2 → XYvirtual WEB
+CONNECT + PLC:   PLC → CONNECT → WebSocket v2 → XYvirtual WEB
 ```
 
 Same protocol, same SignalStore, same React hooks, same behavior models.
@@ -1215,7 +1215,7 @@ Other                   → resolves to node path (string)
 
 ## 9. Signal Lifecycle — Complete Example
 
-A conveyor start button pressed in the realvirtual WEB React UI:
+A conveyor start button pressed in the XYvirtual WEB React UI:
 
 ```
 1. User clicks button in React HMI

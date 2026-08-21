@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * "Open in realvirtual WEB" — from looking at a shared GLB to working with it
+ * "Open in XYvirtual WEB" — from looking at a shared GLB to working with it
  * (plan-386 §2.5, F12).
  *
  * ## Two outcomes, decided by the file and not by the link
@@ -61,7 +61,7 @@ export interface EscalationResult {
 }
 
 /**
- * What "Open in realvirtual WEB" will do with this file (§2.5).
+ * What "Open in XYvirtual WEB" will do with this file (§2.5).
  *
  * `plant` is the plan-413 spelling of what v1 called `model`; `parseShareMeta`
  * up-maps a v1 block before it ever reaches here, so an old share link keeps

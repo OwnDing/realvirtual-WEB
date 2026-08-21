@@ -2,13 +2,13 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * Build / version metadata for realvirtual WEB.
+ * Build / version metadata for XYvirtual WEB.
  *
  * All values are injected at build time by Vite `define` (see vite.config.ts):
  * - `version`   — framework-synced semantic version (from package.json, kept in
  *                 step with the Unity realvirtual release, e.g. "6.3.0").
  * - `webBuild`  — web-specific build number = commit count of THIS repo
- *                 (realvirtual-WEB-DEV), independent of the Unity framework.
+ *                 (XYvirtual-WEB-DEV), independent of the Unity framework.
  * - `commit`    — short git hash of the built commit ("" if git unavailable).
  * - `buildDate` — date of the built commit, "YYYY-MM-DD".
  */

@@ -109,7 +109,7 @@ describe('F1 shortcut', () => {
     renderApp();
     const ev = pressF1();
     expect(openSpy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
     expect(ev.defaultPrevented).toBe(true);
   });

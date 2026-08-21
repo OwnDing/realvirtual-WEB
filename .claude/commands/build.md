@@ -5,7 +5,7 @@ allowed-tools: Bash(*)
 
 # Build Command
 
-Verify and build realvirtual WEB without publishing it.
+Verify and build XYvirtual WEB without publishing it.
 
 ## Task
 

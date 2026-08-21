@@ -469,7 +469,7 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
         color: 'rgba(255,255,255,0.92)', pointerEvents: 'auto',
       }}
     >
-      {/* realvirtual logo — the top-left corner mark; opens the About modal. */}
+      {/* XYvirtual logo — the top-left corner mark; opens the About modal. */}
       {isEntryAllowed('about') && (
         <>
           <LogoBadge />

@@ -18,7 +18,7 @@
  * This matters for PLC signal names: a Siemens symbol like `MC04.01I00W`
  * becomes `MC0401I00W` once it lands on `Object3D.name`. realvirtual registers
  * signals (and resolves rv_extras component references) by exact name, and the
- * live interfaces (MQTT / realvirtual CONNECT) address the SAME signal by the
+ * live interfaces (MQTT / XYvirtual CONNECT) address the SAME signal by the
  * ORIGINAL dotted name. Re-deriving the original glTF name and detecting that a
  * given `Object3D.name` is *purely* the sanitized form of it (no dedup `_N`
  * suffix) lets the loader restore the exact original name so both sides match.

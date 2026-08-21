@@ -64,7 +64,7 @@ function buildFixture() {
   const root = mkdtempSync(join(tmpdir(), 'rv-build-cache-test-'));
   temporary.push(root);
   const workspaceRoot = join(root, 'workspace');
-  const coreRoot = join(workspaceRoot, 'realvirtual-web');
+  const coreRoot = join(workspaceRoot, 'xyvirtual-web');
   const cacheRoot = join(root, 'cache');
   write(join(coreRoot, 'package.json'), '{"name":"build-fixture","version":"1.0.0"}');
   write(join(coreRoot, 'package-lock.json'), '{"lockfileVersion":3,"packages":{}}');
@@ -123,7 +123,7 @@ function fixture() {
   write(join(core, 'package.json'), '{"name":"core","version":"1.0.0"}');
   write(join(core, 'package-lock.json'), '{"lockfileVersion":3}');
   write(join(core, 'tsconfig.json'), JSON.stringify({ compilerOptions: { paths: {} } }));
-  write(join(core, 'webviewer.mcp.md'), '# realvirtual WEB MCP Tools fixture');
+  write(join(core, 'webviewer.mcp.md'), '# XYvirtual WEB MCP Tools fixture');
   for (const name of staticCoreRecipes) {
     write(join(core, 'recipes', name), `# ${name} fixture\n`);
   }
@@ -148,7 +148,7 @@ function fixture() {
   write(join(privateRoot, 'appliance', 'state', 'resume.json'), '{"phase":"E"}');
   write(join(privateRoot, 'appliance', 'tests', 'node_modules', 'vitest', 'index.js'), 'module.exports = {};');
   const referencedImages = [
-    'realvirtual-web-demo.jpg', 'screenshot-hmi-overview.png', 'screenshot-layout-planner.jpg',
+    'xyvirtual-web-demo.jpg', 'screenshot-hmi-overview.png', 'screenshot-layout-planner.jpg',
     'screenshot-drive-chart.png', 'screenshot-hierarchy.png', 'screenshot-settings.png',
   ];
   write(join(core, 'README.md'), '# Core\n\n'
@@ -377,8 +377,8 @@ describe('customer workspace generator', () => {
     expect(settings.news).toBeUndefined();
     expect(readFileSync(join(first.privateRoot!, 'package.json'), 'utf8')).not.toContain('@nvidia');
     expect(existsSync(join(first.coreRoot, 'public', 'aasx'))).toBe(false);
-    expect(existsSync(join(first.workspaceRoot, 'realvirtual-web', 'webviewer.mcp.md'))).toBe(true);
-    expect(existsSync(join(first.workspaceRoot, 'realvirtual-web', 'schema', 'v1', 'rv-odt.json'))).toBe(true);
+    expect(existsSync(join(first.workspaceRoot, 'xyvirtual-web', 'webviewer.mcp.md'))).toBe(true);
+    expect(existsSync(join(first.workspaceRoot, 'xyvirtual-web', 'schema', 'v1', 'rv-odt.json'))).toBe(true);
     // Imported as ?raw by src/plugins/mcp-bridge/rv-mcp-help-tool.ts — the customer build
     // fails to resolve them when they are not staged. They travel inside src/ now, so this
     // asserts the staging of src/ rather than a hand-listed extra directory.
@@ -394,7 +394,7 @@ describe('customer workspace generator', () => {
       expect(existsSync(join(first.coreRoot, name)), name).toBe(false);
     }
     for (const name of [
-      'realvirtual-web-demo.jpg', 'screenshot-hmi-overview.png', 'screenshot-layout-planner.jpg',
+      'xyvirtual-web-demo.jpg', 'screenshot-hmi-overview.png', 'screenshot-layout-planner.jpg',
       'screenshot-drive-chart.png', 'screenshot-hierarchy.png', 'screenshot-settings.png',
     ]) expect(existsSync(join(first.coreRoot, 'docs', 'images', name)), name).toBe(true);
     expect(existsSync(join(first.coreRoot, 'docs', 'images', 'unreferenced.png'))).toBe(false);
@@ -410,8 +410,8 @@ describe('customer workspace generator', () => {
     // delivered README - not as the main route and not as an alternative. A download link
     // to something we do not currently support is worse than no link at all.
     expect(readme).not.toContain('setup.exe');
-    expect(readme).not.toContain('realvirtual-WEB-dev-setup');
-    expect(readme).not.toContain('realvirtual WEB dev');
+    expect(readme).not.toContain('XYvirtual-WEB-dev-setup');
+    expect(readme).not.toContain('XYvirtual WEB dev');
     // Git is THE documented route, and its prerequisites are stated because nothing
     // brings them along any more.
     expect(readme.indexOf('## How to get started')).toBeGreaterThan(-1);
@@ -453,9 +453,9 @@ describe('customer workspace generator', () => {
     expect(readme).toContain('Diagnosis.Enabled=false');
     expect(readme).toContain('## Working with the workspace');
     expect(readme).toContain('[workspace recipes](recipes/README.md)');
-    // Customer contact address is professional@realvirtual.io — never support@.
-    expect(readme).toContain('professional@realvirtual.io');
-    expect(readme).not.toContain('support@realvirtual.io');
+    // Customer contact address is professional@xyvirtual.io — never support@.
+    expect(readme).toContain('professional@xyvirtual.io');
+    expect(readme).not.toContain('support@xyvirtual.io');
     // One address for every setup (plan-363 Phase 6): CONNECT serves the Viewer and starts the dev
     // server itself, so the README names a port rather than a second command to run.
     expect(readme).toContain('One address, whichever way the workspace runs');
@@ -499,15 +499,15 @@ describe('customer workspace generator', () => {
     expect(readme).toContain('same licence and codebase as the public Community version');
     expect(readme).toContain('public Community version can be newer or older than this delivered snapshot');
     expect(readme).toContain('`delivery-manifest.json` is authoritative for the version, commit, and changeset');
-    expect(readme).not.toContain('It matches the public realvirtual WEB source');
-    expect(readme).toContain('realvirtual-web/doc-scripting.md');
+    expect(readme).not.toContain('It matches the public XYvirtual WEB source');
+    expect(readme).toContain('xyvirtual-web/doc-scripting.md');
     expect(readme).toContain('npx tsc --noEmit');
     const claudeGuide = readFileSync(join(first.workspaceRoot, 'CLAUDE.md'), 'utf8');
     const agentsGuide = readFileSync(join(first.workspaceRoot, 'AGENTS.md'), 'utf8');
     expect(agentsGuide).toBe(claudeGuide);
     expect(claudeGuide).toContain('projects/acme/plugins/index.ts');
-    expect(claudeGuide).toContain('realvirtual-web/doc-webviewer.md');
-    expect(claudeGuide).toContain('realvirtual-web/webviewer.mcp.md');
+    expect(claudeGuide).toContain('xyvirtual-web/doc-webviewer.md');
+    expect(claudeGuide).toContain('xyvirtual-web/webviewer.mcp.md');
     expect(claudeGuide).toContain('[workspace recipes](recipes/README.md)');
     expect(claudeGuide).toContain('canonical, vendor-neutral instructions');
     for (const internalTerm of ['Bunny', 'RV_INTERNAL', 'Assets/realvirtual-WebViewer~']) {
@@ -527,7 +527,7 @@ describe('customer workspace generator', () => {
     const recipeIndex = readFileSync(join(first.workspaceRoot, 'recipes', 'README.md'), 'utf8');
     for (const name of workspaceRecipes.slice(1)) expect(recipeIndex).toContain(`](${name})`);
     const replaceRecipe = readFileSync(join(first.workspaceRoot, 'recipes', 'replace-machine-model.md'), 'utf8');
-    expect(replaceRecipe).toContain('../realvirtual-web/doc-unity-to-web.md');
+    expect(replaceRecipe).toContain('../xyvirtual-web/doc-unity-to-web.md');
     const deployRecipe = readFileSync(join(first.workspaceRoot, 'recipes', 'deploy-production-web.md'), 'utf8');
     expect(deployRecipe).toContain('Never put secrets in `VITE_*` variables or `settings.json`');
     expect(deployRecipe).toContain('`wss://`');
@@ -559,7 +559,7 @@ describe('customer workspace generator', () => {
     const projectRoot = join(core, 'public');
     write(join(projectRoot, 'library', 'catalog.json'), JSON.stringify({
       version: '1.0',
-      name: 'realvirtual Library',
+      name: 'XYvirtual Library',
       entries: [
         { id: 'pallethandling-roll-conveyor-1m', name: 'Roll Conveyor 1m', category: 'Pallet Handling', glbUrl: 'PalletHandling/RollConveyor-1m.glb' },
         { id: 'custom-other-customer', name: 'Other Customer', category: 'Custom', glbUrl: 'Custom/other-customer.glb' },
@@ -587,7 +587,7 @@ describe('customer workspace generator', () => {
     const catalog = JSON.parse(readFileSync(join(library, 'catalog.json'), 'utf8'));
     expect(catalog.entries.map((entry: { id: string }) => entry.id)).toEqual(['pallethandling-roll-conveyor-1m']);
     expect(readFileSync(join(staged.workspaceRoot, '.gitattributes'), 'utf8'))
-      .toContain('realvirtual-web/public/models/*.glb filter=lfs diff=lfs merge=lfs -text');
+      .toContain('xyvirtual-web/public/models/*.glb filter=lfs diff=lfs merge=lfs -text');
   });
 
   it('omits the bundled library when the layout planner is not part of the core', () => {
@@ -619,11 +619,11 @@ describe('customer workspace generator', () => {
     temporary.push(staged.workspaceRoot);
     // Tier-excluded @rv-private module exists as its public stub with rewritten core imports.
     const stubPath = join(staged.privateRoot!, 'src', 'plugins', 'des', 'hmi', 'event-queue-overlay.tsx');
-    expect(readFileSync(stubPath, 'utf8')).toContain("from '../../../../../realvirtual-web/src/core/rv-ui-plugin'");
+    expect(readFileSync(stubPath, 'utf8')).toContain("from '../../../../../xyvirtual-web/src/core/rv-ui-plugin'");
     expect(() => assertNoCrossTierLeak(staged.workspaceRoot, manifest, delivery)).not.toThrow();
     // Customer project files move one level up: sibling imports lose exactly one `../`.
     const chart = readFileSync(join(staged.workspaceRoot, 'projects', 'acme', 'plugins', 'chart.tsx'), 'utf8');
-    expect(chart).toContain("from '../../../realvirtual-web/src/core/hmi/FloatingPanel'");
+    expect(chart).toContain("from '../../../xyvirtual-web/src/core/hmi/FloatingPanel'");
     // Staged vite.config resolves bare imports from the workspace projects/ tree.
     const viteConfig = readFileSync(join(staged.coreRoot, 'vite.config.ts'), 'utf8');
     expect(viteConfig).toContain("resolve(__dirname, '../projects')");
@@ -741,7 +741,7 @@ describe('customer workspace generator', () => {
       Diagnosis: { RequestyApiKey: syntheticRequestyKey() },
       Agents: { DeliveredApiKeys: { 'cloud-eu-france': syntheticRequestyKey() } },
     }));
-    write(join(root, 'realvirtual-web', 'public', 'settings.json'), JSON.stringify({ connectLicensePrefill: 'RVC1-PLACEHOLDER' }));
+    write(join(root, 'xyvirtual-web', 'public', 'settings.json'), JSON.stringify({ connectLicensePrefill: 'RVC1-PLACEHOLDER' }));
     expect(() => assertWorkspaceGuards(root)).not.toThrow();
     write(join(root, 'connect', 'project-config.json'), JSON.stringify({ Agents: { ApiKey: syntheticRequestyKey() } }));
     expect(() => assertWorkspaceGuards(root)).toThrow(/allowed schema path/);
@@ -863,9 +863,9 @@ describe('customer workspace generator', () => {
     execFileSync('git', ['init', '-b', 'main'], { cwd: staged.workspaceRoot, stdio: 'ignore' });
     execFileSync('git', ['add', '-A'], { cwd: staged.workspaceRoot, stdio: 'ignore' });
     applyMergedSnapshot(staged.workspaceRoot, clone, { projects: [{ key: 'acme', vendor: null }], version: '9.9.9' });
-    expect(existsSync(join(clone, 'realvirtual-web', 'node_modules'))).toBe(false);
-    expect(existsSync(join(clone, 'realvirtual-web', 'dist'))).toBe(false);
-    expect(existsSync(join(clone, 'realvirtual-web', 'package.json'))).toBe(true);
+    expect(existsSync(join(clone, 'xyvirtual-web', 'node_modules'))).toBe(false);
+    expect(existsSync(join(clone, 'xyvirtual-web', 'dist'))).toBe(false);
+    expect(existsSync(join(clone, 'xyvirtual-web', 'package.json'))).toBe(true);
     // Same reason as above: staging plus two `git init`/`git add` subprocesses
     // does not fit the 5 s default while the suite runs in parallel.
   }, 60000);
@@ -895,7 +895,7 @@ describe('customer workspace generator', () => {
     temporary.push(root);
     const staged = join(root, 'staged');
     write(join(staged, '.gitattributes'), 'projects/*/models/*.glb filter=lfs diff=lfs merge=lfs -text\n');
-    write(join(staged, 'realvirtual-web', 'src', 'main.ts'), 'export {};');
+    write(join(staged, 'xyvirtual-web', 'src', 'main.ts'), 'export {};');
     write(join(staged, 'projects', 'acme', 'models', 'machine.glb'), 'large-binary-model-fixture-payload');
     // A core repository whose HEAD moves between the two deliveries below.
     const core = join(root, 'core');
@@ -943,7 +943,7 @@ describe('customer workspace generator', () => {
     coreGit('commit', '-m', 'feat(webviewer): something the customer can see');
     // A real second delivery ships changed sources and a rewritten manifest; without any
     // difference `git commit` would refuse the snapshot.
-    write(join(staged, 'realvirtual-web', 'src', 'main.ts'), 'export const changed = true;');
+    write(join(staged, 'xyvirtual-web', 'src', 'main.ts'), 'export const changed = true;');
     write(join(staged, 'delivery-manifest.json'), JSON.stringify({ coreCommit: coreGit('rev-parse', 'HEAD').trim() }));
     execFileSync('git', ['add', '-A'], { cwd: staged });
     Object.assign(process.env, identity);
@@ -962,7 +962,7 @@ describe('customer workspace generator', () => {
       }
     }
     const files = execFileSync('git', ['-C', bare, 'ls-tree', '-r', '--name-only', 'main'], { encoding: 'utf8' });
-    expect(files).toContain('realvirtual-web/src/main.ts');
+    expect(files).toContain('xyvirtual-web/src/main.ts');
     expect(files).toContain('projects/acme/models/machine.glb');
     // The LFS-filtered model must land in the remote as a small Git LFS v1 pointer, not a full blob.
     const blob = execFileSync('git', ['-C', bare, 'cat-file', 'blob', 'main:projects/acme/models/machine.glb'], { encoding: 'utf8' });
@@ -1148,7 +1148,7 @@ describe('customer workspace generator', () => {
         // Only what the GENERATOR wrote. realvirtual-web/ is the delivered product tree and
         // carries its own developer documentation, which is not this plan's subject.
         if (entry.isDirectory()) {
-          if (['realvirtual-web', 'realvirtual-web-pro', 'node_modules', '.git', 'projects', 'connect'].includes(entry.name)) continue;
+          if (['xyvirtual-web', 'realvirtual-web-pro', 'node_modules', '.git', 'projects', 'connect'].includes(entry.name)) continue;
           collect(full);
         } else if (entry.name.endsWith('.md')) documents.push(full);
       }
@@ -1165,7 +1165,7 @@ describe('customer workspace generator', () => {
     // And the replacement is actually stated, rather than merely deleted.
     const readme = readFileSync(join(staged.workspaceRoot, 'README.md'), 'utf8');
     expect(readme).toContain('http://localhost:5100');
-    expect(readme).toContain('Going back to an earlier realvirtual CONNECT');
+    expect(readme).toContain('Going back to an earlier XYvirtual CONNECT');
     expect(readme).toContain('After a `git pull` that changes the dependencies');
   });
 
@@ -1488,7 +1488,7 @@ describe('projectless customer workspace', () => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
         if (entry.isDirectory()) {
-          if (['realvirtual-web', 'realvirtual-web-pro', 'node_modules', '.git'].includes(entry.name)) continue;
+          if (['xyvirtual-web', 'realvirtual-web-pro', 'node_modules', '.git'].includes(entry.name)) continue;
           walk(join(dir, entry.name), rel);
         } else if (/\.(md|json|ps1|sh|txt|ts|nvmrc|gitattributes|gitignore)$/.test(entry.name)
           || entry.name.startsWith('.git')) {
@@ -1536,8 +1536,8 @@ describe('projectless customer workspace', () => {
     // The one-click installer is switched off and appears nowhere — not as the main
     // route, not as a fallback, and above all not as a download link.
     expect(readme).not.toContain('setup.exe');
-    expect(readme).not.toContain('realvirtual-WEB-dev-setup');
-    expect(readme).not.toContain('realvirtual WEB dev');
+    expect(readme).not.toContain('XYvirtual-WEB-dev-setup');
+    expect(readme).not.toContain('XYvirtual WEB dev');
     expect(readme.indexOf('git clone')).toBeLessThan(readme.indexOf('## Reference'));
   });
 
@@ -1664,7 +1664,7 @@ describe('projectless customer workspace', () => {
     execFileSync('git', ['init', '-b', 'main'], { cwd: clone, stdio: 'ignore' });
     // A previous delivery, plus the project the customer built themselves.
     write(join(clone, 'README.md'), '# an older delivery\n');
-    write(join(clone, 'realvirtual-web', 'main.ts'), 'export const old = true;');
+    write(join(clone, 'xyvirtual-web', 'main.ts'), 'export const old = true;');
     const own: Record<string, string> = {
       'projects/mymachine/project.json': '{"canonicalName":"mymachine"}\n',
       'projects/mymachine/models/mine.glb': 'binary-ish content the delivery must never touch',

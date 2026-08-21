@@ -221,7 +221,7 @@ export function readWebComponentCode(
 }
 
 /** Starter template written when a script is added to a node (editor entry). */
-export const SCRIPT_TEMPLATE = `// realvirtual WEB component script (apiVersion ${SDK_API_VERSION})
+export const SCRIPT_TEMPLATE = `// XYvirtual WEB component script (apiVersion ${SDK_API_VERSION})
 // Contract: one global setup(self) returning lifecycle handlers.
 
 function setup(self) {

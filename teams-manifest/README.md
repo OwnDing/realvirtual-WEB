@@ -1,6 +1,6 @@
 # Microsoft Teams App Manifest
 
-This directory contains the manifest for distributing realvirtual WEB as a Microsoft Teams personal tab.
+This directory contains the manifest for distributing XYvirtual WEB as a Microsoft Teams personal tab.
 
 ## Files
 
@@ -14,7 +14,7 @@ The two icon files are **not included** and must be created before the manifest 
 
 | File | Size | Format | Content |
 |------|------|--------|---------|
-| `color.png` | 192×192 px | PNG (transparency allowed) | Full-color realvirtual logo or branded icon |
+| `color.png` | 192×192 px | PNG (transparency allowed) | Full-color XYvirtual logo or branded icon |
 | `outline.png` | 32×32 px | PNG (white on transparent) | Simplified single-color outline version |
 
 See [Microsoft's icon guidelines](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/apps-package#app-icons) for exact requirements.
@@ -30,12 +30,12 @@ See [Microsoft's icon guidelines](https://learn.microsoft.com/en-us/microsofttea
 3. **Package the app**:
    ```bash
    cd teams-manifest
-   zip -r realvirtual-teams.zip manifest.json color.png outline.png
+   zip -r XYvirtual-teams.zip manifest.json color.png outline.png
    ```
 
 4. **Upload to Teams**:
    - Go to Teams → Apps → Manage your apps → Upload an app
-   - Select `realvirtual-teams.zip`
+   - Select `XYvirtual-teams.zip`
    - The 3D Viewer tab will appear in personal apps
 
 ## Multiuser Collaboration in Teams

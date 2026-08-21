@@ -77,7 +77,7 @@ describe('help topic tables', () => {
       expect(DOC_SLUG_LABELS[slug], `slug '${slug}' has no label`).toBeTruthy();
     }
     expect(helpTopicLabel({ slug: 'planner/overview' })).toBe('Layout Planner');
-    expect(helpTopicLabel(HELP_FALLBACK)).toBe('realvirtual WEB');
+    expect(helpTopicLabel(HELP_FALLBACK)).toBe('XYvirtual WEB');
     // A plugin may point at documentation we know nothing about.
     expect(helpTopicLabel({ slug: 'vendor/thing' })).toBe('vendor/thing');
   });

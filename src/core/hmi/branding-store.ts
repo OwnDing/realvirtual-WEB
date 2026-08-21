@@ -5,8 +5,8 @@
  * branding-store.ts — Custom branding configuration.
  *
  * Allows project plugins to set a custom logo that replaces the default
- * realvirtual branding in the LogoBadge. When a custom logo is set,
- * the badge shows: [Custom Logo] — powered by realvirtual
+ * XYvirtual branding in the LogoBadge. When a custom logo is set,
+ * the badge shows: [Custom Logo] — powered by XYvirtual
  *
  * Usage from a project plugin:
  *   import { setCustomBranding } from '../core/hmi/branding-store';
@@ -19,7 +19,7 @@ import { useSyncExternalStore } from 'react';
 
 export interface CustomBranding {
   /** URL to the custom activity-bar logo (the top-left mark). Optional: when
-   *  omitted the activity bar keeps the default realvirtual logo, so a project
+   *  omitted the activity bar keeps the default XYvirtual logo, so a project
    *  can apply title-bar/colour branding while leaving the platform mark in
    *  place (e.g. Mauser). Set it to let a customer swap in their own mark. */
   logoUrl?: string;
@@ -57,7 +57,7 @@ function notify(): void {
   for (const l of _listeners) l();
 }
 
-/** Set custom branding. Pass null to reset to default realvirtual branding. */
+/** Set custom branding. Pass null to reset to default XYvirtual branding. */
 export function setCustomBranding(branding: CustomBranding | null): void {
   _branding = branding;
   notify();

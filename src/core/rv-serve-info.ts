@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * Dev-server session info for realvirtual WEB.
+ * Dev-server session info for XYvirtual WEB.
  *
  * Answers a question the browser cannot otherwise answer: **which checkout is
  * this tab actually served from?** Parallel worktree sessions (see

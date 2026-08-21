@@ -90,7 +90,7 @@ async function startStandaloneDemo(page: Page, forceStart = false) {
 
 function getConnectPanel(page: Page): Locator {
   return page.locator('[data-ui-panel]').filter({
-    has: page.getByText('realvirtual CONNECT', { exact: true }),
+    has: page.getByText('XYvirtual CONNECT', { exact: true }),
   }).first();
 }
 

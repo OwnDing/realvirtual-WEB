@@ -69,7 +69,7 @@ export const enUSDeferred = {
       rename: 'Rename…',
       delete: 'Delete…',
     },
-    demoCaption: 'realvirtual demo scenes & library',
+    demoCaption: 'XYvirtual demo scenes & library',
     nav: {
       project: 'Project',
       libraries: 'Libraries',
@@ -200,7 +200,7 @@ export const enUSDeferred = {
       content: 'Settings tab',
     },
     version: {
-      title: 'realvirtual WEB build version',
+      title: 'XYvirtual WEB build version',
     },
     backup: {
       settings: 'Settings',
@@ -397,7 +397,7 @@ export const enUSDeferred = {
       resume: 'Resume',
       shutdown: 'Shutdown',
       setup: 'Setup — enable the AI Bridge',
-      setupIntro: 'realvirtual CONNECT hosts the AI Bridge itself — no Node, no extra install.',
+      setupIntro: 'XYvirtual CONNECT hosts the AI Bridge itself — no Node, no extra install.',
       copy: 'Copy',
       step1: 'Run CONNECT with the MCP server enabled',
       step1Body: 'Tray icon ▸ <0>MCP server ▸ Enabled</0> (takes effect after a CONNECT restart).',
@@ -737,7 +737,7 @@ export const enUSDeferred = {
     },
   },
   /**
-   * The realvirtual CONNECT flow (EP-I18N-001 Milestone 4b, batch 4).
+   * The XYvirtual CONNECT flow (EP-I18N-001 Milestone 4b, batch 4).
    *
    * Product and protocol NAMES are deliberately absent: `Siemens S7`,
    * `Modbus TCP`, `ctrlX`, `FANUC`, `EtherNet/IP` and the rest are industrial
@@ -1051,7 +1051,7 @@ export const enUSDeferred = {
     },
     opener: {
       title: 'Live PLC data in this viewer',
-      intro: 'realvirtual CONNECT is the local gateway that links this viewer to real controllers and robots. The free tier includes 20 PLC signals.',
+      intro: 'XYvirtual CONNECT is the local gateway that links this viewer to real controllers and robots. The free tier includes 20 PLC signals.',
       beta: 'beta {{version}}',
       betaPlain: 'beta',
       alreadyInstalled: 'Already installed? Start CONNECT on that machine, then press Connect.',
@@ -1135,8 +1135,8 @@ export const enUSDeferred = {
       cancel: 'Cancel',
     },
     embed: {
-      region: 'realvirtual CONNECT demo',
-      emptyTitle: 'Want to check your signals and experience a digital twin with realvirtual CONNECT?',
+      region: 'XYvirtual CONNECT demo',
+      emptyTitle: 'Want to check your signals and experience a digital twin with XYvirtual CONNECT?',
       emptyText: 'Start the included machine demo when you are ready. Your CONNECT interfaces and signal monitoring stay available in the panel.',
       start: 'Start the demo',
       sourceCode: 'Source code (AGPL-3.0)',
@@ -1414,7 +1414,7 @@ export const enUSDeferred = {
       sewSub: 'KA47-DRN90M4 gearmotor (Drive 1) — ',
       sewManual: 'see manual p.265',
       testAxes: 'Test Axes',
-      tourWelcome: 'Welcome to the realvirtual Demo',
+      tourWelcome: 'Welcome to the XYvirtual Demo',
       tourTransport: 'Transport surfaces move parts between stations',
       tourOverload: '⚠ Motor overload on Axis 3',
       tourOverloadTitle: 'Drive Overload',
@@ -1698,7 +1698,7 @@ export const enUSDeferred = {
       licence: 'Licence (optional)',
       licenceNone: '— none —',
       whereFileLives: 'Where the file lives',
-      uploadToRv: 'Upload to realvirtual',
+      uploadToRv: 'Upload to XYvirtual',
       useOwnUrl: 'Use my own URL',
       ownUrlHelper: 'Nothing is uploaded and no sign-in is needed.',
       recipientView: 'Recipient\'s view',
@@ -1706,7 +1706,7 @@ export const enUSDeferred = {
       deleteAutomatically: 'Delete automatically',
       allowDownload: 'Allow downloading the GLB',
       ndaWarning: 'Anyone with the link can view the model. The link is <0>unlisted</0>, not private — do not upload anything confidential.',
-      terms: 'I hold the rights to this content and accept the terms of use. realvirtual may delete shared files at any time.',
+      terms: 'I hold the rights to this content and accept the terms of use. XYvirtual may delete shared files at any time.',
       signinIntro: 'Sign in with your e-mail so you can manage and delete your shared files later.',
       email: 'E-mail',
       signinHelper: 'We send you a sign-in link. No password, nothing to remember. Your entries here are kept while you fetch it.',
@@ -1736,7 +1736,7 @@ export const enUSDeferred = {
       linkExpiresOn: 'link expires on {{date}}',
       embedded_one: 'contains {{count}} embedded asset',
       embedded_other: 'contains {{count}} embedded assets',
-      openInApp: 'Open in realvirtual WEB',
+      openInApp: 'Open in XYvirtual WEB',
     },
     import: {
       title: 'Import',

@@ -30,7 +30,7 @@ import {
 import { useRvTranslation } from '../../core/i18n';
 import { Trans } from 'react-i18next';
 
-const DEFAULT_SOURCE_URL = 'https://github.com/game4automation/realvirtual-WEB';
+const DEFAULT_SOURCE_URL = 'https://github.com/xyvirtual/XYvirtual-WEB';
 
 /** Minimal-shell empty/loading/error surface for the CONNECT embedded demo. */
 export function ConnectEmbedGate() {

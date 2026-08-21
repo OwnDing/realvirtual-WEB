@@ -1127,7 +1127,7 @@
           "type": "boolean",
           "default": false,
           "readonly": true,
-          "description": "Unity-only. realvirtual WEB v1 does not rebuild physics colliders for machined chunks; the flag is shown for parity and has no effect."
+          "description": "Unity-only. XYvirtual WEB v1 does not rebuild physics colliders for machined chunks; the flag is shown for parity and has no effect."
         },
         "SignalSpindleOn": {
           "$ref": "#/$defs/ComponentReference",
@@ -1438,7 +1438,7 @@
         "Isolate": {
           "type": "boolean",
           "default": false,
-          "description": "realvirtual WEB only: when the operator clicks the message, the step's target objects are additionally isolated (rest of the scene dimmed) for a clearer view, on top of the camera focus and highlight."
+          "description": "XYvirtual WEB only: when the operator clicks the message, the step's target objects are additionally isolated (rest of the scene dimmed) for a clearer view, on top of the camera focus and highlight."
         },
         "signal": {
           "$ref": "#/$defs/ComponentReference",

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * Entry point: local MCP stdio server bridging Claude <-> realvirtual WEB browser.
+ * Entry point: local MCP stdio server bridging Claude <-> XYvirtual WEB browser.
  *
  * Runs on a SEPARATE port (18714 by default). The Unity Python server is left at its
  * old standard (Unity 18711 + its own WebViewer bridge 18712, no --no-webviewer); this

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * ConnectPanel — LeftPanel for realvirtual CONNECT gateway configuration.
+ * ConnectPanel — LeftPanel for XYvirtual CONNECT gateway configuration.
  *
  * Sections:
  *   1. Server URL input + Connect/Disconnect + status indicator
@@ -350,8 +350,8 @@ export function SignalBudgetIndicator({ status }: { status: LicenseStatus | null
  *  is reachable. Falls back to the plain brand text (unchanged accessible name) otherwise. */
 function stableDownloadLabel(version: string | null): string {
   return version
-    ? `Download realvirtual CONNECT ${version}`
-    : 'Download realvirtual CONNECT';
+    ? `Download XYvirtual CONNECT ${version}`
+    : 'Download XYvirtual CONNECT';
 }
 
 /** Human tooltip carrying the build number + date when known. */
@@ -843,7 +843,7 @@ export function ConnectPanel() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Cable sx={{ fontSize: 16, color: 'primary.main' }} />
           <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.primary' }}>
-            realvirtual CONNECT
+            XYvirtual CONNECT
           </Typography>
         </Box>
       }

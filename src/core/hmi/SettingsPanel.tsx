@@ -180,7 +180,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           title={t('version.title')}
           sx={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: 10 }}
         >
-          realvirtual WEB {formatVersionFull()}
+          XYvirtual WEB {formatVersionFull()}
         </Typography>
       </Box>
     </LeftPanel>

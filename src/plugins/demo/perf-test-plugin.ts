@@ -86,7 +86,7 @@ export class PerfTestPlugin implements RVViewerPlugin {
     // Blob URLs (from streaming download) have no meaningful filename — derive from title or localStorage
     let modelName: string;
     if (modelUrl.startsWith('blob:')) {
-      const titleMatch = document.title.match(/^(.+?) - realvirtual/i);
+      const titleMatch = document.title.match(/^(.+?) - XYvirtual/i);
       modelName = titleMatch?.[1] ?? localStorage.getItem('rv-webviewer-last-model')?.split('/').pop()?.replace(/\.glb$/i, '') ?? 'demo';
     } else {
       modelName = (modelUrl.split('/').pop() ?? modelUrl).split('?')[0].replace(/\.glb$/i, '');

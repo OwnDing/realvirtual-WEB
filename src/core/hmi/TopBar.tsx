@@ -191,7 +191,7 @@ export function TopBar() {
 
   return (
     <>
-      {/* The top app bar was removed — the realvirtual logo now lives at the top
+      {/* The top app bar was removed — the XYvirtual logo now lives at the top
           of the left activity bar, window-openers live in the activity bar, and
           the sim/mode + camera/view controls float in the viewport corners
           (below). TopBar remains the HMI host for those floating clusters, the

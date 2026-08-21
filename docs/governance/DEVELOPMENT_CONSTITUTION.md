@@ -1,19 +1,19 @@
 ---
 doc_id: GOV-CONSTITUTION
-title: realvirtual WEB 开发宪法
+title: XYvirtual WEB 开发宪法
 status: approved
 owner: architecture
 last_reviewed: 2026-08-18
 authority: normative
 ---
 
-# realvirtual WEB 开发宪法
+# XYvirtual WEB 开发宪法
 
 本文件是仓库的强制工程约束。Agent 入口见 [`../../AGENTS.md`](../../AGENTS.md)，安全细则见 [`AI_SAFETY.md`](AI_SAFETY.md)。违反 P0 规则的变更不得合并。
 
 ## 1. 产品与技术基线
 
-realvirtual WEB 是开源、浏览器优先的工业数字孪生运行与创作平台：
+XYvirtual WEB 是开源、浏览器优先的工业数字孪生运行与创作平台：
 
 - 3D 和渲染：Three.js，WebGL 为默认路径，WebGPU/WebXR 为受支持扩展路径；
 - UI：React + MUI；

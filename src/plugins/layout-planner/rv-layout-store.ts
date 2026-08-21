@@ -45,7 +45,7 @@ export type SignalLinkDirection = 'plcOutput' | 'plcInput';
 
 /**
  * A single link between a Planner-component standard-signal SLOT and a live
- * realvirtual CONNECT signal. Persisted per {@link PlacedComponent} so it
+ * XYvirtual CONNECT signal. Persisted per {@link PlacedComponent} so it
  * survives reload. Optional on PlacedComponent → legacy scenes load unchanged.
  */
 export interface SignalMapping {
@@ -121,7 +121,7 @@ export interface PlacedComponent {
   splatUrl?: string;
   /** Visibility toggle. Missing/undefined = visible (legacy default). */
   visible?: boolean;
-  /** Live-signal links to realvirtual CONNECT. Optional → legacy scenes load
+  /** Live-signal links to XYvirtual CONNECT. Optional → legacy scenes load
    *  unchanged. Serialized as-is by {@link serializeLayout}. */
   signalMappings?: SignalMapping[];
   /**

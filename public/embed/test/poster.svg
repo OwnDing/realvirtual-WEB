@@ -13,5 +13,5 @@
     <circle cx="600" cy="240" r="16"/>
     <path d="M590 264h20v64h-20z"/>
   </g>
-  <text x="600" y="625" fill="#9ba9b4" font-family="Inter,Arial,sans-serif" font-size="28" text-anchor="middle">realvirtual conveyor · loading live simulation</text>
+  <text x="600" y="625" fill="#9ba9b4" font-family="Inter,Arial,sans-serif" font-size="28" text-anchor="middle">XYvirtual conveyor · loading live simulation</text>
 </svg>

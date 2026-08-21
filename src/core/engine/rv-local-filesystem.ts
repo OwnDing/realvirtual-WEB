@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * rv-local-filesystem.ts — Local Working Folder for realvirtual WEB.
+ * rv-local-filesystem.ts — Local Working Folder for XYvirtual WEB.
  *
  * A single "working folder" is configured once in settings. All features
  * (models, planner library, splats) read from defined subfolders:

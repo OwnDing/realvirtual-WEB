@@ -79,7 +79,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
     return () => { setWelcomeModalOpen(false); };
   }, [open]);
 
-  // Demo links only make sense on the public realvirtual demo. A customer deploy
+  // Demo links only make sense on the public XYvirtual demo. A customer deploy
   // sets custom branding, so we hide the demo shortcuts there.
   const custom = useCustomBranding();
 
@@ -125,7 +125,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, color: '#4fc3f7' }}>
-            realvirtual WEB
+            XYvirtual WEB
           </Typography>
           <Box
             component="span"
@@ -218,21 +218,21 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
             i18nKey="welcome.betaText"
             components={[
               <strong key="license" style={{ color: '#fff' }} />,
-              <a key="terms" href="https://realvirtual.io/en/terms/" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
-              <a key="site" href="https://realvirtual.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="terms" href="https://xyvirtual.io/en/terms/" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="site" href="https://xyvirtual.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
             ]}
           />
         </Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          <a href="https://github.com/game4automation/realvirtual-WEB" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
-            github.com/game4automation/realvirtual-WEB
+          <a href="https://github.com/xyvirtual/XYvirtual-WEB" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
+            github.com/xyvirtual/XYvirtual-WEB
           </a>
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: 10 }}>
-            realvirtual WEB {formatVersionFull()}
+            XYvirtual WEB {formatVersionFull()}
           </Typography>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
             &copy; 2025 realvirtual GmbH

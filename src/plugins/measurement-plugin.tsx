@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * measurement-plugin.ts — 3D distance measurement tool for the realvirtual WebViewer.
+ * measurement-plugin.ts — 3D distance measurement tool for the XYvirtual WebViewer.
  *
  * Allows users to measure distances between mesh surfaces with a two-click
  * workflow. Measurements persist in localStorage per model and are managed

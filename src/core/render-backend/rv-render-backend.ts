@@ -4,7 +4,7 @@
 /**
  * rv-render-backend.ts — Optional, swappable 3D render backend (plan-256).
  *
- * realvirtual WEB renders its 3D scene with Three.js by default. This module
+ * XYvirtual WEB renders its 3D scene with Three.js by default. This module
  * lets a *non-Three* backend (e.g. an NVIDIA Omniverse RTX WebRTC stream) take
  * over the 3D pixels while HMI, SignalStore and all adapters stay identical.
  *

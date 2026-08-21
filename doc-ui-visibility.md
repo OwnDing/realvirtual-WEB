@@ -1,6 +1,6 @@
 # UI Visibility — Which Axis Decides What
 
-Two independent mechanisms decide whether you see something in realvirtual WEB, and they are
+Two independent mechanisms decide whether you see something in XYvirtual WEB, and they are
 routinely confused for one another. This document exists because that confusion has already
 produced two discarded designs: a "shell contract" and a "UI/runtime separation" were both
 designed from scratch before anyone found `UIPluginRegistry.register()`, where the mechanism already
@@ -254,7 +254,7 @@ Two consequences worth knowing:
 
 ## 5. The other visibility axes (named, not covered here)
 
-Visibility in realvirtual WEB is decided in more places than the two above. These are out of
+Visibility in XYvirtual WEB is decided in more places than the two above. These are out of
 scope for this document and are listed only so nobody assumes the taxonomy here is complete:
 
 | Store | Governs |

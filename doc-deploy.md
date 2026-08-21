@@ -1,6 +1,6 @@
 # Building & Deploying
 
-*Guide for building realvirtual WEB locally for testing, publishing it with realvirtual's own pipeline, and self-hosting it on your own infrastructure.*
+*Guide for building XYvirtual WEB locally for testing, publishing it with realvirtual's own pipeline, and self-hosting it on your own infrastructure.*
 
 > **The important distinction:** *building* produces a `dist/` folder on your machine and publishes nothing. *Deploying* builds **and** uploads that build somewhere. The built-in `npm run deploy` is **realvirtual's own** publish pipeline — it targets realvirtual's Bunny CDN account and goes live at `web.realvirtual.io`. If you are not realvirtual, you do not have those credentials; see [Deploy it yourself](#7-deploy-it-yourself).
 
@@ -59,7 +59,7 @@ npm run build                  # customer-tier build — internal features exclu
 RV_INTERNAL=1 npm run build    # internal build — everything included
 ```
 
-The same pattern is reusable if you develop on top of realvirtual WEB yourself: gate your own work-in-progress plugins behind `__RV_INTERNAL__` (or your own `define` flag) so your production deployments only ship what you intend to release. The AGPL/commercial licensing terms in section 7 apply to your extensions as usual.
+The same pattern is reusable if you develop on top of XYvirtual WEB yourself: gate your own work-in-progress plugins behind `__RV_INTERNAL__` (or your own `define` flag) so your production deployments only ship what you intend to release. The AGPL/commercial licensing terms in section 7 apply to your extensions as usual.
 
 ---
 
@@ -171,7 +171,7 @@ A deployment that mirrors or replaces that documentation points the base URL at 
 }
 ```
 
-- Default: `https://realvirtual.io/doc/web/`.
+- Default: `https://xyvirtual.io/doc/web/`.
 - The topic paths below the base stay the same (`planning/layout-planner/`, `connect/overview/`, …),
   so a mirror only needs to keep the page structure.
 - A trailing slash is optional — it is added when missing.
@@ -246,7 +246,7 @@ That fragment is **half** the key; the password is the other half and is never l
 ### Opening a project hosted elsewhere
 
 Because a deploy publishes `project.json`, `models.json` and `scenes/index.json` at its root, any
-realvirtual WEB instance can open a project served from another deploy root, read-only:
+XYvirtual WEB instance can open a project served from another deploy root, read-only:
 
 ```
 https://web.realvirtual.io/?projectUrl=https://cdn.example.com/customer-xy/
@@ -257,7 +257,7 @@ files beside it. It is read-only by construction — the backend refuses every w
 be pushed back at a host you do not own. A base URL that serves no `project.json` is ignored and the
 normal project resolution continues; the host must allow cross-origin reads for this to work at all.
 
-> The GLB files themselves are produced in Unity (the realvirtual.io GLB export). This tool deploys existing GLBs — it does not generate them.
+> The GLB files themselves are produced in Unity (the xyvirtual.io GLB export). This tool deploys existing GLBs — it does not generate them.
 
 > The success line printed in private mode (`https://web.realvirtual.io/{code}/`) is realvirtual's own domain. On your own Bunny account the files upload correctly to your zone, but that printed URL is cosmetic — substitute your own pull-zone hostname.
 
@@ -317,13 +317,13 @@ Both produce identical CDN output. The CLI is the Unity-independent path; pick w
 
 ## 7. Deploy it yourself
 
-realvirtual WEB is the open standard for browser-based 3D HMI in manufacturing. You can run your own deployment two ways: reuse the built-in tool with your own Bunny account, or treat the build as plain static files and host them anywhere.
+XYvirtual WEB is the open standard for browser-based 3D HMI in manufacturing. You can run your own deployment two ways: reuse the built-in tool with your own Bunny account, or treat the build as plain static files and host them anywhere.
 
-> **AGPL obligations apply to self-hosting.** realvirtual WEB is licensed under the **GNU Affero General Public License v3 (AGPL-3.0)**. Deploying it on your own infrastructure — including serving it as a network service — triggers the AGPL: you must publish your **complete project** under AGPL-3.0 and make it freely available. This includes all source code, configuration, and **all content delivered through the application**, such as GLB model files, `settings.json`, and plugins. This applies whether the application is served over a network or distributed directly.
+> **AGPL obligations apply to self-hosting.** XYvirtual WEB is licensed under the **GNU Affero General Public License v3 (AGPL-3.0)**. Deploying it on your own infrastructure — including serving it as a network service — triggers the AGPL: you must publish your **complete project** under AGPL-3.0 and make it freely available. This includes all source code, configuration, and **all content delivered through the application**, such as GLB model files, `settings.json`, and plugins. This applies whether the application is served over a network or distributed directly.
 
-> The "Powered by realvirtual WEB" watermark and the realvirtual logo must remain visible and unmodified in all AGPL deployments. Removing or modifying branding requires a commercial license.
+> The "Powered by XYvirtual WEB" watermark and the realvirtual logo must remain visible and unmodified in all AGPL deployments. Removing or modifying branding requires a commercial license.
 
-> **Keeping a project private?** To self-host with proprietary models, private configuration, or closed plugins — or to remove branding — use a [commercial license](https://realvirtual.io/en/company/license). See the [README license section](README.md#license) for the canonical terms.
+> **Keeping a project private?** To self-host with proprietary models, private configuration, or closed plugins — or to remove branding — use a [commercial license](https://xyvirtual.io/en/company/license). See the [README license section](README.md#license) for the canonical terms.
 
 ### 7a. Use the built-in tool with your own Bunny account
 
@@ -500,7 +500,7 @@ server {
 
 Customer source repositories are generated snapshots, not development mirrors. The generator reads
 `tier-manifest.json` from the private WebViewer repository, applies the customer profile from
-`delivery/<config>.json`, and creates a flat workspace containing `realvirtual-web/`,
+`delivery/<config>.json`, and creates a flat workspace containing `xyvirtual-web/`,
 `realvirtual-web-pro/`, the customer's `projects/<key>/` directories, and the pinned `connect/` RAG
 pair. Internal source and unlicensed restricted features are physically absent.
 
@@ -514,7 +514,7 @@ and replaced without a word.
 
 ```
 rv-project-<customer>/
-├── realvirtual-web/          ZONE A — ours, replaced every delivery
+├── xyvirtual-web/          ZONE A — ours, replaced every delivery
 ├── realvirtual-web-pro/      ZONE A
 ├── connect/                  ZONE A
 ├── delivery-manifest.json    ZONE A — carries the merge basis

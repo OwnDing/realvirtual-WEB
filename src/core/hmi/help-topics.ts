@@ -16,7 +16,7 @@
  *
  * NOT to be confused with `DOC_BASE_URL` in tooltip/MetadataTooltipContent.tsx:
  * that constant resolves relative links out of Unity `RuntimeMetadata`
- * (customer content on doc.realvirtual.io) and is a different domain entirely.
+ * (customer content on doc.xyvirtual.io) and is a different domain entirely.
  */
 
 /**
@@ -124,7 +124,7 @@ export const MODE_TOPICS: Readonly<Record<string, HelpTopic>> = {
  * rest of the activity bar (Models, Hierarchy, Settings, AI Bridge).
  */
 export const DOC_SLUG_LABELS: Readonly<Record<string, string>> = {
-  '': 'realvirtual WEB',
+  '': 'XYvirtual WEB',
   'connect/development/ai-clients': 'AI Clients',
   'connect/development/rest-and-websocket-api': 'REST and WebSocket API',
   'connect/getting-started/first-connection': 'First Connection',

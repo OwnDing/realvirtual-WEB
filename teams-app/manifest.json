@@ -5,26 +5,26 @@
   "id": "72d38d46-1fb3-42d9-b666-004d9af5e71e",
   "developer": {
     "name": "realvirtual GmbH",
-    "websiteUrl": "https://realvirtual.io",
-    "privacyUrl": "https://realvirtual.io/datenschutzerklaerung",
-    "termsOfUseUrl": "https://realvirtual.io/unternehmen/lizenz"
+    "websiteUrl": "https://xyvirtual.io",
+    "privacyUrl": "https://xyvirtual.io/datenschutzerklaerung",
+    "termsOfUseUrl": "https://xyvirtual.io/unternehmen/lizenz"
   },
   "name": {
-    "short": "realvirtual WEB",
-    "full": "realvirtual WEB — 3D Digital Twin Viewer"
+    "short": "XYvirtual WEB",
+    "full": "XYvirtual WEB — 3D Digital Twin Viewer"
   },
   "description": {
     "short": "Browser-based 3D Digital Twin Viewer for industrial automation",
-    "full": "realvirtual WEB brings industrial digital twins directly into Microsoft Teams. View and interact with 3D models of production lines, machines, and automation systems. Supports live PLC connections, signal monitoring, and drive visualization — all within a lightweight browser-based viewer."
+    "full": "XYvirtual WEB brings industrial digital twins directly into Microsoft Teams. View and interact with 3D models of production lines, machines, and automation systems. Supports live PLC connections, signal monitoring, and drive visualization — all within a lightweight browser-based viewer."
   },
   "icons": {
     "outline": "outline.png",
     "color": "color.png"
   },
-  "accentColor": "#e94078",
+  "accentColor": "#2596DE",
   "staticTabs": [
     {
-      "entityId": "realvirtual-viewer",
+      "entityId": "XYvirtual-viewer",
       "name": "Digital Twin",
       "contentUrl": "https://web.realvirtual.io/demo/?teams=1&lockSettings=true",
       "websiteUrl": "https://web.realvirtual.io/demo/",

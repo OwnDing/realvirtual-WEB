@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * connect-plugin.tsx — realvirtual CONNECT gateway plugin.
+ * connect-plugin.tsx — XYvirtual CONNECT gateway plugin.
  *
  * Registers an icon button in the TopBar ('toolbar-button' slot) that
  * toggles the ConnectPanel via the LeftPanelManager. A green dot on the
@@ -91,7 +91,7 @@ function ConnectToolbarButton({ viewer }: UISlotProps) {
 
   const title = isStale
     ? 'CONNECT - live data lost'
-    : isConnected ? 'CONNECT (connected)' : 'realvirtual CONNECT';
+    : isConnected ? 'CONNECT (connected)' : 'XYvirtual CONNECT';
 
   return (
     <Tooltip title={title} placement="right">

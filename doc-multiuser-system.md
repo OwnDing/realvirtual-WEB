@@ -1,6 +1,6 @@
-# realvirtual WEB Multiuser System
+# XYvirtual WEB Multiuser System
 
-Technical documentation for the real-time multiuser collaboration system in realvirtual WEB.
+Technical documentation for the real-time multiuser collaboration system in XYvirtual WEB.
 
 ## Architecture Overview
 
@@ -315,7 +315,7 @@ Enforcement is on the Unity server side. The relay forwards all messages regardl
 
 A relay server is a Node.js WebSocket multiplexer that enables multiuser sessions when clients cannot reach Unity directly (firewalls, NAT, Teams meetings, public web sessions).
 
-> **The relay server source code lives in a separate repository.** It is no longer bundled with realvirtual WEB. The settings store ships with a default hosted relay URL (`wss://download.realvirtual.io/relay`) and the realvirtual WEB plugin handles both `local` and `relay` connection modes (see `connectionMode` in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts)).
+> **The relay server source code lives in a separate repository.** It is no longer bundled with XYvirtual WEB. The settings store ships with a default hosted relay URL (`wss://download.realvirtual.io/relay`) and the XYvirtual WEB plugin handles both `local` and `relay` connection modes (see `connectionMode` in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts)).
 
 > **Two relay URLs appear in the sources and they do not agree.** The browser
 > default is `wss://download.realvirtual.io/relay` (`relayUrl` in
@@ -449,7 +449,7 @@ All WebSocket callbacks enqueue events to a `ConcurrentQueue<PresenceEvent>`. Th
 
 ---
 
-## realvirtual WEB Client (multiuser-plugin.ts)
+## XYvirtual WEB Client (multiuser-plugin.ts)
 
 ### Drive Map Building
 
@@ -542,7 +542,7 @@ Recipients clicking this link auto-join the same session.
 
 ### Tab Configuration
 
-When adding realvirtual WEB as a Teams tab, the admin configures:
+When adding XYvirtual WEB as a Teams tab, the admin configures:
 1. **Model URL** -- GLB file to load (optional)
 2. **Tab Name** -- Header text in Teams
 3. **Relay Server URL** -- For automatic multiuser (optional)
@@ -648,7 +648,7 @@ Unity (Host)        Relay Server        Browser A        Browser B
 | `Packages/io.realvirtual.professional/Runtime/MultiplayerWEB/Avatar.prefab` | Remote player avatar template |
 | `Packages/io.realvirtual.professional/Runtime/MultiplayerWEB/MultiplayerWeb.prefab` | Pre-configured MultiplayerWEB instance |
 
-### realvirtual WEB Side
+### XYvirtual WEB Side
 | File | Purpose |
 |------|---------|
 | `src/plugins/multiuser-plugin.ts` | Core multiuser logic, message handling, ownership |
@@ -660,7 +660,7 @@ Unity (Host)        Relay Server        Browser A        Browser B
 | `src/core/types/plugin-types.ts` | MultiuserPluginAPI interface |
 
 ### Relay Server
-The relay server lives in its own repository (not in this realvirtual WEB repo). The hosted endpoint defaults to `wss://download.realvirtual.io/relay`.
+The relay server lives in its own repository (not in this XYvirtual WEB repo). The hosted endpoint defaults to `wss://download.realvirtual.io/relay`.
 
 ### Teams Integration
 | File | Purpose |

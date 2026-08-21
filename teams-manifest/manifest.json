@@ -5,13 +5,13 @@
   "id": "{{MICROSOFT_APP_ID}}",
   "developer": {
     "name": "realvirtual GmbH",
-    "websiteUrl": "https://realvirtual.io",
-    "privacyUrl": "https://realvirtual.io/privacy",
-    "termsOfUseUrl": "https://realvirtual.io/terms"
+    "websiteUrl": "https://xyvirtual.io",
+    "privacyUrl": "https://xyvirtual.io/privacy",
+    "termsOfUseUrl": "https://xyvirtual.io/terms"
   },
   "name": {
-    "short": "realvirtual 3D",
-    "full": "realvirtual 3D Digital Twin Viewer"
+    "short": "XYvirtual 3D",
+    "full": "XYvirtual 3D Digital Twin Viewer"
   },
   "description": {
     "short": "3D digital twin viewer for industrial automation",
@@ -24,7 +24,7 @@
   "accentColor": "#2196F3",
   "staticTabs": [
     {
-      "entityId": "realvirtual-viewer",
+      "entityId": "XYvirtual-viewer",
       "name": "3D Viewer",
       "contentUrl": "https://{{YOUR_DOMAIN}}/webviewer?context=teams",
       "websiteUrl": "https://{{YOUR_DOMAIN}}/webviewer",

@@ -1,11 +1,11 @@
 {
-  "name": "realvirtual Web Viewer",
-  "short_name": "realvirtual",
+  "name": "XYvirtual Web Viewer",
+  "short_name": "XYvirtual",
   "description": "Industrial automation 3D viewer and digital twin",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#1a1a1a",
-  "theme_color": "#e94078",
+  "theme_color": "#2596DE",
   "icons": [
     { "src": "pwa-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "pwa-512x512.png", "sizes": "512x512", "type": "image/png" },

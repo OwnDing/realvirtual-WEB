@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * Browser evidence for the realvirtual CONNECT flow (EP-I18N-001 batch 4).
+ * Browser evidence for the XYvirtual CONNECT flow (EP-I18N-001 batch 4).
  *
  * This surface has one rule the other batches did not, and it is the reason
  * these cases exist: **industrial identifiers are not copy.** `Siemens S7`,

@@ -22,7 +22,7 @@ import { useMode } from '../../hooks/use-mode';
 const logoUrl = `${import.meta.env.BASE_URL}logo.png`;
 
 /**
- * BrandingContent — the logo image for the activity bar: the default realvirtual
+ * BrandingContent — the logo image for the activity bar: the default XYvirtual
  * mark, or a custom logo when custom branding is set. Constrained to fit the
  * narrow (30px) vertical activity bar — icon only, no text.
  */
@@ -30,10 +30,10 @@ function BrandingContent() {
   const custom = useCustomBranding();
 
   // No branding, or branding that doesn't override the activity-bar mark →
-  // keep the default realvirtual logo. A project sets `logoUrl` only when it
+  // keep the default XYvirtual logo. A project sets `logoUrl` only when it
   // wants its own mark here; Mauser leaves it so the platform logo stays.
   if (!custom?.logoUrl) {
-    return <img src={logoUrl} alt="realvirtual" style={{ height: 24, width: 24 }} />;
+    return <img src={logoUrl} alt="XYvirtual" style={{ height: 24, width: 24 }} />;
   }
   return (
     <img
@@ -46,7 +46,7 @@ function BrandingContent() {
 
 // ── Logo Badge (the top mark of the left activity bar) ──────────────────
 
-/** Clickable realvirtual (or custom) logo at the top of the activity bar.
+/** Clickable XYvirtual (or custom) logo at the top of the activity bar.
  *  Opens the About / Welcome modal. Icon-only to fit the 30px vertical bar. */
 const WELCOME_DISMISSED_KEY = 'rv-welcome-dismissed';
 

@@ -48,7 +48,7 @@ export async function startConnectEmbedDemo(viewer: ConnectEmbedActionViewer): P
 
   const loader = viewer.loadModelWithProgress;
   if (!loader) {
-    failConnectEmbedDemoLoad('The demo loader is not available. Reload realvirtual CONNECT and try again.');
+    failConnectEmbedDemoLoad('The demo loader is not available. Reload XYvirtual CONNECT and try again.');
     return;
   }
 

@@ -345,7 +345,7 @@ describe('secret references (plan-718)', () => {
   it('keeps the three pre-718 allowances exactly as they were', () => {
     expect(isAllowedSecretSchemaPath('connect/project-config.json', ['Diagnosis', 'RequestyApiKey'])).toBe(true);
     expect(isAllowedSecretSchemaPath('connect/project-config.json', ['Agents', 'DeliveredApiKeys', 'acme'])).toBe(true);
-    expect(isAllowedSecretSchemaPath('realvirtual-web/public/settings.json', ['connectLicensePrefill'])).toBe(true);
+    expect(isAllowedSecretSchemaPath('xyvirtual-web/public/settings.json', ['connectLicensePrefill'])).toBe(true);
     expect(isAllowedSecretSchemaPath('connect/project-config.json', ['Diagnosis', 'Something'])).toBe(false);
   });
 

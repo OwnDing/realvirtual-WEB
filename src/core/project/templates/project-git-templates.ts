@@ -18,7 +18,7 @@
  * `-text` matters as much as the LFS filter: on Windows, git would otherwise
  * happily CRLF-mangle a `.glb` and corrupt it.
  */
-export const GITATTRIBUTES_TEMPLATE = `# realvirtual project - binary artefacts
+export const GITATTRIBUTES_TEMPLATE = `# XYvirtual project - binary artefacts
 *.glb    filter=lfs diff=lfs merge=lfs -text
 *.gltf   filter=lfs diff=lfs merge=lfs -text
 *.splat  filter=lfs diff=lfs merge=lfs -text

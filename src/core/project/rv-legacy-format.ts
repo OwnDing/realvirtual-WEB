@@ -69,7 +69,7 @@ export class LegacyFormatError extends Error {
 export function legacyFormatMessage(kind: LegacyFormatKind, subject: string): string {
   const what = kind === 'localstorage-scene-v2' ? 'This scene' : 'This project';
   return `${what} was saved in a format that is no longer supported (${subject}). `
-    + `Open it once with realvirtual WEB ${LAST_CONVERTING_VERSION} `
+    + `Open it once with XYvirtual WEB ${LAST_CONVERTING_VERSION} `
     + '— the release before this one — to convert it, then open it here again.';
 }
 

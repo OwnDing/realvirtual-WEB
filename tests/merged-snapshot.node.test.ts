@@ -97,7 +97,7 @@ function bytes(root: string): Record<string, string> {
 }
 
 const V1: Record<string, string> = {
-  'realvirtual-web/src/main.ts': 'export const version = 1;\n',
+  'xyvirtual-web/src/main.ts': 'export const version = 1;\n',
   'projects/acme/project.json': JSON.stringify({ schemaVersion: 1, id: 'prj_1', name: 'Acme', canonicalName: 'acme', vendor: VENDOR }, null, 2) + '\n',
   'projects/acme/models/machine.glb': 'model-v1',
   'projects/acme/connect/project-config.json': '{"poll":100}\n',
@@ -150,7 +150,7 @@ describe('applyMergedSnapshot', { timeout: 180000 }, () => {
     // the customer, and a vendor scene must not overwrite what they made of it.
     expect(existsSync(join(clone, 'projects/acme/scenes/shipped.scene.json'))).toBe(true);
     expect(existsSync(join(clone, 'projects/acme/models/machine.glb'))).toBe(true);
-    expect(existsSync(join(clone, 'realvirtual-web/src/main.ts'))).toBe(true);
+    expect(existsSync(join(clone, 'xyvirtual-web/src/main.ts'))).toBe(true);
     expect(existsSync(join(clone, 'DELIVERY-REPORT.md'))).toBe(true);
   });
 
@@ -161,14 +161,14 @@ describe('applyMergedSnapshot', { timeout: 180000 }, () => {
     // The customer works in their repository.
     write(join(clone, 'projects/acme/scenes/mine.scene.json'), '{"scene":"mine"}\n');
     write(join(clone, 'projects/acme/connect/project-config.json'), '{"poll":250}\n');
-    write(join(clone, 'realvirtual-web/src/main.ts'), 'export const patchedByCustomer = true;\n');
+    write(join(clone, 'xyvirtual-web/src/main.ts'), 'export const patchedByCustomer = true;\n');
     write(join(clone, 'notizen.md'), 'meine notizen\n');
     commit(clone, 'customer work');
     const before = bytes(join(clone, 'projects/acme'));
 
     const stagedV2 = stage(root, 'staged-v2', {
       ...V1,
-      'realvirtual-web/src/main.ts': 'export const version = 2;\n',
+      'xyvirtual-web/src/main.ts': 'export const version = 2;\n',
       'projects/acme/connect/project-config.json': '{"poll":500}\n',
       'projects/acme/docs/manual.md': 'manual v2\n',
       'projects/acme/models/new.glb': 'model-new',
@@ -206,8 +206,8 @@ describe('applyMergedSnapshot', { timeout: 180000 }, () => {
     }
 
     // Zone A is replaced, and the difference is REPORTED rather than dropped in silence.
-    expect(readFileSync(join(clone, 'realvirtual-web/src/main.ts'), 'utf8')).toBe('export const version = 2;\n');
-    expect(snapshot.drift).toContainEqual({ status: 'M', path: 'realvirtual-web/src/main.ts' });
+    expect(readFileSync(join(clone, 'xyvirtual-web/src/main.ts'), 'utf8')).toBe('export const version = 2;\n');
+    expect(snapshot.drift).toContainEqual({ status: 'M', path: 'xyvirtual-web/src/main.ts' });
     expect(snapshot.drift).toContainEqual({ status: 'A', path: 'notizen.md' });
     expect(existsSync(join(clone, 'notizen.md'))).toBe(false);
 

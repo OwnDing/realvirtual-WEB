@@ -12,9 +12,9 @@ import { RagStatusSection } from './RagStatusSection';
 import { useRvTranslation } from '../../i18n';
 import { Trans } from 'react-i18next';
 
-/** The default transport: realvirtual CONNECT hosts the MCP endpoint itself, so any
+/** The default transport: XYvirtual CONNECT hosts the MCP endpoint itself, so any
  *  MCP client registers ONE http entry and needs neither Node nor Vite (plan-327 AP5). */
-const CONNECT_MCP_SNIPPET = `"realvirtual-CONNECT": {
+const CONNECT_MCP_SNIPPET = `"XYvirtual-CONNECT": {
   "type": "http",
   "url": "http://localhost:5100/mcp"
 }`;
@@ -223,7 +223,7 @@ export function McpTab() {
         )}
       </SettingsSection>
 
-      {/* CONNECT RAG / LLM status — the AI-diagnosis assistant that lives in realvirtual CONNECT,
+      {/* CONNECT RAG / LLM status — the AI-diagnosis assistant that lives in XYvirtual CONNECT,
           shown here next to the MCP bridge (plan-284). Independent of the MCP connection. */}
       <RagStatusSection />
 

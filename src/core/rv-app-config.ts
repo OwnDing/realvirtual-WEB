@@ -180,7 +180,7 @@ export interface RVAppConfig {
    */
   docs?: {
     /**
-     * Base URL of the documentation. Default: `https://realvirtual.io/doc/web/`.
+     * Base URL of the documentation. Default: `https://xyvirtual.io/doc/web/`.
      * Ignored (default used) when it is not an absolute `http:`/`https:` URL.
      */
     baseUrl?: string;

@@ -20,7 +20,7 @@ because the assistant path is the faster one.
 
 ## Prerequisites
 
-- The workspace is running (`start.ps1`, Linux `./start.sh`) and realvirtual CONNECT is reachable
+- The workspace is running (`start.ps1`, Linux `./start.sh`) and XYvirtual CONNECT is reachable
   at http://localhost:5100.
 - **The asset editor is open and the CAD is already imported.** This recipe does not open, import
   or save anything — it starts from what is on screen and ends by handing back.
@@ -664,7 +664,7 @@ confidentiality as the CAD it describes.
 
 ## Further reading
 
-- [realvirtual WEB overview](../realvirtual-web/doc-webviewer.md)
-- [MCP tool reference](../realvirtual-web/webviewer.mcp.md)
-- [Unity-to-WEB workflow](../realvirtual-web/doc-unity-to-web.md)
+- [XYvirtual WEB overview](../xyvirtual-web/doc-webviewer.md)
+- [MCP tool reference](../xyvirtual-web/webviewer.mcp.md)
+- [Unity-to-WEB workflow](../xyvirtual-web/doc-unity-to-web.md)
 - [Troubleshoot the runtime](troubleshoot-runtime.md)

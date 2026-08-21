@@ -1,5 +1,5 @@
 ---
-description: "Start the realvirtual WEB dev server"
+description: "Start the XYvirtual WEB dev server"
 allowed-tools: Bash(*)
 ---
 
@@ -16,7 +16,7 @@ lsof -nP -iTCP:5173 -sTCP:LISTEN 2>/dev/null || true
 ```
 
 If the port is occupied, identify the command and working directory. Reuse a healthy
-realvirtual WEB server when appropriate. Otherwise report the conflict or select an
+XYvirtual WEB server when appropriate. Otherwise report the conflict or select an
 explicit alternate port for this task. Never terminate all Node.js processes and never
 stop a process that this task did not start.
 

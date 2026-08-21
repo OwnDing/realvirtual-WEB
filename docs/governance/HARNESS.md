@@ -1,13 +1,13 @@
 ---
 doc_id: GOV-HARNESS
-title: realvirtual WEB AI Coding Harness
+title: XYvirtual WEB AI Coding Harness
 status: approved
 owner: engineering
 last_reviewed: 2026-08-19
 authority: normative-process
 ---
 
-# realvirtual WEB AI Coding Harness
+# XYvirtual WEB AI Coding Harness
 
 ## 1. 目标
 

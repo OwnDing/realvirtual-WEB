@@ -61,6 +61,6 @@ describe.skipIf(!hasDist)('rv-embed production bundle', () => {
     const entry = readFileSync(ENTRY, 'utf8');
     expect(entry).toContain('AGPL-3.0-only');
     expect(entry).toContain('Corresponding Source:');
-    expect(entry).toContain('https://github.com/game4automation/realvirtual-WEB');
+    expect(entry).toContain('https://github.com/xyvirtual/XYvirtual-WEB');
   });
 });

@@ -172,7 +172,7 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
               <Trans
                 ns="shell"
                 i18nKey="license.betaNotice"
-                components={[<strong key="beta" />, <Link key="mail" href="mailto:info@realvirtual.io" sx={{ fontSize: 11 }} />]}
+                components={[<strong key="beta" />, <Link key="mail" href="mailto:info@xyvirtual.io" sx={{ fontSize: 11 }} />]}
               />
             </Alert>
           )}
@@ -298,7 +298,7 @@ export function LicenseSection({ serverUrl, statusOverride }: LicenseSectionProp
               i18nKey="license.terms"
               components={[
                 <Link key="terms" href={LICENSE_TERMS_URL} target="_blank" rel="noopener noreferrer" sx={{ fontSize: 10 }} />,
-                <Link key="privacy" href="https://realvirtual.io/en/privacy/" target="_blank" rel="noopener noreferrer" sx={{ fontSize: 10 }} />,
+                <Link key="privacy" href="https://xyvirtual.io/en/privacy/" target="_blank" rel="noopener noreferrer" sx={{ fontSize: 10 }} />,
               ]}
             />
           </Typography>

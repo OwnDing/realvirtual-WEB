@@ -4,7 +4,7 @@
 /**
  * GaussianSplatPlugin — Load and render 3D Gaussian Splatting files
  * (.splat, .ply, .ksplat) AND Point Cloud files (.ply, .pcd) in the
- * realvirtual WebViewer.
+ * XYvirtual WebViewer.
  *
  * Gaussian Splat mode: Uses @mkkellogg/gaussian-splats-3d with selfDrivenMode: false
  * so the library does NOT run its own requestAnimationFrame loop.

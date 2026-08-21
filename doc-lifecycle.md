@@ -1,6 +1,6 @@
 # Lifecycle — RVViewer
 
-This document describes the **runtime lifecycle** of realvirtual WEB:
+This document describes the **runtime lifecycle** of XYvirtual WEB:
 from construction to model load, the per-frame simulation/render loop, pause and
 reset semantics, connection-state transitions, and teardown.
 

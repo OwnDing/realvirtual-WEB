@@ -41,7 +41,7 @@ console.log(validate({ Direction: 'LinearX', TargetSpeed: 200 }));
 
 ## Who uses it
 
-- **realvirtual WEB** — the AGPL browser viewer/simulator is the reference
+- **XYvirtual WEB** — the AGPL browser viewer/simulator is the reference
   implementation; its runtime component schemas are loaded directly from
   `rv-odt.json` (zero drift by construction).
 - **realvirtual Unity framework** — exports rv-ODT GLBs from Unity scenes.
@@ -65,7 +65,7 @@ conformance fixtures, and this README — is licensed under
 You may implement readers and writers freely, including commercially, with attribution
 ("realvirtual Open Digital Twin Format, © realvirtual GmbH").
 
-The realvirtual WEB **reference implementation** (the surrounding repository) is
+The XYvirtual WEB **reference implementation** (the surrounding repository) is
 licensed separately under AGPL-3.0-only with a commercial option — the CC BY 4.0
 grant applies only to this `schema/` subtree.
 
@@ -75,5 +75,5 @@ grant applies only to this `schema/` subtree.
   new optional fields, new enum values).
 - Every 1.x release is recorded with its SHA-256 in [`RELEASES.md`](./RELEASES.md).
 - Proposals via issues/PRs on the public repository
-  ([game4automation/realvirtual-WEB](https://github.com/game4automation/realvirtual-WEB)).
+  ([xyvirtual/XYvirtual-WEB](https://github.com/xyvirtual/XYvirtual-WEB)).
 - See `specification.md` Sections 10-11 for the full rules.

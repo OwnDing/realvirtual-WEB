@@ -38,7 +38,7 @@
  *
  * An **opaque** viewer link, `?glb=s:<id>` — not the storage URL (§2.1,
  * `share_OpaqueId_DoesNotLeakStorageUrl`). What is forwarded in a mail is a
- * realvirtual WEB link, which buys revocation, a reason code on `410` and
+ * XYvirtual WEB link, which buys revocation, a reason code on `410` and
  * access counts. It is a hurdle and a product decision, not DRM: the browser
  * must load the bytes eventually.
  *

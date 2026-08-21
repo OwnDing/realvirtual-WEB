@@ -103,7 +103,7 @@ import { OrderPanel } from '../../plugins/order-manager-plugin';
 // Sensor History Panel (opens from pinned WebSensor tooltip "Show" button)
 import { SensorHistoryPanel } from './SensorHistoryPanel';
 
-// Connect panel (realvirtual CONNECT gateway)
+// Connect panel (XYvirtual CONNECT gateway)
 import { ConnectPanel } from './ConnectPanel';
 // Models panel host — shared by the full HMI (via TopBar) and the embed shell.
 // Dev-server-only badge naming the served checkout (eliminated from builds).

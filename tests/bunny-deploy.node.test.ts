@@ -582,7 +582,7 @@ describe('SEO artifacts', () => {
     const dir = mkdtempSync(join(tmpdir(), 'rv-seo-test-'));
     writeFileSync(
       join(dir, 'index.html'),
-      '<!DOCTYPE html>\n<html><head>\n  <title>realvirtual WEB</title>\n</head>\n<body></body></html>\n',
+      '<!DOCTYPE html>\n<html><head>\n  <title>XYvirtual WEB</title>\n</head>\n<body></body></html>\n',
     );
     writeFileSync(join(dir, 'pwa-512x512.png'), 'png');
     if (withOgImage) writeFileSync(join(dir, 'og-image.png'), 'png');

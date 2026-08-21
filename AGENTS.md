@@ -1,4 +1,4 @@
-# realvirtual WEB AI Agent Guide
+# XYvirtual WEB AI Agent Guide
 
 本文件是仓库级 AI Agent 的短入口，只负责导航和最高优先级规则。详细规则必须维护在 `docs/`，不得继续堆入本文件。
 

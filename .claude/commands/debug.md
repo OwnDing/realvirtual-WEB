@@ -1,11 +1,11 @@
 ---
-description: "Debug realvirtual WEB runtime state (signals, drives, errors)"
+description: "Debug XYvirtual WEB runtime state (signals, drives, errors)"
 allowed-tools: Bash(*), WebFetch, Read, Grep, Glob
 ---
 
 # Debug Command
 
-Inspects and controls the running realvirtual WEB dev server (`localhost:5173`) via debug HTTP endpoints.
+Inspects and controls the running XYvirtual WEB dev server (`localhost:5173`) via debug HTTP endpoints.
 
 ## Usage
 

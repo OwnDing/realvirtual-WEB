@@ -79,7 +79,7 @@ describe('NewsDialog rendering', () => {
   });
 
   it('renders safe external links with a protected new-tab target', () => {
-    renderNews({ id: 'x', title: 'T', body: '', link: 'https://realvirtual.io' });
+    renderNews({ id: 'x', title: 'T', body: '', link: 'https://xyvirtual.io' });
     const link = screen.getByRole('link');
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toContain('noopener');

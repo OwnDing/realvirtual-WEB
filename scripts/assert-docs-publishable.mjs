@@ -82,7 +82,7 @@ function stripCodeBlocks(text) {
 }
 
 // Recipes are authored for the DELIVERED customer workspace, where the core sits
-// under realvirtual-web/ — their relative links are correct there and meaningless
+// under xyvirtual-web/ — their relative links are correct there and meaningless
 // against this repo's root, so they are out of scope for the mirror check.
 const LINK_CHECK_SKIP_DIRS = ['recipes/'];
 

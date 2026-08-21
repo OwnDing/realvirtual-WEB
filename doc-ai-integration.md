@@ -1,12 +1,12 @@
 # AI Integration & the MCP Bridge
 
-realvirtual WEB exposes its running 3D scene to AI assistants (Claude Code, Claude
+XYvirtual WEB exposes its running 3D scene to AI assistants (Claude Code, Claude
 Desktop) through an **MCP bridge**. Once connected, the assistant can inspect
 and control the live browser scene — read drives, signals, sensors and transport
 state, drive the simulation, capture screenshots, and build layouts in the Layout
 Planner — using a set of `web_*` tools.
 
-**realvirtual CONNECT is the default transport.** It hosts the MCP endpoint itself, so
+**XYvirtual CONNECT is the default transport.** It hosts the MCP endpoint itself, so
 nothing extra has to be installed. The local **Node bridge** remains fully supported as the
 documented emergency fallback — it is not deprecated and not scheduled for removal here.
 
@@ -21,7 +21,7 @@ Exactly one MCP host owns each tool family. There is no overlap:
 
 | Host | Owns | Tool prefix |
 |------|------|-------------|
-| **realvirtual CONNECT** (C#, `http://localhost:5100/mcp`) | the `web_*` browser tools **and** the CONNECT gateway tools (`signal_list`, `signal_read`, `interfaces_status`, `health`) | `mcp__realvirtual-CONNECT__…` |
+| **XYvirtual CONNECT** (C#, `http://localhost:5100/mcp`) | the `web_*` browser tools **and** the CONNECT gateway tools (`signal_list`, `signal_read`, `interfaces_status`, `health`) | `mcp__XYvirtual-CONNECT__…` |
 | **Unity MCP server** (Python, `unity_mcp_server.py`) | the 80+ Unity Editor tools (scene, prefabs, play mode, recompile) | `mcp__UnityMCP__…` |
 
 CONNECT is the default transport for `web_*`: it is same-origin with the delivered HMI,
@@ -40,7 +40,7 @@ The connection is a three-link chain. Only the middle link differs between the t
 ```
   CONNECT (default)
 
-   Claude (MCP host)              realvirtual CONNECT              Browser (realvirtual WEB)
+   Claude (MCP host)              XYvirtual CONNECT              Browser (XYvirtual WEB)
  ┌───────────────────┐  HTTP    ┌──────────────────────┐ WebSocket ┌──────────────────────┐
  │ Claude Code /      │ (MCP) ⟷ │ :5100/mcp             │  :5100    │ McpBridgePlugin       │
  │ Claude Code Desktop│         │ embedded C# MCP server│ /webviewer│  → RVViewer scene     │
@@ -48,7 +48,7 @@ The connection is a three-link chain. Only the middle link differs between the t
 
   Node bridge (fallback)
 
-   Claude (MCP host)                 Node bridge                   Browser (realvirtual WEB)
+   Claude (MCP host)                 Node bridge                   Browser (XYvirtual WEB)
  ┌───────────────────┐  stdio   ┌──────────────────────┐ WebSocket ┌──────────────────────┐
  │ Claude Code /      │ (MCP) ⟷ │ mcp-bridge/dist/      │  :<port>  │ McpBridgePlugin       │
  │ Claude Desktop     │         │ index.js              │ /webviewer│  → RVViewer scene     │
@@ -118,7 +118,7 @@ CONNECT is possible but out of scope and at your own risk.
    configurations. Or add it by hand to `.mcp.json` (Claude Code / Code Desktop):
 
    ```json
-   "realvirtual-CONNECT": {
+   "XYvirtual-CONNECT": {
      "type": "http",
      "url": "http://localhost:5100/mcp"
    }
@@ -127,7 +127,7 @@ CONNECT is possible but out of scope and at your own risk.
    For **Claude Desktop (classic)** in `claude_desktop_config.json`:
 
    ```json
-   "realvirtual-CONNECT": {
+   "XYvirtual-CONNECT": {
      "command": "npx",
      "args": ["-y", "mcp-remote", "http://localhost:5100/mcp", "--allow-http"]
    }

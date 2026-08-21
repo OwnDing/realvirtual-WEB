@@ -111,8 +111,8 @@ const REGISTRATION_STATUSES = Object.freeze(['stable', 'beta']);
 const GENERATED_GIT_ATTRIBUTES = [
   'connect/rag.zip filter=lfs diff=lfs merge=lfs -text',
   'projects/*/models/*.glb filter=lfs diff=lfs merge=lfs -text',
-  'realvirtual-web/public/models/*.glb filter=lfs diff=lfs merge=lfs -text',
-  'realvirtual-web/public/models/library/**/*.glb filter=lfs diff=lfs merge=lfs -text',
+  'xyvirtual-web/public/models/*.glb filter=lfs diff=lfs merge=lfs -text',
+  'xyvirtual-web/public/models/library/**/*.glb filter=lfs diff=lfs merge=lfs -text',
 ];
 //! Node.js major version the workspace is delivered for. Single source for `.nvmrc`,
 //! the start-script preflight, and the README prerequisites.
@@ -824,7 +824,7 @@ export function generateCustomerPrivatePlugins(manifest, profile) {
     `import { register as registerFeature${index} } from '${manifest.registrations[feature].adapter}';`);
   const calls = features.map((_feature, index) => `  await registerFeature${index}(viewer);`);
   return [
-    `import type { RVViewer } from '../../realvirtual-web/src/core/rv-viewer';`,
+    `import type { RVViewer } from '../../xyvirtual-web/src/core/rv-viewer';`,
     ...imports,
     '',
     'export async function registerPrivatePlugins(viewer: RVViewer): Promise<void> {',
@@ -999,7 +999,7 @@ function deliveredPublicModels(coreRoot) {
 }
 
 //! Copies the DemoRealvirtual reference model AND the curated component library out of the
-//! core tree into the delivered `realvirtual-web/public/`.
+//! core tree into the delivered `xyvirtual-web/public/`.
 //!
 //! The demo content is bundled: it lives in the core tree's own `public/models/` and
 //! `public/library/`, which is also where the workspace expects it, because that is where
@@ -1281,7 +1281,7 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
   const shared = delivery.sharedRepo === true;
   const cloneFolder = shared ? SHARED_CLONE_FOLDER
     : (projectKey ?? (typeof delivery.customer === 'string' && delivery.customer.trim()
-      ? delivery.customer.trim() : 'realvirtual-web'));
+      ? delivery.customer.trim() : 'xyvirtual-web'));
   const licensedBlock = features.length
     ? features.map((feature) => `- \`${feature}\``).join('\n')
     : '- None enabled for this profile.';
@@ -1300,7 +1300,7 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
       ? `- **Git and Git LFS:** Install both, then check them with \`git --version\` and \`git lfs version\`. Run \`git lfs install\` once on your computer. Git LFS is critical because \`connect/rag.zip\` is an LFS object; without Git LFS, Git downloads only a small pointer file and the diagnosis function cannot start.\n`
       : `- **Git and Git LFS:** Install both, then check them with \`git --version\` and \`git lfs version\`. Run \`git lfs install\` once on your computer. Git LFS is critical because the delivered models are LFS objects; without Git LFS, Git downloads only small pointer files and the models cannot load.\n`) +
     `- **Disk and network:** Keep about 2 GB of free disk space and allow network access to \`git.realvirtual.io\` and \`web.realvirtual.io\` for the CONNECT download.\n\n`;
-  // ONE documented route, and it is plain Git. The "realvirtual WEB dev" one-click installer
+  // ONE documented route, and it is plain Git. The "XYvirtual WEB dev" one-click installer
   // used to lead this section and bring Node.js and Git along; it is switched off for now and
   // is therefore not mentioned at all — not even as an alternative, because a download link to
   // something we do not currently support is worse than no link. Anyone working in this
@@ -1318,19 +1318,19 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
     `1. Open PowerShell on Windows, or a terminal on Linux/macOS.\n` +
     `2. Clone this repository into a short local folder such as \`D:\\git\\${cloneFolder}\`, not one inside OneDrive: the sync client would try to upload every one of the tens of thousands of files in the workspace. Then open the cloned folder.\n\n` +
     `   \`git clone ${remote}\`\n\n` +
-    `3. Start the workspace **from the repository root**, the folder that contains \`start.ps1\` next to \`realvirtual-web/\`. Do not run the start script from inside \`realvirtual-web/\`:\n\n` +
+    `3. Start the workspace **from the repository root**, the folder that contains \`start.ps1\` next to \`xyvirtual-web/\`. Do not run the start script from inside \`xyvirtual-web/\`:\n\n` +
     `   - **Windows:** Run \`powershell -NoProfile -ExecutionPolicy Bypass -File .\\start.ps1\`. The \`-ExecutionPolicy Bypass\` option avoids the common local-script policy error. Alternatively, right-click \`start.ps1\` and select **Run with PowerShell**.\n` +
     `   - **Linux and macOS:** Run \`./start.sh\`.\n\n` +
-    `   \`start.ps1\` prepares the workspace by calling \`setup.ps1\` and then starts realvirtual CONNECT, which serves the viewer itself. \`setup.ps1\` can also be run on its own after a \`git pull\`; it starts nothing.\n\n` +
+    `   \`start.ps1\` prepares the workspace by calling \`setup.ps1\` and then starts XYvirtual CONNECT, which serves the viewer itself. \`setup.ps1\` can also be run on its own after a \`git pull\`; it starts nothing.\n\n` +
     `4. Take updates with \`git pull\` in the workspace folder and start again the same way. If the pull changed the dependencies, run \`setup.ps1\` (Linux: \`setup.sh\`) once before starting.\n\n`;
   return `# ${deliveryDisplayName(delivery)}\n\n` +
     (projectless
-      ? `This repository is your ready-to-run realvirtual WEB workspace. It ships the viewer, realvirtual CONNECT and the demo model; your own machine models and code go into \`projects/\`, which starts out empty. See [Create your first project](#create-your-first-project) below.\n\n`
-      : `This repository is your ready-to-run realvirtual WEB workspace for \`${customerModel}\`.\n\n`) +
+      ? `This repository is your ready-to-run XYvirtual WEB workspace. It ships the viewer, XYvirtual CONNECT and the demo model; your own machine models and code go into \`projects/\`, which starts out empty. See [Create your first project](#create-your-first-project) below.\n\n`
+      : `This repository is your ready-to-run XYvirtual WEB workspace for \`${customerModel}\`.\n\n`) +
     `Data protection, hosting, and access control are described under [Your private workspace](#your-private-workspace) in the reference section below.\n\n` +
     gettingStarted +
     `## The first start\n\n` +
-    `Wait for the first start to finish. It installs the npm dependencies, downloads realvirtual CONNECT (about 225 MB) from \`web.realvirtual.io\`, verifies its SHA-256 checksum, and opens your browser with \`${customerModel}\`.\n\n` +
+    `Wait for the first start to finish. It installs the npm dependencies, downloads XYvirtual CONNECT (about 225 MB) from \`web.realvirtual.io\`, verifies its SHA-256 checksum, and opens your browser with \`${customerModel}\`.\n\n` +
     `The preparation reports its stages, shows the CONNECT download progress in MB, and the browser only opens once the viewer actually answers. On a first start, the dependency installation and the download each take several minutes; as long as steps or progress keep appearing, it is working. If progress stops entirely, read [If the start hangs while installing the dependencies](#if-the-start-hangs-while-installing-the-dependencies) in the reference section.\n\n` +
     `### Licence activation\n\n` +
     // Two truths, and which one applies is decided by the channel, not by taste:
@@ -1342,9 +1342,9 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
       : `On the first start, the activation dialog appears with your licence key already filled in. Click **Activate** and accept the Terms once. Activation needs Internet access to the realvirtual portal. Without activation, the viewer still runs, but CONNECT functions are limited.\n\n`) +
     `## Daily operation\n\n` +
     `### One address, whichever way the workspace runs\n\n` +
-    `realvirtual CONNECT is the only thing you start. It works out how this workspace is set up, starts the development server for you when the sources are present, and serves the Viewer at **http://localhost:5100** either way. Hot reload works there as usual: save a file and the browser updates.\n\n` +
+    `XYvirtual CONNECT is the only thing you start. It works out how this workspace is set up, starts the development server for you when the sources are present, and serves the Viewer at **http://localhost:5100** either way. Hot reload works there as usual: save a file and the browser updates.\n\n` +
     `To use other ports, pass them to the start script: \`powershell -NoProfile -ExecutionPolicy Bypass -File .\\start.ps1 -ConnectPort 5101 -WebPort 5174\`.\n\n` +
-    `The realvirtual CONNECT tray icon shows which mode this instance runs in and which folders it uses, and lets you stop, start or restart the development server from **realvirtual WEB**.\n\n` +
+    `The XYvirtual CONNECT tray icon shows which mode this instance runs in and which folders it uses, and lets you stop, start or restart the development server from **XYvirtual WEB**.\n\n` +
     `### Updates\n\n` +
     `Updates stay in Git: run \`git pull\` in the workspace folder, then start again with the same start script as before. Nothing else is required. Your own changes under \`${projectPath}/\` remain untouched.\n\n` +
     `### After a \`git pull\` that changes the dependencies\n\n` +
@@ -1354,15 +1354,15 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
       ? `### Create your first project\n\n`
         + `\`projects/\` is yours and starts out empty. A project is a folder in it - \`projects/<your-project>/\` - with \`models/\` for the machine models, \`plugins/\` for project-specific viewer code, and \`docs/\` for project documentation. Nothing outside \`projects/\` is yours to edit; it is replaced by every delivery update.\n\n`
         + `The quickest way to start is in the browser: open the workspace, use the asset editor to import a CAD assembly or a GLB, and save it into a new project folder. Everything you create there stays yours - an update never touches \`projects/\`, in either direction.\n\n`
-        + `To set one up by hand, create \`projects/<your-project>/models/\` and put your GLB there, then set \`defaultModel\` in \`realvirtual-web/public/settings.json\` to its bare file name. For project-specific code, add \`projects/<your-project>/plugins/index.ts\` and register your plugins from it, then restart the development server so Vite discovers the new entry point. GLB models are tracked with Git LFS; the delivered \`.gitattributes\` already covers \`projects/*/models/*.glb\`.\n\n`
+        + `To set one up by hand, create \`projects/<your-project>/models/\` and put your GLB there, then set \`defaultModel\` in \`xyvirtual-web/public/settings.json\` to its bare file name. For project-specific code, add \`projects/<your-project>/plugins/index.ts\` and register your plugins from it, then restart the development server so Vite discovers the new entry point. GLB models are tracked with Git LFS; the delivered \`.gitattributes\` already covers \`projects/*/models/*.glb\`.\n\n`
         + `The [workspace recipes](recipes/README.md) are the canonical, vendor-neutral runbooks for common model, CONNECT, historian, plugin, troubleshooting, and deployment tasks. They can be followed by a person or any AI assistant.\n\n`
       : ``) +
-      (projectless ? `` : `Your editable files are under \`${projectPath}/\`: \`models/\` contains the machine models, \`plugins/\` contains project-specific viewer code, and \`docs/\` contains project documentation. Edit only this project directory; everything outside it - \`realvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\` - is replaced by every delivery update. See \`CONTRIBUTING.md\` before making changes, and "Receiving an update" below for what an update does inside your project directory.\n\n` +
+      (projectless ? `` : `Your editable files are under \`${projectPath}/\`: \`models/\` contains the machine models, \`plugins/\` contains project-specific viewer code, and \`docs/\` contains project documentation. Edit only this project directory; everything outside it - \`xyvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\` - is replaced by every delivery update. See \`CONTRIBUTING.md\` before making changes, and "Receiving an update" below for what an update does inside your project directory.\n\n` +
       `The [workspace recipes](recipes/README.md) are the canonical, vendor-neutral runbooks for common model, CONNECT, historian, plugin, troubleshooting, and deployment tasks. They can be followed by a person or any AI assistant.\n\n` +
       `### Use your own machine model\n\n` +
-      `Export the machine as a GLB file from Unity with the GLB export in realvirtual Professional, then place it in \`${projectPath}/models/\`. If the new file has the same name as the existing model, no configuration change is required. If it has a different name, update \`defaultModel\` in \`realvirtual-web/public/settings.json\`. GLB models are tracked with Git LFS.\n\n` +
+      `Export the machine as a GLB file from Unity with the GLB export in realvirtual Professional, then place it in \`${projectPath}/models/\`. If the new file has the same name as the existing model, no configuration change is required. If it has a different name, update \`defaultModel\` in \`xyvirtual-web/public/settings.json\`. GLB models are tracked with Git LFS.\n\n` +
       `### Custom development\n\n` +
-      `Create project-specific Viewer code only in \`${projectPath}/plugins/\`. Add a plugin file there, export and register it from \`${projectPath}/plugins/index.ts\`, then restart the development server so Vite discovers the changed project entry point. See [Extending realvirtual WEB](realvirtual-web/doc-extending-webviewer.md) and [Scripting](realvirtual-web/doc-scripting.md). Before opening a pull request, run \`npx tsc --noEmit\` and \`npm run build\` from \`realvirtual-web/\`.\n\n`) +
+      `Create project-specific Viewer code only in \`${projectPath}/plugins/\`. Add a plugin file there, export and register it from \`${projectPath}/plugins/index.ts\`, then restart the development server so Vite discovers the changed project entry point. See [Extending XYvirtual WEB](xyvirtual-web/doc-extending-webviewer.md) and [Scripting](xyvirtual-web/doc-scripting.md). Before opening a pull request, run \`npx tsc --noEmit\` and \`npm run build\` from \`xyvirtual-web/\`.\n\n`) +
     `### AI-assisted development (optional)\n\n` +
     `The workspace includes \`CLAUDE.md\` and an MCP bridge. If you start Claude Code, or another MCP-capable assistant, in the workspace folder, it can inspect and modify the running scene through the \`web_*\` MCP tools. This requires your own subscription with the respective provider; realvirtual supplies the integration, not an assistant licence.\n\n` +
     // The delivery channel, stated once and differently for the two relationships (§2.2).
@@ -1373,17 +1373,17 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
     (projectless
       ? `### How you receive this workspace\n\n`
         + `This repository is **read-only for you**: realvirtual publishes the product into it, and you take updates with \`git pull\`. There is no pull request to open here and no review step - nothing you write is expected to travel back to us.\n\n`
-        + `Your own work is versioned on your side. Keep your projects under \`projects/\` in this clone and commit them to your own branch, remote, or backup as your organisation prefers; \`projects/\` is never touched by an update, in either direction. If you want us to look at something, send it to [professional@realvirtual.io](mailto:professional@realvirtual.io).\n\n`
+        + `Your own work is versioned on your side. Keep your projects under \`projects/\` in this clone and commit them to your own branch, remote, or backup as your organisation prefers; \`projects/\` is never touched by an update, in either direction. If you want us to look at something, send it to [professional@xyvirtual.io](mailto:professional@xyvirtual.io).\n\n`
       : `### Submit changes\n\n`
         + `Create a branch, commit your changes, and open a pull request in this repository. realvirtual reviews the pull request. See \`CONTRIBUTING.md\` for details.\n\n`) +
     `### Receiving an update\n\n` +
     (projectless
-      ? `An update arrives as a commit pushed to this repository by realvirtual. Take it with \`git pull\`. It replaces everything outside \`projects/\` - \`realvirtual-web/\`, \`realvirtual-web-pro/\`, the scripts and the manifests - and it never touches anything inside \`projects/\`. Your projects are yours: they are neither updated, nor merged, nor removed by a delivery.\n\n`
+      ? `An update arrives as a commit pushed to this repository by realvirtual. Take it with \`git pull\`. It replaces everything outside \`projects/\` - \`xyvirtual-web/\`, \`realvirtual-web-pro/\`, the scripts and the manifests - and it never touches anything inside \`projects/\`. Your projects are yours: they are neither updated, nor merged, nor removed by a delivery.\n\n`
         + `After every update, read \`DELIVERY-REPORT.md\` in the repository root. It is regenerated each time and lists, in German, what was updated, added and removed, and any changes of yours outside \`projects/\` that the update overwrote.\n\n`
       : `An update arrives as a commit pushed to this repository by realvirtual. It touches three kinds of file, and the rule differs for each:\n\n`) +
     (projectless ? `` : `| What | What an update does |\n` +
     `| --- | --- |\n` +
-      `| \`realvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\` and everything else outside \`projects/\` | **Replaced.** Do not edit these; changes here are overwritten. If you did change something, the update lists it in the report so you can see what was lost. |\n` +
+      `| \`xyvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\` and everything else outside \`projects/\` | **Replaced.** Do not edit these; changes here are overwritten. If you did change something, the update lists it in the report so you can see what was lost. |\n` +
       `| Parts of \`${projectPath}/\` that realvirtual maintains - typically \`models/\`, \`docs/\`, \`connect/\`, \`plugins/\`, \`rag/\` | **Merged.** If you did not change a file, it is updated. If you did, **your version stays** and ours is put beside it (see below). |\n` +
       `| Everything else in \`${projectPath}/\` - \`scenes/\`, \`settings/\`, \`layouts/\`, and anything not listed above | **Never touched.** This is yours. |\n\n` +
       `After every update, read \`DELIVERY-REPORT.md\` in the repository root. It is regenerated each time and lists, in German, what was updated, added and removed, which of your files were kept, and any changes of yours outside \`projects/\` that the update overwrote.\n\n` +
@@ -1405,7 +1405,7 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
         + `${projectBlock}\n\n`) +
     `See [FEATURES.md](FEATURES.md) for the detailed feature matrix and tier assignment.\n\n` +
     `### Editions\n\n` +
-    `- **Community:** \`realvirtual-web/\` is the AGPL-licensed core, using the same licence and codebase as the public Community version. Release schedules are independent, so the public Community version can be newer or older than this delivered snapshot. For this delivery, \`delivery-manifest.json\` is authoritative for the version, commit, and changeset.\n` +
+    `- **Community:** \`xyvirtual-web/\` is the AGPL-licensed core, using the same licence and codebase as the public Community version. Release schedules are independent, so the public Community version can be newer or older than this delivered snapshot. For this delivery, \`delivery-manifest.json\` is authoritative for the version, commit, and changeset.\n` +
     `- **Professional/Commercial:** Additional commercial extensions in \`realvirtual-web-pro/\`. Their use requires a commercial licence.\n` +
     (projectless
       ? `- **Your own projects:** Everything below \`projects/\`. It is yours; realvirtual neither delivers nor modifies anything in that folder.\n\n`
@@ -1415,11 +1415,11 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
     `realvirtual operates the server on its own infrastructure in the EU, in a Hetzner data centre in Helsinki, rather than on US cloud services. Machine geometry, documentation, and project-specific code are stored in this private repository.\n\n` +
     `Each user receives an individual account. Two-factor authentication (2FA) is recommended. Access is assigned per person and can be revoked individually.\n\n` +
     (hasDiagnosis
-      ? `The optional AI diagnosis in realvirtual CONNECT sends the current question and relevant excerpts from the documentation to an EU-hosted AI endpoint for processing. To avoid this processing, disable the diagnosis function by setting \`Diagnosis.Enabled=false\` in \`connect/project-config.json\`. All other workspace functions - the viewer, simulation, and models - run locally.\n\n`
+      ? `The optional AI diagnosis in XYvirtual CONNECT sends the current question and relevant excerpts from the documentation to an EU-hosted AI endpoint for processing. To avoid this processing, disable the diagnosis function by setting \`Diagnosis.Enabled=false\` in \`connect/project-config.json\`. All other workspace functions - the viewer, simulation, and models - run locally.\n\n`
       : `This delivery contains no AI diagnosis package, so nothing in this workspace sends questions or documentation to an AI endpoint. The viewer, simulation, and models run locally.\n\n`) +
     `### Appliance (optional)\n\n` +
-    `For a machine that has to carry its own HMI at the plant, realvirtual can deliver an **appliance**: one dedicated box in the plant network that serves the HMI, the project Git repository, the recorded signal history and the realvirtual CONNECT gateway from a single secured address, without Internet access. It is optional, it is separate from this workspace, and this workspace stays where the project is developed. The appliance is still in development and is not released for production use. If it is part of your delivery, the \`appliance/\` folder ships with the workspace and [Set up the appliance](recipes/setup-appliance.md) is the runbook; if the folder is not there and you need it, ask [professional@realvirtual.io](mailto:professional@realvirtual.io).\n\n` +
-    `### Updating realvirtual CONNECT\n\n` +
+    `For a machine that has to carry its own HMI at the plant, realvirtual can deliver an **appliance**: one dedicated box in the plant network that serves the HMI, the project Git repository, the recorded signal history and the XYvirtual CONNECT gateway from a single secured address, without Internet access. It is optional, it is separate from this workspace, and this workspace stays where the project is developed. The appliance is still in development and is not released for production use. If it is part of your delivery, the \`appliance/\` folder ships with the workspace and [Set up the appliance](recipes/setup-appliance.md) is the runbook; if the folder is not there and you need it, ask [professional@xyvirtual.io](mailto:professional@xyvirtual.io).\n\n` +
+    `### Updating XYvirtual CONNECT\n\n` +
     `The newest stable release is always at the same two addresses. They are overwritten by every release, so they never need to be looked up again:\n\n` +
     `| What | Address |\n` +
     `| --- | --- |\n` +
@@ -1431,9 +1431,9 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
     `3. **By hand.** Download the address in the table above and replace \`tools/connect/realvirtual-Connect.exe\` with it while CONNECT is not running. Use this if the machine has no route for the automated download.\n\n` +
     `CONNECT never updates itself unattended: it downloads nothing before a confirmation naming a specific build, and it does not check on startup whether a newer version exists. An update is always something you asked for, so a workspace keeps behaving exactly as it did yesterday until you decide otherwise.\n\n` +
     `Your project files are untouched by all three routes. Only the program file under \`tools/connect/\` changes.\n\n` +
-    `### Going back to an earlier realvirtual CONNECT\n\n` +
+    `### Going back to an earlier XYvirtual CONNECT\n\n` +
     `If a new CONNECT version misbehaves, pin an earlier one instead of waiting for a fix:\n\n` +
-    `1. Open \`connect.lock.json\` in the workspace root and set \`version\`, \`url\` and \`sha256\` to the earlier release. Ask [professional@realvirtual.io](mailto:professional@realvirtual.io) for the values if you do not have them.\n` +
+    `1. Open \`connect.lock.json\` in the workspace root and set \`version\`, \`url\` and \`sha256\` to the earlier release. Ask [professional@xyvirtual.io](mailto:professional@xyvirtual.io) for the values if you do not have them.\n` +
     `2. Delete \`tools/connect/\` so the old binary is fetched again.\n` +
     `3. Run the preparation once: \`powershell -NoProfile -ExecutionPolicy Bypass -File .\\setup.ps1\` (Linux: \`./setup.sh\`).\n\n` +
     `Start the workspace as usual afterwards. A CONNECT that predates the built-in launcher cannot start the development server itself; the start script notices that and starts it separately, so the Viewer works either way.\n\n` +
@@ -1444,23 +1444,23 @@ function generateReadme(delivery, projectKey, model, features, projectPlugins = 
     `1. Open \`dependencies.lock.json\` in the workspace root and copy the \`url\`.\n` +
     `2. Download that file on any machine with internet access, for example in a browser.\n` +
     `3. Put it, unrenamed, next to \`start.ps1\` in the workspace root.\n` +
-    `4. Start the workspace again. The archive is verified against the \`sha256\` from \`dependencies.lock.json\` and unpacked into \`realvirtual-web/node_modules\`; nothing is fetched from the network.\n\n` +
+    `4. Start the workspace again. The archive is verified against the \`sha256\` from \`dependencies.lock.json\` and unpacked into \`xyvirtual-web/node_modules\`; nothing is fetched from the network.\n\n` +
     `The archive belongs to exactly one \`package-lock.json\` and one operating system, both recorded in \`dependencies.lock.json\`. After an update that changes the dependencies, the file name changes with it, so download the new one named in the updated \`dependencies.lock.json\`.\n\n` +
     `If your virus scanner is the bottleneck rather than the network, ask your IT department for a scan exclusion for the workspace folder. That single change usually turns a start of many minutes into one of a few.\n\n` +
     `## Troubleshooting\n\n` +
     `| Problem | Solution |\n` +
     `| --- | --- |\n` +
     `| \`npm\` or \`node\` is not recognized as a command | Node.js ${REQUIRED_NODE_MAJOR} LTS is not installed, or the terminal still uses the old PATH. Install it from [nodejs.org](https://nodejs.org/), then open a new terminal - in an IDE, restart the IDE - and check \`node --version\`. |\n` +
-    `| \`start.ps1\` is not found | You are inside a subfolder. The start script is in the repository root, next to \`realvirtual-web/\`. Run \`cd ..\` until \`dir\` (Windows) or \`ls\` (Linux/macOS) shows \`start.ps1\`. |\n` +
+    `| \`start.ps1\` is not found | You are inside a subfolder. The start script is in the repository root, next to \`xyvirtual-web/\`. Run \`cd ..\` until \`dir\` (Windows) or \`ls\` (Linux/macOS) shows \`start.ps1\`. |\n` +
     `| Company proxy or custom certificate authority | Set \`NODE_EXTRA_CA_CERTS\` to your corporate CA bundle before running npm. Do not disable TLS verification. |\n` +
     (hasDiagnosis
       ? `| \`connect/rag.zip\` is only a few KB | Git LFS was missing during the clone. Run \`git lfs install && git lfs pull\`. |\n`
       : `| A model file is only a few KB | Git LFS was missing during the clone. Run \`git lfs install && git lfs pull\`. |\n`) +
     `| Web or CONNECT port is already in use | On Windows, choose other ports with \`powershell -NoProfile -ExecutionPolicy Bypass -File .\\start.ps1 -WebPort 5174 -ConnectPort 5101\`. |\n` +
-    `| "realvirtual CONNECT is already running for a different workspace" | Another workspace holds the CONNECT port. End it from its tray icon, or start this one on other ports as in the previous row. Starting a second instance on the same port would not work: the first one owns it. |\n` +
-    `| The Viewer is empty and the tray says the development server failed | Open the tray icon, **realvirtual WEB > Show dev server log**. If it reports changed dependencies, run \`setup.ps1\` once. |\n` +
+    `| "XYvirtual CONNECT is already running for a different workspace" | Another workspace holds the CONNECT port. End it from its tray icon, or start this one on other ports as in the previous row. Starting a second instance on the same port would not work: the first one owns it. |\n` +
+    `| The Viewer is empty and the tray says the development server failed | Open the tray icon, **XYvirtual WEB > Show dev server log**. If it reports changed dependencies, run \`setup.ps1\` once. |\n` +
     `| CONNECT download fails | Ask your IT team to allow the firewall/proxy connection to \`web.realvirtual.io\`. |\n` +
-    `| You still need help | Contact [professional@realvirtual.io](mailto:professional@realvirtual.io). |\n`;
+    `| You still need help | Contact [professional@xyvirtual.io](mailto:professional@xyvirtual.io). |\n`;
 }
 
 //! Writes vendor-neutral workspace runbooks for people and AI assistants.
@@ -1499,7 +1499,7 @@ function writeWorkspaceRecipes(root, projectKey, model, coreRoot) {
       `## Recommended order\n\n` +
       `1. [Replace the machine model](replace-machine-model.md) - put the exported GLB for ${deliveryName(projectKey)} in the correct location and verify its scale, axes, and startup view.\n` +
       `2. [Kinematize and materialize a CAD import](kinematize-cad-import.md) - turn a raw STEP, JT, or GLB assembly into a named, grouped, materialized asset whose axes are proven to move.\n` +
-      `3. [Connect live signals](connect-live-signals.md) - bind the GLB's \`rv_extras\` signals to realvirtual CONNECT with the correct PLC direction.\n` +
+      `3. [Connect live signals](connect-live-signals.md) - bind the GLB's \`rv_extras\` signals to XYvirtual CONNECT with the correct PLC direction.\n` +
       `4. [Set up the InfluxDB historian](setup-influxdb-historian.md) - install customer-owned InfluxDB OSS v2, provision project buckets and a scoped token, configure CONNECT, and verify recorded data.\n` +
       `5. [Create a custom plugin](create-custom-plugin.md) - add customer-owned behavior with a minimal, disposable plugin lifecycle.\n` +
       `6. [Troubleshoot the runtime](troubleshoot-runtime.md) - isolate failures from asset path through browser, WebSocket, CONNECT, and proxy.\n` +
@@ -1510,15 +1510,15 @@ function writeWorkspaceRecipes(root, projectKey, model, coreRoot) {
       `## Goal and outcome\n\nReplace the current \`${customerModel}\` model for project \`${projectArg}\` with a GLB exported from Unity. The result loads in the development server with the intended axes, units, and startup camera and without browser console errors.\n\n` +
       `## When to use\n\nUse this recipe after changing the machine in Unity or when introducing a different customer model.\n\n` +
       `## Prerequisites\n\n- realvirtual Professional in Unity with GLB export available.\n- Git and Git LFS installed; run \`git lfs install\` once per computer.\n- A clean export that includes the required realvirtual metadata.\n\n` +
-      `## Steps\n\n1. In Unity, export the machine with the realvirtual Professional GLB export.\n2. Copy the GLB into ${projectDirLink('project model directory', 'models/')}. The generated \`.gitattributes\` tracks \`projects/*/models/*.glb\` with Git LFS.\n3. To replace \`${customerModel}\` without a configuration change, keep exactly the same filename.\n4. If the filename changes, set \`defaultModel\` to the new bare filename in [settings.json](../realvirtual-web/public/settings.json); do not add a directory prefix.\n5. Start the workspace with \`start.ps1\` (Linux: \`./start.sh\`) and open http://localhost:5100. Hard-reload the browser and confirm that the requested GLB, rather than a cached previous file, loads.\n6. Check the machine's X/Y/Z orientation, physical scale and units, and the initial camera framing. Correct the Unity export or startup-camera data if any of them are wrong.\n7. Review \`git status\` and confirm that the GLB is handled by Git LFS before committing it.\n\n` +
+      `## Steps\n\n1. In Unity, export the machine with the realvirtual Professional GLB export.\n2. Copy the GLB into ${projectDirLink('project model directory', 'models/')}. The generated \`.gitattributes\` tracks \`projects/*/models/*.glb\` with Git LFS.\n3. To replace \`${customerModel}\` without a configuration change, keep exactly the same filename.\n4. If the filename changes, set \`defaultModel\` to the new bare filename in [settings.json](../xyvirtual-web/public/settings.json); do not add a directory prefix.\n5. Start the workspace with \`start.ps1\` (Linux: \`./start.sh\`) and open http://localhost:5100. Hard-reload the browser and confirm that the requested GLB, rather than a cached previous file, loads.\n6. Check the machine's X/Y/Z orientation, physical scale and units, and the initial camera framing. Correct the Unity export or startup-camera data if any of them are wrong.\n7. Review \`git status\` and confirm that the GLB is handled by Git LFS before committing it.\n\n` +
       `## Acceptance criteria\n\n- The model loads in the development server without browser console errors.\n- Axes, units, scale, and the startup camera are correct.\n- Git LFS tracks the GLB, and \`defaultModel\` is the bare filename of the delivered model.\n\n` +
-      `## Rollback\n\nRestore the previous tracked file with \`git checkout -- ${projectPath}/models/${customerModel}\`. If you changed \`defaultModel\`, also restore \`realvirtual-web/public/settings.json\`, then restart the development server.\n\n` +
+      `## Rollback\n\nRestore the previous tracked file with \`git checkout -- ${projectPath}/models/${customerModel}\`. If you changed \`defaultModel\`, also restore \`xyvirtual-web/public/settings.json\`, then restart the development server.\n\n` +
       `## Common problems\n\n- **404 for the GLB:** the filename or \`defaultModel\` does not match, including letter case.\n- **Only a small text pointer is present:** run \`git lfs pull\`.\n- **Wrong size or orientation:** fix the Unity unit/axis export settings and export again.\n- **Old geometry remains:** hard-reload and verify the requested model URL in the browser Network panel.\n\n` +
       `## Security and version notes\n\nA GLB shipped to an authorized browser user can be downloaded by that user. Do not include geometry or metadata that the recipient is not permitted to receive. Version meaningful model changes in Git; for deployments that cache models, prefer a new filename when cache invalidation must be explicit.\n\n` +
-      `## Further reading\n\n- [Unity-to-WEB workflow](../realvirtual-web/doc-unity-to-web.md)\n- [realvirtual WEB overview](../realvirtual-web/doc-webviewer.md)\n`,
+      `## Further reading\n\n- [Unity-to-WEB workflow](../xyvirtual-web/doc-unity-to-web.md)\n- [XYvirtual WEB overview](../xyvirtual-web/doc-webviewer.md)\n`,
 
     'connect-live-signals.md': `# Connect live signals\n\n` +
-      `## Goal and outcome\n\nConnect the signals embedded in \`${customerModel}\` to realvirtual CONNECT so live PLC values flow in the intended direction.\n\n` +
+      `## Goal and outcome\n\nConnect the signals embedded in \`${customerModel}\` to XYvirtual CONNECT so live PLC values flow in the intended direction.\n\n` +
       `## When to use\n\nUse this recipe when commissioning a model against CONNECT, a PLC, or another configured realtime source.\n\n` +
       `## Prerequisites\n\n- The model loads locally and contains exported signal names in \`rv_extras\`.\n- The workspace's pinned CONNECT binary is installed by the start script.\n- Network and PLC access have been approved by the customer's IT/OT owners.\n\n` +
       `## Steps\n\n1. Start the workspace with [start.ps1](../start.ps1) on Windows. For a manual CONNECT start, run the workspace-local CONNECT binary with \`--project-root <workspace-root>\`; do not rely on a globally installed CLI.\n2. Open the model and inspect its exported \`rv_extras\` signal names. Use those exact names, including case, in CONNECT and PLC mappings.\n3. Apply the PLC direction convention: **PLC Outputs -> the Viewer reads**; **PLC Inputs -> the Viewer writes**.\n4. Open the Viewer ConnectPanel and verify that the gateway is reachable and the expected connection is selected.\n5. Set safe test values from the owning side of each signal. Confirm the value and type in the ConnectPanel or debug signal view, then confirm the visible machine response.\n6. Test at least one signal in each direction when the project supports both. Return all test values to a safe state.\n\n` +
@@ -1526,10 +1526,10 @@ function writeWorkspaceRecipes(root, projectKey, model, coreRoot) {
       `## Rollback\n\nStop CONNECT or disconnect in the ConnectPanel, restore the previous CONNECT/PLC mapping, and return test signals to their documented safe values.\n\n` +
       `## Common problems\n\n- **Name mismatch:** compare exact GLB \`rv_extras\` names, including case and hierarchy.\n- **Type mismatch:** align Boolean, numeric, and string types on both sides.\n- **Wrong direction:** re-check PLC Output/Viewer-read and PLC Input/Viewer-write ownership.\n- **Gateway unreachable:** verify CONNECT is running, the configured URL/port is correct, and firewall or proxy rules allow the route.\n\n` +
       `## Security and version notes\n\nUse only approved test values and change-control procedures on live equipment. Do not expose CONNECT or PLC ports directly to the public Internet; use the customer-approved reverse proxy, VPN, or DMZ design. Keep the workspace's pinned CONNECT version unless an update is explicitly tested.\n\n` +
-      `## Further reading\n\n- [Industrial interfaces and signal flow](../realvirtual-web/doc-webviewer-interface.md)\n- [Signal architecture](../realvirtual-web/doc-signal-architecture.md)\n`,
+      `## Further reading\n\n- [Industrial interfaces and signal flow](../xyvirtual-web/doc-webviewer-interface.md)\n- [Signal architecture](../xyvirtual-web/doc-signal-architecture.md)\n`,
 
     'setup-influxdb-historian.md': `# Set up the InfluxDB historian\n\n` +
-      `## Goal and outcome\n\nInstall a customer-owned InfluxDB OSS v2 instance, create isolated resources for project \`${projectArg}\`, connect realvirtual CONNECT with a least-privilege token, and prove that selected signal history appears in the Viewer.\n\n` +
+      `## Goal and outcome\n\nInstall a customer-owned InfluxDB OSS v2 instance, create isolated resources for project \`${projectArg}\`, connect XYvirtual CONNECT with a least-privilege token, and prove that selected signal history appears in the Viewer.\n\n` +
       `CONNECT derives the bucket names from the project. There is no free-form Bucket field: project \`${projectArg}\` uses \`${projectArg}_raw\`, \`${projectArg}_1m\`, and \`${projectArg}_1h\`.\n\n` +
       `## When to use\n\nUse this recipe when a customer wants persistent signal trends on infrastructure they operate. It applies to local machines, an OT server, a customer VM, or a customer-approved private cloud. It does not depend on realvirtual infrastructure.\n\n` +
       `## Prerequisites\n\n- An x64 Windows or Linux host with persistent storage and an approved backup location.\n- Network approval between CONNECT and TCP port 8086 on the InfluxDB host. Do not expose port 8086 to the public Internet.\n- An InfluxDB OSS v2 operator token for one-time provisioning. Store it outside this Git workspace.\n- Node.js 18 or newer for the supplied provisioning helper.\n- A running workspace and at least one CONNECT signal that can be safely marked for recording.\n\n` +
@@ -1571,37 +1571,37 @@ function writeWorkspaceRecipes(root, projectKey, model, coreRoot) {
       `## Further reading\n\n- [InfluxDB OSS v2 installation](https://docs.influxdata.com/influxdb/v2/install/)\n- [InfluxDB v2 HTTP API](https://docs.influxdata.com/influxdb/v2/api/)\n- [Troubleshoot the runtime](troubleshoot-runtime.md)\n`,
 
     'deploy-production-web.md': `# Deploy the production web app\n\n` +
-      `## Goal and outcome\n\nBuild and host the customer-managed static realvirtual WEB application at its real production URL with secure CONNECT communication and predictable caching.\n\n` +
+      `## Goal and outcome\n\nBuild and host the customer-managed static XYvirtual WEB application at its real production URL with secure CONNECT communication and predictable caching.\n\n` +
       `## When to use\n\nUse this recipe when customer IT deploys the Viewer to an intranet, DMZ, private cloud, or approved public web host.\n\n` +
       `## Prerequisites\n\n- A tested model and workspace.\n- A customer-owned HTTPS host or reverse proxy configuration.\n- An approved network path from each user's browser to CONNECT.\n- Customer IT/OT approval for authentication, firewall, VPN/DMZ, retention, and monitoring.\n\n` +
-      `## Steps\n\n1. From \`realvirtual-web/\`, run \`npm run build\`. Deploy the generated \`dist/\` directory as static content.\n2. If the app is hosted below a URL subpath, set Vite's \`base\` in [vite.config.ts](../realvirtual-web/vite.config.ts) to that public subpath before building. Configure the web server's SPA fallback so unknown application routes return \`index.html\`.\n3. Serve production over HTTPS. An HTTPS page must connect to CONNECT with \`wss://\`, not insecure \`ws://\`. Configure WebSocket Upgrade headers and proxy read/idle timeouts long enough for persistent sessions and reconnects.\n4. Prefer same-origin routing for the static app, REST endpoints, and WebSocket endpoint. If cross-origin routing is required, configure an explicit CORS allowlist and a CSP whose \`connect-src\` permits only the required HTTPS/WSS endpoints.\n5. Protect the REST and WebSocket endpoints with the same authorization boundary as the application. Authentication on only the HTML page is insufficient.\n6. Set short or revalidation-based caching for \`index.html\` and \`settings.json\`. Cache content-hashed assets for a long time with immutable caching. Version GLB filenames when model cache invalidation must be reliable.\n7. Configure correct MIME types for JavaScript, WebAssembly, and GLB files (for example \`text/javascript\`, \`application/wasm\`, and \`model/gltf-binary\`) and enable Brotli or gzip compression where supported. Avoid recompressing already compressed content when it provides no benefit.\n8. Test the real production URL from the same network and browser profile used by operators. Perform a hard reload, open a nested/subpath URL, verify WebSocket reconnect, and verify the user-visible behavior while CONNECT is unavailable and after it returns.\n\n` +
+      `## Steps\n\n1. From \`xyvirtual-web/\`, run \`npm run build\`. Deploy the generated \`dist/\` directory as static content.\n2. If the app is hosted below a URL subpath, set Vite's \`base\` in [vite.config.ts](../xyvirtual-web/vite.config.ts) to that public subpath before building. Configure the web server's SPA fallback so unknown application routes return \`index.html\`.\n3. Serve production over HTTPS. An HTTPS page must connect to CONNECT with \`wss://\`, not insecure \`ws://\`. Configure WebSocket Upgrade headers and proxy read/idle timeouts long enough for persistent sessions and reconnects.\n4. Prefer same-origin routing for the static app, REST endpoints, and WebSocket endpoint. If cross-origin routing is required, configure an explicit CORS allowlist and a CSP whose \`connect-src\` permits only the required HTTPS/WSS endpoints.\n5. Protect the REST and WebSocket endpoints with the same authorization boundary as the application. Authentication on only the HTML page is insufficient.\n6. Set short or revalidation-based caching for \`index.html\` and \`settings.json\`. Cache content-hashed assets for a long time with immutable caching. Version GLB filenames when model cache invalidation must be reliable.\n7. Configure correct MIME types for JavaScript, WebAssembly, and GLB files (for example \`text/javascript\`, \`application/wasm\`, and \`model/gltf-binary\`) and enable Brotli or gzip compression where supported. Avoid recompressing already compressed content when it provides no benefit.\n8. Test the real production URL from the same network and browser profile used by operators. Perform a hard reload, open a nested/subpath URL, verify WebSocket reconnect, and verify the user-visible behavior while CONNECT is unavailable and after it returns.\n\n` +
       `## Acceptance criteria\n\n- \`npm run build\` succeeds and the deployed \`dist/\` loads at the real URL.\n- Hard reload and SPA routing work under the configured base/subpath.\n- HTTPS/WSS, authentication, CSP/CORS, and reverse-proxy Upgrade/timeouts behave as intended.\n- The Viewer reconnects after a WebSocket interruption and handles a CONNECT outage without exposing unsafe controls.\n\n` +
       `## Rollback\n\nKeep the previous immutable \`dist/\` release. Switch the web-server release pointer back, restore the previous proxy/configuration revision, purge only the affected entry-point cache, and repeat the production smoke test.\n\n` +
       `## Common problems\n\n- **Blank page under a subpath:** the Vite \`base\` or asset URLs do not match the deployed path.\n- **404 after a hard reload:** the SPA fallback to \`index.html\` is missing.\n- **WebSocket fails behind the proxy:** Upgrade headers, \`wss://\`, authentication forwarding, or timeouts are wrong.\n- **Stale model/settings:** cache rules are too long for mutable files or the GLB filename was reused behind an immutable cache.\n- **Browser reaches the site but not CONNECT:** a public CDN cannot automatically reach an OT network; the user's browser must have a permitted route to CONNECT.\n\n` +
       `## Security and version notes\n\n- **Never put secrets in \`VITE_*\` variables or \`settings.json\`.** Vite values and settings are delivered to the browser and can be read from the bundle or network responses. Keep secrets in a protected server-side component.\n- Do not expose CONNECT or PLC ports directly to the public Internet. Use a customer-approved reverse proxy, VPN, or DMZ and obtain customer IT/OT approval.\n- Authentication must protect REST and WebSocket traffic, not only the HTML page.\n- A public CDN cannot automatically reach an OT network. The user's browser must be able to reach CONNECT through the approved route.\n- A GLB delivered to an authorized user is downloadable by that user; hosting authorization controls access but cannot make delivered geometry non-extractable.\n- Record the delivered workspace/version and the proxy/static-host configuration with each release.\n\n` +
-      `## Further reading\n\n- [Workspace settings](../realvirtual-web/public/settings.json)\n- [Runtime debugging](troubleshoot-runtime.md)\n`,
+      `## Further reading\n\n- [Workspace settings](../xyvirtual-web/public/settings.json)\n- [Runtime debugging](troubleshoot-runtime.md)\n`,
 
     'create-custom-plugin.md': `# Create a custom plugin\n\n` +
       `## Goal and outcome\n\nAdd customer-owned behavior for \`${modelStem}\` under \`${projectPath}/plugins/\`, with a minimal \`init\`/\`dispose\` lifecycle and a visible result in the Viewer.\n\n` +
       `## When to use\n\nUse this recipe for project-specific UI, behavior, event handling, or visualization that should travel with the customer project.\n\n` +
       `## Prerequisites\n\n- The model loads in the running workspace at http://localhost:5100.\n- Read the plugin lifecycle and model-specific registration sections linked below.\n- Decide what visible, reversible behavior proves that the plugin is active.\n\n` +
-      `## Steps\n\n1. Create a TypeScript or TSX plugin file in ${projectDirLink('project plugin directory', 'plugins/')}. Keep the plugin small and give it a unique \`id\`.\n2. Implement the minimum lifecycle: use \`init(viewer, context)\` to register visible UI/behavior or subscriptions, and \`dispose()\` to unregister listeners and release every resource created by the plugin.\n3. Add or update \`${projectPath}/plugins/index.ts\`: list the matching model name \`${modelStem}\`, create the plugin in \`registerModelPlugins\`, and remove it by ID in \`unregisterModelPlugins\`.\n4. Restart the development server. Project plugin entry points are discovered through a Vite auto-discovery glob, so adding or renaming an entry file is not reliably picked up without a restart.\n5. Confirm the plugin's visible UI, marker, or behavior appears only for the intended model and disappears cleanly after model switch/unload.\n6. From \`realvirtual-web/\`, run \`npx tsc --noEmit\`, then \`npm run build\`.\n\n` +
+      `## Steps\n\n1. Create a TypeScript or TSX plugin file in ${projectDirLink('project plugin directory', 'plugins/')}. Keep the plugin small and give it a unique \`id\`.\n2. Implement the minimum lifecycle: use \`init(viewer, context)\` to register visible UI/behavior or subscriptions, and \`dispose()\` to unregister listeners and release every resource created by the plugin.\n3. Add or update \`${projectPath}/plugins/index.ts\`: list the matching model name \`${modelStem}\`, create the plugin in \`registerModelPlugins\`, and remove it by ID in \`unregisterModelPlugins\`.\n4. Restart the development server. Project plugin entry points are discovered through a Vite auto-discovery glob, so adding or renaming an entry file is not reliably picked up without a restart.\n5. Confirm the plugin's visible UI, marker, or behavior appears only for the intended model and disappears cleanly after model switch/unload.\n6. From \`xyvirtual-web/\`, run \`npx tsc --noEmit\`, then \`npm run build\`.\n\n` +
       `## Acceptance criteria\n\n- \`npx tsc --noEmit\` and \`npm run build\` both succeed.\n- The plugin has a visible intended effect for \`${modelStem}\`.\n- Repeated model load/unload does not duplicate UI, listeners, or scene objects.\n\n` +
       `## Rollback\n\nRemove the plugin registration first, restart the development server, then delete the plugin file. Use Git to restore the previous \`${projectPath}/plugins/\` state if necessary.\n\n` +
       `## Common problems\n\n- **Plugin never appears:** restart the dev server and verify the model name exported by \`models\` matches the GLB filename without \`.glb\`.\n- **TypeScript import errors:** use paths relative to the customer workspace layout and follow existing project plugins.\n- **Duplicate behavior after reload:** ensure \`unregisterModelPlugins\` removes the plugin and \`dispose()\` releases subscriptions/resources.\n- **Build passes but nothing is visible:** add a bounded visible acceptance signal such as a UI slot, then verify it in the intended model.\n\n` +
       `## Security and version notes\n\nDo not add AGPL headers to code under \`${projectPath}/\`; customer code is governed by the customer contract. Do not put credentials, tokens, or private endpoints in browser plugin source. Treat plugin API changes as versioned workspace changes and re-run both checks after delivery updates.\n\n` +
-      `## Further reading\n\n- [Extending realvirtual WEB](../realvirtual-web/doc-extending-webviewer.md)\n- [Scripting](../realvirtual-web/doc-scripting.md)\n`,
+      `## Further reading\n\n- [Extending XYvirtual WEB](../xyvirtual-web/doc-extending-webviewer.md)\n- [Scripting](../xyvirtual-web/doc-scripting.md)\n`,
 
     'troubleshoot-runtime.md': `# Troubleshoot the runtime\n\n` +
       `## Goal and outcome\n\nLocate a runtime failure at the first broken boundary: asset path -> GLB -> browser console -> WebSocket -> CONNECT -> reverse proxy.\n\n` +
       `## When to use\n\nUse this recipe when the model, live data, controls, or production connection does not behave as expected.\n\n` +
       `## Prerequisites\n\n- Reproduce the issue with a timestamp and expected result.\n- Keep browser DevTools available.\n- Know whether the test is local, same-origin production, or cross-origin production.\n\n` +
-      `## Steps\n\n1. **Asset path:** check \`defaultModel\` in [settings.json](../realvirtual-web/public/settings.json), then verify the model request URL/status in the browser Network panel.\n2. **GLB:** confirm the response is a real GLB rather than an LFS pointer, login page, or proxy error. Verify that the GLB contains expected \`rv_extras\` names and loads without parser errors.\n3. **Browser console:** reload with DevTools open. Resolve the first relevant error before secondary failures; use \`http://localhost:5100/__api/debug\` for a read-only runtime snapshot (reachable from this machine only).\n4. **WebSocket:** inspect the connection URL, \`ws://\` versus \`wss://\`, handshake status, close code, reconnect behavior, and frames.\n5. **CONNECT:** verify the workspace-owned CONNECT process is healthy, started with \`--project-root <workspace-root>\`, and exposes the expected signals/types/directions.\n6. **Reverse proxy:** if local operation works, inspect DNS/TLS, base/subpath routing, WebSocket Upgrade headers, authorization forwarding, CORS/CSP, and idle/read timeouts.\n7. Re-test one boundary at a time and record the first failing request, error, or status with secrets removed.\n\n` +
+      `## Steps\n\n1. **Asset path:** check \`defaultModel\` in [settings.json](../xyvirtual-web/public/settings.json), then verify the model request URL/status in the browser Network panel.\n2. **GLB:** confirm the response is a real GLB rather than an LFS pointer, login page, or proxy error. Verify that the GLB contains expected \`rv_extras\` names and loads without parser errors.\n3. **Browser console:** reload with DevTools open. Resolve the first relevant error before secondary failures; use \`http://localhost:5100/__api/debug\` for a read-only runtime snapshot (reachable from this machine only).\n4. **WebSocket:** inspect the connection URL, \`ws://\` versus \`wss://\`, handshake status, close code, reconnect behavior, and frames.\n5. **CONNECT:** verify the workspace-owned CONNECT process is healthy, started with \`--project-root <workspace-root>\`, and exposes the expected signals/types/directions.\n6. **Reverse proxy:** if local operation works, inspect DNS/TLS, base/subpath routing, WebSocket Upgrade headers, authorization forwarding, CORS/CSP, and idle/read timeouts.\n7. Re-test one boundary at a time and record the first failing request, error, or status with secrets removed.\n\n` +
       `## Acceptance criteria\n\n- The first failing boundary is identified with reproducible evidence.\n- The fix is verified at that boundary and through the full user flow.\n- Browser console and debug state contain no new relevant errors.\n\n` +
       `## Rollback\n\nRestore the last known-good model, settings, workspace revision, or proxy configuration for the identified boundary. Restart only the workspace-owned processes and repeat the same reproduction.\n\n` +
       `## Common problems\n\n- **Model request returns HTML:** authentication or SPA fallback intercepted the GLB URL.\n- **GLB is only a small text file:** Git LFS content was not pulled.\n- **Mixed-content error:** an HTTPS page attempted \`ws://\`; use \`wss://\`.\n- **Handshake succeeds locally only:** proxy Upgrade/auth/CSP/CORS or the browser-to-OT route is missing.\n- **Signals connect but do not move the model:** check exact name, type, and PLC direction against \`rv_extras\`.\n\n` +
       `## Security and version notes\n\nRemove tokens, customer data, and machine geometry from shared logs or screenshots. Prefer read-only inspection before changing signal values or processes. Record browser, workspace, CONNECT, and proxy versions because behavior can differ between delivered snapshots.\n\n` +
-      `## Further reading\n\n- [WEB debugging guide](../realvirtual-web/doc-web-debugging.md)\n- [Industrial interfaces](../realvirtual-web/doc-webviewer-interface.md)\n`,
+      `## Further reading\n\n- [WEB debugging guide](../xyvirtual-web/doc-web-debugging.md)\n- [Industrial interfaces](../xyvirtual-web/doc-webviewer-interface.md)\n`,
 
     // The appliance ships from the commercial tier only, and the recipe generator has no tier
     // input (writeWorkspaceRecipes takes none, and adding one is plan-372 P5, not this change).
@@ -1610,7 +1610,7 @@ function writeWorkspaceRecipes(root, projectKey, model, coreRoot) {
     // delivery, which is more useful than a silently missing runbook.
     'setup-appliance.md': `# Set up the appliance\n\n` +
       `## Goal and outcome\n\nThis recipe requires the \`appliance/\` folder, which ships from the commercial tier. If it is not in your workspace, this recipe does not apply to your delivery; ask realvirtual whether the appliance is part of your contract.\n\n` +
-      `Install the appliance on one dedicated box in the plant network so that project \`${projectArg}\` is served from a single secured HTTPS address: the HMI with \`${customerModel}\`, the project Git repository, the recorded signal history, and the realvirtual CONNECT gateway. Any panel PC or tablet on the same network reaches all of it through that one address, without Internet access.\n\n` +
+      `Install the appliance on one dedicated box in the plant network so that project \`${projectArg}\` is served from a single secured HTTPS address: the HMI with \`${customerModel}\`, the project Git repository, the recorded signal history, and the XYvirtual CONNECT gateway. Any panel PC or tablet on the same network reaches all of it through that one address, without Internet access.\n\n` +
       `**The appliance is still in development and is not released for production use.** Backup and restore do not exist yet, and the complete Windows installation run has not been performed on a fresh machine. Treat an installation as a pilot on hardware you are able to rebuild.\n\n` +
       `## When to use\n\nUse this recipe when the machine has to carry its own HMI at the plant: no Internet, no engineering workstation in the loop, and the project repository plus the signal history stay on customer premises for the life of the machine. Do not use it for a developer workstation; there the normal workspace start scripts are the right tool.\n\n` +
       `## Prerequisites\n\n` +
@@ -1671,7 +1671,7 @@ function generateContributing(projectKey) {
   if (!projectKey) {
     return `# Contributing\n\nThis repository is published by realvirtual and is **read-only for you**. There is no pull request to open here and no review step; take updates with \`git pull\`.\n\n` +
       `Everything under \`projects/\` is yours. Version it on your side - your own branch, remote, or backup - as your organisation prefers; a delivery never reads, changes or removes anything in that folder.\n\n` +
-      `If you want realvirtual to look at something you built, or you would like a project developed together with us, contact [professional@realvirtual.io](mailto:professional@realvirtual.io).\n`;
+      `If you want realvirtual to look at something you built, or you would like a project developed together with us, contact [professional@xyvirtual.io](mailto:professional@xyvirtual.io).\n`;
   }
   return `# Contributing\n\nCustomer changes belong only in \`projects/${projectKey}/\` and are submitted through a reviewed pull request.\n\n` +
     `By submitting a contribution, you confirm that you may provide it and grant realvirtual GmbH the rights required to maintain, merge, license, and redistribute it as part of the delivered product. This clause is a placeholder pending legal review and must be replaced before the first customer contribution.\n`;
@@ -1688,10 +1688,10 @@ function generateContributing(projectKey) {
 // on, so a setup that started CONNECT would be a loop with a 225 MB download in it.
 
 function generateSetupPowerShell(hasDiagnosis = true) {
-  return `# Prepares this workspace: Node check, dependencies, realvirtual CONNECT.\n` +
+  return `# Prepares this workspace: Node check, dependencies, XYvirtual CONNECT.\n` +
     `#\n` +
     `# It deliberately starts NOTHING. Use start.ps1 to run the workspace.\n` +
-    `# realvirtual CONNECT points here when the dependencies have moved on,\n` +
+    `# XYvirtual CONNECT points here when the dependencies have moved on,\n` +
     `# so a preparation that also started CONNECT would call itself.\n` +
     `$ErrorActionPreference = 'Stop'\n$workspace = Split-Path -Parent $MyInvocation.MyCommand.Path\n` +
     // Preflight: without Node.js the script would fail deep inside `npm ci` with a bare
@@ -1708,9 +1708,9 @@ function generateSetupPowerShell(hasDiagnosis = true) {
     `  Write-Host 'Install the current LTS from https://nodejs.org, then open a new terminal and run setup.ps1 again.'\n` +
     `  exit 1\n}\n` +
     `if ($nodeMajor -gt ${REQUIRED_NODE_MAJOR}) { Write-Host "Note: Node.js $nodeMajor is newer than the delivered version ${REQUIRED_NODE_MAJOR}. If the start fails, install Node.js ${REQUIRED_NODE_MAJOR} LTS." }\n` +
-    `Write-Host ''\nWrite-Host 'realvirtual WEB workspace - preparation' -ForegroundColor Cyan\n` +
+    `Write-Host ''\nWrite-Host 'XYvirtual WEB workspace - preparation' -ForegroundColor Cyan\n` +
     `Write-Host "[1/3] Node.js $nodeMajor detected."\n` +
-    `$core = Join-Path $workspace 'realvirtual-web'\n` +
+    `$core = Join-Path $workspace 'xyvirtual-web'\n` +
     // The shared identity and fingerprint rules. Without them the preparation could still install,
     // but it could not record a fingerprint CONNECT recognises - so it says so instead of writing
     // something the other side will read as "changed" on every start.
@@ -1762,7 +1762,7 @@ function generateSetupPowerShell(hasDiagnosis = true) {
         `  Write-Host '      Run: git lfs install; git lfs pull'\n` +
         `}\n`
       : '') +
-    `Write-Host '[3/3] Checking realvirtual CONNECT. The first run downloads about 225 MB.'\n` +
+    `Write-Host '[3/3] Checking XYvirtual CONNECT. The first run downloads about 225 MB.'\n` +
     // --latest resolves the channel manifest instead of trusting the version this repository was
     // pinned to when it was cloned. Without it a clone that is half a year old starts on a
     // half-year-old CONNECT. The cache still short-circuits the download, and connect.lock.json is
@@ -1770,7 +1770,7 @@ function generateSetupPowerShell(hasDiagnosis = true) {
     `node (Join-Path $workspace 'tools/get-connect.mjs') $workspace --latest\n` +
     `if ($LASTEXITCODE -ne 0) {\n` +
     `  Write-Host ''\n` +
-    `  Write-Host 'realvirtual CONNECT could not be provided. The workspace itself is ready.' -ForegroundColor Yellow\n` +
+    `  Write-Host 'XYvirtual CONNECT could not be provided. The workspace itself is ready.' -ForegroundColor Yellow\n` +
     // The reason is printed by get-connect one line above, and it is not always the network. Naming
     // only the network sent a customer hunting a firewall for a rejected pin URL, which no amount of
     // network access would have fixed. Point at the reason first, then at the two causes it can have.
@@ -1786,11 +1786,11 @@ function generateSetupPowerShell(hasDiagnosis = true) {
 // what existing shortcuts, older documentation and a year of muscle memory point at.
 function generateStartPowerShell() {
   return `# Starts this workspace. A thin shim over two steps that are documented separately:\n` +
-    `#   setup.ps1  prepares the workspace (Node, dependencies, realvirtual CONNECT)\n` +
+    `#   setup.ps1  prepares the workspace (Node, dependencies, XYvirtual CONNECT)\n` +
     `#   CONNECT    starts the viewer itself and serves it on the CONNECT port\n` +
     `#\n` +
     `# Kept because shortcuts, older documentation and habit all point at this file. It no longer\n` +
-    `# starts a development server of its own: realvirtual CONNECT does that and proxies it, so the\n` +
+    `# starts a development server of its own: XYvirtual CONNECT does that and proxies it, so the\n` +
     `# viewer answers on ONE address whichever way the workspace runs.\n` +
     `param([int]$WebPort = 5173, [int]$ConnectPort = 5100)\n` +
     `$ErrorActionPreference = 'Stop'\n$workspace = Split-Path -Parent $MyInvocation.MyCommand.Path\n` +
@@ -1815,10 +1815,10 @@ function generateStartPowerShell() {
 
 function generateSetupShell() {
   return `#!/usr/bin/env sh\n` +
-    `# Prepares this workspace: Node check, dependencies, realvirtual CONNECT.\n` +
+    `# Prepares this workspace: Node check, dependencies, XYvirtual CONNECT.\n` +
     `# It starts NOTHING - use ./start.sh to run the workspace. realvirtual CONNECT points here when\n` +
     `# the dependencies have moved on, so a preparation that also started CONNECT would call itself.\n` +
-    `set -eu\nROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nCORE="$ROOT/realvirtual-web"\n` +
+    `set -eu\nROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nCORE="$ROOT/xyvirtual-web"\n` +
     `if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then\n` +
     `  echo "Node.js ${REQUIRED_NODE_MAJOR} LTS is required to prepare this workspace, but node/npm were not found." >&2\n` +
     `  echo "Install it from https://nodejs.org, or use your package manager or nvm, then open a new terminal and run ./setup.sh again." >&2\n` +
@@ -1865,7 +1865,7 @@ function generateSetupShell() {
     `  [ "$RESTORED" = "1" ] || (cd "$CORE" && npm ci)\n` +
     `  rv_record\n` +
     `fi\n` +
-    `echo "[3/3] Checking realvirtual CONNECT. The first run downloads about 225 MB."\n` +
+    `echo "[3/3] Checking XYvirtual CONNECT. The first run downloads about 225 MB."\n` +
     `node "$ROOT/tools/get-connect.mjs" "$ROOT" --latest\n` +
     `echo\necho "The workspace is prepared. Start it with ./start.sh"\n`;
 }
@@ -1873,7 +1873,7 @@ function generateSetupShell() {
 // The Linux shim, matching start.ps1: prepare, then hand the day-to-day start to CONNECT.
 function generateStartShell() {
   return `#!/usr/bin/env sh\n` +
-    `# Starts this workspace. Preparation lives in setup.sh; realvirtual CONNECT serves the viewer\n` +
+    `# Starts this workspace. Preparation lives in setup.sh; XYvirtual CONNECT serves the viewer\n` +
     `# itself and starts the development server when the workspace is a source checkout, so there is\n` +
     `# ONE address whichever way it runs.\n` +
     `set -eu\nROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n` +
@@ -1881,7 +1881,7 @@ function generateStartShell() {
     `"$ROOT/setup.sh"\n` +
     `CONNECT="$ROOT/tools/connect/realvirtual-Connect"\n` +
     `if [ ! -x "$CONNECT" ]; then\n` +
-    `  echo "realvirtual CONNECT is not in the workspace yet - run ./setup.sh" >&2\n` +
+    `  echo "XYvirtual CONNECT is not in the workspace yet - run ./setup.sh" >&2\n` +
     `  exit 1\nfi\n` +
     `export REALVIRTUAL_CONNECT_PORT="$CONNECT_PORT"\nexport RV_WEB_DEV_PORT="$WEB_PORT"\n` +
     // The rollback route (plan-363 Phase 6): a CONNECT older than the launcher has no `web` block
@@ -1892,7 +1892,7 @@ function generateStartShell() {
     `if command -v curl >/dev/null 2>&1; then\n` +
     `  i=0\n` +
     `  while [ $i -lt 600 ]; do\n` +
-    `    if ! kill -0 "$CONNECT_PID" 2>/dev/null; then echo "realvirtual CONNECT stopped on its own." >&2; exit 1; fi\n` +
+    `    if ! kill -0 "$CONNECT_PID" 2>/dev/null; then echo "XYvirtual CONNECT stopped on its own." >&2; exit 1; fi\n` +
     `    HEALTH=$(curl -fsS "http://127.0.0.1:$CONNECT_PORT/health" 2>/dev/null || true)\n` +
     `    [ -n "$HEALTH" ] && break\n` +
     `    i=$((i + 1)); sleep 1\n` +
@@ -1900,12 +1900,12 @@ function generateStartShell() {
     `fi\n` +
     `case "$HEALTH" in\n` +
     `  *'"web"'*)\n` +
-    `    echo "realvirtual WEB is running on http://localhost:$CONNECT_PORT" ;;\n` +
+    `    echo "XYvirtual WEB is running on http://localhost:$CONNECT_PORT" ;;\n` +
     `  '')\n` +
-    `    echo "realvirtual CONNECT is starting on http://localhost:$CONNECT_PORT" ;;\n` +
+    `    echo "XYvirtual CONNECT is starting on http://localhost:$CONNECT_PORT" ;;\n` +
     `  *)\n` +
-    `    echo "This realvirtual CONNECT predates the built-in launcher - starting the development server separately."\n` +
-    `    (cd "$ROOT/realvirtual-web" && npm run dev -- --port "$WEB_PORT" --strictPort) ;;\n` +
+    `    echo "This XYvirtual CONNECT predates the built-in launcher - starting the development server separately."\n` +
+    `    (cd "$ROOT/xyvirtual-web" && npm run dev -- --port "$WEB_PORT" --strictPort) ;;\n` +
     `esac\n` +
     `wait "$CONNECT_PID"\n`;
 }
@@ -1913,7 +1913,7 @@ function generateStartShell() {
 function generateWorkspaceGuide(projectKey, deliveredDocs) {
   const docIndex = deliveredDocs
     .filter((name) => name.startsWith('doc-'))
-    .map((name) => `- [${name}](realvirtual-web/${name})`)
+    .map((name) => `- [${name}](xyvirtual-web/${name})`)
     .join('\n');
   // Projectless: `projects/` exists and is empty, so the guide names the folder
   // rather than a project inside it (plan-434 Phase 4).
@@ -1923,20 +1923,20 @@ function generateWorkspaceGuide(projectKey, deliveredDocs) {
     (projectKey
       ? `- \`projects/${projectKey}/\` is the customer-owned development area. Edit project models, documentation, and plugins only there.\n`
       : `- \`projects/\` is the customer-owned development area and starts out empty. Create \`projects/<your-project>/\` and edit models, documentation, and plugins only there.\n`) +
-    `- \`realvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\`, and delivery manifests are delivery-managed and are replaced by the next delivery.\n\n` +
+    `- \`xyvirtual-web/\`, \`realvirtual-web-pro/\`, \`connect/\`, and delivery manifests are delivery-managed and are replaced by the next delivery.\n\n` +
     `The project plugin entry point is \`${projectPath}/plugins/index.ts\`. Put new plugin files in the same directory and register them from that entry point. Restart the development server after changing registration.\n\n` +
     `## Commands\n\n` +
     `Start the workspace from its root. realvirtual CONNECT serves the Viewer at http://localhost:5100 and starts the development server itself, so there is one address in every setup:\n\n` +
     `\`\`\`bash\npowershell -NoProfile -ExecutionPolicy Bypass -File .\\start.ps1\n\`\`\`\n\n` +
     `Run these checks from the workspace root:\n\n` +
-    `\`\`\`bash\ncd realvirtual-web\nnpx tsc --noEmit\n\`\`\`\n\n` +
-    `\`\`\`bash\ncd realvirtual-web\nnpm run build\n\`\`\`\n\n` +
+    `\`\`\`bash\ncd xyvirtual-web\nnpx tsc --noEmit\n\`\`\`\n\n` +
+    `\`\`\`bash\ncd xyvirtual-web\nnpm run build\n\`\`\`\n\n` +
     `## Recipes and documentation\n\n` +
     `The [workspace recipes](recipes/README.md) are the canonical, vendor-neutral instructions for recurring tasks. Follow them directly; assistant-specific commands are only adapters.\n\n` +
     `To turn a CAD assembly that is already open in the asset editor into a usable model - kinematic axes with drives that are proven to move, plus industrial materials - follow [Kinematize and materialize a CAD import](recipes/kinematize-cad-import.md). With Claude Code, run \`/kinematize\` or ask for the \`kinematize\` subagent, which follows that same recipe in its own context window. It never renames CAD nodes and never saves the asset; it also keeps a knowledge folder per asset in the work folder, so drop datasheets or notes there and they are read on the next run.\n\n` +
     `${docIndex || '- No feature documents were delivered.'}\n\n` +
-    `The MCP tool reference is [webviewer.mcp.md](realvirtual-web/webviewer.mcp.md). Use the documented \`web_*\` tools to inspect the running Viewer and prefer read-only diagnosis until a requested change is understood.\n\n` +
-    `## Verification\n\nBefore submitting a change, run both \`npx tsc --noEmit\` and \`npm run build\` from \`realvirtual-web/\`.\n\n` +
+    `The MCP tool reference is [webviewer.mcp.md](xyvirtual-web/webviewer.mcp.md). Use the documented \`web_*\` tools to inspect the running Viewer and prefer read-only diagnosis until a requested change is understood.\n\n` +
+    `## Verification\n\nBefore submitting a change, run both \`npx tsc --noEmit\` and \`npm run build\` from \`xyvirtual-web/\`.\n\n` +
     `## Data protection and licensing\n\n` +
     `Source code, GLB models, and PDF documents can be processed by the selected AI provider when supplied to an assistant. Share only data that the provider is permitted to process.\n\n` +
     `Never add AGPL licence headers automatically to files under \`${projectPath}/\`. Customer project code is commercial code and its ownership and usage are governed by the customer contract.\n`;
@@ -1948,8 +1948,8 @@ function generateWorkspaceGuide(projectKey, deliveredDocs) {
 function writeCustomerAgents(root) {
   const agents = join(root, '.claude', 'agents');
   mkdirSync(agents, { recursive: true });
-  writeFileSync(join(agents, 'kinematize.md'), `---\nname: kinematize\ndescription: Turn a raw CAD import in the realvirtual WEB asset editor into a usable asset - named and grouped parts, industrial materials, and kinematic axes with drives that are proven to move. Use after importing a STEP, JT, or GLB assembly whose nodes have no meaningful names.\n---\n\n` +
-    `You build kinematic models from raw CAD assemblies in realvirtual WEB, working through the \`web_*\` MCP tools on a single asset document in the editor.\n\n` +
+  writeFileSync(join(agents, 'kinematize.md'), `---\nname: kinematize\ndescription: Turn a raw CAD import in the XYvirtual WEB asset editor into a usable asset - named and grouped parts, industrial materials, and kinematic axes with drives that are proven to move. Use after importing a STEP, JT, or GLB assembly whose nodes have no meaningful names.\n---\n\n` +
+    `You build kinematic models from raw CAD assemblies in XYvirtual WEB, working through the \`web_*\` MCP tools on a single asset document in the editor.\n\n` +
     `**[recipes/kinematize-cad-import.md](../../recipes/kinematize-cad-import.md) is canonical. Read it first and follow it step by step.** This file only frames how you work; the recipe holds every instruction, tool name, and pitfall. Where the two ever disagree, the recipe wins.\n\n` +
     `Your working discipline:\n\n` +
     `- **Perceive before you act.** Do not rename, group, or kinematize until you can describe what the machine does. Raw CAD gives you numbered nodes with no semantics, and every assumption you skip validating becomes a wrong axis someone else has to find.\n` +
@@ -1965,12 +1965,12 @@ function writeCustomerCommands(root) {
   mkdirSync(commands, { recursive: true });
   writeFileSync(join(commands, 'kinematize.md'), `# Kinematize a CAD import\n\nThis command is an adapter; [recipes/kinematize-cad-import.md](../../recipes/kinematize-cad-import.md) is canonical. Use the \`kinematize\` subagent for this work, because the perception phase consumes a lot of context and belongs in its own window. The recipe starts from an asset editor that is already open on an imported assembly - confirm that with \`web_editor_status\` first. It does not import and does not save.\n`);
   writeFileSync(join(commands, 'dev.md'), `# Start development\n\nThis command is an adapter; the [workspace recipes](../../recipes/README.md) are canonical. From the workspace root, run \`powershell -NoProfile -ExecutionPolicy Bypass -File .\\start.ps1\` (Linux: \`./start.sh\`). realvirtual CONNECT starts the development server itself and serves the Viewer at http://localhost:5100. After a \`git pull\` that changed the dependencies, run \`setup.ps1\` once. For model replacement or live signals, follow the linked recipe. Do not stop unrelated Node processes; if a port is occupied, pass \`-ConnectPort\` and \`-WebPort\` explicitly.\n`);
-  writeFileSync(join(commands, 'build.md'), `# Verify and build\n\nThis command is an adapter; follow [Create a custom plugin](../../recipes/create-custom-plugin.md) for development checks and [Deploy the production web app](../../recipes/deploy-production-web.md) for deployment. From the workspace root, run \`cd realvirtual-web\`, then \`npx tsc --noEmit\`, then \`npm run build\`. Report either failure without changing unrelated files.\n`);
-  writeFileSync(join(commands, 'debug.md'), `# Read-only diagnosis\n\nThis command is an adapter; follow [Troubleshoot the runtime](../../recipes/troubleshoot-runtime.md) as the canonical runbook. Start with read-only inspection. Read \`http://127.0.0.1:5100/__api/debug\` or use the read-only \`web_*\` MCP tools documented in \`realvirtual-web/webviewer.mcp.md\`. Do not change signals, scene state, files, or processes unless the user explicitly requests a mutation.\n`);
+  writeFileSync(join(commands, 'build.md'), `# Verify and build\n\nThis command is an adapter; follow [Create a custom plugin](../../recipes/create-custom-plugin.md) for development checks and [Deploy the production web app](../../recipes/deploy-production-web.md) for deployment. From the workspace root, run \`cd xyvirtual-web\`, then \`npx tsc --noEmit\`, then \`npm run build\`. Report either failure without changing unrelated files.\n`);
+  writeFileSync(join(commands, 'debug.md'), `# Read-only diagnosis\n\nThis command is an adapter; follow [Troubleshoot the runtime](../../recipes/troubleshoot-runtime.md) as the canonical runbook. Start with read-only inspection. Read \`http://127.0.0.1:5100/__api/debug\` or use the read-only \`web_*\` MCP tools documented in \`xyvirtual-web/webviewer.mcp.md\`. Do not change signals, scene state, files, or processes unless the user explicitly requests a mutation.\n`);
 }
 
 function writeWorkspaceFiles(root, coreRoot, privateRoot, project, projectKey, delivery, manifest, connectPin, deliveredDocs, hasDiagnosis = true) {
-  const core = join(root, 'realvirtual-web');
+  const core = join(root, 'xyvirtual-web');
   mkdirSync(join(core, 'public'), { recursive: true });
   writeFileSync(join(core, 'public', 'settings.json'), JSON.stringify(generatedSettings(project, delivery, connectPin), null, 2) + '\n');
   const features = selectedFeatures(manifest, delivery);
@@ -2069,7 +2069,7 @@ function stubFallbackContent(stubSource, stubRel) {
     const resolved = posix.normalize(posix.join(PRIVATE_STUB_ROOT, stubDir, spec));
     if (resolved.startsWith(`${PRIVATE_STUB_ROOT}/`)) return match; // sibling stub keeps its relative layout
     if (!resolved.startsWith('src/')) throw new Error(`Stub ${stubRel} imports outside the core src tree: ${spec}`);
-    return `${prefix}${quote}${'../'.repeat(depth + 2)}realvirtual-web/${resolved}${quote}`;
+    return `${prefix}${quote}${'../'.repeat(depth + 2)}xyvirtual-web/${resolved}${quote}`;
   });
 }
 
@@ -2113,12 +2113,12 @@ function rewriteCustomerWorkspaceNames(root) {
     const source = readFileSync(absolute, 'utf8');
     let rewritten = source
       .replaceAll('realvirtual-WebViewer-Private~', 'realvirtual-web-pro')
-      .replaceAll('realvirtual-WebViewer~', 'realvirtual-web');
+      .replaceAll('realvirtual-WebViewer~', 'xyvirtual-web');
     // Project files move one level up in the flat layout (dev: <private>/projects/<key>,
     // workspace: projects/<key>), so sibling-tree imports lose exactly one `../`.
     if (rel.startsWith('projects/') && codeExtensions.has(extension)) {
       rewritten = rewritten.replace(
-        /(['"])((?:\.\.\/){2,})(realvirtual-web(?:-pro)?\/)/g,
+        /(['"])((?:\.\.\/){2,})(xyvirtual-web(?:-pro)?\/)/g,
         (_match, quote, ups, target) => `${quote}${ups.slice(3)}${target}`,
       );
     }
@@ -2172,11 +2172,11 @@ export function assertNoBrokenDocLinks(stagingRoot) {
   const root = resolve(stagingRoot);
   walk(root, (absolute, rel, entry) => {
     if (isNonDeliveredBuildDir(entry)) return false;
-    // realvirtual-web/recipes/ is the bundler's copy, imported with `?raw` by the MCP help tool.
+    // xyvirtual-web/recipes/ is the bundler's copy, imported with `?raw` by the MCP help tool.
     // Its links are authored for the workspace-level recipes/ — the copy the customer actually
     // reads, and the one this walk still checks. Checking the build-input copy would demand two
     // incompatible sets of relative paths in one file.
-    if (entry.isDirectory() && toPosix(rel) === 'realvirtual-web/recipes') return false;
+    if (entry.isDirectory() && toPosix(rel) === 'xyvirtual-web/recipes') return false;
     if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.md')) return;
     for (const { target } of markdownLinks(readFileSync(absolute, 'utf8'))) {
       const destination = resolve(dirname(absolute), target);
@@ -2215,7 +2215,7 @@ export function stageFilteredSourceTree(options) {
     throw new Error(`Destination must be empty: ${destinationRoot}`);
   }
   mkdirSync(destinationRoot, { recursive: true });
-  const coreOutput = join(destinationRoot, 'realvirtual-web');
+  const coreOutput = join(destinationRoot, 'xyvirtual-web');
   mkdirSync(coreOutput, { recursive: true });
   const deliveredDocs = selectedDocumentation(manifest, profile);
   // The public demo content (scenes/ + aasx/) belongs to the hosted demo site, not to the
@@ -2343,7 +2343,7 @@ export function assertNoCrossTierLeak(workspaceRoot, manifest, profile) {
     if (sourceAllowed(resolved, profile)) return;
     // Generated stub fallbacks are allowed: the file must be byte-identical to the
     // transformed public stub shipped in the core tree — nothing private fits in there.
-    const stub = join(workspaceRoot, 'realvirtual-web', PRIVATE_STUB_ROOT, rel);
+    const stub = join(workspaceRoot, 'xyvirtual-web', PRIVATE_STUB_ROOT, rel);
     if (existsSync(stub)
       && readFileSync(absolute, 'utf8') === stubFallbackContent(readFileSync(stub, 'utf8'), rel)) return;
     throw new Error(`Cross-tier source leak: ${rel} (${resolved.tier}).`);
@@ -2473,7 +2473,7 @@ function runNpm(args, options) {
 }
 
 function buildProfileKey(workspaceRoot, coreRoot) {
-  const lockfiles = [['realvirtual-web/package-lock.json', join(coreRoot, 'package-lock.json')]];
+  const lockfiles = [['xyvirtual-web/package-lock.json', join(coreRoot, 'package-lock.json')]];
   const proLock = join(workspaceRoot, 'realvirtual-web-pro', 'package-lock.json');
   if (existsSync(proLock)) lockfiles.push(['realvirtual-web-pro/package-lock.json', proLock]);
   try {
@@ -2535,7 +2535,7 @@ function populateBuildCache(cacheBase, profileRoot, sourceNodeModules) {
 //! Runs npm ci and the production build from the filtered workspace core.
 export function runBuild(workspaceRoot, options = {}) {
   const candidate = resolve(workspaceRoot);
-  const coreRoot = existsSync(join(candidate, 'realvirtual-web', 'package.json')) ? join(candidate, 'realvirtual-web') : candidate;
+  const coreRoot = existsSync(join(candidate, 'xyvirtual-web', 'package.json')) ? join(candidate, 'xyvirtual-web') : candidate;
   if (options.dryRun) return { coreRoot, distDir: join(coreRoot, 'dist'), dryRun: true, cacheStatus: 'disabled' };
   const env = { ...process.env };
   if (options.mode === 'public') { env.VITE_PUBLIC_BUILD = '1'; delete env.VITE_PRIVATE_BUILD; }
@@ -2595,7 +2595,7 @@ export function runBuild(workspaceRoot, options = {}) {
   if (populateCache) populateBuildCache(cacheBase, profileRoot, targetNodeModules);
   const distDir = join(coreRoot, 'dist');
   writeFileSync(join(distDir, '.rv-build-provenance.json'), JSON.stringify({
-    sourceTreeSha256: hashTree(candidate, ['realvirtual-web/dist/**', '**/node_modules/**']),
+    sourceTreeSha256: hashTree(candidate, ['xyvirtual-web/dist/**', '**/node_modules/**']),
     mode: options.mode ?? 'private',
     project: options.projectKey ?? null,
     fast: Boolean(options.fast),

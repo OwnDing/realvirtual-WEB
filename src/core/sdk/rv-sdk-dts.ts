@@ -91,7 +91,7 @@ declare function Boolean(value: unknown): boolean;
  * (Tier 0 full + math library + component handles + Tier-1 profile).
  */
 export function generateSdkDts(): string {
-  return `// rv-sdk.d.ts — realvirtual WEB component SDK (apiVersion ${SDK_API_VERSION}, generated)
+  return `// rv-sdk.d.ts — XYvirtual WEB component SDK (apiVersion ${SDK_API_VERSION}, generated)
 // Value-typed script surface: only plain data crosses the sandbox boundary.
 
 // ── Value types (POJOs) ──

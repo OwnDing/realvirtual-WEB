@@ -196,7 +196,7 @@ export class McpSignalBindTools {
     });
   }
 
-  @McpTool('List signals available as binding sources: live realvirtual CONNECT signals from every connected interface plus internal model signals, each with direction, data type, provider and comment. Use with web_signal_bindings_list to match external names to slots.', { readOnly: true })
+  @McpTool('List signals available as binding sources: live XYvirtual CONNECT signals from every connected interface plus internal model signals, each with direction, data type, provider and comment. Use with web_signal_bindings_list to match external names to slots.', { readOnly: true })
   async webSignalSourcesList(
     @McpParam('filter', 'Only signals whose name or comment contains this substring (case-insensitive).', 'string', false) filter?: string,
     @McpParam('limit', 'Maximum signals returned (default 300).', 'number', false) limit?: number,

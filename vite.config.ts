@@ -55,7 +55,7 @@ const RV_HMR_CLIENT_PORT = (() => {
 // version:  framework-synced semver from package.json (kept in step with the
 //           Unity realvirtual release, e.g. 6.3.0).
 // webBuild: web-specific build number = commit count of THIS repo
-//           (realvirtual-WEB-DEV), independent of the Unity framework.
+//           (XYvirtual-WEB-DEV), independent of the Unity framework.
 // commit/buildDate: short hash and date of the built commit.
 // All git calls are guarded so a git-less build (tarball, CI without .git)
 // still produces a valid bundle.
@@ -77,7 +77,7 @@ const RV_BUILD_DATE = rvGit(
   new Date().toISOString().slice(0, 10),
 );
 console.log(
-  `[rv-build] realvirtual WEB v${RV_VERSION} · web build ${RV_WEB_BUILD}` +
+  `[rv-build] XYvirtual WEB v${RV_VERSION} · web build ${RV_WEB_BUILD}` +
   `${RV_COMMIT ? ` (${RV_COMMIT})` : ''} · ${RV_BUILD_DATE}`,
 );
 
@@ -123,7 +123,7 @@ function rvServeInfoLiteral(command: string): string {
 
 
 /**
- * Vite plugin: lets realvirtual CONNECT prove WHICH dev server is on a port before adopting it.
+ * Vite plugin: lets XYvirtual CONNECT prove WHICH dev server is on a port before adopting it.
  *
  * plan-363 Phase 2. CONNECT starts and proxies this dev server, but a port that answers is not
  * evidence of anything — it could be an unrelated service or a Vite belonging to a different
@@ -154,7 +154,7 @@ function devServerIdentityPlugin() {
         }
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({
-          server: 'realvirtual-web-vite',
+          server: 'xyvirtual-web-vite',
           root: __dirname,
           hmrClientPort: RV_HMR_CLIENT_PORT ?? null,
         }));
@@ -945,7 +945,7 @@ export default defineConfig(({ command }) => ({
         // while every emitted chunk shipped without the AGPL header and nobody
         // noticed, because the config still looked correct. Same fix, same
         // reason as vite.embed.config.ts; keep the markers when editing.
-        banner: '/*! @license realvirtual WEB | AGPL-3.0-only | '
+        banner: '/*! @license XYvirtual WEB | AGPL-3.0-only | '
           + 'Copyright (C) 2025 realvirtual GmbH | https://realvirtual.io */',
         // plan-344 Phase 4: `react-pdf` deliberately has NO manual entry.
         // `DocViewerOverlay` already imports it dynamically, so Rollup splits it

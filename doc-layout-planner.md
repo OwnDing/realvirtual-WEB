@@ -1,4 +1,4 @@
-# Layout Planner & Library Objects — realvirtual WEB
+# Layout Planner & Library Objects — XYvirtual WEB
 
 This document describes the **Layout Planner** plugin and the **library
 object** pipeline that feeds it: how library objects are authored in Unity,
@@ -137,7 +137,7 @@ Catalogs come from four sources:
 
 | Source | How it's discovered |
 |---|---|
-| **Built-in catalogs** | Bundled with realvirtual WEB, listed in the Catalog tab. |
+| **Built-in catalogs** | Bundled with XYvirtual WEB, listed in the Catalog tab. |
 | **Local Folder** | The user picks a working folder via the File System Access API. The Planner scans `library/` for `.glb` and `splats/` for `.splat` / `.ksplat` / `.ply`. Subfolders become **collections** (filter chips); the first subfolder also maps to a **category** for `conveyor`, `robot`, `machine`, `fixture`, `des`. |
 | **Remote URL** | A catalog JSON hosted at a URL added through the Catalog tab. |
 | **GitHub repository** | A `github.com/<owner>/<repo>` URL (optionally `/tree/<branch>` or `/tree/<branch>/<subfolder>`). The Planner scans the repository tree via the public GitHub API for every `.glb` file, turns each into a `custom` entry whose `glbUrl` is the file's raw URL, and maps the immediate parent folder to a **collection** chip. No `catalog.json` is required. |

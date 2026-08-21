@@ -1,6 +1,6 @@
 # Document Linking System
 
-realvirtual WEB supports linking PDF documents and AASX (Asset Administration Shell) packages to 3D scene nodes. Linked documents appear in the tooltip and can be opened in a built-in PDF viewer overlay.
+XYvirtual WEB supports linking PDF documents and AASX (Asset Administration Shell) packages to 3D scene nodes. Linked documents appear in the tooltip and can be opened in a built-in PDF viewer overlay.
 
 ## Architecture
 
@@ -222,7 +222,7 @@ The document index is a JSON file mapping identifiers to arrays of document entr
 
 ### Index Generation Script
 
-This script is not shipped with realvirtual WEB — create it in your own project's `scripts/` folder. The example below scans the `docs/` folder and writes `docs-index.json`:
+This script is not shipped with XYvirtual WEB — create it in your own project's `scripts/` folder. The example below scans the `docs/` folder and writes `docs-index.json`:
 
 ```javascript
 import { readdir, writeFile } from 'fs/promises';

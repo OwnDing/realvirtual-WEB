@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * connect-store.ts — Zustand-style pub/sub store for the realvirtual CONNECT panel.
+ * connect-store.ts — Zustand-style pub/sub store for the XYvirtual CONNECT panel.
  *
  * Manages CONNECT server URL, connection state, configured interfaces,
  * discovery results, and all REST API calls against the CONNECT gateway.
@@ -900,16 +900,16 @@ async function _errorMessage(resp: Response): Promise<string> {
 function _friendlyError(err: unknown, serverUrl: string): string {
   const msg = err instanceof Error ? err.message : String(err);
   if (err instanceof NonGatewayResponseError) {
-    return `${err.baseUrl} served the viewer, not the realvirtual CONNECT gateway. `
+    return `${err.baseUrl} served the viewer, not the XYvirtual CONNECT gateway. `
       + `CONNECT is probably running on a different port - enter its address under the settings gear, `
       + `for example ${FALLBACK_GATEWAY_URL}.`;
   }
   if (err instanceof DOMException && err.name === 'AbortError') {
     return `No gateway answered at ${serverUrl} within ${HEALTH_TIMEOUT_MS / 1000} s. `
-      + 'Start realvirtual CONNECT on that machine, then connect again.';
+      + 'Start XYvirtual CONNECT on that machine, then connect again.';
   }
   if (err instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(msg)) {
-    return `No gateway answered at ${serverUrl}. Start realvirtual CONNECT on that machine, then connect again.`;
+    return `No gateway answered at ${serverUrl}. Start XYvirtual CONNECT on that machine, then connect again.`;
   }
   return humanizeConnectError(msg);
 }

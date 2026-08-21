@@ -3,7 +3,7 @@
 
 /**
  * s7-tag-table.ts — Browser-side import of Siemens TIA tag tables for the
- * realvirtual CONNECT MQTT ProcessImage interface.
+ * XYvirtual CONNECT MQTT ProcessImage interface.
  *
  * A tag table (xlsx or csv) lists named signals with their Siemens symbolic
  * address (e.g. `%I0.0`, `%IW13`, `%MD20`), data type and an optional comment.

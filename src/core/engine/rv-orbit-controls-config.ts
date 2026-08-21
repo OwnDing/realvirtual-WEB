@@ -34,7 +34,7 @@ export const DEFAULT_ORBIT_NAVIGATION_SETTINGS: Readonly<OrbitNavigationSettings
 });
 
 /**
- * Apply the interaction contract and sensitivity settings used by realvirtual WEB.
+ * Apply the interaction contract and sensitivity settings used by XYvirtual WEB.
  *
  * The main app may reapply sensitivity values from its visual-settings store at
  * runtime. rv-embed deliberately stays on the shared defaults.

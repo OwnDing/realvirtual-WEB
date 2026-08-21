@@ -8,7 +8,7 @@
  * ## Why this is two halves and not one
  *
  * plan-718 gives every file exactly one author: CONNECT owns `connect/**`,
- * realvirtual WEB owns `project.json`. The migration has to cross that line —
+ * XYvirtual WEB owns `project.json`. The migration has to cross that line —
  * the old binding (`ConnectProfile.Model`, a GLB file name) lives in CONNECT's
  * configuration and the new one (`documents[].connectRef`) lives in the
  * manifest — so it is split rather than allowed to break the rule:

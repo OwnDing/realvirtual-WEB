@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * createStore<T> — Minimal Pub/Sub store factory for the realvirtual WebViewer.
+ * createStore<T> — Minimal Pub/Sub store factory for the XYvirtual WebViewer.
  *
  * Designed to be compatible with React 18's `useSyncExternalStore`:
  *   - `subscribe(cb)` returns an unsubscribe function

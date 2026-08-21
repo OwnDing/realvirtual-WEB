@@ -241,14 +241,14 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 
 - 覆盖 32 个文件：顶栏 / 底栏 / 活动栏 / 相机栏 / 面板框架，以及所有门禁、横幅和全局浮层（欢迎页、许可、AI 桥接同意、模型签名、共享模型信任、密码、项目代码、分析同意、新特性、AI 回答对话框）。该面受门禁命中归零，全仓 1537 → **1342**；`shell` namespace 新增 **235** 个 key。
 - 这是第一次实质性地动 `a11y-name` 类别：83 → **58**。这类字符串在截图里看不见、在 diff 里也不显眼，所以新测试专门查了一条 `aria-label` 是否随语言切换。
-- **发现 `NewsDialog.tsx` 整个是德文**：`Neu in realvirtual WEB`、`News schließen`、`Mehr erfahren`、`Weiter`、`Schließen`、`N von M` —— 一个英文产品里的德文遗留面（Milestone 3 在 `LayoutLibraryPanel.tsx` 也遇到过一次德文残留）。这意味着**没有可以逐字搬运的英文原文**：英文是新写的，因此 6 个 key 全部登记进 `NEW_STRING_EXEMPTIONS`（包括那些恰好能在别处匹配到的短词——值得记录的事实是这个对话框从来没有英文，而不是某个三字母按钮标签是否与别的文件撞了）。`tests/news-render.test.tsx` 原本断言的正是这些德文，已随内容变更改为断言新的英文。
+- **发现 `NewsDialog.tsx` 整个是德文**：`Neu in XYvirtual WEB`、`News schließen`、`Mehr erfahren`、`Weiter`、`Schließen`、`N von M` —— 一个英文产品里的德文遗留面（Milestone 3 在 `LayoutLibraryPanel.tsx` 也遇到过一次德文残留）。这意味着**没有可以逐字搬运的英文原文**：英文是新写的，因此 6 个 key 全部登记进 `NEW_STRING_EXEMPTIONS`（包括那些恰好能在别处匹配到的短词——值得记录的事实是这个对话框从来没有英文，而不是某个三字母按钮标签是否与别的文件撞了）。`tests/news-render.test.tsx` 原本断言的正是这些德文，已随内容变更改为断言新的英文。
 - **逐字迁入门禁又漏了一类**：`<Trans>` 的编号占位替换成 `<[^>]*>`，但带属性的 `<Link>`/`<a>` 开标签会**跨行**，其内容从下一行开始，而目录里的句子是平的。因此标记两侧必须吸收空白（`\s*<[^>]*>\s*`）。反例：撤掉这个容错后，`welcome.betaText`、`license.betaNotice`、`license.terms` 三条立刻失败。
 - 同一处补了 HTML 实体等价：`&apos;`、`&amp;`、`&mdash;`、`&copy;` 等在渲染后就是对应字符，目录里存的是用户看到的字符。反例验证过这不是放水——把 `Following {{name}}'s view` 改成 `Watching …` 仍然失败。
 - 还补了转义序列边界：模板串里的 `\nBranch:` 在**源码文本**中是 `\`、`n`、`B` 三个字符，`n` 与 `B` 之间没有词边界，于是批次 2 加的词锚把它误判为新串。源码级转义序列算作边界。
 - 受检 `en-US` 值 604 → **839**。
 - 11 个既有浏览器测试因默认语言变化失败，全部按 ADR 显式 pin `en-US`（不放宽、不删除断言），107 例恢复通过。
 - `USE_CASES`（欢迎页的 5 组用例）在模块级数组里，扫描器看不见元组，但它是实打实的界面文案，一并迁移；不为此放宽分类规则——数组元组的启发式会带来大量误报。
-- 四项不可翻译项登记例外：品牌名 `realvirtual WEB`、仓库 URL、版权行 `© 2025 realvirtual GmbH`。
+- 四项不可翻译项登记例外：品牌名 `XYvirtual WEB`、仓库 URL、版权行 `© 2025 realvirtual GmbH`。
 - 本批次不含 CONNECT 面（`ConnectPanel.tsx` 282 处等，共 372 处）与 `plugin-registry` 类别（129 处），仍是后续批次。
 
 ### Milestone 4b 批次 2：Settings 面板（2026-08-20）
@@ -263,7 +263,7 @@ Milestone 1 的全部数字由 `npm run i18n:inventory` 产生，schema v1；引
 - `rv-render-modes.ts` 的 `label`/`description` 保留英文原值给非 UI 调用方，UI 改从目录取。两份同样的字符串必然漂移，因此加了一条守卫测试把二者钉在一起；反例：把 `Shaded` 改成 `Lit` 后该测试失败。
 - **批次 1 的验证报告有一处需要更正**：当时称完整 Browser 套件的失败「没有一条涉及译文」。实际上 `tests/scene-name-dialog.test.tsx` 有 3 例是因为 `Scene name` 已在批次 1 迁移、而该文件没有 pin locale 而失败——它当时渲染的是**裸 key**（不含中文），所以被 CJK 计数漏过，混进了 WebGL 那一堆。本次已按 pin 策略修正。
 - 由此把 `tests/i18n-test-locale-pin.node.test.ts` 的文本定位器识别范围扩到 `:has-text(`。这是最会藏的一种：CSS 选择器匹配英文文本，文案一变不是抛错而是**匹配不到**，而 `hmi-panels.spec.ts` 写的是「匹配不到就 `test.skip`」——于是测试会安静地停止测试。该 spec 已补 pin，反例验证过守卫会失败。
-- 扫描器的三处误报按**改源码**而不是加例外处理：`&nbsp;` 文本节点（改成一句可插值的 `Status: {{value}}`）、`RENDER_MODE_KEY` 的 `label`/`description` 属性（改名 `labelKey`/`descriptionKey`，与本批次其它 key 表一致）。真正不可翻译的 4 项才登记例外（品牌名 `realvirtual WEB`、双语 `Language / 语言`、示例信号名 `Conveyor.Start …`、与 store 默认值必须一致的 `Browser` 占位符）。
+- 扫描器的三处误报按**改源码**而不是加例外处理：`&nbsp;` 文本节点（改成一句可插值的 `Status: {{value}}`）、`RENDER_MODE_KEY` 的 `label`/`description` 属性（改名 `labelKey`/`descriptionKey`，与本批次其它 key 表一致）。真正不可翻译的 4 项才登记例外（品牌名 `XYvirtual WEB`、双语 `Language / 语言`、示例信号名 `Conveyor.Start …`、与 store 默认值必须一致的 `Browser` 占位符）。
 - 顺带清掉本面的 `intl-format` 建议项：19 处 `toLocaleString()`/`toLocaleDateString()` 全部显式传入当前 locale（`ADR-0001` 第 6 条），全仓建议数 38 → 22。
 - `RENDER_MODES`、`UISlotEntry` 之外没有触碰任何公共契约；`plugin-registry` 类别（131 处）与 `AiBridgeGate`、`ActivityBar` 等 Settings 面板之外的文案仍是后续批次。
 

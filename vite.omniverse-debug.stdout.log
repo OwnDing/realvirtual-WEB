@@ -1,14 +1,14 @@
 
-> realvirtual-web@6.3.0 predev
+> xyvirtual-web@6.3.0 predev
 > node scripts/install-private-dependencies.mjs
 
 [private-deps] 1 private dependencies already installed.
 
-> realvirtual-web@6.3.0 dev
+> xyvirtual-web@6.3.0 dev
 > vite --host 127.0.0.1
 
 [rv-build] Private build
-[rv-build] realvirtual WEB v6.3.0 · web build 135 (e7e7eb5) · 2026-07-12
+[rv-build] XYvirtual WEB v6.3.0 · web build 135 (e7e7eb5) · 2026-07-12
 
   [32m[1mVITE[22m v6.4.1[39m  [2mready in [0m[1m1102[22m[2m[0m ms[22m
 

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * rv-clipping-plugin.tsx — Section / clipping-plane tool for the realvirtual WebViewer.
+ * rv-clipping-plugin.tsx — Section / clipping-plane tool for the XYvirtual WebViewer.
  *
  * Lets the user slice the loaded model along the X, Y or Z axis to expose
  * inner geometry (drives, cabling, mounted components). Implemented via

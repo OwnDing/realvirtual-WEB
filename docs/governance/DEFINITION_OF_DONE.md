@@ -1,13 +1,13 @@
 ---
 doc_id: GOV-DOD
-title: realvirtual WEB 任务完成定义
+title: XYvirtual WEB 任务完成定义
 status: approved
 owner: engineering
 last_reviewed: 2026-08-18
 authority: normative
 ---
 
-# realvirtual WEB 任务完成定义
+# XYvirtual WEB 任务完成定义
 
 任务只有满足所有适用项时才能标记完成。
 

@@ -157,12 +157,12 @@ describe('CONNECT license gate UI integration', () => {
 
   it('provides downloads and explains both disconnected setup paths without a red alarm', () => {
     render(themed(<ConnectDownloadLinks />));
-    expect(screen.getByRole('link', { name: 'Download realvirtual CONNECT' }).getAttribute('href'))
+    expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT' }).getAttribute('href'))
       .toBe(CONNECT_STABLE_DOWNLOAD_URL);
     expect(CONNECT_BETA_DOWNLOAD_URL).toBeNull();
     expect(screen.queryByRole('link', { name: 'beta' })).toBeNull();
     expect(connectStoreSource).toContain(
-      'No gateway answered at ${serverUrl}. Start realvirtual CONNECT on that machine, then connect again.',
+      'No gateway answered at ${serverUrl}. Start XYvirtual CONNECT on that machine, then connect again.',
     );
     expect(connectPanelSource).toContain("snap.errorMessage.startsWith('No gateway answered at ')");
   });
@@ -174,7 +174,7 @@ describe('CONNECT license gate UI integration', () => {
       loaded: true,
     });
     render(themed(<ConnectDownloadLinks />));
-    expect(screen.getByRole('link', { name: 'Download realvirtual CONNECT 0.2.0' }).getAttribute('href'))
+    expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT 0.2.0' }).getAttribute('href'))
       .toBe(CONNECT_STABLE_DOWNLOAD_URL);
     expect(screen.queryByRole('link', { name: /beta/ })).toBeNull();
   });
@@ -186,7 +186,7 @@ describe('CONNECT license gate UI integration', () => {
       loaded: true,
     });
     render(themed(<ConnectOpener failedUrl={null} />));
-    expect(screen.getByRole('link', { name: 'Download realvirtual CONNECT 0.2.0' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT 0.2.0' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'beta 0.3.0' }).getAttribute('href'))
       .toBe('https://web.realvirtual.io/download/realvirtual-Connect-beta.exe');
   });
@@ -195,7 +195,7 @@ describe('CONNECT license gate UI integration', () => {
     render(themed(<ConnectOpener failedUrl="http://localhost:5100" />));
     // Value proposition + the one primary CTA (Download), Connect stays secondary.
     expect(screen.getByText('Live PLC data in this viewer')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Download realvirtual CONNECT' }).getAttribute('href'))
+    expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT' }).getAttribute('href'))
       .toBe(CONNECT_STABLE_DOWNLOAD_URL);
     expect(screen.getByText('Already installed? Start CONNECT on that machine, then press Connect.')).toBeTruthy();
     // Capability rows fill the formerly empty space (Thomas: signals, VIBN, real PLCs).

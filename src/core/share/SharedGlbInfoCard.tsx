@@ -42,7 +42,7 @@ export interface SharedGlbInfoCardProps {
   loading?: boolean;
   /** Hides the download button when the provider disabled it (F14). */
   onDownload?: (() => void) | undefined;
-  /** "Open in realvirtual WEB" — escalation into the full app (F12). */
+  /** "Open in XYvirtual WEB" — escalation into the full app (F12). */
   onOpenInApp?: (() => void) | undefined;
   /** "Add to my library" — the one write the receiver may ask for (F13). */
   onAddToLibrary?: (() => void) | undefined;

@@ -705,7 +705,7 @@ export function newProject(name: string): RvProject {
     canonicalName: canonicalNameOf(name),
     createdAt: now,
     modifiedAt: now,
-    provenance: { generator: 'realvirtual WEB', lastWriter: 'web' },
+    provenance: { generator: 'XYvirtual WEB', lastWriter: 'web' },
     documents: [],
     activeSceneId: null,
     settingsRef: { ref: PROJECT_SETTINGS_REF },

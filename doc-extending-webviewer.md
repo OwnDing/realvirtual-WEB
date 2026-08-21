@@ -1,6 +1,6 @@
-# Extending realvirtual WEB
+# Extending XYvirtual WEB
 
-Guide for building custom plugins, adding UI components, and extending realvirtual WEB with new functionality.
+Guide for building custom plugins, adding UI components, and extending XYvirtual WEB with new functionality.
 
 ## Architecture at a Glance
 
@@ -132,7 +132,7 @@ Individual UI elements mark themselves with `data-ui-panel` attribute for identi
 
 ## 2. Components, Signals, and Unity Mapping
 
-### How Unity Components Map to realvirtual WEB
+### How Unity Components Map to XYvirtual WEB
 
 The Unity scene is exported as a **GLB file** with custom `extras` data on each node. During loading, the `rv-scene-loader.ts` traverses the GLB scene graph and maps Unity components to TypeScript counterparts:
 
@@ -193,9 +193,9 @@ Like Unity's `Awake()` / `Start()` lifecycle:
 
 This ensures all components exist before any references are resolved.
 
-### Adding a New Component Type (Unity → realvirtual WEB)
+### Adding a New Component Type (Unity → XYvirtual WEB)
 
-To map an existing Unity component to realvirtual WEB:
+To map an existing Unity component to XYvirtual WEB:
 
 **Step 1: Create the TypeScript component** in `src/core/engine/`:
 

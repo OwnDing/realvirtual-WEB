@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * LayoutPlannerPlugin — Factory layout planning tool for the realvirtual WebViewer.
+ * LayoutPlannerPlugin — Factory layout planning tool for the XYvirtual WebViewer.
  *
  * Users browse GLB component libraries (multi-tab catalog system), click or drag
  * components into the 3D scene, and reposition/rotate them using TransformControls.

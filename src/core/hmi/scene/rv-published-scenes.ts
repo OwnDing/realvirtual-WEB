@@ -152,7 +152,7 @@ export function parsePublishedIndex(raw: unknown): PublishedSceneEntry[] {
     if (typeof file === 'string' && /\.scene\.json$/i.test(file)) {
       console.warn(
         `[published-scenes] '${file}' is a legacy JSON example and is not listed. `
-        + 'Example scenes are GLBs since realvirtual WEB 6.3 — re-deploy to convert them.',
+        + 'Example scenes are GLBs since XYvirtual WEB 6.3 — re-deploy to convert them.',
       );
       continue;
     }

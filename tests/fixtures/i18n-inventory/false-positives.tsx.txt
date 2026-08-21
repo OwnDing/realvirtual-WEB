@@ -14,7 +14,7 @@ export function Styled() {
       name="signalName"
       variant="outlined"
       color="primary"
-      href="https://realvirtual.io/docs"
+      href="https://xyvirtual.io/docs"
       sx={{ fontFamily: 'monospace', border: '1px solid #4fc3f7' }}
       style={{ width: '12px' }}
     >

@@ -17,7 +17,7 @@
  * The target is resolved by {@link resolveMcpBridgeTarget}: when the HMI is
  * served BY CONNECT (same-origin, not the Vite dev server, no explicit port),
  * it is derived from window.location (`ws(s)://<host>/webviewer`); otherwise it
- * is `ws://localhost:<port>/webviewer` — realvirtual CONNECT on the default port
+ * is `ws://localhost:<port>/webviewer` — XYvirtual CONNECT on the default port
  * 5100, or the Node bridge when its port is pinned. Either way the configured
  * auth token travels as `?apikey=` (plan-327 AP5).
  *
@@ -162,7 +162,7 @@ const MAX_SERVER_LOG = 200;
 
 const STORAGE_KEY = 'rv-ai-bridge';
 
-/** Default bridge port: realvirtual CONNECT (plan-327 AP5). CONNECT is the standard
+/** Default bridge port: XYvirtual CONNECT (plan-327 AP5). CONNECT is the standard
  *  `web_*` transport — it needs neither Node nor Vite and is the only path that works
  *  for a static WebViewer delivery. The value lives in the dependency-free defaults
  *  module so the eager settings hook does not pull this lazy plugin into startup. */

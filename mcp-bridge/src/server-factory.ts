@@ -54,7 +54,7 @@ export function createBridgeServer(opts: BridgeServerOptions = {}): BridgeServer
   logger.setSink((lines) => bridge.sendLog(lines));
 
   const server = new Server(
-    { name: 'realvirtual-webviewer', version: '1.0.0' },
+    { name: 'xyvirtual-webviewer', version: '1.0.0' },
     { capabilities: { tools: { listChanged: true } }, instructions: opts.instructions ?? '' },
   );
 

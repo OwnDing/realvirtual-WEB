@@ -160,8 +160,8 @@ describe('AI Bridge entry — activity bar', () => {
     fireEvent.click(aiButton());
 
     const info = await screen.findByTestId('ai-connect-download-info');
-    expect(info).toHaveTextContent(/realvirtual CONNECT as their MCP server/);
-    expect(screen.getByRole('link', { name: /Download realvirtual CONNECT/ })).toBeInTheDocument();
+    expect(info).toHaveTextContent(/XYvirtual CONNECT as their MCP server/);
+    expect(screen.getByRole('link', { name: /Download XYvirtual CONNECT/ })).toBeInTheDocument();
     // No consent may be recorded by merely bumping into the dead end.
     expect(hasAiBridgeConsent()).toBe(false);
     expect(getRequestedSettingsTab()).toBeNull();

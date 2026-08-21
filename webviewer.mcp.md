@@ -1,4 +1,4 @@
-# realvirtual WEB MCP Tools
+# XYvirtual WEB MCP Tools
 
 Browser-based 3D viewer for industrial digital twins. The `web_*` tools read and control the
 running Three.js scene directly — no Unity required. Unity tools (when connected) modify the
@@ -183,7 +183,7 @@ _137 tools across 24 domains, generated from the @McpTool decorators — do not 
 ## Connection
 
 Every tool runs **in the browser**; this server only proxies. The viewer tab connects out to
-whichever bridge is hosting it — realvirtual CONNECT (`/webviewer` on the gateway port, the
+whichever bridge is hosting it — XYvirtual CONNECT (`/webviewer` on the gateway port, the
 default) or the standalone Node bridge — and the tool surface is identical either way.
 
 - **"WebViewer not connected"** = no viewer tab is attached (tab closed, not loaded, or still

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * RVViewer — Public facade for the realvirtual Web Viewer core.
+ * RVViewer — Public facade for the XYvirtual Web Viewer core.
  *
  * Single entry point that owns the Three.js scene, simulation loop, and all
  * core subsystems. Framework-agnostic: no React, no MUI. Custom UIs bind
@@ -2969,7 +2969,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       window.addEventListener('resize', this.resizeHandler);
     }
 
-    logInfo(`realvirtual WEB — Ready (${this.hasCompute ? 'WebGPU' : this.isWebGPU ? 'WebGPU (GL backend)' : 'WebGL'})`);
+    logInfo(`XYvirtual WEB — Ready (${this.hasCompute ? 'WebGPU' : this.isWebGPU ? 'WebGPU (GL backend)' : 'WebGL'})`);
 
     // ─── Sub-Facaden (Phase 4a of plan-182) ────────────────────────────
     // Initialized last: all managers (controls, camera, scene) are ready.

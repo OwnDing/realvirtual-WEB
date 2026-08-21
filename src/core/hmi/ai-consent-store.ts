@@ -83,7 +83,7 @@ export function useAiBridgeConsent(): boolean {
 }
 
 /**
- * One-shot check whether a realvirtual CONNECT answers at the configured
+ * One-shot check whether a XYvirtual CONNECT answers at the configured
  * gateway URL, using `/health` — the single route CONNECT leaves unauthenticated
  * (plan-366 Phase 7), so an unreachable answer here really means "no CONNECT",
  * not "no key".

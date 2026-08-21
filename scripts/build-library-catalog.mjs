@@ -3,7 +3,7 @@
 
 /**
  * build-library-catalog.mjs — Generates the standard parts library manifest
- * (`catalog.json`) for the realvirtual WebViewer from the GitHub repository
+ * (`catalog.json`) for the XYvirtual WebViewer from the GitHub repository
  * `game4automation/realvirtual-Library`.
  *
  * Why this exists: the WebViewer can scan a GitHub repo for `.glb` files live

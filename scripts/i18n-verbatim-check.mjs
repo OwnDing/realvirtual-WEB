@@ -110,7 +110,7 @@ export const MIGRATED_SOURCES = [
   'src/core/hmi/MessagePanel.tsx',
   'src/core/hmi/InstructionLayer.tsx',
   'src/core/hmi/ConnectUpdateNotice.tsx',
-  // realvirtual CONNECT flow (Milestone 4b, batch 4)
+  // XYvirtual CONNECT flow (Milestone 4b, batch 4)
   'src/core/hmi/ConnectPanel.tsx',
   'src/core/hmi/ConnectOptionsWindow.tsx',
   'src/core/hmi/connect-store.ts',
@@ -306,7 +306,34 @@ const NESTED_TEMPLATE = 'The separator lived INSIDE a nested ternary — `Browse
   + 'characters in the source. Both halves are unchanged; joining them is what makes the title one '
   + 'translatable string instead of a stem a translator cannot reorder.';
 
+const BRAND_RENAME = 'Deliberately no longer verbatim: the product was renamed from realvirtual '
+  + 'to XYvirtual, so every value naming the product, the CONNECT gateway or the marketing domain '
+  + 'diverges from `d1949a5` by exactly that substitution and nothing else. This is a rewrite in '
+  + 'the letter of ADR-0001 §3, which is why it is declared here one key at a time rather than '
+  + 'waved through by moving the base ref — the gate still proves the OTHER 2325 values were moved '
+  + 'and not re-derived. Diff any value below against the ref and the only delta is the name; if a '
+  + 'sentence ever changes for another reason, it must earn its own entry.';
+
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['shell.ai.reachText', BRAND_RENAME],
+  ['shell.ai.downloadInfo', BRAND_RENAME],
+  ['shell.ai.downloadTitle', BRAND_RENAME],
+  ['shell.welcome.betaText', BRAND_RENAME],
+  ['shell.license.dialogLicensed', BRAND_RENAME],
+  ['shell.license.dialogActivate', BRAND_RENAME],
+  ['shell.license.betaNotice', BRAND_RENAME],
+  ['shell.license.terms', BRAND_RENAME],
+  ['shell.login.poweredBy', BRAND_RENAME],
+  ['projects.demoCaption', BRAND_RENAME],
+  ['settings.version.title', BRAND_RENAME],
+  ['settings.ai.setupIntro', BRAND_RENAME],
+  ['connect.opener.intro', BRAND_RENAME],
+  ['connect.embed.region', BRAND_RENAME],
+  ['connect.embed.emptyTitle', BRAND_RENAME],
+  ['demo.hmi.tourWelcome', BRAND_RENAME],
+  ['assets.share.uploadToRv', BRAND_RENAME],
+  ['assets.share.openInApp', BRAND_RENAME],
+  ['assets.share.terms', BRAND_RENAME],
   ['connect.browse.titleTyped', NESTED_TEMPLATE],
   ['connect.connections.sectionCount', NESTED_TEMPLATE],
   ['shell.news.eyebrow', GERMAN_SOURCE],

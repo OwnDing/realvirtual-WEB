@@ -216,7 +216,7 @@ async function responseError(response: Response): Promise<string> {
 }
 
 /** URL of the license terms the activation dialog links to and the user accepts on activation. */
-export const LICENSE_TERMS_URL = 'https://realvirtual.io/en/terms/';
+export const LICENSE_TERMS_URL = 'https://xyvirtual.io/en/terms/';
 
 /** Version stamp of the license terms; recorded server-side as proof of acceptance. Bump when the terms change. */
 export const LICENSE_TERMS_VERSION = '2026-07';

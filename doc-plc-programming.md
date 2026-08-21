@@ -1,6 +1,6 @@
 # PLC Programming (Virtual PLC)
 
-realvirtual WEB includes a **virtual PLC**: write IEC 61131-3 Structured Text (ST) in a
+XYvirtual WEB includes a **virtual PLC**: write IEC 61131-3 Structured Text (ST) in a
 VS-Code-style editor (Monaco) directly in the browser, deploy it, and run it as a cyclic
 scan program against the live scene. PLC inputs and outputs map straight onto the
 SignalStore — sensors are read, drives and actuators are written — so complete plant

@@ -110,7 +110,7 @@ describe('help entry in the activity bar', () => {
     renderWithViewer(<ActivityBar />, createViewer((lpm) => lpm.open('layout-planner', 300, 'left')));
     fireEvent.click(helpButton());
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/planner/overview/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/planner/overview/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -119,7 +119,7 @@ describe('help entry in the activity bar', () => {
     renderWithViewer(<ActivityBar />, createViewer());
     fireEvent.click(helpButton());
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -131,7 +131,7 @@ describe('help entry in the activity bar', () => {
   it('updates the accessible name when a plugin contributes a topic', () => {
     const viewer = createViewer();
     renderWithViewer(<ActivityBar />, viewer);
-    expect(screen.getByRole('button', { name: /help for realvirtual WEB/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /help for XYvirtual WEB/i })).toBeTruthy();
     act(() => { registerHelpTopic('plugin:test', { slug: 'des/overview' }); });
     expect(screen.getByRole('button', { name: /help for DES/i })).toBeTruthy();
   });
@@ -150,7 +150,7 @@ describe('help entry in the activity bar', () => {
     const item = screen.getByRole('menuitem', { name: 'Help' });
     fireEvent.click(item);
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
   });
 

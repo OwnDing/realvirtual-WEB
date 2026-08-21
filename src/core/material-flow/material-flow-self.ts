@@ -412,7 +412,7 @@ export interface MaterialFlowSelf<
   downstreamInterlock(): { occupied(): boolean };
   /**
    * True when this component is connected to a live signal — i.e. ANY of its
-   * signals is bound to a source from realvirtual CONNECT (a PLC) or the built-in
+   * signals is bound to a source from XYvirtual CONNECT (a PLC) or the built-in
    * virtual PLC. When wired the component's internal simulation should defer to
    * the live values (the relay is authoritative). Standard detection — no
    * per-signal name-building in the component code.

@@ -24,7 +24,7 @@ let _cachedUrl: string | null = null;
 /** Build the minimal empty-scene glTF JSON document. */
 function emptySceneJson(): string {
   return JSON.stringify({
-    asset: { version: '2.0', generator: 'realvirtual-empty-scene' },
+    asset: { version: '2.0', generator: 'xyvirtual-empty-scene' },
     scene: 0,
     scenes: [{}],
   });

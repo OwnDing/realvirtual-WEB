@@ -1,6 +1,6 @@
 # Node Paths — How References Are Written and Resolved
 
-Almost everything realvirtual WEB knows about a scene beyond its geometry is addressed by a
+Almost everything XYvirtual WEB knows about a scene beyond its geometry is addressed by a
 **node path**: a slash-separated string naming a node in the scene hierarchy. Component
 references, instruction targets, kinematic bodies, signal addresses and persisted selections
 all resolve through the same mechanism.
@@ -325,7 +325,7 @@ renamed — repeated names in different branches are normal for CAD assemblies:
 ```
 3 referenced target(s) sit below a node whose glTF name is not unique
 in this export. Three.js renames duplicate node names when loading the GLB
-(Pusher -> Pusher_1), which breaks paths to their children in realvirtual WEB.
+(Pusher -> Pusher_1), which breaks paths to their children in XYvirtual WEB.
 Names are compared AFTER Three.js sanitization, so "A B" and "A_B" collide too.
 Rename the colliding nodes in Unity, then re-export.
 

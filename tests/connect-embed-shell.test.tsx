@@ -242,7 +242,7 @@ describe('CONNECT embedded minimal shell', () => {
 
   it('renders the CTA without normal HMI chrome in the structural App branch', () => {
     renderGate();
-    expect(screen.getByText('Want to check your signals and experience a digital twin with realvirtual CONNECT?')).toBeVisible();
+    expect(screen.getByText('Want to check your signals and experience a digital twin with XYvirtual CONNECT?')).toBeVisible();
     const minimalStart = appSource.indexOf('function ConnectEmbedMinimalShell()');
     const minimalEnd = appSource.indexOf('interface FullHmiShellProps', minimalStart);
     const minimalBranch = appSource.slice(minimalStart, minimalEnd);
@@ -338,7 +338,7 @@ describe('CONNECT embedded minimal shell', () => {
     const opened = vi.spyOn(window, 'open').mockImplementation(() => null);
     fireEvent.click(help);
     expect(opened).toHaveBeenCalledWith(
-      expect.stringContaining('https://realvirtual.io/doc/web/'), '_blank', 'noopener,noreferrer',
+      expect.stringContaining('https://xyvirtual.io/doc/web/'), '_blank', 'noopener,noreferrer',
     );
   });
 

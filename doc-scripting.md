@@ -1,6 +1,6 @@
 # Component Scripting (JS-in-GLB)
 
-realvirtual WEB lets you attach a JavaScript behavior directly to a node in the GLB. The script travels with the model — no separate signal map, no build step, no plugin registration. It runs in a sandboxed QuickJS virtual machine inside the browser, is authored in the built-in Monaco editor (TypeScript, checked against the SDK's own type declarations), and hot-reloads without a scene reload.
+XYvirtual WEB lets you attach a JavaScript behavior directly to a node in the GLB. The script travels with the model — no separate signal map, no build step, no plugin registration. It runs in a sandboxed QuickJS virtual machine inside the browser, is authored in the built-in Monaco editor (TypeScript, checked against the SDK's own type declarations), and hot-reloads without a scene reload.
 
 One script writes one behavior once. The same handler set runs unmodified against the continuous, real-time simulation kernel and — where a DES runner is present — against the event-based kernel, so a turntable or a supervisory cell coordinator written today keeps working if the model later runs headless at 1000× speed.
 
@@ -8,24 +8,24 @@ Script components are the general-purpose extension point below [Component Behav
 
 ## Choosing your extension path
 
-realvirtual WEB gives you two different ways to add custom logic, and they are not interchangeable — pick based on where the logic belongs.
+XYvirtual WEB gives you two different ways to add custom logic, and they are not interchangeable — pick based on where the logic belongs.
 
 **1. In-GLB scripting (this document).** You write JavaScript or TypeScript in the built-in Monaco editor, attached to a node. TypeScript is transpiled to conservative JS at save time — the GLB itself stays toolchain-free and self-describing, and the script travels with the scene: open the model anywhere and the behavior comes with it, no separate build or deployment step. You get the full `self` API described below: component handles, ports/MU material flow, script-to-script messaging, scheduling, error handling, and value-typed math — plus hot reload while the model stays loaded. The trade-off is the sandbox boundary: no DOM, no `fetch`, no network, no wall-clock timers, no direct Three.js access (only value-typed `NodeHandle` reads cross the boundary), a shared memory limit and a per-call interrupt deadline, and a trust gate that keeps scripts from an untrusted model from running until the user (or an explicit host setting) allows it. `self.random()` and `self.now` are deterministic (seeded PRNG, virtual time) by design, not wall-clock. This path fits component behavior, interlocks, routing logic, supervisory cell coordination, and anything meant to be shared as part of a reusable, portable model.
 
-**2. Native TypeScript extension (plugins and behaviors in the viewer build).** You write a `RVViewerPlugin` (lifecycle hooks: `onModelLoaded`, `onModelCleared`, `onFixedUpdatePre`/`onFixedUpdatePost`, `onRender`, `dispose` — see [Extending realvirtual WEB](doc-extending-webviewer.md)) or a Component Behavior file (see [Component Behaviors](doc-behaviors.md)) as part of the viewer's own source tree, built with the project's Vite toolchain. This code runs unsandboxed, with full access to the live Three.js scene graph, the rich `MaterialFlowSelf` material-flow surface, React-based HMI panels via UI slots, and no memory or interrupt ceilings — at full bundle performance. The trade-off is distribution: the result is part of the *application*, not the model — it ships with a viewer build/deployment, not inside a GLB, and reaches every model loaded into that build rather than travelling with one specific scene.
+**2. Native TypeScript extension (plugins and behaviors in the viewer build).** You write a `RVViewerPlugin` (lifecycle hooks: `onModelLoaded`, `onModelCleared`, `onFixedUpdatePre`/`onFixedUpdatePost`, `onRender`, `dispose` — see [Extending XYvirtual WEB](doc-extending-webviewer.md)) or a Component Behavior file (see [Component Behaviors](doc-behaviors.md)) as part of the viewer's own source tree, built with the project's Vite toolchain. This code runs unsandboxed, with full access to the live Three.js scene graph, the rich `MaterialFlowSelf` material-flow surface, React-based HMI panels via UI slots, and no memory or interrupt ceilings — at full bundle performance. The trade-off is distribution: the result is part of the *application*, not the model — it ships with a viewer build/deployment, not inside a GLB, and reaches every model loaded into that build rather than travelling with one specific scene.
 
 | | In-GLB scripting | Native TypeScript extension |
 |---|---|---|
 | API surface | The `self` SDK (this document) | Full `RVViewerPlugin` / `RVBehavior` / `MaterialFlowSelf` API |
 | Three.js scene access | None — value-typed `NodeHandle` reads only | Direct, full scene graph |
 | Distribution | Inside the GLB — travels with the model | Part of the viewer build/deployment |
-| Portability | Runs in any realvirtual WEB instance that opens the model | Runs only in builds that include the plugin/behavior |
+| Portability | Runs in any XYvirtual WEB instance that opens the model | Runs only in builds that include the plugin/behavior |
 | Sandbox / limits | QuickJS VM, shared memory limit, per-call interrupt deadline, trust gate | None — native JS execution |
 | Determinism | Enforced (seeded random, virtual time, no wall clock) | Not enforced — full platform APIs available |
 | Authoring | JS or TypeScript in the built-in Monaco editor, hot-reloaded live | TypeScript in the project source tree, requires a build |
 | Custom HMI UI | Not available from the script itself | Full React UI slots (KPI cards, panels, overlays) |
 
-**3. Project code (`documents[].scriptRef`).** A third way exists for code that belongs to neither the model nor the viewer, but to a **project**: a `.ts` module inside the project folder, bound to a document by a reference on its manifest row (`documents[].scriptRef` in `project.json`). It is the same native TypeScript plugin as path 2 — same API, same lack of a sandbox — with a different *binding*: which documents get it is stated in the manifest rather than in the module, so several documents can share one module (N:1) and renaming a GLB cannot break the binding. It replaces the module's own `models: string[]` self-declaration, which bound code to a file name. See [Extending realvirtual WEB](doc-extending-webviewer.md) for the authoring rules.
+**3. Project code (`documents[].scriptRef`).** A third way exists for code that belongs to neither the model nor the viewer, but to a **project**: a `.ts` module inside the project folder, bound to a document by a reference on its manifest row (`documents[].scriptRef` in `project.json`). It is the same native TypeScript plugin as path 2 — same API, same lack of a sandbox — with a different *binding*: which documents get it is stated in the manifest rather than in the module, so several documents can share one module (N:1) and renaming a GLB cannot break the binding. It replaces the module's own `models: string[]` self-declaration, which bound code to a file name. See [Extending XYvirtual WEB](doc-extending-webviewer.md) for the authoring rules.
 
 | | In-GLB scripting | Native TypeScript extension | Project code (`scriptRef`) |
 |---|---|---|---|
@@ -739,4 +739,4 @@ Booting sends `start` to every worker (delivered on each worker's next tick, so 
 ## See also
 
 - [Component Behaviors](doc-behaviors.md) — the native-TypeScript wiring layer script components sit alongside.
-- [Extending realvirtual WEB](doc-extending-webviewer.md) — plugins, UI slots, and how components map from Unity to the viewer.
+- [Extending XYvirtual WEB](doc-extending-webviewer.md) — plugins, UI slots, and how components map from Unity to the viewer.

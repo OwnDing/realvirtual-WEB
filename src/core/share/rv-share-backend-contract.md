@@ -35,7 +35,7 @@ at ours and therefore needs no login at all (Finding 14) — it never reaches th
 ### `POST /auth/request`
 
 ```json
-{ "email": "thomas@realvirtual.io", "returnUrl": "https://web.realvirtual.io/?mode=planner" }
+{ "email": "thomas@xyvirtual.io", "returnUrl": "https://web.xyvirtual.io/?mode=planner" }
 ```
 
 → `202` `{ "requestId": "…", "expiresInSec": 900 }`

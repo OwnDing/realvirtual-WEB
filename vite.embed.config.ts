@@ -87,13 +87,13 @@ const RV_VERSION = JSON.parse(
 /** AGPL compliance: corresponding source of the embedded AGPL engine build.
  *  The public GitHub mirror is an unfiltered 1:1 mirror of `main`, so as long
  *  as `src/embed/` + this config live in `main` the source is fully public. */
-const RV_SOURCE_URL = 'https://github.com/game4automation/realvirtual-WEB';
+const RV_SOURCE_URL = 'https://github.com/xyvirtual/XYvirtual-WEB';
 
 // `/*!` + `@license` marks the banner as a legal comment — esbuild's minifier
 // strips plain comments during renderChunk, which would silently delete the
 // AGPL/corresponding-source header (verified in the first AP1 build).
 const BANNER =
-  `/*! @license rv-embed v${RV_VERSION} | realvirtual WEB | AGPL-3.0-only | ` +
+  `/*! @license rv-embed v${RV_VERSION} | XYvirtual WEB | AGPL-3.0-only | ` +
   `Copyright (C) 2026 realvirtual GmbH | https://realvirtual.io | ` +
   `Corresponding Source: ${RV_SOURCE_URL} */`;
 

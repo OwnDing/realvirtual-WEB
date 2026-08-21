@@ -69,7 +69,7 @@ describe('LicenseSection', () => {
     }));
     expect(screen.getByText('LIC-****-****-CCCC')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate...' }));
-    expect(screen.getByRole('dialog', { name: 'realvirtual CONNECT license' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'XYvirtual CONNECT license' })).toBeTruthy();
     expect(screen.getByText('Deactivate this device')).toBeTruthy();
     const deactivate = screen.getByRole('button', { name: 'Deactivate license' }) as HTMLButtonElement;
     expect(deactivate.disabled).toBe(true);
@@ -108,14 +108,14 @@ describe('LicenseSection', () => {
   it('offers the activation dialog from the free license state', () => {
     renderStatus(status('LicensedCommunity'));
     fireEvent.click(screen.getByRole('button', { name: 'Activate license...' }));
-    expect(screen.getByRole('dialog', { name: 'Activate realvirtual CONNECT' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Activate XYvirtual CONNECT' })).toBeTruthy();
   });
 
   it('shows the license terms notice with a link in the activation dialog', () => {
     renderStatus(status('Unlicensed'));
     fireEvent.click(screen.getByRole('button', { name: 'Activate license...' }));
-    const link = screen.getByRole('link', { name: 'realvirtual license terms' }) as HTMLAnchorElement;
-    expect(link.href).toBe('https://realvirtual.io/en/terms/');
+    const link = screen.getByRole('link', { name: 'XYvirtual license terms' }) as HTMLAnchorElement;
+    expect(link.href).toBe('https://xyvirtual.io/en/terms/');
     expect(link.target).toBe('_blank');
   });
 
@@ -132,7 +132,7 @@ describe('LicenseSection', () => {
     renderStatus(status('Unlicensed'));
     fireEvent.click(screen.getByRole('button', { name: 'Activate license...' }));
     const link = screen.getByRole('link', { name: 'privacy policy' }) as HTMLAnchorElement;
-    expect(link.href).toBe('https://realvirtual.io/en/privacy/');
+    expect(link.href).toBe('https://xyvirtual.io/en/privacy/');
     expect(link.target).toBe('_blank');
   });
 });

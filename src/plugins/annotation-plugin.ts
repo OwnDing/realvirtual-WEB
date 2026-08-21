@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * annotation-plugin.ts — Annotation system for the realvirtual WebViewer.
+ * annotation-plugin.ts — Annotation system for the XYvirtual WebViewer.
  *
  * Allows users to place persistent 3D markers with labels on any surface.
  * Annotations persist in localStorage for single-user sessions and sync

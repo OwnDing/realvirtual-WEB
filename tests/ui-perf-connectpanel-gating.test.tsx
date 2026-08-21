@@ -100,7 +100,7 @@ describe('ConnectPanel — background work is gated on isOpen', () => {
     const lpm = new LeftPanelManager(); // nothing open
     renderPanel(makeViewer(lpm));
     // The panel renders nothing while closed…
-    expect(screen.queryByText(/realvirtual CONNECT/i)).toBeNull();
+    expect(screen.queryByText(/XYvirtual CONNECT/i)).toBeNull();
 
     const statusAfterConnect = counts.status;
     await act(async () => { await new Promise((r) => setTimeout(r, POLL_MS * 2 + 300)); });

@@ -1,6 +1,6 @@
 # Events & Hooks — Developer Reference
 
-Overview of all extension points where custom logic can hook into realvirtual WEB.
+Overview of all extension points where custom logic can hook into XYvirtual WEB.
 For plugin basics see [doc-extending-webviewer.md](doc-extending-webviewer.md), for the render/sim loop see [doc-lifecycle.md](doc-lifecycle.md).
 
 ---

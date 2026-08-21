@@ -152,7 +152,7 @@ describe('connect gateway fallback (bare Vite on 5173)', () => {
     // No parser wording, and the URL is NOT silently moved on a failed fallback.
     expect(snap.errorMessage).not.toMatch(/Unexpected token|not valid JSON/);
     expect(snap.errorMessage).toBe(
-      `${DERIVED_URL} served the viewer, not the realvirtual CONNECT gateway. `
+      `${DERIVED_URL} served the viewer, not the XYvirtual CONNECT gateway. `
       + 'CONNECT is probably running on a different port - enter its address under the settings gear, '
       + `for example ${FALLBACK_GATEWAY_URL}.`,
     );

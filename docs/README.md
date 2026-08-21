@@ -1,13 +1,13 @@
 ---
 doc_id: DOC-INDEX
-title: realvirtual WEB 文档中心
+title: XYvirtual WEB 文档中心
 status: approved
 owner: architecture
 last_reviewed: 2026-08-18
 authority: normative
 ---
 
-# realvirtual WEB 文档中心
+# XYvirtual WEB 文档中心
 
 本目录是项目产品、架构、契约、计划、验收与交付证据的记录系统。AI Agent 和开发者必须先判断文档状态与权威等级，再决定能否用于实现。
 

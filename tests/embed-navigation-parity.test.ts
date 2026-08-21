@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe('rv-embed navigation parity', () => {
-  it('matches the realvirtual WEB mouse, touch, damping and speed defaults', () => {
+  it('matches the XYvirtual WEB mouse, touch, damping and speed defaults', () => {
     const appDefaults = getDefaultVisualSettings();
     expect(DEFAULT_ORBIT_NAVIGATION_SETTINGS).toMatchObject({
       orbitRotateSpeed: appDefaults.orbitRotateSpeed,

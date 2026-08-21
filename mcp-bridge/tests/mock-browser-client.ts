@@ -9,7 +9,7 @@ interface CloseInfo {
 }
 
 /**
- * Test fixture: a fake realvirtual WEB browser connecting to the WebBridge.
+ * Test fixture: a fake XYvirtual WEB browser connecting to the WebBridge.
  *
  * Provides a race-free message/close queue so tests can `await` the next
  * message the server sends, or the close frame it receives.

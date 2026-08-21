@@ -164,7 +164,7 @@ const REASON_SENTENCES: Record<string, string> = {
   'manifest-invalid': 'The update information from the server could not be read. Please try again later.',
   'manifest-changed': 'A different build is being offered than the one you confirmed. Please check again and confirm the new one.',
   'checksum-mismatch': 'The downloaded file does not match its checksum and was discarded. CONNECT was not changed.',
-  'signature-invalid': 'The downloaded file does not carry a valid realvirtual signature and was discarded. CONNECT was not changed.',
+  'signature-invalid': 'The downloaded file does not carry a valid XYvirtual signature and was discarded. CONNECT was not changed.',
   'signature-unverifiable': 'The signature could not be checked because the revocation service was unreachable. This usually happens behind a proxy. CONNECT was not changed.',
   'no-write-permission': 'CONNECT may not change its own program directory. Please move the installation to a writable directory.',
   'other-instance-running': 'A second CONNECT instance is still running from the same program file. Please close it first.',

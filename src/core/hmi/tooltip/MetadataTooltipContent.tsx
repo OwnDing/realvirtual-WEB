@@ -30,7 +30,7 @@ import { tooltipRegistry } from './tooltip-registry';
 import type { TooltipData } from './tooltip-store';
 import type { OrderManagerConfig, OrderManagerPluginAPI } from '../../types/plugin-types';
 import { useRvTranslation } from '../../i18n';
-const DOC_BASE_URL = 'https://doc.realvirtual.io/';
+const DOC_BASE_URL = 'https://doc.xyvirtual.io/';
 
 /** Data shape for metadata tooltips. */
 export interface MetadataTooltipData extends TooltipData {

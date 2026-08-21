@@ -41,7 +41,7 @@ Notes:
 
 ## Running against the reference implementation
 
-realvirtual WEB runs this suite in CI: `tests/conformance.test.ts`.
+XYvirtual WEB runs this suite in CI: `tests/conformance.test.ts`.
 
 ## Regenerating the GLBs
 

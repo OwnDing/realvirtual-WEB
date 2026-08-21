@@ -1,4 +1,4 @@
-# Persistence Architecture — realvirtual WEB
+# Persistence Architecture — XYvirtual WEB
 
 This document describes how realvirtual persists state across page reloads,
 tab closes, and user sessions: which storage backend each piece of state lives
@@ -349,7 +349,7 @@ code path left. What remains is one error and one sentence, in
 [`rv-legacy-format.ts`](src/core/project/rv-legacy-format.ts):
 
 > This project was saved in a format that is no longer supported (…).
-> Open it once with realvirtual WEB **6.3.16** — the release before this one —
+> Open it once with XYvirtual WEB **6.3.16** — the release before this one —
 > to convert it, then open it here again.
 
 Three surfaces can meet a holdout, and all three raise the same
@@ -1530,7 +1530,7 @@ the public CDN.
 
 `main.ts` reads `manifest.models` from the CONNECT gateway's `/model/manifest`
 endpoint. Plan-413 replaced `models[]`/`scenes[]`/`library[]` with one
-`documents[]` list — *in the manifests realvirtual WEB writes*. This one it does
+`documents[]` list — *in the manifests XYvirtual WEB writes*. This one it does
 not write: CONNECT is a separate program with its own release cycle, and that
 field name is its published contract. The boundary is therefore a **compatibility
 adapter**: CONNECT's `models[]` is translated into viewer catalogue entries at
@@ -2055,7 +2055,7 @@ The five workspace modes registered in `main.ts`, in dropdown order — **Viewer
 `viewer.modes.restore('hmi')` reads it on boot, and `?mode=<id>` overrides it
 for that load without writing. A locked mode (`lock()`) ignores both.
 
-#### realvirtual CONNECT keys
+#### XYvirtual CONNECT keys
 
 None of these are in `ALL_RV_STORAGE_KEYS` except the last, and the three
 dynamic families are **not** in `RV_DYNAMIC_PREFIXES` — so "Reset all" leaves
@@ -2636,7 +2636,7 @@ can co-edit safely.
 `rv-interface-settings` stores PLC connection credentials (WebSocket auth
 tokens, MQTT username/password) in **plain text** in localStorage. The
 Login Gate plugin uses base64 obfuscation, which is not encryption. Treat
-realvirtual WEB's localStorage as readable by anyone with file-system access
+XYvirtual WEB's localStorage as readable by anyone with file-system access
 to the browser profile.
 
 Production deployments that need real secret handling should:

@@ -3,7 +3,7 @@
 **Status:** Released
 **Format version:** 1.0
 **Canonical machine-readable schema:** [`rv-odt.json`](./rv-odt.json) (`$id: https://realvirtual.io/schema/odt/v1/rv-odt.json`)
-**License:** This specification and the accompanying `rv-odt.json` are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) — see [`../LICENSE`](../LICENSE). The reference implementation (realvirtual WEB) is separately licensed under AGPL-3.0-only.
+**License:** This specification and the accompanying `rv-odt.json` are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) — see [`../LICENSE`](../LICENSE). The reference implementation (XYvirtual WEB) is separately licensed under AGPL-3.0-only.
 
 > **Normative precedence:** Where this document and `rv-odt.json` disagree on field
 > names, types, defaults, units, or enum values, **the JSON schema is normative**.
@@ -52,7 +52,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
 
 - A **writer** is a tool that produces rv-ODT GLB files (e.g. the realvirtual Unity exporter).
-- A **reader** is a tool that consumes rv-ODT GLB files (e.g. realvirtual WEB).
+- A **reader** is a tool that consumes rv-ODT GLB files (e.g. XYvirtual WEB).
 - A **component** is a named block of key/value configuration attached to a glTF node.
 
 ## 4. Format Overview
@@ -687,7 +687,7 @@ Raw fields (`rawFields`):
 |---|---|---|---|
 | `type` | enum(Info, Maintenance, Warning, Error, Success) | "Info" | Instruction category (Info, Maintenance, Warning, Error, Success). Writers MUST emit the C# enum name; readers map it to the lowercase internal value and additionally accept the legacy integer index per the enumMap. |
 | `dismissible` | boolean | true | If true the operator can dismiss the instruction via an OK/close button (offered on the last step only); once dismissed it reappears only on the next rising signal edge. |
-| `Isolate` | boolean | false | realvirtual WEB only: when the operator clicks the message, the step's target objects are additionally isolated (rest of the scene dimmed) on top of the camera focus and highlight. |
+| `Isolate` | boolean | false | XYvirtual WEB only: when the operator clicks the message, the step's target objects are additionally isolated (rest of the scene dimmed) on top of the camera focus and highlight. |
 | `signal` | ComponentReference | - | Activation signal; the instruction is shown while the signal is true. |
 | `BlinkSpeed` | number | 2 | Blink speed of the attention highlight in Hz. 0 = no blinking, the part is only highlighted; higher = faster. |
 
@@ -2012,7 +2012,7 @@ A conforming reader:
 The directory [`conformance/`](./conformance/) contains test GLB files with
 `*.expected.json` fixtures describing the exact component state a conforming reader
 must produce after loading (defaults applied, aliases resolved, enums mapped).
-realvirtual WEB is the reference implementation and runs this suite in CI
+XYvirtual WEB is the reference implementation and runs this suite in CI
 (`tests/conformance.test.ts`).
 
 ## 10. Versioning
@@ -2029,7 +2029,7 @@ realvirtual WEB is the reference implementation and runs this suite in CI
 
 ## 11. Governance
 
-- The specification is maintained by **realvirtual GmbH** in the realvirtual WEB
+- The specification is maintained by **realvirtual GmbH** in the XYvirtual WEB
   repository (`schema/` subtree).
 - Proposals for new components or fields are accepted via issues/pull requests on
   the public repository. Acceptance criteria: implementable by at least the
@@ -2041,7 +2041,7 @@ realvirtual WEB is the reference implementation and runs this suite in CI
   components (`DES*`) and dynamically registered library behavior schemas
   (`ConveyorBehavior`, `TurntableBehavior`, `SourceBehavior`, `SinkBehavior`,
   `ChainTransferBehavior`, and the material-flow types `Conveyor`, `Turntable`,
-  `ChainTransfer`). These are realvirtual WEB runtime concerns, not part of the
+  `ChainTransfer`). These are XYvirtual WEB runtime concerns, not part of the
   interchange format. `Drive_CAM` is reserved (Section 7f).
 
 ## 12. References
@@ -2051,5 +2051,5 @@ realvirtual WEB is the reference implementation and runs this suite in CI
 - RFC 2119, Key words for use in RFCs — https://www.rfc-editor.org/rfc/rfc2119
 - UCUM, Unified Code for Units of Measure — https://ucum.org/
 - EU Machinery Regulation 2023/1230 — https://eur-lex.europa.eu/eli/reg/2023/1230/oj
-- realvirtual WEB (reference implementation) — https://github.com/game4automation/realvirtual-WEB
-- realvirtual documentation — https://doc.realvirtual.io
+- XYvirtual WEB (reference implementation) — https://github.com/xyvirtual/XYvirtual-WEB
+- XYvirtual documentation — https://doc.xyvirtual.io

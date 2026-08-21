@@ -11,7 +11,7 @@
  * this module and `deriveHelpTopic()` do is therefore pure and synchronous.
  *
  * NOT the same as `DOC_BASE_URL` in tooltip/MetadataTooltipContent.tsx
- * (`https://doc.realvirtual.io/`). That constant resolves relative links out of
+ * (`https://doc.xyvirtual.io/`). That constant resolves relative links out of
  * Unity `RuntimeMetadata` — customer content, different domain, different
  * lifecycle. Touching it would break customer tooltips; it stays as it is.
  */
@@ -19,7 +19,7 @@
 import type { HelpTopic } from './help-topics';
 
 /** Product documentation root — used unless a deployment overrides it. */
-export const DEFAULT_DOC_BASE_URL = 'https://realvirtual.io/doc/web/';
+export const DEFAULT_DOC_BASE_URL = 'https://xyvirtual.io/doc/web/';
 
 /**
  * True when `candidate` is usable as a documentation base: a non-empty string
@@ -45,8 +45,8 @@ function normalizeBaseUrl(candidate: string | null | undefined): string {
 /**
  * Build the absolute documentation URL for a topic.
  *
- * `{ slug: 'planning/des' }` → `https://realvirtual.io/doc/web/planning/des/`
- * `{ slug: '' }`             → `https://realvirtual.io/doc/web/`
+ * `{ slug: 'planning/des' }` → `https://xyvirtual.io/doc/web/planning/des/`
+ * `{ slug: '' }`             → `https://xyvirtual.io/doc/web/`
  * `{ slug: 'odt', anchor: 'x' }` → `…/odt/#x`
  */
 export function buildHelpUrl(topic: HelpTopic, baseUrl?: string | null): string {

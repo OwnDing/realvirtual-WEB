@@ -5,32 +5,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#e94078" />
+  <meta name="theme-color" content="#2596DE" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <title>realvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer</title>
-  <meta name="description" content="realvirtual WEB is the open, browser-based 3D HMI and digital twin viewer for industrial automation. Explore live demos of conveyor simulation, robotics and PLC-connected 3D visualization — no installation, right in the browser." />
+  <title>XYvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer</title>
+  <meta name="description" content="XYvirtual WEB is the open, browser-based 3D HMI and digital twin viewer for industrial automation. Explore live demos of conveyor simulation, robotics and PLC-connected 3D visualization — no installation, right in the browser." />
   <!-- URL-bound SEO tags (canonical, og:url, og:image, twitter:card) are injected
        per deploy by scripts/bunny-deploy.mjs — the committed file stays deployment-neutral. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="realvirtual WEB" />
-  <meta property="og:title" content="realvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer" />
+  <meta property="og:site_name" content="XYvirtual WEB" />
+  <meta property="og:title" content="XYvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer" />
   <meta property="og:description" content="Open, browser-based 3D HMI and digital twin viewer for industrial automation. Live demos: conveyor simulation, robotics, PLC-connected 3D visualization." />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "realvirtual WEB",
-    "alternateName": "realvirtual WebViewer",
+    "name": "XYvirtual WEB",
+    "alternateName": "XYvirtual WebViewer",
     "description": "Open, browser-based 3D HMI and digital twin viewer for industrial automation: conveyor simulation, robotics, sensors and live PLC signals rendered in real time in the browser.",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Any (web browser)",
     "browserRequirements": "Requires JavaScript and WebGL2",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-    "publisher": { "@type": "Organization", "name": "realvirtual GmbH", "url": "https://realvirtual.io" },
-    "sameAs": ["https://github.com/game4automation/realvirtual-WEB"]
+    "publisher": { "@type": "Organization", "name": "realvirtual GmbH", "url": "https://xyvirtual.io" },
+    "sameAs": ["https://github.com/xyvirtual/XYvirtual-WEB"]
   }
   </script>
   <style>
@@ -101,7 +102,7 @@
       width: min(120px, 30vw);
       height: min(120px, 30vw);
       animation: logo-pulse 2s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(233, 64, 120, 0.6));
+      filter: drop-shadow(0 0 20px rgba(45, 212, 191, 0.6));
     }
 
     /* Orbiting dot */
@@ -109,7 +110,7 @@
       position: absolute;
       inset: -30px;
       border-radius: 50%;
-      border: 1px solid rgba(233, 64, 120, 0.12);
+      border: 1px solid rgba(45, 212, 191, 0.14);
     }
     .orbit-dot {
       position: absolute;
@@ -124,9 +125,9 @@
       transform: translateX(-50%);
       width: 6px;
       height: 6px;
-      background: #ff6b9d;
+      background: #2DD4BF;
       border-radius: 50%;
-      box-shadow: 0 0 8px rgba(233, 64, 120, 0.8), -6px 0 5px rgba(233, 64, 120, 0.3);
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.85), -6px 0 5px rgba(79, 70, 229, 0.35);
     }
 
     /* Brand name — prominent */
@@ -161,7 +162,7 @@
       transition: color 0.2s;
     }
     .loader-github:hover {
-      color: #e94078;
+      color: #2DD4BF;
     }
 
     /* Status line — subtle */
@@ -195,7 +196,7 @@
     .loader-progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #e94078, #ff6b9d);
+      background: linear-gradient(90deg, #2DD4BF, #4F46E5);
       border-radius: 3px;
       transition: width 0.3s ease-out;
     }
@@ -271,15 +272,15 @@
     }
     .loader-btn:hover { border-color: #666; color: #fff; }
     .loader-btn-primary {
-      border-color: #e94078;
-      background: linear-gradient(90deg, #e94078, #ff6b9d);
+      border-color: #2DD4BF;
+      background: linear-gradient(90deg, #2DD4BF, #4F46E5);
       color: #fff;
     }
     .loader-btn-primary:hover { filter: brightness(1.08); color: #fff; }
 
     @keyframes logo-pulse {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(233, 64, 120, 0.5)); }
-      50% { transform: scale(1.04); filter: drop-shadow(0 0 28px rgba(233, 64, 120, 0.8)); }
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(45, 212, 191, 0.5)); }
+      50% { transform: scale(1.04); filter: drop-shadow(0 0 28px rgba(79, 70, 229, 0.8)); }
     }
 
     @keyframes orbit-spin {
@@ -299,14 +300,14 @@
 
   <noscript>
     <div style="max-width: 640px; margin: 10vh auto 0; padding: 0 24px; color: #222; font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
-      <h2>realvirtual WEB — Browser-based 3D HMI &amp; Digital Twin Viewer</h2>
-      <p>realvirtual WEB loads industrial 3D models (GLB) and runs interactive simulation of
+      <h2>XYvirtual WEB — Browser-based 3D HMI &amp; Digital Twin Viewer</h2>
+      <p>XYvirtual WEB loads industrial 3D models (GLB) and runs interactive simulation of
          conveyors, drives, sensors and robots directly in the browser — as a 3D HMI connected
          to live PLC signals or as a standalone digital twin demo. JavaScript and WebGL are
          required to run the viewer.</p>
-      <p><a href="https://realvirtual.io">realvirtual.io</a> ·
-         <a href="https://github.com/game4automation/realvirtual-WEB">Source on GitHub (AGPL-3.0)</a> ·
-         <a href="https://doc.realvirtual.io">Documentation</a></p>
+      <p><a href="https://xyvirtual.io">xyvirtual.io</a> ·
+         <a href="https://github.com/xyvirtual/XYvirtual-WEB">Source on GitHub (AGPL-3.0)</a> ·
+         <a href="https://doc.xyvirtual.io">Documentation</a></p>
     </div>
   </noscript>
 
@@ -315,9 +316,11 @@
     <div class="loader-logo-wrap">
       <div class="orbit-ring"></div>
       <div class="orbit-dot"></div>
-      <img class="loader-logo" src="/logo.png" alt="realvirtual" />
+      <!-- Decorative: the <h1> right below already announces the brand, so a
+           named logo would make a screen reader say "XYvirtual" twice. -->
+      <img class="loader-logo" src="/logo.png" alt="" />
     </div>
-    <h1 class="loader-brand">realvirtual WEB</h1>
+    <h1 class="loader-brand">XYvirtual WEB</h1>
     <div class="loader-slogan">开放、轻量、工业级、随处可用。</div>
     <div class="loader-status" id="loading-status"><span id="loading-label">正在加载 </span><span class="model-name" id="loading-model-name"></span></div>
     <div class="loader-progress-wrap">
@@ -381,8 +384,8 @@
   <div id="react-root"></div>
 
   <!-- AGPL Watermark — removal requires a commercial license -->
-  <a id="rv-watermark" href="https://github.com/game4automation/realvirtual-WEB" target="_blank" rel="noopener noreferrer">
-    Powered by <strong>realvirtual WEB</strong> · AGPL-3.0
+  <a id="rv-watermark" href="https://github.com/xyvirtual/XYvirtual-WEB" target="_blank" rel="noopener noreferrer">
+    Powered by <strong>XYvirtual WEB</strong> · AGPL-3.0
   </a>
   <style>
     #rv-watermark {

@@ -12,7 +12,7 @@
  *                           bridge may reach. Because both entrances (activity
  *                           bar, Settings tab — and on mobile the tab alone) end
  *                           up here, the gate cannot be walked around.
- *   `AiBridgeDownloadInfo`  the "no CONNECT answered" state: realvirtual CONNECT
+ *   `AiBridgeDownloadInfo`  the "no CONNECT answered" state: XYvirtual CONNECT
  *                           is the MCP server, so without it there is nothing to
  *                           configure — this states that and offers the download,
  *                           reusing `ConnectDownloadLinks` from ConnectPanel.

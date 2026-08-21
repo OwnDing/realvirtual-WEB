@@ -8,9 +8,15 @@
       "reason": "SEW gearmotor type designation from the bundled AASX digital nameplate — a device model number that must match the asset, so translating it would break the link to the datasheet."
     },
     {
+      "file": "src/core/hmi/ButtonPanel.tsx",
+      "category": "a11y-name",
+      "match": "XYvirtual",
+      "reason": "Accessible name of the activity-bar logo, which is the only content of the clickable About badge and so cannot be decorative. The name IS the brand — the custom-branding branch right below it uses the customer's own `custom.name` for the same reason. Detected only since the rename: the classifier skips single lowercase words, so the former 'realvirtual' fell through the same heuristic rather than being genuinely absent."
+    },
+    {
       "file": "src/core/hmi/SettingsPanel.tsx",
       "category": "react-copy",
-      "match": "realvirtual WEB",
+      "match": "XYvirtual WEB",
       "reason": "Product name in the version footer. Translating a brand would make the build string unsearchable in support threads and release notes; the surrounding tooltip IS translated (settings:version.title)."
     },
     {
@@ -34,13 +40,13 @@
     {
       "file": "src/core/hmi/WelcomeModal.tsx",
       "category": "react-copy",
-      "match": "realvirtual WEB",
+      "match": "XYvirtual WEB",
       "reason": "Product name in the About/Welcome header and version line — the same brand exception as SettingsPanel.tsx. The prose around it IS translated (shell:welcome.*)."
     },
     {
       "file": "src/core/hmi/WelcomeModal.tsx",
       "category": "react-copy",
-      "match": "github.com/game4automation/realvirtual-WEB",
+      "match": "github.com/xyvirtual/XYvirtual-WEB",
       "reason": "Repository URL rendered as its own link text. A translated URL would not resolve."
     },
     {
@@ -64,7 +70,7 @@
     {
       "file": "src/core/hmi/ConnectPanel.tsx",
       "category": "react-copy",
-      "match": "realvirtual CONNECT",
+      "match": "XYvirtual CONNECT",
       "reason": "Product name in the panel header — the same brand exception as SettingsPanel.tsx and WelcomeModal.tsx. Every sentence around it is translated (connect:*)."
     },
     {

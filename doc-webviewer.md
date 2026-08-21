@@ -1,8 +1,8 @@
-# realvirtual WEB
+# XYvirtual WEB
 
 **The open standard for browser-based 3D-HMI and Digital Twins in manufacturing.**
 
-realvirtual WEB brings industrial 3D visualization to the browser — load realvirtual GLB exports and run transport simulation, sensor collision, LogicStep sequencing, and drive animation with no installation required. WebGL, WebGPU, and WebXR (VR/AR) supported out of the box.
+XYvirtual WEB brings industrial 3D visualization to the browser — load realvirtual GLB exports and run transport simulation, sensor collision, LogicStep sequencing, and drive animation with no installation required. WebGL, WebGPU, and WebXR (VR/AR) supported out of the box.
 
 **One link. Any device. Live Digital Twin.** Share an interactive 3D model of your machine or production line with anyone — customers, operators, service technicians — across desktop, tablet, and VR/AR headsets.
 
@@ -168,7 +168,7 @@ or the ESLint instance itself.
 
 ## Workspace Modes
 
-realvirtual WEB is organized into **workspace modes** — switch them from the mode
+XYvirtual WEB is organized into **workspace modes** — switch them from the mode
 dropdown in the top-left toolbar. Exactly one mode is active at a time; switching a
 mode swaps both the active plugin set and the UI (each plugin declares its mode
 membership via `plugin.modes`). The same asset stays open across a switch.
@@ -498,7 +498,7 @@ up. Sharing your **own** URL needs no sign-in — we host nothing.
 | `src/core/share/rv-share-meta.ts` | `rv_share` parsing and fallbacks |
 | `src/core/share/rv-share-session.ts` | magic-link session, dialog draft |
 | `src/core/share/rv-share-upload.ts` | signed upload client, my-shares, opaque-id resolver |
-| `src/core/share/rv-share-escalate.ts` | "Open in realvirtual WEB" |
+| `src/core/share/rv-share-escalate.ts` | "Open in XYvirtual WEB" |
 | `src/core/share/shared-asset-bookmarks.ts` | "Add to my library" |
 | `src/core/share/rv-share-backend-contract.md` | the HTTP contract the server must implement |
 
@@ -957,7 +957,7 @@ Internal dev builds include a browser-side IEC 61131-3 soft PLC: write Structure
 Ported from Drive.cs — acceleration/deceleration, position limits, rotation and linear movement. CAM/Gear master-slave dependencies resolved via topological sort.
 
 ### WebSensor (3D-HMI status indicator)
-Pure UI marker authored in Unity (`Packages/io.realvirtual.professional/Runtime/WebViewerHMI/WebSensor.cs`) and rendered exclusively by realvirtual WEB (`rv-web-sensor.ts`). Four visual states — **Low / High / Warning / Error** plus an **Unbound** fallback — driven by either:
+Pure UI marker authored in Unity (`Packages/io.realvirtual.professional/Runtime/WebViewerHMI/WebSensor.cs`) and rendered exclusively by XYvirtual WEB (`rv-web-sensor.ts`). Four visual states — **Low / High / Warning / Error** plus an **Unbound** fallback — driven by either:
 
 - a **PLCOutputBool** (`SignalBool`) → `false=Low`, `true=High`, OR
 - a **PLCOutputInt** (`SignalInt`) → mapped via flexible `IntStateMap` string (default `0=Low, 1=High, 2=Warning, 3=Error`)
@@ -1658,7 +1658,7 @@ only one of them. It is **strictly synchronous** all the way to `window.open(url
 
 > Not to be confused with `DOC_BASE_URL` in `tooltip/MetadataTooltipContent.tsx`. That constant
 > resolves relative links out of Unity `RuntimeMetadata` (customer content on
-> `doc.realvirtual.io`) and is a separate concern.
+> `doc.xyvirtual.io`) and is a separate concern.
 
 ### Keyboard and visibility
 
@@ -2571,7 +2571,7 @@ Project plugins control which plugins are active and can disable standard plugin
 **Project-level** (applies to all models in the project):
 
 ```ts
-import type { RVViewer } from 'realvirtual-webviewer';
+import type { RVViewer } from 'xyvirtual-webviewer';
 import { CustomerHmiPlugin } from './plugins/customer-hmi';
 
 export default function setup(viewer: RVViewer): void {
@@ -2584,7 +2584,7 @@ export default function setup(viewer: RVViewer): void {
 **Model-level** (applies only to a specific model):
 
 ```ts
-import type { RVViewer } from 'realvirtual-webviewer';
+import type { RVViewer } from 'xyvirtual-webviewer';
 
 export default function setup(viewer: RVViewer): void {
   viewer.disablePlugin('sensor-monitor');  // Not needed for this model
@@ -2825,13 +2825,13 @@ Ported DriveBehaviours: `Drive_Simple`, `Drive_Cylinder`, `Drive_DestinationMoto
 
 ## Multiuser
 
-realvirtual WEB supports real-time multiuser sessions where multiple users see each other as avatars in the same 3D scene. Each user's camera position is shared and rendered as a colored sphere with a name label.
+XYvirtual WEB supports real-time multiuser sessions where multiple users see each other as avatars in the same 3D scene. Each user's camera position is shared and rendered as a colored sphere with a name label.
 
 ### Quick Start
 
 1. Add the `MultiplayerWEB` component to any GameObject in your Unity scene
 2. Press Play — the WebSocket server starts on Port 7000
-3. Open realvirtual WEB, click the Multiuser button in the top bar
+3. Open XYvirtual WEB, click the Multiuser button in the top bar
 4. Enter the server URL (e.g., `ws://192.168.1.5:7000`) and your name
 5. Click Connect — you will see other connected users as avatars
 
@@ -2847,11 +2847,11 @@ realvirtual WEB supports real-time multiuser sessions where multiple users see e
 
 ### Web-only Mode (No Unity)
 
-For sessions without a running Unity instance, point realvirtual WEB at a standalone relay server. The relay source lives in a separate repository; realvirtual WEB ships with a default hosted relay (`wss://download.realvirtual.io/relay`) configured in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts). Switch a session into relay mode via the Multiuser settings tab or by passing `?server=wss://...&joinCode=...` on the URL.
+For sessions without a running Unity instance, point XYvirtual WEB at a standalone relay server. The relay source lives in a separate repository; XYvirtual WEB ships with a default hosted relay (`wss://download.realvirtual.io/relay`) configured in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts). Switch a session into relay mode via the Multiuser settings tab or by passing `?server=wss://...&joinCode=...` on the URL.
 
 ### Microsoft Teams Integration
 
-realvirtual WEB runs natively inside Microsoft Teams as an interactive app — no screen sharing needed. Share 3D digital twins directly in meetings, channels, and chats.
+XYvirtual WEB runs natively inside Microsoft Teams as an interactive app — no screen sharing needed. Share 3D digital twins directly in meetings, channels, and chats.
 
 **What it does:**
 - **Meeting stage sharing** — Share the 3D viewer to the meeting stage. All participants can orbit, pan, and zoom the model independently — including external guests who are not in your organization.
@@ -2863,7 +2863,7 @@ realvirtual WEB runs natively inside Microsoft Teams as an interactive app — n
 1. Build the Teams app package:
    ```bash
    cd teams-app
-   powershell.exe Compress-Archive -Path manifest.json,color.png,outline.png -DestinationPath realvirtual-web-teams.zip
+   powershell.exe Compress-Archive -Path manifest.json,color.png,outline.png -DestinationPath xyvirtual-web-teams.zip
    ```
 
 2. Install in Teams:
@@ -2872,7 +2872,7 @@ realvirtual WEB runs natively inside Microsoft Teams as an interactive app — n
 
 3. Share in a meeting:
    - Click **Share** in the meeting toolbar
-   - Select **realvirtual WEB** from the app list
+   - Select **XYvirtual WEB** from the app list
    - The 3D viewer opens on the meeting stage for all participants
 
 **Key points:**

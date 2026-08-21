@@ -1,16 +1,16 @@
 ---
-description: "Visually inspect the running realvirtual WEB via Playwright"
+description: "Visually inspect the running XYvirtual WEB via Playwright"
 allowed-tools: Bash(*), WebFetch, Read, mcp__playwright__*
 ---
 
 # Inspect Command
 
-Uses Playwright MCP to visually inspect and interact with the running realvirtual WEB instance.
+Uses Playwright MCP to visually inspect and interact with the running XYvirtual WEB instance.
 
 ## Usage
 
 ```
-/inspect                     # Open realvirtual WEB, report page structure
+/inspect                     # Open XYvirtual WEB, report page structure
 /inspect screenshot          # Capture a screenshot
 /inspect click <element>     # Click a UI element by accessible name
 /inspect check               # Health check: model loaded, no errors, FPS ok

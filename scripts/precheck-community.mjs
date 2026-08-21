@@ -61,7 +61,7 @@ step('Stage community tree (git-tracked files, no private sibling)');
 const stagingRoot = mkdtempSync(join(tmpdir(), 'rv-community-precheck-'));
 // The core goes into a SUBDIRECTORY whose parent contains no
 // realvirtual-WebViewer-Private~ — that absence is the point of the rehearsal.
-const staged = join(stagingRoot, 'realvirtual-web');
+const staged = join(stagingRoot, 'xyvirtual-web');
 mkdirSync(staged, { recursive: true });
 
 const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT })

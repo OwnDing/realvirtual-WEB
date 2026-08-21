@@ -3,7 +3,7 @@
 
 /**
  * bunny-deploy.mjs — Unity-independent, CI-capable Bunny CDN deploy CLI for the
- * realvirtual WebViewer. Builds the Vite app, then diff-uploads dist/ (+ project
+ * XYvirtual WebViewer. Builds the Vite app, then diff-uploads dist/ (+ project
  * GLBs) to Bunny CDN Edge Storage — public demo or a private customer project.
  *
  * Behavior is a 1:1 parity port of the Unity C# tooling (BunnyCdnUploader.cs +
@@ -364,7 +364,7 @@ async function deployPublic(cfg, opts) {
   }
 
   log('');
-  log(`${MAGENTA}realvirtual WebViewer · Bunny Deploy${RESET}`);
+  log(`${MAGENTA}XYvirtual WebViewer · Bunny Deploy${RESET}`);
   info('mode', opts.demo ? 'demo  (commercial code · public demo content)' : 'public');
   info('zone', `${cfg.storageZone}  region ${cfg.region}`);
   info('remote', `${remotePrefix || '(root)'}/`);
@@ -444,7 +444,7 @@ async function deployPrivate(cfg, opts) {
   if (!opts.dryRun) assertNoDevArtifacts(opts.dist);
 
   log('');
-  log(`${MAGENTA}realvirtual WebViewer · Bunny Deploy${RESET}`);
+  log(`${MAGENTA}XYvirtual WebViewer · Bunny Deploy${RESET}`);
   info('mode', `private  project "${project.name}" (code ${project.code.slice(0, 8)}…)`);
   info('zone', `${cfg.storageZone}  region ${cfg.region}`);
   info('remote', `${project.code}/`);

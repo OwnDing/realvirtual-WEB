@@ -1,4 +1,4 @@
-# From Unity to realvirtual WEB — Customization and Coding-Agent Workflow
+# From Unity to XYvirtual WEB — Customization and Coding-Agent Workflow
 
 This document is written **for users coming from realvirtual on Unity**.
 
@@ -9,16 +9,16 @@ This document is written **for users coming from realvirtual on Unity**.
 
 If you are used to authoring a complete digital twin in the Unity Editor —
 scene, drives, sensors, signals, HMI panels, dashboards — and you are now
-looking at realvirtual WEB, the mental model is different and it is worth
+looking at XYvirtual WEB, the mental model is different and it is worth
 saying out loud:
 
-> **realvirtual WEB is not a virtual-commissioning tool.**
+> **XYvirtual WEB is not a virtual-commissioning tool.**
 > It is the **delivery and runtime platform** for finished products that
 > end users (operators, service technicians, customers, sales prospects)
 > open in a browser. Virtual commissioning, PLC sign-off, mechatronic
 > design and deep engineering all stay in **realvirtual on Unity**.
 
-> **realvirtual WEB is an IT project, not an editor project.**
+> **XYvirtual WEB is an IT project, not an editor project.**
 > The right way to think about it is closer to a modern web application
 > (TypeScript, React, plugins, CI, CDN deployment) than to a Unity scene
 > file. There is no WEB Editor and there is not going to be one for most
@@ -27,7 +27,7 @@ saying out loud:
 
 ### Two products, two phases
 
-| | realvirtual on Unity | realvirtual WEB |
+| | realvirtual on Unity | XYvirtual WEB |
 |---|---|---|
 | Phase | Engineering, virtual commissioning, PLC sign-off | Delivery, runtime, end-user experience |
 | Primary user | Mechatronic / controls engineer | Operator, service tech, customer, sales |
@@ -52,7 +52,7 @@ saying out loud:
 3. **Coding-agent development is faster than editor + code + UI split.**
    In Unity, a non-trivial feature usually means: edit C#, recompile,
    reconfigure an inspector, hook up scene references, save, hit Play,
-   verify. In realvirtual WEB with a coding agent, the same feature is
+   verify. In XYvirtual WEB with a coding agent, the same feature is
    *one prompt* against an already-instrumented codebase: the agent
    writes the plugin, registers it in the model pack, runs the dev
    server, queries the live MCP/debug API for verification, and reports
@@ -131,12 +131,12 @@ normative derivation.
 
 ## 1. Two layers, one runtime
 
-realvirtual WEB is split into two clearly separated layers:
+XYvirtual WEB is split into two clearly separated layers:
 
 | Layer | Source | What it contains |
 |-------|--------|------------------|
 | **Scene + simulation** | Unity → GLB (`rv_extras`) | Geometry, materials, drives, sensors, transport surfaces, sources/sinks, LogicSteps, signal definitions, kinematic links, camera presets |
-| **HMI / application** | realvirtual WEB plugins (TypeScript/React) | KPI bars, message panels, machine status overlays, cart, PDF / document viewer, maintenance procedures, multiuser, WebXR |
+| **HMI / application** | XYvirtual WEB plugins (TypeScript/React) | KPI bars, message panels, machine status overlays, cart, PDF / document viewer, maintenance procedures, multiuser, WebXR |
 
 The GLB is the **single source of truth for the digital twin**. Everything you can
 see in the 3D scene and all simulation behavior is reconstructed from `rv_extras`
@@ -147,7 +147,7 @@ load time from plugins, UI slots and per-model plugin packs.
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ realvirtual WEB (browser)                                          │
+│ XYvirtual WEB (browser)                                          │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │ HMI layer  ── plugins (React + MUI)                          │  │
@@ -258,7 +258,7 @@ that exports `models = [...]` and `registerModelPlugins(viewer)`. realvirtual
 auto-loads it when the matching GLB is loaded and tears it down on model
 change.
 
-This is the **recommended way to customize realvirtual WEB for a specific
+This is the **recommended way to customize XYvirtual WEB for a specific
 machine, plant or product**. It keeps the customization tightly scoped (it
 only runs for *your* GLB), self-contained (one folder, one entry point) and
 easy to ship/share.
@@ -460,7 +460,7 @@ For the full procedure format, see `core/maintenance-parser.ts`.
 
 ## 5. Maturity
 
-realvirtual WEB as a whole still carries a **beta** notice (the welcome
+XYvirtual WEB as a whole still carries a **beta** notice (the welcome
 dialog states it: features, file formats and APIs may still change, and it is
 not intended for production use yet). That is a product-level statement, not a
 per-feature one.
@@ -495,10 +495,10 @@ intended development model is not "click together components in an editor".
 It is "describe what you want to a coding agent and review the result".**
 
 That is not a workaround for missing tooling — it is the deliberate
-positioning of realvirtual WEB. realvirtual WEB is an **IT product**, not
+positioning of XYvirtual WEB. realvirtual WEB is an **IT product**, not
 an editor product. It runs on the same stack and the same workflows as any
 modern web application: TypeScript, React, npm, CI, CDN. People who deploy
-and customize realvirtual WEB are doing **web/IT work**, not Unity scene
+and customize XYvirtual WEB are doing **web/IT work**, not Unity scene
 authoring — and the productivity gains from coding agents are largest
 exactly in that environment:
 
@@ -526,7 +526,7 @@ you, including:
 - adding new industrial interfaces (WebSocket, MQTT, REST).
 
 This is not a side feature — **it is the intended primary development model**
-for customer customizations on top of realvirtual WEB.
+for customer customizations on top of XYvirtual WEB.
 
 ### 6.1 What ships in the repo for agents
 
@@ -574,7 +574,7 @@ edit code → recompile → reconfigure inspector → re-wire references
          → save scene → enter Play mode → verify → exit Play mode → repeat
 ```
 
-The realvirtual WEB loop collapses all of that into one place — code —
+The XYvirtual WEB loop collapses all of that into one place — code —
 with hot-reload, a live debug API and a coding agent that can both write
 and verify:
 
@@ -608,7 +608,7 @@ equivalent change would take through the Unity editor.
   logging) lets the agent verify its own work end-to-end inside the
   browser, not just at compile time.
 
-If you are evaluating realvirtual WEB for a customer project, the realistic
+If you are evaluating XYvirtual WEB for a customer project, the realistic
 mental model is: *"I describe the machine and the HMI; an agent writes the
 plugin pack; I review and ship."*
 
@@ -619,7 +619,7 @@ plugin pack; I review and ship."*
 This document is the **developer** view. For the end-user manual — what the
 buttons do, how an operator drives the UI, the feature tour — use the product
 documentation site instead of restating it here:
-**<https://realvirtual.io/doc/web/>**.
+**<https://xyvirtual.io/doc/web/>**.
 
 | You want to ... | Read |
 |------------------|------|
@@ -649,14 +649,14 @@ documentation site instead of restating it here:
   `node.userData._rvPdfLinks`) plus the core `DocViewerOverlay` reader, and
   `MaintenancePlugin` for authored procedures — all fed by metadata you author
   in Unity and ship in the GLB. `DocsBrowserPlugin` exists but is not used.
-- realvirtual WEB as a product is still **beta** (see the welcome dialog);
+- XYvirtual WEB as a product is still **beta** (see the welcome dialog);
   inside the UI only "Full physics — all conveyors" carries an explicit Beta
   badge.
 - **Not every WEB feature has — or will have — a Unity counterpart.** The
   WEB side is built and customized in TypeScript/React, and the intended
   development model is **with a coding agent (Claude Code) using the
   `CLAUDE.md` and `.claude/commands/` already shipped in this folder.**
-- **realvirtual WEB is not for virtual commissioning.** Deep engineering,
+- **XYvirtual WEB is not for virtual commissioning.** Deep engineering,
   PLC sign-off and commissioning stay in realvirtual on Unity. WEB is the
   **runtime / delivery platform** for end users — operators, service
   technicians, customers, sales — and it is an **IT project**, not an

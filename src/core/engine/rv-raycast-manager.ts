@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * RaycastManager — Unified raycast system for the realvirtual Web Viewer.
+ * RaycastManager — Unified raycast system for the XYvirtual Web Viewer.
  *
  * Uses grouped BVH raycast geometries:
  *   - ONE merged BVH for all static meshes

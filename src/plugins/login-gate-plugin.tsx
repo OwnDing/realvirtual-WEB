@@ -46,7 +46,7 @@ export interface LoginGateConfig {
   accentColor?: string;
   /** sessionStorage key for persisting auth state. Default 'rv-login-auth'. */
   sessionKey?: string;
-  /** Footer text. Default 'powered by realvirtual WEB'. */
+  /** Footer text. Default 'powered by XYvirtual WEB'. */
   footer?: string;
   /**
    * Show a "Load a different model" link below Sign In. Default: true.

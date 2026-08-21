@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * MultiuserPlugin — Multiuser presence plugin for the realvirtual WebViewer.
+ * MultiuserPlugin — Multiuser presence plugin for the XYvirtual WebViewer.
  *
  * Opens an independent WebSocket connection to the MultiplayerWEB server
  * running on Port 7000 inside the Unity application (separate from the

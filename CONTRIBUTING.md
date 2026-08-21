@@ -1,6 +1,6 @@
-# Contributing to realvirtual WEB
+# Contributing to XYvirtual WEB
 
-Thank you for your interest in contributing to realvirtual WEB.
+Thank you for your interest in contributing to XYvirtual WEB.
 
 realvirtual WEB is dual-licensed: it is available under the AGPL-3.0-only license
 and under a commercial license offered by realvirtual GmbH. To keep this
@@ -53,7 +53,7 @@ generated list has drifted.
 
 ### What is not in this repository
 
-Some subsystems of realvirtual WEB are commercial and are not part of this repository — most
+Some subsystems of XYvirtual WEB are commercial and are not part of this repository — most
 notably the CAD import providers (STEP, JT, USD, Onshape) and the PLC runtime. In this
 repository, GLB/glTF is the import format, and the stubs in `src/private-stubs/` stand in for
 the commercial modules so the community edition builds and runs on its own.
@@ -70,7 +70,7 @@ Contributions:
    right to use your Contribution without restriction — including the right to
    reproduce, modify, adapt, distribute, publicly display, publicly perform,
    and make available the Contribution (in whole or in part, in original or
-   modified form) as part of realvirtual WEB or any other product, and the
+   modified form) as part of XYvirtual WEB or any other product, and the
    right to license and relicense the Contribution under license terms of
    realvirtual GmbH's choosing, including the AGPL-3.0-only license, commercial
    licenses, and other open-source or proprietary licenses. To the extent that
@@ -103,4 +103,4 @@ Contributions:
 If you cannot or do not want to agree to these terms, please do not submit
 Contributions to this repository.
 
-Questions? Contact us via [realvirtual.io](https://realvirtual.io).
+Questions? Contact us via [xyvirtual.io](https://xyvirtual.io).

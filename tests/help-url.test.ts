@@ -21,17 +21,17 @@ afterEach(() => {
 describe('buildHelpUrl', () => {
   it('builds a page URL with a trailing slash', () => {
     expect(buildHelpUrl({ slug: 'des/overview' }))
-      .toBe('https://realvirtual.io/doc/web/des/overview/');
+      .toBe('https://xyvirtual.io/doc/web/des/overview/');
   });
 
   it('appends an anchor when present', () => {
     expect(buildHelpUrl({ slug: 'planner/overview', anchor: 'snapping' }))
-      .toBe('https://realvirtual.io/doc/web/planner/overview/#snapping');
+      .toBe('https://xyvirtual.io/doc/web/planner/overview/#snapping');
   });
 
   it('returns the documentation root for the fallback topic', () => {
     expect(buildHelpUrl(HELP_FALLBACK)).toBe(DEFAULT_DOC_BASE_URL);
-    expect(DEFAULT_DOC_BASE_URL).toBe('https://realvirtual.io/doc/web/');
+    expect(DEFAULT_DOC_BASE_URL).toBe('https://xyvirtual.io/doc/web/');
   });
 
   it('honours a configured base URL without doubling slashes', () => {
@@ -47,21 +47,21 @@ describe('buildHelpUrl', () => {
   it.each([[''], ['   '], ['javascript:alert(1)'], ['ftp://x/y'], ['not a url']])(
     'ignores the invalid base URL %p and uses the default', (bad) => {
       expect(buildHelpUrl({ slug: 'odt' }, bad))
-        .toBe('https://realvirtual.io/doc/web/odt/');
+        .toBe('https://xyvirtual.io/doc/web/odt/');
     });
 
   it.each([[null], [undefined]])('ignores %p and uses the default', (bad) => {
     expect(buildHelpUrl({ slug: 'odt' }, bad as unknown as string))
-      .toBe('https://realvirtual.io/doc/web/odt/');
+      .toBe('https://xyvirtual.io/doc/web/odt/');
   });
 });
 
 describe('openExternal', () => {
   it('opens in a new tab with the opener severed', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    openExternal('https://realvirtual.io/doc/web/');
+    openExternal('https://xyvirtual.io/doc/web/');
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
   });
 });
@@ -88,7 +88,7 @@ describe('openCurrentHelp', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     openCurrentHelp(viewerWith(null));
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -96,7 +96,7 @@ describe('openCurrentHelp', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     openCurrentHelp({});
     expect(spy).toHaveBeenCalledWith(
-      'https://realvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
     );
   });
 });

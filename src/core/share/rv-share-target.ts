@@ -127,7 +127,7 @@ export async function resolveShareTarget(raw: string): Promise<string> {
   if (!resolver) {
     throw new ShareFetchError(
       'invalid-url',
-      'This shared link points at realvirtual-hosted content, which this build cannot resolve yet.',
+      'This shared link points at XYvirtual-hosted content, which this build cannot resolve yet.',
     );
   }
   const url = await resolver(target.id);

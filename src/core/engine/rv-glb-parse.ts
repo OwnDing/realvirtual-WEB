@@ -97,7 +97,7 @@ export interface GltfParserLike {
  * collisions. For PLC-driven scenes this breaks exact-name matching: a Siemens
  * signal node `MC04.01I00W` (empty signal `Name` field → falls back to the node
  * name) lands on `Object3D.name` as `MC0401I00W`, while the live interface
- * (MQTT / realvirtual CONNECT) still addresses it as `MC04.01I00W`.
+ * (MQTT / XYvirtual CONNECT) still addresses it as `MC04.01I00W`.
  *
  * Strategy:
  *  - **Pure sanitization** (no dedup suffix, `sanitizeLikeThree(orig) === name`):

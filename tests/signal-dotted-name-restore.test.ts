@@ -8,7 +8,7 @@
  * Three.js' GLTFLoader sanitizes node names (strips reserved chars `[ ] . : /`,
  * whitespace → `_`). A Siemens signal node `MC04.01I00W` with an EMPTY signal
  * `Name` field would therefore register in the SignalStore as `MC0401I00W`
- * (dot lost), so live interface writes (MQTT / realvirtual CONNECT) addressing
+ * (dot lost), so live interface writes (MQTT / XYvirtual CONNECT) addressing
  * the original dotted name `MC04.01I00W` missed the signal entirely.
  *
  * `detectRenamedNodes` now restores the exact original glTF name on the

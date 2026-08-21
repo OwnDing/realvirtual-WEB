@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * realvirtual Web Viewer — Entry Point
+ * XYvirtual Web Viewer — Entry Point
  *
  * Thin orchestrator that creates an RVViewer, handles model selection
  * (URL params, localStorage, Firebase demo mode), and initializes the HMI.
@@ -942,7 +942,7 @@ async function init() {
   // ## `manifest.models` is a FOREIGN catalogue, not a project manifest (plan-413 §2.6)
   //
   // plan-413 replaced `models[]`/`scenes[]`/`library[]` with one `documents[]`
-  // list — in the manifests realvirtual WEB itself writes. This one it does not
+  // list — in the manifests XYvirtual WEB itself writes. This one it does not
   // write: `/model/manifest` is produced by the CONNECT gateway, a separate
   // program with its own release cycle, and the shape below is its published
   // contract. Renaming the field here would only mean reading a key nobody
@@ -1406,7 +1406,7 @@ async function init() {
     const storagePath = `demo/webviewer/${firebaseDemoName}/demo.glb`;
     const firebaseGlbUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(storagePath)}?alt=media`;
     debug('config', `Firebase demo: "${firebaseDemoName}" → ${firebaseGlbUrl}`);
-    document.title = `${firebaseDemoName} - realvirtual WEB`;
+    document.title = `${firebaseDemoName} - XYvirtual WEB`;
     loadModel(firebaseGlbUrl);
   } else {
     // ── Project restore (plan-370 §4b boot mount point) ───────────────
