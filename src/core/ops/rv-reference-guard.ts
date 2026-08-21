@@ -42,6 +42,7 @@ import {
 } from '../engine/rv-asset-reference';
 import { outermostReference } from '../engine/rv-reference-scope';
 import { getNodeId } from '../engine/rv-node-id';
+import { rvT } from '../i18n';
 
 // ─── Structural vs. value ───────────────────────────────────────────────
 
@@ -173,10 +174,8 @@ export function guardReferenceOp(
         referenceNode: reference,
         nodePath,
         message: structural
-          ? `"${describeKind(child.kind)}" changes the structure of a referenced asset. `
-            + 'Open that asset (double-click the reference) and change it there — the edit '
-            + 'then applies to every instance.'
-          : `"${describeKind(child.kind)}" cannot be expressed as an instance override.`,
+          ? rvT('tools', 'finalSweep.asset.structuralOverride', { kind: describeKind(child.kind) })
+          : rvT('tools', 'finalSweep.asset.unsupportedOverride', { kind: describeKind(child.kind) }),
       };
     }
   }

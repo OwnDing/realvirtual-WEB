@@ -29,6 +29,7 @@ import type { Object3D, Mesh, BufferGeometry } from 'three';
 import type { LibraryCatalogEntry } from '../../plugins/layout-planner/rv-layout-store';
 import type { ImportResultItem } from './rv-import-provider';
 import { persistImportedGlb } from './rv-import-persistence';
+import { getLocale } from '../i18n';
 
 // ─── Minimal structural contracts (test-friendly, no hard viewer dep) ───
 
@@ -94,8 +95,8 @@ export interface ImportObjectOutcome {
 export class GlbEncodingTooLargeError extends Error {
   constructor(readonly triangles: number, readonly meshes: number) {
     super(
-      `Model too large to encode as a single GLB (${meshes.toLocaleString()} meshes, ` +
-      `~${triangles.toLocaleString()} triangles). The browser ran out of memory while ` +
+      `Model too large to encode as a single GLB (${meshes.toLocaleString(getLocale())} meshes, ` +
+      `~${triangles.toLocaleString(getLocale())} triangles). The browser ran out of memory while ` +
       'assembling the file. Re-import with a coarser tessellation quality.',
     );
     this.name = 'GlbEncodingTooLargeError';

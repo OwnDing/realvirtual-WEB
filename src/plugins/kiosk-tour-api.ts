@@ -31,6 +31,7 @@ import type { TourApi, ChartKind } from './kiosk-tour-types';
 import type { KioskConfig } from './kiosk-config';
 import { validateCameraArgs, prefersReducedMotion } from './kiosk-config';
 import { waitForCameraAndDwell } from './tour-utils';
+import { rvT } from '../core/i18n';
 
 /** Mutable state tracker of everything the kiosk opened — used for cleanup. */
 export interface KioskOpenState {
@@ -149,7 +150,7 @@ export function createTourApi(
       const actions: InstructionAction[] = [];
       if (opts.componentPath) {
         actions.push({
-          label: 'Show',
+          label: rvT('tools', 'finalSweep.action.show'),
           variant: 'primary',
           onClick: () => {
             viewer.selectionManager?.select(opts.componentPath!);

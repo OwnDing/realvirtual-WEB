@@ -35,6 +35,8 @@ import {
 } from '../src/core/i18n';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
 import { enUSFull as enUS } from './helpers/en-catalog';
+import { analyzeGPU } from '../src/core/engine/rv-gpu-info';
+import { lintDesSafety } from '../src/core/sdk/rv-des-lint';
 
 /** Words that would still be on screen if the German had merely been copied. */
 const GERMAN = /Assets werden|konnte nicht|Wiederholen|Entfernen|Lade /;
@@ -131,6 +133,51 @@ describe('the tools catalog', () => {
       }
       expect(getI18nDiagnostics().filter((d) => d.kind === 'missing'), locale).toEqual([]);
     }
+  });
+});
+
+describe('the final non-React sweep', () => {
+  it('re-resolves GPU diagnostics without changing the stable tier', async () => {
+    const info = {
+      backend: 'webgl' as const,
+      active: { vendor: 'Google', renderer: 'SwiftShader software renderer' },
+    };
+
+    const zh = analyzeGPU(info);
+    expect(zh.tier).toBe('software');
+    expect(zh.message).toMatch(/[一-鿿]/);
+
+    await act(async () => { await setLocale('en-US'); });
+    const en = analyzeGPU(info);
+    expect(en.tier).toBe(zh.tier);
+    expect(en.severity).toBe(zh.severity);
+    expect(en.message).toBe('Hardware acceleration is disabled — rendering on the CPU.');
+  });
+
+  it('translates DES lint prose while preserving machine-readable diagnostics', async () => {
+    const source = 'function setup() { return { continuous: { fixedUpdate(dt) { x += dt; } } }; }';
+    const zh = lintDesSafety(source, { desSafe: true });
+    expect(zh.map((d) => d.rule)).toEqual(['fixed-update', 'dt-accumulation']);
+    expect(zh.every((d) => /[一-鿿]/.test(d.message))).toBe(true);
+
+    await act(async () => { await setLocale('en-US'); });
+    const en = lintDesSafety(source, { desSafe: true });
+    expect(en.map(({ line, col, rule, severity }) => ({ line, col, rule, severity })))
+      .toEqual(zh.map(({ line, col, rule, severity }) => ({ line, col, rule, severity })));
+    expect(en[0]?.message).toContain('continuous.fixedUpdate');
+    expect(en[1]?.message).toContain('self.in(delaySec, hook)');
+  });
+
+  it('keeps stable action IDs out of translated display text', async () => {
+    expect(rvT('tools', 'finalSweep.action.run')).toBe('运行');
+    expect(rvT('tools', 'finalSweep.action.emergencyStop')).toBe('急停');
+
+    await act(async () => { await setLocale('en-US'); });
+    expect(rvT('tools', 'finalSweep.action.run')).toBe('Run');
+    expect(rvT('tools', 'finalSweep.action.emergencyStop')).toBe('Emergency Stop');
+    // IDs are still authored in the behavior definitions (`run`, `stop`,
+    // `estop`); catalog values are display copy and never become identifiers.
+    expect(Object.values(enUS.tools.finalSweep.action)).not.toContain('estop');
   });
 });
 

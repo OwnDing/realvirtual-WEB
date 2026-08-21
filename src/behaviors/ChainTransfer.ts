@@ -31,6 +31,7 @@ import { defineLibraryComponent, createTransitTimer, type RV, type TransitTimer 
 import { classifyConnections, listOwnSnaps, type PortConnection } from './_shared/snap-graph-helpers';
 import { FLOW_OCCUPIED, flowOccupiedRootSignal } from './_shared/transport-links';
 import { findFirst, findSensor, parseTransportName, parseDriveName } from '../core/library-component-loader';
+import { rvT } from '../core/i18n';
 
 // Same type-neutral material-flow interop contract as Conveyor/Turntable.
 const SIGNALS = {
@@ -371,7 +372,7 @@ function resetChainTransfer(self: ChainTransferSelf): void {
 const def = {
   type: 'ChainTransfer' as const,
   kind: 'router' as const,
-  description: 'Chain transfer that lifts parts and moves them 90° sideways to a parallel line.',
+  get description() { return rvT('tools', 'finalSweep.behavior.chainTransfer'); },
   mcpDocs:
     'Right-angle transfer / merge-diverge unit. A part arrives on the roller direction; chains ' +
     'lift it and move it perpendicular (left or right) onto an adjacent conveyor. convroll snaps ' +
@@ -429,7 +430,7 @@ const def = {
     l.timer = createTransitTimer(self, l.zNode);
 
     self.contextMenu(l.zNode, [
-      { id: 'reset', label: 'Reset', action: () => resetChainTransfer(self) },
+      { id: 'reset', label: () => rvT('tools', 'finalSweep.action.reset'), action: () => resetChainTransfer(self) },
     ]);
   },
 

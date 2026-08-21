@@ -38,6 +38,7 @@
  */
 
 import { defineLibraryComponent, type RV } from './_shared/behavior-kit';
+import { rvT } from '../core/i18n';
 
 /** Seconds between generations, derived from the mode-agnostic schema. */
 function generationInterval(self: RV.Self<SourceLocal>): number {
@@ -79,7 +80,7 @@ const def = {
   // Any placed asset whose name contains "Source": Source, PartSource, …
   type: 'Source' as const,
   kind: 'source' as const,
-  description: 'Source that spawns parts (MUs) and feeds them into the line.',
+  get description() { return rvT('tools', 'finalSweep.behavior.source'); },
   mcpDocs:
     'Start of a material-flow line: spawns MUs (pallets/boxes) at an interval and pushes them ' +
     'onto the connected conveyor. Place it at the head of a run (snap it to a conveyor input). ' +

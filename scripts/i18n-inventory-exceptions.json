@@ -168,6 +168,150 @@
       "category": "dom-text",
       "match": "<div style=\"display:flex;align-items:center;gap:14px",
       "reason": "Copy-free markup and CSS for the blocking-load spinner. The label is assigned separately with textContent from rvT(operator:loading.*), which also avoids interpolating a filename into HTML."
+    },
+    {
+      "file": "src/core/rv-render-modes.ts",
+      "category": "plugin-registry",
+      "match": "Unlit",
+      "reason": "Canonical English compatibility metadata retained for non-UI render-mode consumers. The Visual settings UI resolves settings:visual.renderMode.* and tests/i18n-settings.test.tsx pins both copies together, so these values are an API fallback rather than untranslated UI."
+    },
+    {
+      "file": "src/core/rv-render-modes.ts",
+      "category": "plugin-registry",
+      "match": "Shaded",
+      "reason": "Canonical English compatibility metadata for the default render mode; the UI-localized copy and drift guard are described by the adjacent Unlit exception."
+    },
+    {
+      "file": "src/core/rv-render-modes.ts",
+      "category": "plugin-registry",
+      "match": "Fully rendered",
+      "reason": "Canonical English compatibility description for the default render mode; the UI-localized copy and drift guard are described by the Unlit exception."
+    },
+    {
+      "file": "src/core/rv-render-modes.ts",
+      "category": "plugin-registry",
+      "match": "Toon",
+      "reason": "Canonical English compatibility metadata for the toon render mode; the UI-localized copy and drift guard are described by the Unlit exception."
+    },
+    {
+      "file": "src/core/rv-render-modes.ts",
+      "category": "plugin-registry",
+      "match": "Cel-shaded",
+      "reason": "Canonical English compatibility description for the toon render mode; the UI-localized copy and drift guard are described by the Unlit exception."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "Asset Editor:",
+      "reason": "Machine-facing MCP topic summary paired with an English Markdown tool guide. Translating only the summary would make agent discovery disagree with the exact English tool names and guide content; it is not rendered as product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "The full CAD-to-kinematic-model recipe",
+      "reason": "Machine-facing MCP topic summary paired with the customer recipe served verbatim; the MCP protocol and exact tool identifiers remain English and are not product chrome."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "Layout Planner:",
+      "reason": "Machine-facing MCP topic summary paired with an English guide and exact tool identifiers, not product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "HMI runtime debugging:",
+      "reason": "Machine-facing MCP topic summary paired with an English guide and exact tool identifiers, not product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "Virtual PLC:",
+      "reason": "Machine-facing MCP topic summary paired with an English guide and IEC 61131-3 identifiers, not product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-mcp-help-tool.ts",
+      "category": "plugin-registry",
+      "match": "Discrete-event simulation:",
+      "reason": "Machine-facing MCP topic summary paired with an English guide and exact tool identifiers, not product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-object-analyzer-math.ts",
+      "category": "plugin-registry",
+      "match": "context",
+      "reason": "Stable machine-readable tile labels returned by the MCP object-analyzer montage. They identify camera frames in agent output and tests; translating them would change the protocol token rather than localize product UI."
+    },
+    {
+      "file": "src/plugins/mcp-bridge/rv-object-analyzer-math.ts",
+      "category": "plugin-registry",
+      "match": "isolated",
+      "reason": "Stable machine-readable isolated-view tile labels returned by the MCP montage; same protocol-boundary rationale as the context labels."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "XYvirtual WEB",
+      "reason": "Product brand across the static SEO title, no-script fallback, first-paint heading and AGPL watermark. The brand and legal attribution do not vary by locale; all surrounding application copy is catalog-managed."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "xyvirtual.io",
+      "reason": "Visible canonical URL in the no-script fallback. Translating a URL would make it invalid."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "Source on GitHub",
+      "reason": "No-script support link whose English label is part of the static SEO/support fallback, outside the JavaScript locale runtime."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "Documentation",
+      "reason": "No-script support link in the static fallback. With JavaScript disabled no locale preference can be read or switched, so the support fallback stays deployment-neutral English."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "开放、轻量、工业级、随处可用。",
+      "reason": "Required zero-JavaScript zh-CN first-paint copy duplicated from preboot:slogan. tests/i18n-preboot.node.test.ts proves catalog parity and ordering before the deferred module entry."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "正在加载",
+      "reason": "Required zero-JavaScript zh-CN first-paint copy duplicated from preboot:loading and parity-checked by tests/i18n-preboot.node.test.ts."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "无法加载模型",
+      "reason": "Required zero-JavaScript zh-CN error copy duplicated from preboot:errorTitle and parity-checked by tests/i18n-preboot.node.test.ts."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "重试",
+      "reason": "Required zero-JavaScript zh-CN action copy duplicated from preboot:retry and parity-checked by tests/i18n-preboot.node.test.ts."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "重新加载页面",
+      "reason": "Required zero-JavaScript zh-CN action copy duplicated from preboot:reloadPage and parity-checked by tests/i18n-preboot.node.test.ts."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "Powered by",
+      "reason": "AGPL attribution prefix in the immutable watermark; it is legal/product attribution rather than application copy."
+    },
+    {
+      "file": "index.html",
+      "category": "pre-boot",
+      "match": "AGPL-3.0",
+      "reason": "SPDX license identifier in the no-script link and watermark. License identifiers must stay exact across locales."
     }
   ]
 }

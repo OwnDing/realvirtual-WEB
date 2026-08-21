@@ -222,7 +222,7 @@ import { ConnectUpdateNotice } from './ConnectUpdateNotice';
 import { CONNECT_STABLE_DOWNLOAD_URL } from './connect-downloads';
 import { useConnectDownloads } from './use-connect-downloads';
 import { statusAge } from './connect-staleness';
-import { rvT, useRvTranslation } from '../i18n';
+import { getLocale, rvT, useRvTranslation } from '../i18n';
 import { Trans } from 'react-i18next';
 
 // ── Signal-count helper (counts ProcessImage topic signals + legacy signals) ──
@@ -3857,7 +3857,7 @@ function logLevelShort(level: string): string {
 /** Short HH:MM:SS from an ISO timestamp (gateway logs are UTC ISO strings). */
 function logTime(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString();
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString(getLocale());
 }
 
 /** Serialize log entries to plain text for the clipboard (one line per entry). */

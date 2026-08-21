@@ -235,7 +235,7 @@ export class AnnotationPlugin implements RVViewerPlugin, AnnotationPluginAPI {
       id: crypto.randomUUID?.() ?? fallbackUUID(),
       position: midPt,
       normal: [0, 1, 0],
-      text: 'Drawing',
+      text: rvT('tools', 'finalSweep.annotationDrawing'),
       color: lineColor,
       author: this._getAuthorName(),
       timestamp: Date.now(),

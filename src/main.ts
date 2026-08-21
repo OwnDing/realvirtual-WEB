@@ -841,11 +841,11 @@ async function init() {
   // reason the Viewer does. `order: 35` places it between Planner (30) and
   // Editor (40) — a user decision, not a technical one.
   viewer.modes
-    .register({ id: 'viewer', label: 'Viewer', icon: 'ViewInAr', order: 5 })
+    .register({ id: 'viewer', get label() { return rvT('tools', 'finalSweep.workspace.viewer'); }, icon: 'ViewInAr', order: 5 })
     .register({ id: 'hmi', label: 'HMI', icon: 'ViewQuilt', order: 10 })
     .register({ id: 'des', label: 'DES', icon: 'AccountTree', order: 20 })
-    .register({ id: 'planner', label: 'Planner', icon: 'GridView', order: 30 })
-    .register({ id: 'commissioning', label: 'Commissioning', icon: 'Handyman', order: 35 });
+    .register({ id: 'planner', get label() { return rvT('tools', 'finalSweep.workspace.planner'); }, icon: 'GridView', order: 30 })
+    .register({ id: 'commissioning', get label() { return rvT('tools', 'finalSweep.workspace.commissioning'); }, icon: 'Handyman', order: 35 });
   // The Editor mode is registered by the asset-editor feature adapter (plan-434),
   // which runs inside registerPrivatePlugins above. A community build has no
   // editor, so the dropdown must not offer a mode that would open an empty shell.
@@ -1316,19 +1316,19 @@ async function init() {
       // offers — discard the edits or keep them — is theirs to make in their time.
       showInstruction({
         id: MODEL_UPDATE_HINT_ID,
-        text: `"${hint.label}" was updated on the server. Reloading it discards your unsaved changes.`,
+        text: rvT('tools', 'finalSweep.workspace.modelUpdated', { label: hint.label }),
         anchor: { kind: 'edge', edge: 'top' },
         style: 'warning',
         source: 'model-update',
         dismissible: false,
         actions: [
           {
-            label: 'Reload and discard changes',
+            label: rvT('tools', 'finalSweep.workspace.reloadDiscard'),
             variant: 'primary',
             onClick: () => { hideInstruction(MODEL_UPDATE_HINT_ID); hint.onReload(); },
           },
           {
-            label: 'Keep my changes',
+            label: rvT('tools', 'finalSweep.workspace.keepChanges'),
             onClick: () => { hideInstruction(MODEL_UPDATE_HINT_ID); hint.onKeep(); },
           },
         ],
@@ -1406,7 +1406,7 @@ async function init() {
     const storagePath = `demo/webviewer/${firebaseDemoName}/demo.glb`;
     const firebaseGlbUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(storagePath)}?alt=media`;
     debug('config', `Firebase demo: "${firebaseDemoName}" → ${firebaseGlbUrl}`);
-    document.title = `${firebaseDemoName} - XYvirtual WEB`;
+    document.title = rvT('tools', 'finalSweep.workspace.modelDocumentTitle', { name: firebaseDemoName });
     loadModel(firebaseGlbUrl);
   } else {
     // ── Project restore (plan-370 §4b boot mount point) ───────────────

@@ -26,6 +26,7 @@
 import type { RVScriptHost, RVScriptContext } from '../engine/rv-script-host';
 import type { SandboxError, SandboxResult } from '../engine/rv-script-sandbox';
 import { SDK_MATH_INSTALL_SOURCE } from './rv-sdk-math';
+import { rvT } from '../i18n';
 import {
   SDK_SELF_SOURCE,
   SDK_SETUP_WRAPPER_SOURCE,
@@ -95,7 +96,10 @@ export function createSdkComponent(
     if (error) return false;
     const r = run();
     if (!r.ok) {
-      const cause: SandboxError = r.error ?? { name: 'UnknownError', message: 'unknown failure' };
+      const cause: SandboxError = r.error ?? {
+        name: 'UnknownError',
+        message: rvT('tools', 'finalSweep.script.unknownFailure'),
+      };
       error = { ...cause, message: `${label}: ${cause.message}` };
       ctx.disable(`${label} failed: ${cause.message}`);
       return false;

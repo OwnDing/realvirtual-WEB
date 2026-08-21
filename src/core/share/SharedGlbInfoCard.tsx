@@ -30,7 +30,7 @@ import {
   BookmarkAddOutlined, BookmarkAdded,
 } from '@mui/icons-material';
 import type { SharedGlbInfo } from './rv-share-meta';
-import { useRvTranslation } from '../i18n';
+import { getLocale, useRvTranslation } from '../i18n';
 
 const ACCENT = '#4fc3f7';
 
@@ -55,7 +55,7 @@ export interface SharedGlbInfoCardProps {
 function formatExpiry(iso: string): string {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return iso;
-  return new Date(t).toLocaleDateString();
+  return new Date(t).toLocaleDateString(getLocale());
 }
 
 export function SharedGlbInfoCard({

@@ -82,6 +82,7 @@ import {
 import { getDefaultZoneRegistry } from '../core/engine/rv-zone-registry';
 import { getDefaultAgvFleet, type AgvTask, type AgvPhase, type AgvHandle } from '../core/engine/rv-agv-fleet';
 import { getDefaultPathDockRegistry } from '../core/engine/rv-path-dock';
+import { rvT } from '../core/i18n';
 
 // PLC contract — auto-declared as `Agv.<key>` with typed `self.sig.<key>`
 // accessors. Run follows the Conveyor convention (command in, status out).
@@ -424,7 +425,7 @@ function desScheduleLeg(self: AgvSelf): void {
 const def = {
   type: 'Agv' as const,
   kind: 'conveyor' as const,
-  description: 'Autonomous vehicle (FTS/AGV) that follows an rv_extras.Path graph.',
+  get description() { return rvT('tools', 'finalSweep.behavior.agv'); },
   mcpDocs:
     'Path-following vehicle (plan-268). Rides the rv_extras.Path graph: PathId selects a ' +
     'registered path (else the first Path node under the root is used). Speed/ramp come from ' +
@@ -587,8 +588,8 @@ const def = {
     applyPose(self);
 
     self.contextMenu(self.root, [
-      { id: 'run',  label: 'Run',  action: () => self.sig.Run.set(true) },
-      { id: 'stop', label: 'Stop', danger: true, dividerBefore: true,
+      { id: 'run',  label: () => rvT('tools', 'finalSweep.action.run'),  action: () => self.sig.Run.set(true) },
+      { id: 'stop', label: () => rvT('tools', 'finalSweep.action.stop'), danger: true, dividerBefore: true,
         action: () => self.sig.Run.set(false) },
     ]);
   },

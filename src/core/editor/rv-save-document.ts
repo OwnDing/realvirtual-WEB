@@ -86,6 +86,7 @@ import { getProjectStore } from '../project/project-store';
 import { revisionOfBytes, SceneRevisionConflictError } from '../project/rv-scene-record';
 import type { ProjectBackend } from '../project/backends/project-backend';
 import { assertNoDocumentIdCollisions } from '../project/rv-asset-identity';
+import { rvT } from '../i18n';
 
 // ─── The verb, before the click (§2.2.1-6) ──────────────────────────────
 
@@ -619,7 +620,9 @@ async function saveAssetDocument(
       viewer.emit('asset-editor-pre-export', { source: 'save-document' });
 
       const assetRoot = viewer.currentModelRoot;
-      if (!assetRoot) return { kind: 'error', message: 'No asset is loaded.' } as const;
+      if (!assetRoot) {
+        return { kind: 'error', message: rvT('tools', 'finalSweep.asset.noAssetLoadedSentence') } as const;
+      }
 
       const floorAtBakeStart = doc.document.opCount;
       // `exportAssetGlb` runs `pruneComposedReferenceSubtrees` first — the

@@ -39,7 +39,7 @@ import {
   type SceneConflictPromptItem,
 } from './project-store';
 import { Trans } from 'react-i18next';
-import { useRvTranslation } from '../i18n';
+import { getLocale, useRvTranslation } from '../i18n';
 
 // ─── Presentational dialog ──────────────────────────────────────────────
 
@@ -165,7 +165,7 @@ function shortTime(iso: string | null): string {
   if (!iso) return 'unknown';
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return iso;
-  return new Date(t).toLocaleString();
+  return new Date(t).toLocaleString(getLocale());
 }
 
 // ─── Host: installs both gates on the project store ─────────────────────

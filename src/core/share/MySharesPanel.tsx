@@ -33,7 +33,7 @@ import { DeleteOutline, HourglassBottom } from '@mui/icons-material';
 
 import { listMyShares, deleteShare, type MyShareEntry } from './rv-share-upload';
 import { describeShareApiError, type MagicLinkSession } from './rv-share-session';
-import { useRvTranslation } from '../i18n';
+import { getLocale, useRvTranslation } from '../i18n';
 
 export interface MySharesPanelProps {
   session: MagicLinkSession;
@@ -162,7 +162,7 @@ export function MySharesPanel({ session, onDeleted }: MySharesPanelProps) {
 
 function formatDate(iso: string): string {
   const t = Date.parse(iso);
-  return Number.isNaN(t) ? iso : new Date(t).toLocaleDateString();
+  return Number.isNaN(t) ? iso : new Date(t).toLocaleDateString(getLocale());
 }
 
 function formatSize(bytes: number): string {

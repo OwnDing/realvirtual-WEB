@@ -42,6 +42,7 @@ import type {
   QuickJSRuntime,
   QuickJSWASMModule,
 } from 'quickjs-emscripten-core';
+import { rvT } from '../i18n';
 
 // ─── Public types ──────────────────────────────────────────────────────────
 
@@ -347,7 +348,7 @@ export class RVScriptSandbox {
     if (this.disposed) {
       return {
         ok: false,
-        error: { name: 'SandboxDisposedError', message: 'sandbox has been disposed' },
+        error: { name: 'SandboxDisposedError', message: rvT('tools', 'finalSweep.script.sandboxDisposed') },
       };
     }
     if (this.poisoned) {
@@ -355,8 +356,7 @@ export class RVScriptSandbox {
         ok: false,
         error: {
           name: 'SandboxPoisonedError',
-          message:
-            'sandbox context is poisoned by a previous interrupt or memory failure — dispose and create a new sandbox',
+          message: rvT('tools', 'finalSweep.script.sandboxPoisoned'),
         },
       };
     }

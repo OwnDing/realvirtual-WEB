@@ -21,6 +21,8 @@
  * in phase 3.
  */
 
+import { rvT } from '../i18n';
+
 export interface DesLintDiagnostic {
   /** 1-based line of the finding. */
   line: number;
@@ -93,7 +95,7 @@ function positionOf(code: string, index: number): { line: number; col: number } 
   return { line, col: index - lineStart + 1 };
 }
 
-const DOC_HINT = 'see doc-webviewer scripting: DES-safe components use event hooks (self.in/at, sensor.on, signal.on)';
+const docHint = (): string => rvT('tools', 'finalSweep.script.desDocHint');
 
 /**
  * Run the DES-safety lint over a component source. `opts.desSafe` mirrors the
@@ -116,8 +118,8 @@ export function lintDesSafety(code: string, opts: DesLintOptions = {}): DesLintD
       severity: gateSeverity,
       rule: 'fixed-update',
       message: desSafe
-        ? `'continuous.fixedUpdate' declared but the component is marked DesSafe — tick polling does not run in the event kernel. ${DOC_HINT}.`
-        : `'continuous.fixedUpdate' makes this component continuous-only (not DES-safe). ${DOC_HINT}.`,
+        ? rvT('tools', 'finalSweep.script.fixedUpdateUnsafe', { hint: docHint() })
+        : rvT('tools', 'finalSweep.script.fixedUpdateContinuous', { hint: docHint() }),
     });
   }
 
@@ -129,16 +131,19 @@ export function lintDesSafety(code: string, opts: DesLintOptions = {}): DesLintD
       line, col,
       severity: gateSeverity,
       rule: 'dt-accumulation',
-      message: `dt accumulation ('${m.match.trim()}') is a tick-polled timer — it never fires in the event kernel. Schedule with self.in(delaySec, hook) instead. ${DOC_HINT}.`,
+      message: rvT('tools', 'finalSweep.script.dtAccumulation', {
+        expression: m.match.trim(),
+        hint: docHint(),
+      }),
     });
   }
 
   // (c) blocked globals — not exposed in the sandbox; explain why.
   const globalRules: Array<{ re: RegExp; what: string; why: string }> = [
-    { re: /\bMath\.random\s*\(/g, what: 'Math.random()', why: 'non-deterministic — use the seeded self.random()' },
-    { re: /\bDate\b/g, what: 'Date', why: 'wall-clock time breaks determinism — use self.now (virtual sim time)' },
-    { re: /\bsetTimeout\s*\(/g, what: 'setTimeout()', why: 'wall-clock timers do not exist in the sandbox — use self.in(delaySec, hook)' },
-    { re: /\bsetInterval\s*\(/g, what: 'setInterval()', why: 'wall-clock timers do not exist in the sandbox — use self.in(delaySec, hook)' },
+    { re: /\bMath\.random\s*\(/g, what: 'Math.random()', why: rvT('tools', 'finalSweep.script.whyRandom') },
+    { re: /\bDate\b/g, what: 'Date', why: rvT('tools', 'finalSweep.script.whyDate') },
+    { re: /\bsetTimeout\s*\(/g, what: 'setTimeout()', why: rvT('tools', 'finalSweep.script.whyTimeout') },
+    { re: /\bsetInterval\s*\(/g, what: 'setInterval()', why: rvT('tools', 'finalSweep.script.whyInterval') },
   ];
   for (const rule of globalRules) {
     for (const m of matches(rule.re, scan)) {
@@ -147,7 +152,7 @@ export function lintDesSafety(code: string, opts: DesLintOptions = {}): DesLintD
         line, col,
         severity: 'error',
         rule: 'blocked-global',
-        message: `'${rule.what}' is not available in script components: ${rule.why}.`,
+        message: rvT('tools', 'finalSweep.script.blockedGlobal', { what: rule.what, why: rule.why }),
       });
     }
   }
@@ -178,7 +183,7 @@ export function lintDesSafety(code: string, opts: DesLintOptions = {}): DesLintD
         line, col,
         severity: 'warning',
         rule: 'closure-state',
-        message: `'${name}' is persistent closure state — it is LOST on DES snapshot/restore. Persist it via onSnapshot() { return {…} } / onRestore(state), the only supported channel (self.prop is read-only configuration). ${DOC_HINT}.`,
+        message: rvT('tools', 'finalSweep.script.closureState', { name, hint: docHint() }),
       });
     }
   }
@@ -198,9 +203,10 @@ export function lintDesSafety(code: string, opts: DesLintOptions = {}): DesLintD
         line, col,
         severity: 'warning',
         rule: 'geometry-sampling',
-        message: `'${m.match.replace(/\s*\($/, '')}()' samples live geometry in a component with DES hooks — `
-          + `the event-time tween settle stays active for the whole model in FastForward (slower FF). `
-          + `Prefer positions carried in event data when possible. ${DOC_HINT}.`,
+        message: rvT('tools', 'finalSweep.script.geometrySampling', {
+          method: m.match.replace(/\s*\($/, ''),
+          hint: docHint(),
+        }),
       });
     }
   }

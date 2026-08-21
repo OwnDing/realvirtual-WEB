@@ -23,7 +23,7 @@ import type { AgentProvider, AgentRunRecord, AgentRunStatus } from './agent-prov
 import { isTerminalAgentRunStatus } from './agent-provider';
 import { pollAgentRun } from './agent-store';
 import { AgentReportView } from './AgentReportView';
-import { useRvTranslation } from '../../core/i18n';
+import { getLocale, useRvTranslation } from '../../core/i18n';
 
 export interface AgentRunPanelProps {
   open: boolean;
@@ -114,7 +114,7 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
               <StatusChip status={run.status} />
               {!isTerminalAgentRunStatus(run.status) && <CircularProgress size={14} />}
               <Typography sx={{ fontSize: 11, fontFamily: 'monospace', color: 'text.secondary' }}>
-                {t('agent.tokens', { count: run.totalTokens.toLocaleString() })}{run.usageEstimated ? t('agent.tokensEstimated') : ''}
+                {t('agent.tokens', { count: run.totalTokens.toLocaleString(getLocale()) })}{run.usageEstimated ? t('agent.tokensEstimated') : ''}
               </Typography>
             </Box>
             {run.backend && (
@@ -143,7 +143,7 @@ export function AgentRunPanel({ open, onClose, onBack, provider, runId }: AgentR
                   <Accordion key={`${entry.turn}-${entry.tool}-${index}`} disableGutters elevation={0} sx={{ bgcolor: 'transparent', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <AccordionSummary expandIcon={<ExpandMore sx={{ fontSize: 16 }} />} sx={{ minHeight: 34, '& .MuiAccordionSummary-content': { my: 0.5 } }}>
                       <Typography sx={{ fontSize: 11, fontFamily: 'monospace' }}>
-                        {t('agent.turnLine', { turn: entry.turn, tool: entry.tool, chars: entry.resultChars.toLocaleString() })}
+                        {t('agent.turnLine', { turn: entry.turn, tool: entry.tool, chars: entry.resultChars.toLocaleString(getLocale()) })}
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ pt: 0 }}>

@@ -30,7 +30,7 @@ import type { LoadResult } from '../core/engine/rv-scene-loader';
 import { getAppConfig } from '../core/rv-app-config';
 import { RVAssetBlobCache } from '../core/engine/rv-asset-blob-cache';
 import type { SplatRaycastHit } from './layout-planner/gaussian-splat-plugin-type';
-import { rvT } from '../core/i18n';
+import { getLocale, rvT } from '../core/i18n';
 
 /**
  * Shared blob cache for Gaussian Splats / Point Clouds.
@@ -736,7 +736,7 @@ export class GaussianSplatPlugin implements RVViewerPlugin {
 
     const count = geometry.attributes.position.count;
     this._loadedInfo = rvT('operator', 'loading.pointCount', { count: (count / 1000).toFixed(0) });
-    console.log(`[gaussian-splat] Point cloud loaded: ${count.toLocaleString()} points`);
+    console.log(`[gaussian-splat] Point cloud loaded: ${count.toLocaleString(getLocale())} points`);
 
     return pointCloud;
   }

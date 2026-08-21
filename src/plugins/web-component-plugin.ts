@@ -39,6 +39,7 @@ import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
 import type { UISlotEntry } from '../core/rv-ui-plugin';
 import { modeContext } from '../core/rv-mode-manager';
+import { rvT } from '../core/i18n';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
 import type { RVDrive } from '../core/engine/rv-drive';
 import type { RVSensor } from '../core/engine/rv-sensor';
@@ -336,9 +337,9 @@ export class WebComponentPlugin implements RVViewerPlugin {
     componentActionRegistry.register(WEB_COMPONENT_TYPE, [
       {
         id: 'edit-script',
-        label: 'Edit Script',
+        label: () => rvT('tools', 'finalSweep.action.editScript'),
         icon: Code,
-        tooltip: 'Open this component script in the editor',
+        tooltip: () => rvT('tools', 'finalSweep.action.editScriptTooltip'),
         onClick: (ctx) => openScriptEditor(ctx.nodePath),
       },
     ]);

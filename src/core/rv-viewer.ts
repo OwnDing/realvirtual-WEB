@@ -216,6 +216,7 @@ import { ControlsFacadeImpl } from './facades/controls-facade';
 import { SimLoopFacadeImpl } from './facades/sim-loop-facade';
 import { TickStage } from './rv-tick-stages';
 import { BehaviorManager } from './behaviors';
+import { rvT } from './i18n';
 import { ContinuousRunner } from './material-flow/continuous-runner';
 import { SimulationKernel } from './material-flow/simulation-kernel';
 import { StatisticsManager } from './material-flow/rv-statistics-manager';
@@ -3717,7 +3718,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       items: [
         {
           id: '_core.focus',
-          label: 'Focus',
+          label: () => rvT('tools', 'finalSweep.action.focus'),
           order: 1,
           shortcut: 'F',
           action: (target) => {

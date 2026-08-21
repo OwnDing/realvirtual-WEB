@@ -27,6 +27,7 @@ import { alignToInputAngle, dispatchToOutputAngle, calibrateBeltNeutralAngle } f
 import { scheduleDriveMove, schedulePositionMove } from './_shared/drive-des';
 import { muBugOffset, muForward, setMuForward } from './_shared/mu-reference';
 import { FLOW_OCCUPIED, flowOccupiedRootSignal } from './_shared/transport-links';
+import { rvT } from '../core/i18n';
 
 // ── Config & signals ────────────────────────────────────────────────────────
 
@@ -481,7 +482,7 @@ function desInputAlignAngle(self: TurntableSelf): number | null {
 const def = {
   type: 'Turntable' as const,
   kind: 'router' as const,
-  description: 'Rotating platform that re-routes parts 90° between conveyor sides.',
+  get description() { return rvT('tools', 'finalSweep.behavior.turntable'); },
   mcpDocs:
     'Multi-port router / corner piece. 4 snaps Snap-{ZN,ZP,XN,XP}-convroll (all bidi, typeId ' +
     'convroll) — connect a conveyor on any side. A part arrives, the table rotates to a free ' +
@@ -572,7 +573,7 @@ const def = {
     self.statState('Empty');
 
     self.contextMenu(rotaryNode, [
-      { id: 'reset', label: 'Reset', action: () => resetTurntable(self) },
+      { id: 'reset', label: () => rvT('tools', 'finalSweep.action.reset'), action: () => resetTurntable(self) },
     ]);
   },
 

@@ -62,6 +62,7 @@ import {
   marshalHostValue,
   exposeHostFunction,
 } from './rv-script-sandbox';
+import { rvT } from '../i18n';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -319,7 +320,7 @@ export class RVScriptContext {
             ok: false,
             error: {
               name: 'SetupMissingError',
-              message: `script does not define a global '${SCRIPT_SETUP_FUNCTION}' function`,
+              message: rvT('tools', 'finalSweep.script.setupMissing', { function: SCRIPT_SETUP_FUNCTION }),
             },
           };
         }
@@ -359,14 +360,14 @@ export class RVScriptContext {
       if (!this.handlersRoot) {
         return {
           ok: false,
-          error: { name: 'HandlersNotLoadedError', message: 'runSetup() has not retained a handler object' },
+          error: { name: 'HandlersNotLoadedError', message: rvT('tools', 'finalSweep.script.handlersNotLoaded') },
         };
       }
       const fn = this.resolveHandler(path);
       if (!fn) {
         return {
           ok: false,
-          error: { name: 'HandlerNotFoundError', message: `no handler at path '${path}'` },
+          error: { name: 'HandlerNotFoundError', message: rvT('tools', 'finalSweep.script.handlerNotFound', { path }) },
         };
       }
       const call = this.callGuestFunction(fn, args);
@@ -433,7 +434,7 @@ export class RVScriptContext {
     if (this.disposed) {
       return {
         ok: false,
-        error: { name: 'ContextDisposedError', message: 'script context has been disposed' },
+        error: { name: 'ContextDisposedError', message: rvT('tools', 'finalSweep.script.contextDisposed') },
       };
     }
     if (this.disabled) {
@@ -441,7 +442,9 @@ export class RVScriptContext {
         ok: false,
         error: {
           name: 'ContextDisabledError',
-          message: `script context is disabled (${this.disabledReasonValue ?? 'no reason'}) — call enable() explicitly to retry`,
+          message: rvT('tools', 'finalSweep.script.contextDisabled', {
+            reason: this.disabledReasonValue ?? 'no reason',
+          }),
         },
       };
     }

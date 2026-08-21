@@ -64,6 +64,7 @@ import {
 import { yieldMacrotask } from './rv-mesh-merge-port';
 import type { LoadProfiler } from './rv-load-profiler';
 import { resolveArenaPlan } from './rv-arena-planner';
+import { getLocale } from '../i18n';
 
 export interface SceneBatchBuildOptions {
   /** Abort predicate — checked at every yield point. On abort the partially
@@ -467,7 +468,7 @@ export async function buildBatchedScene(
     `[BatchedRender] static uber: ${s.instanceCount} meshes → ${s.batchCount} batch (${s.uniqueGeometryCount} geoms) · ` +
     `static textured: ${t.instanceCount} meshes → ${t.batchCount} batches (${t.skippedCount} lone) · ` +
     `kinematic: ${k.instanceCount} meshes → ${k.batchCount} batches across ${k.driveGroups} drives (${k.skippedCount} lone) · ` +
-    `arena total ${(s.arenaVertices + t.arenaVertices + k.arenaVertices).toLocaleString()} verts · planner=${resolved.planner}`,
+    `arena total ${(s.arenaVertices + t.arenaVertices + k.arenaVertices).toLocaleString(getLocale())} verts · planner=${resolved.planner}`,
   );
   debug('loader',
     `[BatchedRender] ${s.instanceCount + t.instanceCount + k.instanceCount} meshes → ` +

@@ -13,6 +13,7 @@ import type { RVViewerPlugin } from '../../core/rv-plugin';
 import type { RVViewer } from '../../core/rv-viewer';
 import type { LoadResult } from '../../core/engine/rv-scene-loader';
 import { debug, logInfo } from '../../core/engine/rv-debug';
+import { getLocale } from '../../core/i18n';
 
 const TEST_DURATION_S = 5;
 const SAMPLE_INTERVAL_MS = 500;
@@ -191,7 +192,7 @@ export class PerfTestPlugin implements RVViewerPlugin {
       <div>Frame: ${r.frameTime.min}ms / ${r.frameTime.avg}ms / ${r.frameTime.max}ms</div>
       <div>Benchmark: ${r.benchmark.uncappedFps} fps (${r.benchmark.headroom}% headroom)</div>
       <div style="color:#888;font-size:11px;margin-top:6px">
-        ${r.renderer.triangles.toLocaleString()} tris &middot; ${r.renderer.drawCalls} draws &middot;
+        ${r.renderer.triangles.toLocaleString(getLocale())} tris &middot; ${r.renderer.drawCalls} draws &middot;
         ${r.renderer.geometries} geo &middot; ${r.renderer.textures} tex
       </div>
     `;

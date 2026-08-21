@@ -55,6 +55,7 @@ import { requireEditor, isGuardError } from './rv-mcp-editor-guard';
 import { parsePathsParam } from './rv-object-analyzer-math';
 import { captureFrameCanvas, canvasToRvImage, compositeMontage } from './rv-frame-capture';
 import { buildMeshUniverse } from './rv-mcp-view-tools';
+import { rvT } from '../../core/i18n';
 import {
   computeIdenticalPaths,
   computeSameMaterialPaths,
@@ -1401,7 +1402,10 @@ export class McpEditorTools {
     if (intents.length === 0) {
       return JSON.stringify({ error: 'Pass at least one of densityPreset, massKg or comJson' });
     }
-    await this._mechCommit(ctx, bridge, path, { label: 'Set body mass properties', intents });
+    await this._mechCommit(ctx, bridge, path, {
+      label: rvT('tools', 'finalSweep.action.setBodyMass'),
+      intents,
+    });
     return JSON.stringify({ ok: true, path, applied });
   }
 
@@ -1563,7 +1567,7 @@ export class McpEditorTools {
     const componentType = Object.keys(rvOf(ctx.viewer.registry.getNode(path)!))
       .find((k) => /^KinematicJoint(_\d+)?$/.test(k)) ?? 'KinematicJoint';
     await this._mechCommit(ctx, bridge, path, {
-      label: `Fix ${finding}`,
+      label: rvT('tools', 'finalSweep.action.fix', { finding }),
       intents: Object.entries(fix).map(([fieldName, value]) => ({
         op: 'setField' as const, nodePath: path, componentType, fieldName, value,
       })),

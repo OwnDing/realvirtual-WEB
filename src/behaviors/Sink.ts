@@ -37,6 +37,7 @@
  */
 
 import { defineLibraryComponent, type RV } from './_shared/behavior-kit';
+import { rvT } from '../core/i18n';
 
 // Sink publishes the type-neutral material-flow interop signal `Flow.Occupied`
 // (NOT `Sink.*`). `signalNamespace: 'Flow'` scopes the signals block to the
@@ -56,7 +57,7 @@ const def = {
   // Any placed asset whose name contains "Sink": Sink, PalletSink, …
   type: 'Sink' as const,
   kind: 'sink' as const,
-  description: 'Sink that removes parts (MUs) at the end of a line.',
+  get description() { return rvT('tools', 'finalSweep.behavior.sink'); },
   mcpDocs:
     'End of a material-flow line: consumes/destroys MUs that arrive and counts throughput. ' +
     'Place it at the tail of a run (snap it to a conveyor output). Pair with a Source at the head.',

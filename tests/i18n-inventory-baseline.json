@@ -6,111 +6,14 @@
   "totals": {
     "react-copy": 0,
     "a11y-name": 0,
-    "plugin-registry": 62,
-    "dynamic-text": 14,
+    "plugin-registry": 0,
+    "dynamic-text": 0,
     "canvas-texture": 0,
-    "pre-boot": 16,
+    "pre-boot": 0,
     "dom-text": 0,
     "ui-state-text": 0
   },
-  "total": 92,
-  "fileCount": 30,
-  "files": {
-    "index.html": {
-      "pre-boot": 15
-    },
-    "src/behaviors/Agv.ts": {
-      "plugin-registry": 3
-    },
-    "src/behaviors/ChainTransfer.ts": {
-      "plugin-registry": 2
-    },
-    "src/behaviors/Conveyor.ts": {
-      "plugin-registry": 3
-    },
-    "src/behaviors/OverheadConveyor.ts": {
-      "plugin-registry": 3
-    },
-    "src/behaviors/PickPlaceStationExample.ts": {
-      "plugin-registry": 5
-    },
-    "src/behaviors/Sink.ts": {
-      "plugin-registry": 1
-    },
-    "src/behaviors/Source.ts": {
-      "plugin-registry": 1
-    },
-    "src/behaviors/Turntable.ts": {
-      "plugin-registry": 2
-    },
-    "src/core/editor/rv-asset-library-save.ts": {
-      "plugin-registry": 1
-    },
-    "src/core/editor/rv-save-document.ts": {
-      "plugin-registry": 1
-    },
-    "src/core/engine/rv-gpu-info.ts": {
-      "plugin-registry": 2,
-      "dynamic-text": 1
-    },
-    "src/core/engine/rv-script-host.ts": {
-      "plugin-registry": 2,
-      "dynamic-text": 3
-    },
-    "src/core/engine/rv-script-sandbox.ts": {
-      "plugin-registry": 2
-    },
-    "src/core/hmi/scene/scene-store.ts": {
-      "plugin-registry": 2,
-      "dynamic-text": 1
-    },
-    "src/core/ops/rv-document-projection.ts": {
-      "plugin-registry": 3
-    },
-    "src/core/ops/rv-document-recompose.ts": {
-      "dynamic-text": 2
-    },
-    "src/core/ops/rv-reference-guard.ts": {
-      "dynamic-text": 1
-    },
-    "src/core/rv-render-modes.ts": {
-      "plugin-registry": 6
-    },
-    "src/core/rv-viewer.ts": {
-      "plugin-registry": 1
-    },
-    "src/core/sdk/rv-component-sdk.ts": {
-      "plugin-registry": 1
-    },
-    "src/core/sdk/rv-des-lint.ts": {
-      "dynamic-text": 4
-    },
-    "src/main.ts": {
-      "plugin-registry": 5,
-      "dynamic-text": 1,
-      "pre-boot": 1
-    },
-    "src/plugins/annotation-plugin.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/kiosk-tour-api.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/mcp-bridge/rv-mcp-editor-tools.ts": {
-      "plugin-registry": 1,
-      "dynamic-text": 1
-    },
-    "src/plugins/mcp-bridge/rv-mcp-help-tool.ts": {
-      "plugin-registry": 6
-    },
-    "src/plugins/mcp-bridge/rv-object-analyzer-math.ts": {
-      "plugin-registry": 4
-    },
-    "src/plugins/snap-point/index.ts": {
-      "plugin-registry": 1
-    },
-    "src/plugins/web-component-plugin.ts": {
-      "plugin-registry": 2
-    }
-  }
+  "total": 0,
+  "fileCount": 0,
+  "files": {}
 }

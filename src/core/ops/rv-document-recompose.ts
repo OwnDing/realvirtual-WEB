@@ -54,6 +54,7 @@ import { getAssetReference, isUnresolvedReferenceNode } from '../engine/rv-asset
 import { isMissingReferencePlaceholder } from '../engine/rv-missing-reference-placeholder';
 import { getNodeId } from '../engine/rv-node-id';
 import { recomposeProjection } from './rv-document-projection';
+import { rvT } from '../i18n';
 import {
   countInstanceOverrides,
   type RvDocumentStack,
@@ -240,7 +241,7 @@ export class RvDescendController {
     } catch (e) {
       this.host.reportProblem?.({
         kind: 'child-missing',
-        message: `The referenced asset could not be opened: ${String(e)}`,
+        message: rvT('tools', 'finalSweep.asset.childOpenFailed', { detail: String(e) }),
         assetId: verdict.assetId,
         occurrence,
       });
@@ -285,7 +286,7 @@ export class RvDescendController {
     } catch (e) {
       this.host.reportProblem?.({
         kind: 'reload-failed',
-        message: `The parent document could not be recomposed: ${String(e)}`,
+        message: rvT('tools', 'finalSweep.asset.parentRecomposeFailed', { detail: String(e) }),
         assetId: parent.assetId,
         occurrence: parent.occurrence,
       });

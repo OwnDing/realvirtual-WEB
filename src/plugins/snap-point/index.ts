@@ -37,6 +37,7 @@ import { SnapPointPickerPopup } from './SnapPointPickerPopup';
 import { canFlipPlacedComponent, flipPlacedComponent } from './snap-flip-service';
 import { findLayoutAncestor } from '../layout-planner/layout-predicates';
 import type { ComponentType } from 'react';
+import { rvT } from '../../core/i18n';
 
 /** World-space distance at which an approaching moving snap lights up its
  *  compatible match during a drag. Much larger than the magnet pull radius
@@ -204,7 +205,7 @@ export class SnapPointPlugin implements RVViewerPlugin {
         pluginId: 'snap-flip',
         items: [{
           id: 'flip-orientation',
-          label: 'Flip orientation (180°)',
+          label: () => rvT('tools', 'finalSweep.action.flipOrientation'),
           order: 50,
           condition: (target) => {
             // Planner-only: never offer the flip action outside planner mode.

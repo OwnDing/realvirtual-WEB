@@ -62,6 +62,7 @@ import { getDefaultPathNetwork } from '../core/engine/rv-path-network';
 import { computeRampedSpeed } from '../core/engine/rv-drive';
 import { lookRotation } from '../core/engine/rv-pose-align';
 import type { Object3D } from 'three';
+import { rvT } from '../core/i18n';
 
 // PLC contract — auto-declared as `OverheadConveyor.<key>` with typed
 // `self.sig.<key>` accessors (Run = command in, status out — F9 pattern).
@@ -157,7 +158,7 @@ function applyPoses(self: OverheadSelf): void {
 const def = {
   type: 'OverheadConveyor' as const,
   kind: 'conveyor' as const,
-  description: 'Circulating overhead-conveyor chain: N carriers on a closed rv_extras.Path.',
+  get description() { return rvT('tools', 'finalSweep.behavior.overheadConveyor'); },
   mcpDocs:
     'Circulating chain system (plan-268 Phase 4). ONE chain phase scalar moves N carriers on a ' +
     'CLOSED rv_extras.Path at (s_chain + i*pitch) mod L. Carriers are the Carrier/Carrier-<id> ' +
@@ -255,8 +256,8 @@ const def = {
     applyPoses(self);
 
     self.contextMenu(self.root, [
-      { id: 'run',  label: 'Run',  action: () => self.sig.Run.set(true) },
-      { id: 'stop', label: 'Stop', danger: true, dividerBefore: true,
+      { id: 'run',  label: () => rvT('tools', 'finalSweep.action.run'),  action: () => self.sig.Run.set(true) },
+      { id: 'stop', label: () => rvT('tools', 'finalSweep.action.stop'), danger: true, dividerBefore: true,
         action: () => self.sig.Run.set(false) },
     ]);
   },

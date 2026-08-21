@@ -54,6 +54,7 @@
 import type { RvDocument } from './rv-document';
 import type { RvOp } from './rv-unified-ops';
 import { resolveOpTarget, type RvDocumentMode } from './rv-unified-executors';
+import { rvT } from '../i18n';
 
 /**
  * Does `op` materialise in `projection` when applied through the executor?
@@ -209,14 +210,14 @@ export async function undoViaRecompose(req: {
     return {
       ok: false,
       reason: 'in-transaction',
-      message: 'This change can only be undone once the current operation has finished.',
+      message: rvT('tools', 'finalSweep.asset.undoAfterOperation'),
     };
   }
   if (doc.busy) {
-    return { ok: false, reason: 'busy', message: 'The document is still working — try again in a moment.' };
+    return { ok: false, reason: 'busy', message: rvT('tools', 'finalSweep.asset.documentBusy') };
   }
   if (!doc.canUndo()) {
-    return { ok: false, reason: 'nothing-to-undo', message: 'There is nothing to undo.' };
+    return { ok: false, reason: 'nothing-to-undo', message: rvT('tools', 'finalSweep.asset.nothingToUndo') };
   }
   await doc.runExclusive(async () => {
     const history = doc.captureHistory();

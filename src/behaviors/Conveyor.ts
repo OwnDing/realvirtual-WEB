@@ -26,6 +26,7 @@
  */
 
 import { defineLibraryComponent, createTransitTimer, type RV, type TransitTimer } from './_shared/behavior-kit';
+import { rvT } from '../core/i18n';
 
 // Public 4-signal material-flow contract — auto-declared (by createSelf) as
 // `Flow.<key>` (signalNamespace: 'Flow') and exposed as typed `self.sig.<key>`
@@ -95,7 +96,7 @@ function conveyorStat(self: ConveyorSelf, occ: boolean): void {
 const def = {
   type: 'Conveyor' as const,
   kind: 'conveyor' as const,
-  description: 'Straight conveyor that transports parts along its length.',
+  get description() { return rvT('tools', 'finalSweep.behavior.conveyor'); },
   mcpDocs:
     'Straight transport conveyor. Material flows along its local +Z: input snap ' +
     'Snap-ZN-convroll (-Z end), output snap Snap-ZP-convroll (+Z end). Chain a run by ' +
@@ -148,8 +149,8 @@ const def = {
     // DES transit timing: speed from the Transport drive, length from the belt geometry.
     l.timer = createTransitTimer(self, l.belt);
     self.contextMenu(l.belt, [
-      { id: 'run',  label: 'Run',  action: () => self.sig.Run.set(true) },
-      { id: 'stop', label: 'Stop', danger: true, dividerBefore: true,
+      { id: 'run',  label: () => rvT('tools', 'finalSweep.action.run'),  action: () => self.sig.Run.set(true) },
+      { id: 'stop', label: () => rvT('tools', 'finalSweep.action.stop'), danger: true, dividerBefore: true,
         action: () => self.sig.Run.set(false) },
     ]);
   },

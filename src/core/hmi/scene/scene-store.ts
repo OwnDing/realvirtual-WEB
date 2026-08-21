@@ -116,6 +116,7 @@ import type { RvDocumentEntry } from '../../project/rv-project-types';
 import { isSupported as isFileSystemAccessSupported } from '../../engine/rv-local-filesystem';
 import { saveStartPos } from '../camera-startpos-store';
 import { deriveModelKey } from '../../../plugins/camera-startpos-plugin';
+import { rvT } from '../../i18n';
 
 // ─── Snapshot ───────────────────────────────────────────────────────────
 
@@ -2745,7 +2746,7 @@ export class SceneStore {
 
   private async _saveSettingsIntoModel(name: string): Promise<SaveSettingsIntoModelOutcome> {
     const workspaceAtStart = this._workspace;
-    if (!workspaceAtStart) return { kind: 'error', message: 'No scene is open.' };
+    if (!workspaceAtStart) return { kind: 'error', message: rvT('tools', 'finalSweep.asset.noSceneOpen') };
 
     const base = workspaceAtStart.base;
     if (base.kind !== 'builtin') return { kind: 'no-model-base' };
@@ -2772,7 +2773,7 @@ export class SceneStore {
     if (backend.kind === 'folder' && !isFileSystemAccessSupported()) return { kind: 'unsupported' };
 
     const registry = this._viewer.registry;
-    if (!registry) return { kind: 'error', message: 'No model is loaded.' };
+    if (!registry) return { kind: 'error', message: rvT('tools', 'finalSweep.asset.noModelLoaded') };
 
     this._busy = true;
     this._notify();
@@ -2872,7 +2873,10 @@ export class SceneStore {
           console.warn('[scene-store] could not remove the partially written model:', cleanup);
           return {
             kind: 'error',
-            message: `${e instanceof Error ? e.message : String(e)} — and "${writtenPath}" could not be removed; delete it by hand.`,
+            message: rvT('tools', 'finalSweep.asset.cleanupFailed', {
+              detail: e instanceof Error ? e.message : String(e),
+              path: writtenPath,
+            }),
           };
         }
       }

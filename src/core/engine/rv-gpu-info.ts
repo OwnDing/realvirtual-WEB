@@ -19,6 +19,8 @@
  *    no special-casing.
  */
 
+import { rvT } from '../i18n';
+
 export type GPUBackend = 'webgl' | 'webgpu';
 
 export interface ActiveGPU {
@@ -262,8 +264,8 @@ export function analyzeGPU(info: GPUInfo): GPUAnalysis {
       tier,
       severity: 'critical',
       discreteAvailableConfirmed: false,
-      message: 'Hardware acceleration is disabled — rendering on the CPU.',
-      action: 'Enable hardware acceleration in your browser settings, or update your graphics driver.',
+      message: rvT('tools', 'finalSweep.gpu.softwareMessage'),
+      action: rvT('tools', 'finalSweep.gpu.softwareAction'),
     };
   }
 
@@ -292,8 +294,8 @@ export function analyzeGPU(info: GPUInfo): GPUAnalysis {
         severity: 'warning',
         discreteAvailableConfirmed: true,
         betterAvailable: betterName,
-        message: `Browser is using integrated graphics — ${betterName} is available but not being used.`,
-        action: 'Windows: Settings → System → Display → Graphics → set this browser to "High performance".',
+        message: rvT('tools', 'finalSweep.gpu.integratedWithAlternative', { gpu: betterName }),
+        action: rvT('tools', 'finalSweep.gpu.windowsAction'),
       };
     }
     // Integrated detected, no probe data confirming a better option.
@@ -304,8 +306,8 @@ export function analyzeGPU(info: GPUInfo): GPUAnalysis {
       tier,
       severity: 'warning',
       discreteAvailableConfirmed: false,
-      message: 'Browser is using integrated graphics. If this device has a dedicated GPU, performance will improve substantially by switching to it.',
-      action: 'Windows: Settings → System → Display → Graphics → set this browser to "High performance".',
+      message: rvT('tools', 'finalSweep.gpu.integratedMessage'),
+      action: rvT('tools', 'finalSweep.gpu.windowsAction'),
     };
   }
 

@@ -22,6 +22,7 @@
  */
 
 import { defineBehavior } from '../core/behaviors';
+import { rvT } from '../core/i18n';
 
 export default defineBehavior({
   models: ['PickPlaceStation', 'PickPlaceStation_*', 'CustomerXY_PnP'],
@@ -41,14 +42,14 @@ export default defineBehavior({
 
     // ─── Context menus (right-click on a node) ──────────────────────
     rv.contextMenu('Axis1_LinearSled', [
-      { id: 'jog-fwd', label: 'Jog Forward',  action: () => { const d = rv.drives.get('Axis1_LinearSled'); if (d) d.jog(true); } },
-      { id: 'jog-bwd', label: 'Jog Backward', action: () => { const d = rv.drives.get('Axis1_LinearSled'); if (d) d.jog(false); } },
-      { id: 'home',    label: 'Move to Home', action: () => rv.drives.get('Axis1_LinearSled')?.moveTo(0) },
-      { id: 'stop',    label: 'Stop',         action: () => rv.drives.get('Axis1_LinearSled')?.stop(), danger: true, dividerBefore: true },
+      { id: 'jog-fwd', label: () => rvT('tools', 'finalSweep.action.jogForward'),  action: () => { const d = rv.drives.get('Axis1_LinearSled'); if (d) d.jog(true); } },
+      { id: 'jog-bwd', label: () => rvT('tools', 'finalSweep.action.jogBackward'), action: () => { const d = rv.drives.get('Axis1_LinearSled'); if (d) d.jog(false); } },
+      { id: 'home',    label: () => rvT('tools', 'finalSweep.action.moveHome'), action: () => rv.drives.get('Axis1_LinearSled')?.moveTo(0) },
+      { id: 'stop',    label: () => rvT('tools', 'finalSweep.action.stop'), action: () => rv.drives.get('Axis1_LinearSled')?.stop(), danger: true, dividerBefore: true },
     ]);
 
     rv.contextMenu(rv.root, [
-      { id: 'estop', label: 'Emergency Stop', action: () => rv.signals.set('Machine.EStop', true), danger: true },
+      { id: 'estop', label: () => rvT('tools', 'finalSweep.action.emergencyStop'), action: () => rv.signals.set('Machine.EStop', true), danger: true },
     ], { includeChildren: true });
 
     // ─── Signals (PLC binding) ──────────────────────────────────────

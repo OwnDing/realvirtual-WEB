@@ -35,6 +35,7 @@ import { exportAssetGlb } from './rv-asset-glb-export';
 import { isSupported } from '../engine/rv-local-filesystem';
 import { getProjectStore } from '../project/project-store';
 import { ThumbnailRenderer } from '../thumbnails/thumbnail-renderer';
+import { rvT } from '../i18n';
 
 /** Name of the Custom-library subfolder under the project's `library/`. */
 export const CUSTOM_LIBRARY_FOLDER = 'Custom';
@@ -71,7 +72,7 @@ export async function saveAssetToCustomLibrary(
 ): Promise<SaveOutcome> {
   await doc.whenIdle();
   const assetRoot = viewer.currentModelRoot;
-  if (!assetRoot) return { kind: 'error', message: 'No asset loaded' };
+  if (!assetRoot) return { kind: 'error', message: rvT('tools', 'finalSweep.asset.noAssetLoaded') };
 
   const backend = getProjectStore().getBackend();
   if (!backend) {

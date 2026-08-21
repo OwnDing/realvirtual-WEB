@@ -84,6 +84,12 @@ describe('i18n inventory — incremental hardcoded-text gate', () => {
   it('covers every gated category in the baseline shape', () => {
     expect(Object.keys(committed.totals).sort()).toEqual([...GATED_CATEGORIES].sort());
   });
+
+  it('has completed the gated migration and pins every locale formatter', () => {
+    expect(baseline.total).toBe(0);
+    expect(Object.values(baseline.totals).every((count) => count === 0)).toBe(true);
+    expect(inventory.advisory.intlWithoutExplicitLocale).toBe(0);
+  });
 });
 
 describe('i18n inventory — classification rules', () => {
