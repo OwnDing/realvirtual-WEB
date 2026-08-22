@@ -62,7 +62,21 @@ const EXPECTED_PLACEMENTS: Record<string, [number, number, number]> = {
   'CoolingZone-4m': [0, 0, 27],
   'LoadUnloadStation': [7, 0, -6],
   // The booth's FANUC CRX, placed as its own object since EP-DEMO-003.
-  'PaintRobot': [-1.9, 0.1, 20.4],
+  'PaintRobot': [-1.82, 0.1, 20.16],
+};
+
+/**
+ * Placements that are NOT at unit scale, and why the number matters.
+ *
+ * A CRX-10iA/L is 1.4 m tall. At true scale, framed against a 3.4 m booth and
+ * 145 m of conveyor, it read as a toy — so the arm is oversized on purpose and
+ * the booth was widened to 7 m to hold it. That is a deliberate, reversible
+ * staging choice, and it is asserted here because dropping the scale would not
+ * break anything: the demo would keep running, the joints would keep tracking,
+ * and only the picture would quietly go back to being wrong.
+ */
+const EXPECTED_SCALES: Record<string, number> = {
+  'PaintRobot': 1.6,
 };
 
 async function openScene(page: Page): Promise<void> {
@@ -81,15 +95,16 @@ function readPlacements(page: Page) {
     const scene = (window as unknown as { viewer?: { scene?: unknown } }).viewer?.scene as
       { traverse(cb: (o: Record<string, never>) => void): void } | undefined;
     if (!scene) throw new Error('window.viewer.scene is not available');
-    const out: Record<string, [number, number, number]> = {};
+    const out: Record<string, { at: [number, number, number]; scale: number }> = {};
     scene.traverse((node: Record<string, never>) => {
       const n = node as unknown as {
         name: string;
         position: { x: number; y: number; z: number };
+        scale: { x: number };
         userData?: { realvirtual?: { LayoutObject?: unknown } };
       };
       if (n.userData?.realvirtual?.LayoutObject) {
-        out[n.name] = [n.position.x, n.position.y, n.position.z];
+        out[n.name] = { at: [n.position.x, n.position.y, n.position.z], scale: n.scale.x };
       }
     });
     return out;
@@ -160,9 +175,11 @@ test.describe('paint-line demo scene', () => {
 
     expect(Object.keys(placed).sort()).toEqual(Object.keys(EXPECTED_PLACEMENTS).sort());
     for (const [name, at] of Object.entries(EXPECTED_PLACEMENTS)) {
-      expect(placed[name][0], `${name} x`).toBeCloseTo(at[0], 6);
-      expect(placed[name][1], `${name} y`).toBeCloseTo(at[1], 6);
-      expect(placed[name][2], `${name} z`).toBeCloseTo(at[2], 6);
+      expect(placed[name].at[0], `${name} x`).toBeCloseTo(at[0], 6);
+      expect(placed[name].at[1], `${name} y`).toBeCloseTo(at[1], 6);
+      expect(placed[name].at[2], `${name} z`).toBeCloseTo(at[2], 6);
+      expect(placed[name].scale, `${name} scale`)
+        .toBeCloseTo(EXPECTED_SCALES[name] ?? 1, 6);
     }
   });
 

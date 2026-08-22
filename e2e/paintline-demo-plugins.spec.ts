@@ -72,27 +72,79 @@ async function openScene(page: Page, locale = 'zh-CN'): Promise<void> {
  * and every sample lands at the same phase — which reads as "nothing moved"
  * while the arm is in fact running its full sweep.
  */
-function jointTravel(page: Page, ms: number) {
-  return page.evaluate(async (durationMs) => {
+/**
+ * How far each robot joint was COMMANDED and how far it actually MOVED.
+ *
+ * Two numbers, because one of them is not measurable here. `currentPosition`
+ * only advances on a rendered frame, and this suite renders through SwiftShader
+ * at ~14 fps falling lower under trace capture — sampling a 2.2 s sine at that
+ * rate walks straight past the peaks. It reported a 20° wrist sweep for a sweep
+ * measured at a full 69.9° from the rendered geometry, and it did so
+ * intermittently, which is worse than failing outright.
+ *
+ * So the AMPLITUDE is taken from what the plugin commands (wrapping `startMove`
+ * catches every target regardless of frame rate) and the realised span is kept
+ * only to prove the drive is alive and following. A frozen drive still fails;
+ * a slow frame no longer does.
+ *
+ * `until` then removes the second half of the same problem. The sweep phase
+ * advances with SIMULATION time, so a fixed wall-clock window measures how fast
+ * the machine is, not how far the wrist goes: running this file alone the 8 s
+ * window covered a full 70° sweep, and running it behind two other 3D specs the
+ * same window covered 21.95° — the sim had advanced a quarter of a second. Given
+ * per-joint targets, sampling stops as soon as they are all met, so the test
+ * asserts that the motion HAPPENS rather than that the machine was fast enough
+ * to finish it inside an arbitrary window.
+ */
+function jointTravel(page: Page, ms: number, until?: Record<string, number>) {
+  return page.evaluate(async ([durationMs, targets]: [number, Record<string, number> | null]) => {
     const viewer = (window as unknown as {
-      viewer: { drives?: { name: string; currentPosition: number }[] };
+      viewer: { drives?: { name: string; currentPosition: number; startMove(v: number): void }[] };
     }).viewer;
     const base = (n: string) => n.replace(/_\d+$/, '');
     const span: Record<string, { min: number; max: number }> = {};
+    const cmd: Record<string, { min: number; max: number }> = {};
+    const track = (bag: Record<string, { min: number; max: number }>, k: string, v: number) => {
+      const s = bag[k] ?? (bag[k] = { min: Infinity, max: -Infinity });
+      s.min = Math.min(s.min, v);
+      s.max = Math.max(s.max, v);
+    };
 
-    const until = performance.now() + durationMs;
-    while (performance.now() < until) {
-      for (const d of viewer.drives ?? []) {
-        const n = base(d.name);
-        if (!/^A[1-6]$/.test(n)) continue;
-        const s = span[n] ?? (span[n] = { min: Infinity, max: -Infinity });
-        s.min = Math.min(s.min, d.currentPosition);
-        s.max = Math.max(s.max, d.currentPosition);
-      }
-      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    const joints = (viewer.drives ?? []).filter((d) => /^A[1-6]$/.test(base(d.name)));
+    const restore: (() => void)[] = [];
+    for (const d of joints) {
+      const original = d.startMove.bind(d);
+      const n = base(d.name);
+      d.startMove = (v: number) => { track(cmd, n, v); original(v); };
+      restore.push(() => { delete (d as unknown as Record<string, unknown>).startMove; });
     }
-    return Object.fromEntries(Object.entries(span).map(([k, s]) => [k, s.max - s.min]));
-  }, ms);
+
+    const met = () => {
+      if (!targets) return false;
+      return Object.entries(targets).every(([k, v]) => {
+        const c = cmd[k];
+        return c !== undefined && c.max - c.min >= v;
+      });
+    };
+
+    const deadline = performance.now() + durationMs;
+    while (performance.now() < deadline && !met()) {
+      for (const d of joints) track(span, base(d.name), d.currentPosition);
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    for (const undo of restore) undo();
+
+    const flat = (bag: Record<string, { min: number; max: number }>) =>
+      Object.fromEntries(Object.entries(bag).map(([k, s]) => [k, s.max - s.min]));
+    // Bound joints come from the drive list, not from what was commanded: while
+    // a hanger is in the booth only the base and the wrist are driven, so the
+    // commanded set is A1/A5 by design and says nothing about the chain.
+    return {
+      bound: joints.map((d) => base(d.name)).sort(),
+      moved: flat(span),
+      commanded: flat(cmd),
+    };
+  }, [ms, until ?? null] as [number, Record<string, number> | null]);
 }
 
 /** Workpiece finish split and per-instance material count. */
@@ -136,15 +188,23 @@ test.describe('paint-line demo plugin pack', () => {
   test('binds by folder name and moves the booth robot', async ({ page }) => {
     await openScene(page);
 
-    const travel = await jointTravel(page, 8_000);
-    expect(Object.keys(travel).sort(), 'the six-axis chain did not bind')
+    // A full sweep is 2 x SWEEP_DEG = 70°; wait for it rather than for a clock.
+    const travel = await jointTravel(page, 90_000, { A5: 68, A1: 10 });
+    expect(travel.bound, 'the six-axis chain did not bind')
       .toEqual(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
 
     // The wrist sweeps across the workpiece and the base tracks the hanger
     // along the booth; the remaining joints hold a fixed spray posture, so
     // only these two are asserted to travel.
-    expect(travel.A5, 'the wrist never swept').toBeGreaterThan(30);
-    expect(travel.A1, 'the base never tracked a hanger').toBeGreaterThan(10);
+    expect(travel.commanded.A5, 'the wrist was never commanded to sweep')
+      .toBeGreaterThan(60);
+    expect(travel.commanded.A1, 'the base was never commanded to track a hanger')
+      .toBeGreaterThan(10);
+    // And the drives follow — a commanded sweep into a dead drive paints nothing.
+    expect(travel.moved.A5, 'the wrist drive did not follow its command')
+      .toBeGreaterThan(5);
+    expect(travel.moved.A1, 'the base drive did not follow its command')
+      .toBeGreaterThan(5);
   });
 
   test('keeps the base yaw within a working arc, not whipping round', async ({ page }) => {
@@ -154,8 +214,86 @@ test.describe('paint-line demo plugin pack', () => {
     // whenever the nearest hanger changed, and the arm swung 293° the long way
     // round — 321° of travel in eight seconds. Measured from the robot's own
     // facing it is a calm arc, and this pins that.
+    // A fixed window is right here, unlike the sweep test above: this is an
+    // UPPER bound, and under-sampling a slow run can only under-report the
+    // travel, never invent it.
     const travel = await jointTravel(page, 8_000);
-    expect(travel.A1, 'the base whipped round instead of tracking').toBeLessThan(180);
+    expect(travel.commanded.A1, 'the base whipped round instead of tracking')
+      .toBeLessThan(180);
+  });
+
+  test('points the spray gun at the workpiece, not down the line', async ({ page }) => {
+    await openScene(page);
+
+    // The defect this pins: the gun sprayed ALONG the conveyor for two
+    // milestones. Everything observable still looked right — the arm tracked
+    // hangers, the wrist swept, the fan was visible — because nothing measured
+    // where the paint actually went. Measured then, the angle between the spray
+    // axis and the direction to the hanger had a median of ~93°.
+    //
+    // The cause was two-fold and both halves are pinned here: the extractor
+    // carried the donor scene's 2.149 m placement on the robot's root node, so
+    // the base yaw swung the arm around an empty point in the air, and the yaw
+    // itself used atan2(dz, dx) when the asset's tool axis lies along -Z at
+    // A1 = 0, which needs atan2(-dx, -dz).
+    const aim = await page.evaluate(async () => {
+      const v = (window as unknown as { viewer?: Record<string, never> }).viewer!;
+      const scene = (v as unknown as { scene: { traverse(cb: (o: never) => void): void } }).scene;
+      let fan: Record<string, never> | null = null;
+      const carriers: Record<string, never>[] = [];
+      scene.traverse((o: never) => {
+        const n = o as unknown as { name: string; position: { x: number; z: number } };
+        const b = n.name.replace(/_\d+$/, '');
+        if (b === 'Spray-Fan') fan = o;
+        if (/^Carrier-\d\d$/.test(b)) carriers.push(o);
+      });
+      if (!fan) return { parent: null, errs: [] as number[], pitch: [] as number[] };
+      const f = fan as unknown as {
+        parent: { name: string }; visible: boolean;
+        updateWorldMatrix(a: boolean, b: boolean): void;
+        matrixWorld: { elements: number[] };
+      };
+      const errs: number[] = [];
+      const pitch: number[] = [];
+      for (let k = 0; k < 24; k++) {
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        f.updateWorldMatrix(true, false);
+        const e = f.matrixWorld.elements;
+        const px = e[12], pz = e[14];
+        const L = Math.hypot(e[8], e[9], e[10]);
+        const dx = e[8] / L, dy = e[9] / L, dz = e[10] / L;
+        let best: { x: number; z: number } | null = null;
+        let bd = Infinity;
+        for (const c of carriers) {
+          const q = (c as unknown as { position: { x: number; z: number } }).position;
+          if (Math.abs(q.x) > 1 || q.z < 18 || q.z > 24) continue;
+          const d = Math.abs(q.z - pz);
+          if (d < bd) { bd = d; best = q; }
+        }
+        if (!best || !f.visible) continue;
+        let err = (Math.atan2(dx, dz) - Math.atan2(best.x - px, best.z - pz)) * 180 / Math.PI;
+        while (err > 180) err -= 360;
+        while (err < -180) err += 360;
+        errs.push(Math.abs(err));
+        pitch.push(Math.asin(-dy) * 180 / Math.PI);
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      return { parent: f.parent?.name.replace(/_\d+$/, '') ?? null, errs, pitch };
+    });
+
+    expect(aim.parent, 'the spray fan is not parented to the tool centre point').toBe('TCP');
+    expect(aim.errs.length, 'the fan was never visible over a hanger').toBeGreaterThan(8);
+
+    // Median rather than max: the target jumps when the nearest hanger changes,
+    // and the base ramps to the new yaw over a few frames. Those transients are
+    // real motion, not mis-aim, and asserting the max would pin the ramp rate.
+    const sorted = [...aim.errs].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    expect(median, `spray axis is ${median.toFixed(0)}° off the workpiece`).toBeLessThan(25);
+
+    // And it must still sweep: a gun aimed correctly but frozen paints a stripe.
+    expect(Math.max(...aim.pitch) - Math.min(...aim.pitch), 'the gun never swept')
+      .toBeGreaterThan(30);
   });
 
   test('gives every workpiece its own material and paints past the booth', async ({ page }) => {

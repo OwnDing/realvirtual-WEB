@@ -512,7 +512,12 @@ function buildProcessSection(name, { length, width, height, zone, plenum }) {
 // ─── Object 4 — spray booth ─────────────────────────────────────────────────
 
 function buildSprayBooth() {
-  const LENGTH = 6, WIDTH = 4.4, HEIGHT = 3.4;
+  // Widened from 4.4 m in EP-DEMO-003 follow-up: the FANUC's home pose puts its
+  // TCP a fixed 2.3 m (x scale) in +X of the base, so a robot scaled up to read
+  // properly against a 3.4 m booth pushed its own base through the side wall.
+  // Real spray booths are wide anyway — the reference animation's are wider
+  // than this one was.
+  const LENGTH = 6, WIDTH = 7.0, HEIGHT = 3.4;
   const doc = new GlbDoc('SprayBooth');
   const out = [];
   addTunnelShell(doc, out, { length: LENGTH, width: WIDTH, height: HEIGHT, wall: 0.22 });

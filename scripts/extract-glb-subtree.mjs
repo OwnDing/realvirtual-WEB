@@ -239,9 +239,34 @@ export function extractSubtree({ inPath, rootName, exclude = [], outPath, rename
 
   // ── Rebuild the node list ──
   const newRootName = rename ?? rootName;
+  /**
+   * The donor scene's placement, lifted off the root and reported to the caller.
+   *
+   * A subtree's root translation says where the object STOOD in the file it came
+   * from, not how the object is built. Carrying it across made `PaintRobot` a
+   * node 2.149 m away from the robot it names: the arm's own lateral reach is
+   * 0.242 m, but base-to-TCP measured 3.68 m, so every placement had to
+   * pre-subtract the offset by hand and the base yaw swung the arm around an
+   * empty point in the air. Rotation is KEPT — the joint chain nests along local
+   * +Z, so the root rotation is the Z-up-to-Y-up convention and is part of the
+   * asset.
+   */
+  let liftedTranslation = null;
   const outNodes = keptNodes.map((si) => {
     const n = { ...nodes[si] };
     if (si === rootIndex && rename) n.name = rename;
+    if (si === rootIndex) {
+      if (n.matrix) {
+        throw new Error(
+          `root '${rootName}' uses a matrix transform — cannot lift the donor `
+          + 'placement off it without decomposing; convert the source to TRS',
+        );
+      }
+      if (n.translation && n.translation.some((v) => v !== 0)) {
+        liftedTranslation = n.translation;
+        delete n.translation;
+      }
+    }
     n.children = (n.children ?? []).filter((c) => nodeMap.has(c)).map((c) => nodeMap.get(c));
     if (!n.children.length) delete n.children;
     if (n.mesh !== undefined) n.mesh = takeMesh(n.mesh);
@@ -257,7 +282,10 @@ export function extractSubtree({ inPath, rootName, exclude = [], outPath, rename
       version: '2.0',
       generator: 'XYvirtual GLB subtree extractor (EP-DEMO-003)',
       // Provenance: this geometry is not authored here.
-      extras: { extractedFrom: `${inPath}#${rootName}` },
+      extras: {
+        extractedFrom: `${inPath}#${rootName}`,
+        ...(liftedTranslation ? { liftedDonorTranslation: liftedTranslation } : {}),
+      },
     },
     scene: 0,
     scenes: [{ name: newRootName, nodes: [nodeMap.get(rootIndex)] }],

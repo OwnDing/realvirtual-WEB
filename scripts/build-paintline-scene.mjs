@@ -136,7 +136,20 @@ const PLACEMENTS = [
   // a fixed 2.3 m in +X of the base and NO shoulder/elbow angle changes that
   // offset (only the base swivel does), so the base has to sit that far to the
   // -X side for the gun to arrive beside the hangers.
-  { name: 'PaintRobot', file: 'PaintRobot.glb', at: [-1.9, 0.1, 20.4], span: null },
+  //
+  // SCALED 1.6x on purpose. The extracted arm is a CRX-10iA/L — a 1.4 m-reach
+  // collaborative robot — and at true scale it reads as a toy beside a 3.4 m
+  // booth and 2 m hanger pitch. A real paint line this size would run a much
+  // larger arm; scaling the one we have is the honest-looking compromise, and
+  // it is recorded here rather than passed off as true-scale CAD.
+  //
+  // The base position follows from the arm's own geometry, measured after the
+  // extractor stopped carrying the donor scene's placement on the root node:
+  // at A1 = 0 the TCP sits (0.242, 1.532, -1.116) from the base at this scale,
+  // and the working yaw of -90° rotates that to (1.116, 1.532, 0.242). Landing
+  // the gun 0.7 m off the track at the booth's mid-point therefore puts the
+  // base at x = -0.7 - 1.116 and z = 20.4 - 0.242.
+    { name: 'PaintRobot', file: 'PaintRobot.glb', at: [-1.82, 0.1, 20.16], scale: 1.6, span: null },
   // On the RETURN sweep below the line (the z = -6 straight), rotated a quarter
   // turn because the station is authored along Z while that straight runs -X.
   // Its old spot at x = 6 is now the buffer's first serpentine pass.
@@ -178,6 +191,7 @@ for (const p of PLACEMENTS) {
     name: p.name,
     ...(p.at.some((v) => v !== 0) ? { translation: p.at } : {}),
     ...(p.yaw ? { rotation: [0, Math.sin(yawRad / 2), 0, Math.cos(yawRad / 2)] } : {}),
+    ...(p.scale ? { scale: [p.scale, p.scale, p.scale] } : {}),
     extras: {
       realvirtual: {
         NodeId: stableId(p.name),
@@ -258,7 +272,7 @@ console.log(`${SCENE_FILE}  (${glb.length} bytes)  ${PLACEMENTS.length} placemen
 for (const p of PLACEMENTS) {
   const where = p.span
     ? `z ${p.span[0]}–${p.span[1]} m`
-    : (p.yaw ? `yaw ${p.yaw}°` : 'origin, untransformed');
+    : (p.yaw ? `yaw ${p.yaw}°` : (p.scale ? `scale ${p.scale}x` : 'origin, untransformed'));
   console.log(`  ${p.name.padEnd(28)} @ [${p.at.join(', ')}]  ${where}`);
 }
 console.log(`registered in scenes/index.json as "${entry.name}"`);
