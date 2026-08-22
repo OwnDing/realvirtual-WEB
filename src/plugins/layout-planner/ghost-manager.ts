@@ -211,6 +211,16 @@ function addVirtualConventionNodes(root: Object3D, entry: LibraryCatalogEntry): 
     const node = new Object3D();
     node.name = `Snap-${port.name}`;
     node.position.fromArray(port.position).multiplyScalar(MM_TO_M);
+    if (port.portId && port.typeId && port.flow && port.direction) {
+      node.userData.realvirtual = {
+        AssemblyPort: {
+          PortId: port.portId,
+          TypeId: port.typeId,
+          Flow: port.flow,
+          Direction: { x: port.direction[0], y: port.direction[1], z: port.direction[2] },
+        },
+      };
+    }
     root.add(node);
   }
 

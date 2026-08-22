@@ -7,12 +7,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager } from '@rv-private/plugins/des/rv-des-manager';
-import { DES } from '@rv-private/plugins/des/rv-des-api';
-import { DESStation } from '@rv-private/plugins/des/rv-des-station';
-import { DESDowntime } from '@rv-private/plugins/des/rv-des-downtime';
-import { DESComponent } from '@rv-private/plugins/des/rv-des-component';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+import { DESManager } from '../../src/plugins/des/rv-des-manager';
+import { DES } from '../../src/plugins/des/rv-des-api';
+import { DESStation } from '../../src/plugins/des/rv-des-station';
+import { DESDowntime } from '../../src/plugins/des/rv-des-downtime';
+import { DESComponent } from '../../src/plugins/des/rv-des-component';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import { NodeRegistry } from '../../src/core/engine/rv-node-registry';
 import { SignalStore } from '../../src/core/engine/rv-signal-store';
 

@@ -351,6 +351,21 @@ const SMART_ASSET_EDITOR = 'No English original exists to move: the public Smart
   + 'authoring, validation and publishing workflow. They are declared explicitly so the verbatim '
   + 'gate keeps proving that older product wording was moved rather than rewritten.';
 
+const PUBLIC_DES = 'No English original exists to move: the public, domain-neutral DES runtime '
+  + '(EP-DES-001) was added after the migration base ref. These strings label its new event-queue '
+  + 'and KPI diagnostics. Declaring the keys explicitly preserves the proof that older product '
+  + 'wording was moved rather than rewritten.';
+
+const PUBLIC_DES_KEYS = [
+  'sim.des.eventQueueTitle',
+  'sim.des.eventQueueToggle',
+  'sim.des.eventProcessed',
+  'sim.des.eventNext',
+  'sim.des.eventEmpty',
+  'sim.des.kpiTitle',
+  'sim.des.bottleneck',
+];
+
 const SMART_ASSET_EDITOR_KEYS = [
   'assets.smartEditor.title',
   'assets.smartEditor.steps',
@@ -445,6 +460,7 @@ const SMART_ASSET_EDITOR_KEYS = [
 
 export const NEW_STRING_EXEMPTIONS = new Map([
   ...SMART_ASSET_EDITOR_KEYS.map((key) => [key, SMART_ASSET_EDITOR]),
+  ...PUBLIC_DES_KEYS.map((key) => [key, PUBLIC_DES]),
   ['demo.paintline.tourOverview', PAINTLINE_DEMO],
   ['demo.paintline.tourPretreat', PAINTLINE_DEMO],
   ['demo.paintline.tourOven', PAINTLINE_DEMO],

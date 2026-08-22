@@ -10,7 +10,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { RVScriptHost } from '../../src/core/engine/rv-script-host';
-import { runParamScript } from '@rv-private/plugins/des/des-param-script-runner';
+import { runParamScript } from '../../src/plugins/des/des-param-script-runner';
 
 let host: RVScriptHost;
 beforeAll(async () => { host = await RVScriptHost.create(); });

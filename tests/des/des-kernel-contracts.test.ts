@@ -5,12 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ArcSegment, RVPath } from '../../src/core/engine/rv-path';
 import { getDefaultPathNetwork } from '../../src/core/engine/rv-path-network';
 import { Object3D, Vector3 } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { bindSceneToRunner } from '@rv-private/plugins/des/des-scene-binding';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
-import { DESComponent } from '@rv-private/plugins/des/rv-des-component';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { bindSceneToRunner } from '../../src/plugins/des/des-scene-binding';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
+import { DESComponent } from '../../src/plugins/des/rv-des-component';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

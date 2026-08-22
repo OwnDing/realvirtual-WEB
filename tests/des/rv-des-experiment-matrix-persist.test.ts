@@ -9,8 +9,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { IndexedDBSnapshotStore } from '@rv-private/plugins/des/rv-des-experiment-store';
-import type { ParamOverride } from '@rv-private/plugins/des/rv-des-experiment-model';
+import { IndexedDBSnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
+import type { ParamOverride } from '../../src/plugins/des/rv-des-experiment-model';
 import { parseExperimentInfo } from '../../src/core/material-flow/rv-run-history-store';
 
 const OV: ParamOverride = { path: 'Src', component: 'DESSource', field: 'InterArrivalTime', value: 3.0 };

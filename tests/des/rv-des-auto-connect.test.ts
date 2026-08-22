@@ -10,13 +10,13 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager } from '@rv-private/plugins/des/rv-des-manager';
-import { DES } from '@rv-private/plugins/des/rv-des-api';
-import { DESComponent } from '@rv-private/plugins/des/rv-des-component';
-import { DESSource } from '@rv-private/plugins/des/rv-des-source';
-import { DESSink } from '@rv-private/plugins/des/rv-des-sink';
-import { DESConveyor } from '@rv-private/plugins/des/rv-des-conveyor';
-import { autoConnect, computePreviousComponents } from '@rv-private/plugins/des/rv-des-connection';
+import { DESManager } from '../../src/plugins/des/rv-des-manager';
+import { DES } from '../../src/plugins/des/rv-des-api';
+import { DESComponent } from '../../src/plugins/des/rv-des-component';
+import { DESSource } from '../../src/plugins/des/rv-des-source';
+import { DESSink } from '../../src/plugins/des/rv-des-sink';
+import { DESConveyor } from '../../src/plugins/des/rv-des-conveyor';
+import { autoConnect, computePreviousComponents } from '../../src/plugins/des/rv-des-connection';
 import { NodeRegistry } from '../../src/core/engine/rv-node-registry';
 import { SignalStore } from '../../src/core/engine/rv-signal-store';
 

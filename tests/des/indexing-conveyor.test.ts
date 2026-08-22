@@ -3,11 +3,11 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Object3D, Vector3 } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
-import { IndexingConveyor } from '@rv-private/plugins/des/material-flow/IndexingConveyor';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter, type DESMU } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
+import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingConveyor';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

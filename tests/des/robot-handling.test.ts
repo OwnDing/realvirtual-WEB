@@ -3,16 +3,16 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
-import { RobotHandling } from '@rv-private/plugins/des/material-flow/RobotHandling';
-import { PalletSource } from '@rv-private/plugins/des/material-flow/PalletSource';
-import { IndexingConveyor } from '@rv-private/plugins/des/material-flow/IndexingConveyor';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
+import { RobotHandling } from '../../src/plugins/des/material-flow/RobotHandling';
+import { PalletSource } from '../../src/plugins/des/material-flow/PalletSource';
+import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingConveyor';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
 import {
   loadMUOnCarrier,
-} from '@rv-private/plugins/des/rv-des-component';
-import { resetDESMUCounter, type DESMU } from '@rv-private/plugins/des/rv-des-mu';
+} from '../../src/plugins/des/rv-des-component';
+import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

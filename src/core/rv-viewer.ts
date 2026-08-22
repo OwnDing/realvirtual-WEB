@@ -220,12 +220,9 @@ import { rvT } from './i18n';
 import { ContinuousRunner } from './material-flow/continuous-runner';
 import { SimulationKernel } from './material-flow/simulation-kernel';
 import { StatisticsManager } from './material-flow/rv-statistics-manager';
-// Plan 194 P5 — the DES runner factory is INJECTED, never imported concretely:
-// `@rv-private/plugins/des/register-des-runner` resolves to the private factory
-// when the private folder is present, and to the public stub (`createDesRunner
-// = null`) otherwise. So `hasDesRunner()` is true only in the private build and
-// the public build stays continuous-only with no private import leaked.
-import { createDesRunner } from '@rv-private/plugins/des/register-des-runner';
+// Public DES is injected through the existing kernel factory seam. The kernel
+// stays mode-agnostic and never imports a concrete DES runtime class itself.
+import { createDesRunner } from '../plugins/des/register-des-runner';
 import {
   applyKinematicsSpec,
   createBindContext,
@@ -2289,8 +2286,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       // P5 wires the actual material-flow definitions in play; continuous
       // discovery already binds them via the BehaviorManager today.
       defs: [],
-      // DES factory defaults to the stub (`null` in the public build) →
-      // hasDesRunner() is false → the DES toggle stays hidden (P6).
+      // Public DES is loaded behind a synchronous facade on first entry, so it
+      // stays out of the startup chunk without changing the kernel switch API.
       desRunnerFactory: createDesRunner,
       // Phase B: the DES runner composes the same CoreSubsystems pipeline so
       // drives/logic/visuals keep ticking at 60 Hz while the event queue runs.

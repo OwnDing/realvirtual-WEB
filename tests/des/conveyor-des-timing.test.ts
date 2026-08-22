@@ -12,14 +12,14 @@
  *  - back-pressure: when the downstream cannot accept, the MU is parked in
  *    `blockedMUs` and released once the downstream frees (onDownstreamReady).
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Mesh, BoxGeometry } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import { ConveyorFlow } from '../../src/behaviors/Conveyor';
 import {
   createSelf,

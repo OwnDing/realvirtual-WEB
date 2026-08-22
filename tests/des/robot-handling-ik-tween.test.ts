@@ -3,15 +3,15 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Object3D, Vector3 } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
 import {
   RobotHandling,
   cycleDuration,
-} from '@rv-private/plugins/des/material-flow/RobotHandling';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import type { DESMU } from '@rv-private/plugins/des/rv-des-mu';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+} from '../../src/plugins/des/material-flow/RobotHandling';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import type { DESMU } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

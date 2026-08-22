@@ -39,7 +39,7 @@ describe('DES registration and planner authoring', () => {
     const registry = await import('../../src/core/material-flow/registry');
     registry._resetMaterialFlowRegistry();
 
-    await import('@rv-private/plugins/des/des-plugin');
+    await import('../../src/plugins/des/des-plugin');
 
     for (const type of MATERIAL_FLOW_TYPES) {
       expect(registry.getMaterialFlow(type), `${type} is registered`).toBeDefined();
@@ -48,15 +48,15 @@ describe('DES registration and planner authoring', () => {
 
   it('round-trips virtual catalog nodes and binds the authored DES components', async () => {
     vi.resetModules();
-    await import('@rv-private/plugins/des/des-plugin');
-    const { DESHMIPlugin } = await import('@rv-private/plugins/des/hmi/des-hmi-plugin');
+    await import('../../src/plugins/des/des-plugin');
+    const { DESHMIPlugin } = await import('../../src/plugins/des/hmi/des-hmi-plugin');
     const { LayoutStore, normalizeCatalogEntry } = await import(
       '../../src/plugins/layout-planner/rv-layout-store'
     );
     const { buildVirtualNode } = await import('../../src/plugins/layout-planner/ghost-manager');
     const { pathFromNode } = await import('../../src/core/engine/rv-path');
-    const { DESRunner } = await import('@rv-private/plugins/des/des-runner');
-    const { bindSceneToRunner } = await import('@rv-private/plugins/des/des-scene-binding');
+    const { DESRunner } = await import('../../src/plugins/des/des-runner');
+    const { bindSceneToRunner } = await import('../../src/plugins/des/des-scene-binding');
 
     const store = new LayoutStore();
     // The catalog registers only while the DES mode is ACTIVE — it no longer
@@ -109,5 +109,60 @@ describe('DES registration and planner authoring', () => {
     const runner = new DESRunner({ subMode: 'animated' });
     expect(bindSceneToRunner(runner, scene, makeHost())).toBe(4);
     expect(runner.liveInstances.map((instance) => instance.def.type)).toEqual(authoredTypes);
+  });
+
+  it('rebinds the cached runner after Planner replaces the authored scene', async () => {
+    vi.resetModules();
+    await import('../../src/plugins/des/des-plugin');
+    const { DESRunner } = await import('../../src/plugins/des/des-runner');
+    const scene = new Object3D();
+    const first = new Object3D();
+    first.name = 'Station-A';
+    first.userData.realvirtual = { Station: { ProcessingTime: 2 } };
+    scene.add(first);
+    const runner = new DESRunner();
+    const topology = { root: scene, host: makeHost() };
+
+    runner.start([], topology);
+    expect(runner.liveInstances.map(({ adapter }) => adapter.node.name)).toEqual(['Station-A']);
+
+    scene.remove(first);
+    const second = new Object3D();
+    second.name = 'Station-B';
+    second.userData.realvirtual = { Station: { ProcessingTime: 3 } };
+    scene.add(second);
+    runner.start([], topology);
+
+    expect(runner.liveInstances.map(({ adapter }) => adapter.node.name)).toEqual(['Station-B']);
+    expect(runner.getManager().components).toHaveLength(1);
+  });
+
+  it('does not bind legacy Source/Sink extras from an unrelated inner model node', async () => {
+    vi.resetModules();
+    await import('../../src/behaviors/Source');
+    await import('../../src/behaviors/Sink');
+    const { DESRunner } = await import('../../src/plugins/des/des-runner');
+    const { bindSceneToRunner } = await import('../../src/plugins/des/des-scene-binding');
+    const scene = new Object3D();
+    const ambientSource = new Object3D();
+    ambientSource.name = 'Turbine';
+    ambientSource.userData.realvirtual = { Source: { AutomaticGeneration: true, Interval: 0 } };
+    const ambientSink = new Object3D();
+    ambientSink.name = 'Sink';
+    ambientSink.userData.realvirtual = { Sink: {} };
+    scene.add(ambientSource, ambientSink);
+
+    const placed = new Object3D();
+    placed.name = 'Part Source';
+    placed.userData.realvirtual = { LayoutObject: { catalogId: 'part-source' } };
+    const authoredSource = new Object3D();
+    authoredSource.name = 'Emitter';
+    authoredSource.userData.realvirtual = { Source: { AutomaticGeneration: true, Interval: 3 } };
+    placed.add(authoredSource);
+    scene.add(placed);
+
+    const runner = new DESRunner();
+    expect(bindSceneToRunner(runner, scene, makeHost())).toBe(1);
+    expect(runner.liveInstances.map(({ adapter }) => adapter.node.name)).toEqual(['Emitter']);
   });
 });

@@ -3,16 +3,16 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { BoxGeometry, Mesh, Object3D } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
-import { Downtime } from '@rv-private/plugins/des/material-flow/Downtime';
-import { Processing } from '@rv-private/plugins/des/material-flow/Processing';
-import { IndexingConveyor } from '@rv-private/plugins/des/material-flow/IndexingConveyor';
-import { PathTransport } from '@rv-private/plugins/des/material-flow/PathTransport';
-import { RobotHandling } from '@rv-private/plugins/des/material-flow/RobotHandling';
-import { loadMUOnCarrier } from '@rv-private/plugins/des/rv-des-component';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter, type DESMU } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
+import { Downtime } from '../../src/plugins/des/material-flow/Downtime';
+import { Processing } from '../../src/plugins/des/material-flow/Processing';
+import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingConveyor';
+import { PathTransport } from '../../src/plugins/des/material-flow/PathTransport';
+import { RobotHandling } from '../../src/plugins/des/material-flow/RobotHandling';
+import { loadMUOnCarrier } from '../../src/plugins/des/rv-des-component';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
 import { ConveyorFlow } from '../../src/behaviors/Conveyor';
 import {
   createSelf,

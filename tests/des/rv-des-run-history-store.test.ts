@@ -14,9 +14,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { IndexedDBSnapshotStore } from '@rv-private/plugins/des/rv-des-experiment-store';
-import type { RunResult } from '@rv-private/plugins/des/rv-des-experiment-model';
-import type { DESSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
+import { IndexedDBSnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
+import type { RunResult } from '../../src/plugins/des/rv-des-experiment-model';
+import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
 import { parseExperimentInfo } from '../../src/core/material-flow/rv-run-history-store';
 
 function makeRun(runId: string, over: Partial<RunResult> = {}): RunResult {

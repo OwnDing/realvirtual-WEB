@@ -13,15 +13,15 @@
  *  - the Sink consumes them → throughput > 0;
  *  - no events are dropped (the queue drains to empty).
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Mesh, BoxGeometry } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
-import type { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import type { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
 import { ConveyorFlow } from '../../src/behaviors/Conveyor';
 import Source from '../../src/behaviors/Source';
 import {

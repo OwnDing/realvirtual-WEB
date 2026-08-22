@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { IndexedDBSnapshotStore } from '@rv-private/plugins/des/rv-des-experiment-store';
+import { IndexedDBSnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
 import {
   listProjects, createProject, renameProject, closeProjectDb, runScopeStore,
 } from '../../src/core/material-flow/rv-run-history-store';

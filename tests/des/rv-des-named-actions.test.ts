@@ -16,8 +16,8 @@ import {
   ACTION_BY_INDEX,
   ACTION_INDEX,
   ACTION_NAME,
-} from '@rv-private/plugins/des/rv-des-named-actions';
-import type { ActionContext } from '@rv-private/plugins/des/rv-des-event';
+} from '../../src/core/material-flow/des/rv-des-named-actions';
+import type { ActionContext } from '../../src/core/material-flow/des/rv-des-event';
 
 /**
  * Helper: clear all registered actions between tests.

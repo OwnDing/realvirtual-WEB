@@ -39,8 +39,17 @@ export interface LibraryCatalogEntry {
   desType?: string;                        // 'DESConveyor', 'DESStation', etc.
   desConfig?: Record<string, unknown>;     // default rv_extras values
   gizmoSize?: [number, number, number];    // visual box size in mm [x, y, z]
-  /** Virtual snap-point nodes. Positions use catalog millimetres [x, y, z]. */
-  virtualPorts?: { name: string; position: [number, number, number] }[];
+  /** Virtual stable assembly ports. Positions use catalog millimetres [x, y, z].
+   *  Explicit metadata is optional for legacy catalogs; new entries should set
+   *  the four stable fields so connection identity never depends on a node UUID. */
+  virtualPorts?: {
+    name: string;
+    position: [number, number, number];
+    portId?: string;
+    typeId?: string;
+    flow?: 'in' | 'out' | 'bidi';
+    direction?: [number, number, number];
+  }[];
   /** Virtual convention nodes. Positions and optional sizes use millimetres. */
   virtualChildren?: {
     name: string;

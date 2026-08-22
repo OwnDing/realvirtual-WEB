@@ -10,17 +10,17 @@
  * `SdkScheduler` surface the continuous heap scheduler implements — a script
  * component never knows which kernel serves its timers.
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { DESManager, DESMode } from '@rv-private/plugins/des/rv-des-manager';
+import { DESManager, DESMode } from '../../src/plugins/des/rv-des-manager';
 import {
   ensureScriptHookAction,
   makeScriptHookScheduler,
   SCRIPT_HOOK_ACTION,
-} from '@rv-private/plugins/des/rv-des-script-hook';
-import { ACTION_INDEX } from '@rv-private/plugins/des/rv-des-named-actions';
+} from '../../src/plugins/des/rv-des-script-hook';
+import { ACTION_INDEX } from '../../src/plugins/des/rv-des-named-actions';
 import type { ScriptHookDispatcher, ScriptMuRef } from '../../src/core/sdk/rv-script-hook';
 
 interface Dispatched {

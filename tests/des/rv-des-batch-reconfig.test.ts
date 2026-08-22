@@ -16,9 +16,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   readConfigNumber,

@@ -13,15 +13,15 @@
  * absolute ms gates are flaky in CI (style: rv-des-snapshot-scale.test.ts).
  * The only throughput assertion is the smoke check `eventsPerSecond > 0`.
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect } from 'vitest';
 import { Object3D } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
-import type { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import type { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
 import {
   createSelf,
   type MaterialFlowSelf,

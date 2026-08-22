@@ -8,9 +8,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { IndexedDBSnapshotStore } from '@rv-private/plugins/des/rv-des-experiment-store';
-import { createExperimentMeta } from '@rv-private/plugins/des/rv-des-experiment-model';
-import type { DESSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
+import { IndexedDBSnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
+import { createExperimentMeta } from '../../src/plugins/des/rv-des-experiment-model';
+import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
 import { hasCompressionStream, gzipString, gunzipToString } from '../../src/core/persistence/rv-gzip-utils';
 
 function makeSnapshot(simTime: number, marker: string): DESSnapshot {

@@ -28,6 +28,7 @@ export interface KernelSnapshot {
   readonly available: boolean;
   readonly mode: SimulationMode;
   readonly hasDes: boolean;
+  readonly desReady: boolean;
   readonly switching: boolean;
   readonly subMode: SimSubMode | null;
   readonly multiplier: number;
@@ -108,7 +109,7 @@ function readSnapshot(viewer: RVViewer, version: number): KernelSnapshot {
   const kernel = viewer.simulationKernel;
   if (!kernel) {
     return {
-      available: false, mode: 'continuous', hasDes: false, switching: false,
+      available: false, mode: 'continuous', hasDes: false, desReady: false, switching: false,
       subMode: null, multiplier: 1, ffProgress: null,
       simTime: 0, processed: 0, pending: 0, endTime: Infinity, statResetTime: 0, version,
     };
@@ -120,6 +121,7 @@ function readSnapshot(viewer: RVViewer, version: number): KernelSnapshot {
     available: true,
     mode: kernel.mode,
     hasDes: kernel.hasDesRunner(),
+    desReady: ctl?.ready ?? true,
     switching: kernel.isSwitching,
     subMode: ctl?.subMode ?? null,
     multiplier: ctl?.multiplier ?? 1,
@@ -137,6 +139,7 @@ function sameSnapshot(a: KernelSnapshot, b: KernelSnapshot): boolean {
   return a.available === b.available
     && a.mode === b.mode
     && a.hasDes === b.hasDes
+    && a.desReady === b.desReady
     && a.switching === b.switching
     && a.subMode === b.subMode
     && a.multiplier === b.multiplier

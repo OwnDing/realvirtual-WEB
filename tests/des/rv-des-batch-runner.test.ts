@@ -18,8 +18,8 @@ import {
   CRN_BASE,
   type BatchHost,
   type BatchExperimentSpec,
-} from '@rv-private/plugins/des/des-batch-runner';
-import { SEED_STRIDE } from '@rv-private/plugins/des/rv-des-experiment-model';
+} from '../../src/plugins/des/des-batch-runner';
+import { SEED_STRIDE } from '../../src/plugins/des/rv-des-experiment-model';
 
 class FakeHost implements BatchHost {
   calls: string[] = [];
@@ -30,6 +30,7 @@ class FakeHost implements BatchHost {
   onFF: ((i: number) => void) | null = null;
   failQuotaAt: number | null = null;
   scriptFails = false;
+  paramsFail = false;
   private ffCount = 0;
   constructor(private specs: Map<string, BatchExperimentSpec>) {}
 
@@ -42,7 +43,10 @@ class FakeHost implements BatchHost {
         .map((s) => ({ model: s.model, exp: s.exp })),
     );
   }
-  applyParams(): void { this.calls.push('applyParams'); }
+  applyParams(): void {
+    this.calls.push('applyParams');
+    if (this.paramsFail) throw new Error('invalid parameter target');
+  }
   applyScript(): Promise<{ ok: boolean; message?: string }> {
     this.calls.push('applyScript');
     return Promise.resolve(this.scriptFails ? { ok: false, message: 'boom' } : { ok: true });
@@ -152,6 +156,17 @@ describe('DesBatchRunner — runExperiment (9.3)', () => {
     expect(host.seeds).toHaveLength(0);            // aborted before seeding
     expect(JSON.parse(batch.progressJson()!).phase).toBe('aborted');
     expect(host.autoSuppressed).toBe(false);       // finally-restored
+  });
+
+  it('an invalid parameter target aborts with an observable message', async () => {
+    const host = new FakeHost(new Map([['M/E', spec({ exp: 'E', replicationCount: 2 })]]));
+    host.paramsFail = true;
+    const batch = new DesBatchRunner(host);
+    await batch.runExperiment('M', 'E', { replications: 2, crn: false });
+    expect(host.calls).not.toContain('ff');
+    expect(JSON.parse(batch.progressJson()!)).toMatchObject({
+      phase: 'aborted', message: 'invalid parameter target',
+    });
   });
 });
 

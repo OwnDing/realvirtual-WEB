@@ -15,15 +15,15 @@
  *  - the tween registry is driven on lateTick (Animated) / off in FastForward.
  *  - createDesRunner factory is non-null in the private build (kernel wiring).
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Vector3 } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { createDesRunner } from '@rv-private/plugins/des/register-des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { createDesRunner } from '../../src/plugins/des/register-des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
+import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,
@@ -459,7 +459,7 @@ describe('DESRunner — Station definition (DES-only wrapper)', () => {
 
   it('holds an MU for ProcessingTime, then transfers it downstream', async () => {
     // Import here so the def self-registers AFTER the registry reset.
-    const { Station } = await import('@rv-private/plugins/des/material-flow/Station');
+    const { Station } = await import('../../src/plugins/des/material-flow/Station');
     const def = Station as unknown as MaterialFlowDefinition<MaterialFlowSelf<{ processingTime: number }>>;
     const defAny = def as unknown as MaterialFlowDefinition;
 

@@ -5,8 +5,8 @@
  * simulation-kernel.ts — the single transport-owning orchestrator (Plan 194 §2.1).
  *
  * The `SimulationKernel` holds exactly ONE active `SimulationExecutor` at a time
- * — the public `ContinuousRunner` (default) or, when the private side registers
- * one, the `DESRunner`. It is the static form of the old dynamic
+ * — the public `ContinuousRunner` (default) or the registered public DES
+ * executor. It is the static form of the old dynamic
  * `_physicsPluginActive` mutex: `handlesTransport` is a const `true` because the
  * active executor (continuous OR des) is always exactly one, and that one always
  * drives transport (Plan 194 §2.7 / §11.3).
@@ -17,11 +17,10 @@
  * v1. The switch is guarded against rapid re-entry (W4/W5) and wrapped in
  * try/catch so a half-finished switch can never wedge the toggle.
  *
- * DES availability is injected, never imported: `registerDesRunnerFactory()`
- * takes the factory the private side provides (the public build's
- * `des-runner-stub` exports `null`), and `hasDesRunner()` reports it. The public
- * UI toggle reads `hasDesRunner()` and hides DES when false — `SimModeToggle`
- * (P6) never imports `DESRunner` directly (Plan 194 V7).
+ * DES availability is injected, never imported: the standard public viewer
+ * supplies the split public runner factory, while custom/test compositions may
+ * still pass `null`. `hasDesRunner()` reports that capability. UI code never
+ * imports the concrete `DESRunner`; it uses the structural control facade.
  */
 
 import type { MaterialFlowDefinition } from './define-material-flow';
@@ -36,9 +35,8 @@ export type SimulationMode = 'continuous' | 'des';
 
 /**
  * DES sub-mode (Plan 194 §3.2 / F10). Declared here on the PUBLIC kernel surface
- * so `SimModeToggle` (and any public UI) can drive the second toolbar row WITHOUT
- * importing the private `DESRunner`. The private `DESRunner.DesSubMode` is the
- * same string-union — it satisfies this structurally.
+ * so `SimModeToggle` (and any public UI) can drive the second toolbar row without
+ * importing the concrete `DESRunner`.
  */
 export type SimSubMode = 'animated' | 'hybrid' | 'fastforward' | 'step';
 
@@ -62,8 +60,7 @@ export interface SimKpiSnapshot {
  * Lightweight DES clock + event counters the top toolbar reads every poll
  * (Plan 194). Pure data, all O(1) on the manager — so the toolbar can show the
  * sim time (DD:HH:MM:SS), the processed/pending counts and the next-event time
- * without snapshotting the whole queue (that's the Event Queue window's job, and
- * it lives on the private side). No private types cross the boundary.
+ * without snapshotting the whole queue (that's the Event Queue window's job).
  */
 export interface SimEventStats {
   /** Canonical simulation time in seconds. */
@@ -141,6 +138,8 @@ export interface SimDesStatistics {
  * kernel exposes it via `desControl()`, returning `null` outside DES mode.
  */
 export interface SimDesControl {
+  /** True once an asynchronously split DES runtime has loaded and started. */
+  readonly ready?: boolean;
   /** Current sub-mode. */
   readonly subMode: SimSubMode;
   /** Switch the sub-mode (Animated / Hybrid / FastForward / Step). */
@@ -189,9 +188,7 @@ export interface SimDesControl {
   // ── Experiment / snapshot management (plan-261) ────────────────────────
   // REPO-BOUNDARY RULE (plan-261 B3): everything below transports STRINGS and
   // primitives only — the manifest crosses as a JSON string (like
-  // `snapshotJson`), NEVER as a private type. The private repo does not exist
-  // at public build time; a private type in a signature would be a
-  // compilability break, not a style issue.
+  // `snapshotJson`), never as a concrete runner/store type.
 
   /** Master PRNG seed of the DES manager. */
   readonly masterSeed?: number;
@@ -252,8 +249,8 @@ export interface SimDesControl {
 }
 
 /**
- * Factory the private DES side provides; `null` in the public build. Same shape
- * as `private-stubs/des-runner-stub.ts` `CreateDesRunner`. The optional `core`
+ * Factory supplied by the public composition root; `null` remains supported for
+ * continuous-only custom/test compositions. The optional `core`
  * is the viewer's CoreSubsystems pipeline the DES runner composes into its
  * tick (drives/visuals keep running at 60 Hz while the event queue advances).
  */
@@ -269,7 +266,7 @@ export interface SimulationKernelOptions {
   readonly topology: SimulationTopology;
   /** Material-flow definitions in play (continuous discovery already binds them). */
   readonly defs?: MaterialFlowDefinition[];
-  /** DES runner factory; defaults to the stub (`null`) → continuous-only public build. */
+  /** DES runner factory; omit or pass `null` for a continuous-only composition. */
   readonly desRunnerFactory?: DesRunnerFactory;
   /** The viewer's CoreSubsystems pipeline, forwarded to the DES runner factory
    *  (the continuous runner receives it directly at construction). */
@@ -340,9 +337,8 @@ export class SimulationKernel {
   }
 
   /**
-   * True when a DES runner factory is registered (i.e. the private side is
-   * present). The public build's stub registers `null` → `false`, so the
-   * Realtime/DES toggle is hidden (Plan 194 §4.1 / P1).
+   * True when a DES runner factory is registered. Standard public builds return
+   * true; continuous-only custom/test compositions return false.
    */
   hasDesRunner(): boolean {
     return this.desRunnerFactory !== null;
@@ -352,8 +348,8 @@ export class SimulationKernel {
    * The DES sub-mode / KPI control surface, or `null` when not in DES mode (or
    * the active executor does not expose one). The public UI drives the
    * sub-mode row + reads KPIs through this STRUCTURAL interface — it never sees
-   * the concrete (private) `DESRunner` (Plan 194 V7). The cast is purely
-   * structural; in the continuous mode (or with the public stub) there is no
+   * the concrete `DESRunner` (Plan 194 V7). The cast is purely structural; in
+   * continuous mode (or a continuous-only composition) there is no
    * DES executor, so this returns `null` and the sub-mode row stays hidden.
    */
   desControl(): SimDesControl | null {
@@ -369,9 +365,7 @@ export class SimulationKernel {
   // ─── DES registration (injection, never import) ───────────────────────
 
   /**
-   * Register (or clear) the DES runner factory. Called once at wiring time with
-   * the factory the private side exports (`des-runner-stub` exports `null` in
-   * the public build). Idempotent.
+   * Register (or clear) the DES runner factory. Idempotent.
    */
   registerDesRunnerFactory(factory: DesRunnerFactory): void {
     this.desRunnerFactory = factory;
@@ -397,9 +391,9 @@ export class SimulationKernel {
     // Rapid-toggle / re-entrancy guard (W5).
     if (this._mode === m || this._switching) return;
 
-    // Public build: no DES runner → DES is unavailable, ignore the request.
+    // Continuous-only composition: DES is unavailable, ignore the request.
     if (m === 'des' && !this.hasDesRunner()) {
-      console.warn('[SimulationKernel] setMode("des") ignored — no DES runner registered (public build).');
+      console.warn('[SimulationKernel] setMode("des") ignored — no DES runner registered.');
       return;
     }
 

@@ -11,7 +11,7 @@ authority: normative-registry
 
 当前没有待批准的 ExecPlan。
 
-- `EP-DES-001` 已于 2026-08-22 接受 `ADR-0005` 后激活，移至 [`../active/EP-DES-001-public-domain-neutral-des.md`](../active/EP-DES-001-public-domain-neutral-des.md)。
+- `EP-DES-001` 已于 2026-08-22 接受 `ADR-0005` 后激活并完成，移至 [`../completed/EP-DES-001-public-domain-neutral-des.md`](../completed/EP-DES-001-public-domain-neutral-des.md)。
 
 - `EP-I18N-001` 已于 2026-08-19 接受 `ADR-0001` 后激活，并于 2026-08-21 完成，移至 [`../completed/EP-I18N-001-incremental-foundation.md`](../completed/EP-I18N-001-incremental-foundation.md)。
 - `EP-DEMO-001` 已于 2026-08-21 获用户批准后激活，并于 2026-08-22 完成，移至 [`../completed/EP-DEMO-001-paintline-demo.md`](../completed/EP-DEMO-001-paintline-demo.md)。

@@ -16,7 +16,7 @@ import {
   uniform,
   erlang,
   weibull,
-} from '@rv-private/plugins/des/rv-des-distribution';
+} from '../../src/core/material-flow/des/rv-des-distribution';
 
 describe('DESDistribution', () => {
   it('exponential has correct mean (10K samples, within 10%)', () => {

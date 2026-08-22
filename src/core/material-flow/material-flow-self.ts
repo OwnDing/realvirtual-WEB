@@ -126,6 +126,8 @@ export interface MU {
   /** Per-MU snapshot-safe custom state. */
   prop?: Record<string, JsonValue>;
   childMUs?: MuRef[];
+  /** Runtime-only child objects; stable references remain authoritative for persistence. */
+  runtimeChildren?: MU[];
   parentMU?: MuRef | null;
   carrierType?: string;
   carrierCapacity?: number;

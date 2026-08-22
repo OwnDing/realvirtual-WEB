@@ -13,17 +13,17 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager, DESMode } from '@rv-private/plugins/des/rv-des-manager';
-import { DES } from '@rv-private/plugins/des/rv-des-api';
-import { DESSource } from '@rv-private/plugins/des/rv-des-source';
-import { DESSink } from '@rv-private/plugins/des/rv-des-sink';
-import { DESConveyor } from '@rv-private/plugins/des/rv-des-conveyor';
-import { DESStation } from '@rv-private/plugins/des/rv-des-station';
-import { DESComponent } from '@rv-private/plugins/des/rv-des-component';
-import { createSnapshot, restoreSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
-import type { DESSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
-import { resetDESMUCounter, createDESMU } from '@rv-private/plugins/des/rv-des-mu';
-import type { DESMU } from '@rv-private/plugins/des/rv-des-mu';
+import { DESManager, DESMode } from '../../src/plugins/des/rv-des-manager';
+import { DES } from '../../src/plugins/des/rv-des-api';
+import { DESSource } from '../../src/plugins/des/rv-des-source';
+import { DESSink } from '../../src/plugins/des/rv-des-sink';
+import { DESConveyor } from '../../src/plugins/des/rv-des-conveyor';
+import { DESStation } from '../../src/plugins/des/rv-des-station';
+import { DESComponent } from '../../src/plugins/des/rv-des-component';
+import { createSnapshot, restoreSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import { resetDESMUCounter, createDESMU } from '../../src/plugins/des/rv-des-mu';
+import type { DESMU } from '../../src/plugins/des/rv-des-mu';
 import { NodeRegistry } from '../../src/core/engine/rv-node-registry';
 import { SignalStore } from '../../src/core/engine/rv-signal-store';
 

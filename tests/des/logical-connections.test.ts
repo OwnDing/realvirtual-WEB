@@ -17,7 +17,7 @@ import {
   breakTwoCycles,
   detectCycles,
   type ConnectableInstance,
-} from '@rv-private/plugins/des/logical-connections';
+} from '../../src/plugins/des/logical-connections';
 
 type MockAdapter = {
   node: Object3D;

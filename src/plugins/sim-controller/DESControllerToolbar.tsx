@@ -18,15 +18,15 @@
  * It never imports the private `DESRunner` (Plan 194 V7), so it works unchanged
  * whether the DES runner is private (today) or public (later).
  *
- * The Event Queue button toggles a shared open-store; the actual window (with
- * filter/category/footer) is the private `DESEventQueueWindow`, rendered by the
- * `@rv-private` overlay the DES workspace registers.
+ * The Event Queue button toggles a shared open-store and renders the public
+ * live diagnostics panel through a body portal. The store is closed by the DES
+ * workspace's mode-deactivation hook, so it never leaks into other workspaces.
  */
 
 import { useState, useCallback, useEffect, useSyncExternalStore, lazy, type MouseEvent } from 'react';
 import { Box, Menu, MenuItem, LinearProgress, TextField, Checkbox, FormControlLabel, Divider, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import {
-  Speed, FastForward, SkipNext, Close, Schedule, Science,
+  Speed, FastForward, SkipNext, Close, Schedule, Science, FormatListBulleted,
 } from '@mui/icons-material';
 import type { UISlotProps } from '../../core/rv-ui-plugin';
 import { ActionSegment, ActionDivider } from '../../core/hmi/action-group';
@@ -42,7 +42,11 @@ import { LazyPanelBoundary } from '../../core/hmi/LazyPanelBoundary';
 import {
   desMatrixWindowStore, closeDesMatrixWindow, toggleDesMatrixWindow,
 } from './des-matrix-window-store';
+import {
+  isEventQueueWindowOpen, setEventQueueWindowOpen, subscribeEventQueueWindow,
+} from './event-queue-window-store';
 import { useRvTranslation } from '../../core/i18n';
+import { DESEventQueuePanel } from './DESEventQueuePanel';
 
 /**
  * The Experiment Matrix is a 46 KB panel that most sessions never open, so it is
@@ -139,6 +143,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
   const runSettings = useSyncExternalStore(desRunSettingsStore.subscribe, desRunSettingsStore.getSnapshot);
   // Shared open-state: the private DES side-tool button toggles the SAME window.
   const runsOpen = useSyncExternalStore(desMatrixWindowStore.subscribe, desMatrixWindowStore.getSnapshot);
+  const eventQueueOpen = useSyncExternalStore(subscribeEventQueueWindow, isEventQueueWindowOpen);
   // `hasLoaded || open`, NOT a plain `open &&` (plan-344 Phase 4): the matrix
   // holds real user state — the experiment list, batch progress, the CRN flag and
   // half-typed parameter input. Unmounting it on close would silently discard all
@@ -152,8 +157,8 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
   // Bootstrap the run scope (default project + experiment by glb fingerprint)
   // once a DES runner is active — the private lifecycle archives into it.
   useEffect(() => {
-    if (snap.hasDes && snap.mode === 'des') void ensureActiveScope(viewer).catch(() => {});
-  }, [snap.hasDes, snap.mode, viewer]);
+    if (snap.hasDes && snap.desReady && snap.mode === 'des') void ensureActiveScope(viewer).catch(() => {});
+  }, [snap.hasDes, snap.desReady, snap.mode, viewer]);
 
   const setSeedValue = useCallback((v: string) => {
     const seed = Math.floor(Number(v));
@@ -271,7 +276,15 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
             buttonProps={{ 'data-testid': 'des-runs-open' }}
           />
 
-          {/* Event Queue + Save/Load snapshot moved to the side DES tool menu. */}
+          <ActionSegment
+            title={t('des.eventQueueToggle')}
+            onClick={() => setEventQueueWindowOpen(!eventQueueOpen)}
+            active={eventQueueOpen}
+            icon={<FormatListBulleted />}
+            buttonProps={{ 'data-testid': 'des-event-queue', 'aria-pressed': eventQueueOpen }}
+          />
+
+          {/* Save/Load snapshot remains in the side DES tool menu. */}
 
           {/* Play-speed factor dropdown */}
           <Menu
@@ -429,6 +442,7 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
           )}
         </>
       )}
+      <DESEventQueuePanel viewer={viewer} open={eventQueueOpen} />
     </>
   );
 }

@@ -14,13 +14,13 @@
  *   - the §6-appendix Turntable DES block runs FOR REAL: accept → timed
  *     rotation on the DES clock → `transfer(mu, selectedOutput)`.
  *
- * Runs only in the private build (imports `@rv-private/plugins/des/*`).
+ * Runs only in the private build (imports `../../src/plugins/des/*`).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Object3D } from 'three';
-import { DESManager, DESMode } from '@rv-private/plugins/des/rv-des-manager';
-import { makeScriptHookScheduler } from '@rv-private/plugins/des/rv-des-script-hook';
+import { DESManager, DESMode } from '../../src/plugins/des/rv-des-manager';
+import { makeScriptHookScheduler } from '../../src/plugins/des/rv-des-script-hook';
 import { RVScriptHost } from '../../src/core/engine/rv-script-host';
 import { createSdkComponent } from '../../src/core/sdk/rv-component-sdk';
 import { RVScriptComponentAdapter } from '../../src/core/sdk/rv-script-component-adapter';

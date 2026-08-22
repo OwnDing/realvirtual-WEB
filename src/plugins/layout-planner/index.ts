@@ -2479,6 +2479,11 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
     // Routes through SelectionManager → 'selection-changed' → TransformControls attach.
     this._selectObject(id);
 
+    // Programmatic placement (Library double-click, MCP and tests) can land a
+    // virtual DES component directly on an existing stable port. Rebuild after
+    // the burst just like drag/snap/restore paths so coincident authored ports
+    // become real pairings before the DES runner binds the scene.
+    this._scheduleSnapPairingRebuild();
     this._viewer.markRenderDirty();
     this._viewer.emit('layout:component-placed' as any, { id, entry });
     return id;
@@ -2915,25 +2920,8 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
    * `_modelCache.getOrLoad('')`, which is never a usable placement.
    */
   private async _buildVirtualDesNode(entry: LibraryCatalogEntry): Promise<Object3D> {
-    const gizmoSize = entry.gizmoSize ?? [500, 500, 500] as [number, number, number];
-    let node: Object3D | null = null;
-    try {
-      const { getRegisteredFactories } = await import('../../core/engine/rv-component-registry');
-      const factories = getRegisteredFactories();
-      const factory = factories.get(entry.desType!);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (factory && typeof (factory as any).ctor?.createGizmo === 'function') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        node = (factory as any).ctor.createGizmo(gizmoSize) as Object3D;
-      }
-    } catch { /* fall through to placeholder */ }
-    if (!node) {
-      const { createVirtualPlaceholder } = await import('./ghost-manager');
-      node = createVirtualPlaceholder(gizmoSize, entry.desType);
-    }
-    node.name = entry.name;
-    node.userData.realvirtual = { [entry.desType!]: entry.desConfig ?? {} };
-    return node;
+    const { buildVirtualNode } = await import('./ghost-manager');
+    return buildVirtualNode(entry);
   }
 
   /**
@@ -3523,14 +3511,16 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
     ownSnapName: string,
   ): Promise<string | null> {
     if (!this._viewer) return null;
-    if (!entry.glbUrl) return null;
+    if (!entry.glbUrl && !(entry.virtual && entry.desType)) return null;
 
     const snapPlugin = this._viewer.getPlugin<SnapPointPlugin>('snap-point');
     const snapRegistry = snapPlugin?.getRegistry();
     if (!snapRegistry) return null;
     if (target.occupied) return null;
 
-    const node = await this._modelCache.getOrLoad(entry.glbUrl);
+    const node = entry.virtual && entry.desType
+      ? await buildVirtualNode(entry)
+      : await this._modelCache.getOrLoad(entry.glbUrl ?? '');
     const id = crypto.randomUUID();
 
     const result = smPlaceAtSnapPoint(
@@ -3548,7 +3538,7 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
     const comp: PlacedComponent = {
       id,
       catalogId: entry.id,
-      glbUrl: entry.glbUrl,
+      glbUrl: entry.glbUrl ?? '',
       label: entry.name,
       position: [node.position.x, node.position.y, node.position.z],
       rotation: [

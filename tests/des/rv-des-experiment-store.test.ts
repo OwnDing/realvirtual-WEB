@@ -17,14 +17,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   IndexedDBSnapshotStore,
   ManifestVersionConflictError,
-} from '@rv-private/plugins/des/rv-des-experiment-store';
+} from '../../src/plugins/des/rv-des-experiment-store';
 import {
   SEED_STRIDE,
   replicationSeed,
   createExperimentMeta,
-} from '@rv-private/plugins/des/rv-des-experiment-model';
-import type { DESSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
-import { SFC32 } from '@rv-private/plugins/des/rv-des-distribution';
+} from '../../src/plugins/des/rv-des-experiment-model';
+import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import { SFC32 } from '../../src/plugins/des/rv-des-distribution';
 
 function makeSnapshot(simTime: number, payload = 'x'): DESSnapshot {
   return {

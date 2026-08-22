@@ -3,10 +3,9 @@
 
 /**
  * event-queue-window-store — tiny shared open-state for the DES Event Queue
- * window. PUBLIC so the DES toolbar button (public `DESControllerToolbar`) and
- * the private window overlay (`@rv-private/.../event-queue-overlay`) share one
- * source of truth across the repo boundary: the button toggles, the private
- * overlay renders the actual `DESEventQueueWindow` when open.
+ * window. PUBLIC so the DES toolbar button and any compatible auxiliary entry
+ * point share one source of truth. The public toolbar owns the live diagnostics
+ * portal; the DES workspace closes this store when the mode is deactivated.
  *
  * `useSyncExternalStore`-compatible (subscribe + a stable getSnapshot).
  */

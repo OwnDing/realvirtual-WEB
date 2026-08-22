@@ -2,7 +2,7 @@
 doc_id: EP-DES-001
 title: 公开、行业无关的 DES 完整闭环
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-22
 authority: normative
@@ -69,12 +69,14 @@ authority: normative
 
 - `docs/adr/`、`docs/contracts/`、`docs/product-specs/`、`docs/exec-plans/`、`docs/acceptance/`、`docs/governance/`
 - `src/core/material-flow/`、`src/core/sdk/`、`src/core/rv-viewer.ts`、`src/core/rv-viewer-events.ts`
+- `src/core/library/library-types.ts`、`src/hooks/use-kernel-snapshot.ts`
 - `src/core/project/`、`src/core/ops/`、`src/core/hmi/scene/`、`src/core/editor/`
 - `src/plugins/des/`、`src/plugins/sim-controller/`、`src/plugins/layout-planner/`、`src/plugins/smart-asset-editor/`、`src/behaviors/`
 - `src/private-stubs/des-runner-stub.ts`、`src/private-stubs/plugins/des/`
 - `src/core/i18n/catalogs/`、`src/main.ts`
 - `tests/des/`、`tests/path/`、`tests/simulation-kernel.test.ts`、`tests/des-workspace-coupling.test.ts`、`tests/sim-mode-toggle.node.test.ts`、`tests/private-dependent-tests.json`
-- `scripts/gen-private-test-excludes.mjs`、`tsconfig.json`、`vite.config.ts`、`vitest.node.config.ts`
+- `scripts/gen-private-test-excludes.mjs`、`scripts/i18n-verbatim-check.mjs`、`tsconfig.json`、`vite.config.ts`、`vitest.node.config.ts`
+- `tests/ui-lazy-panels.test.tsx`、`tests/bundle-splitting.test.ts`
 - `e2e/`、`playwright.config.ts`
 - `doc-behavior-modelling.md`、`doc-behaviors.md`
 
@@ -145,14 +147,14 @@ authority: normative
 - [x] 盘点公开 DES 骨架、私有 stub、Schema 边界与现有特征测试
 - [x] 建立 Approved `PS-DES-001`、Proposed `ADR-0005` 与 Proposed `EP-DES-001`
 - [x] 用户批准 ExecPlan 并接受 ADR-0005
-- [ ] M0 公开契约与失败基线
-- [ ] M1 确定性调度黄金切片
-- [ ] M2 通用实体、组件与拓扑
-- [ ] M3 SimulationKernel、四模式与生命周期
-- [ ] M4 公开工作区、创作与诊断
-- [ ] M5 快照、运行历史与实验
-- [ ] M6 跨行业黄金流程
-- [ ] M7 完整迁移、性能与交付
+- [x] M0 公开契约与失败基线
+- [x] M1 确定性调度黄金切片
+- [x] M2 通用实体、组件与拓扑
+- [x] M3 SimulationKernel、四模式与生命周期
+- [x] M4 公开工作区、创作与诊断
+- [x] M5 快照、运行历史与实验
+- [x] M6 跨行业黄金流程
+- [x] M7 完整迁移、性能与交付
 
 ## Surprises & Discoveries
 
@@ -160,6 +162,11 @@ authority: normative
 - `tests/des/` 已保留丰富行为契约，但 54/65 文件被公开构建排除。这些测试是迁移目标不是可删除的历史负担。
 - rv-ODT v1.1 对 DES 的排除是明确的规范边界，不是一个可直接补 `$defs` 的遗漏。公开 DES 先建立独立运行契约，避免本计划静默改变交换格式范围。
 - 现有涂装线行为是连续模式的特定消费者，其应作为跨行业验收的最后一层，不应被当成 DES 内核开发的第一个依赖。
+- Planner 的虚拟放置原先只保存 transform/asset 引用，DES 重开验收暴露出稳定端口子节点也必须进入 `rv-layout-autosave` 投影；否则对象本身恢复但逻辑拓扑丢失。
+- 场景绑定不能把任意旧模型中的 `Source`/`Sink` extras 当成用户创作的 DES 线；带 `models` 的定义必须遵循连续 BehaviorManager 的模型/LayoutObject 作用域。
+- 把公开 runner 直接静态导入 Viewer 会让入口从 3,466,216 B 增到 3,573,006 B 并越过 3,520,000 B 预算。最终保留 `SimulationKernel.setMode()` 同步契约，以同步 facade + 首次 DES 进入动态加载 runner；最终入口为 3,516,780 B，控制面通过 `ready` 明示加载状态，快速切回会废弃待启动请求。
+- 全量 Browser 在本机同时暴露两个非本计划代码失败：`public/models/tests.glb` 实际是 130 B Git LFS pointer，当前环境没有 `git-lfs`；长时间 SwiftShader 运行还会被 Chromium 因 WebGL 上下文耗尽阻断。单独重跑不依赖该 LFS 资产的失败套件可通过，依赖它的用例稳定报 GLB 解析错误。
+- 实施收尾审计发现实验/批处理模块虽已公开且独立测试通过，但真实 runner 尚未连接 `SimDesControl`；补齐 IndexedDB、快照、运行生命周期、checkpoint、参数脚本和批处理连接后，新增真实 facade 集成测试，避免以“模块存在”冒充 M5 闭环。
 
 ## Decision Log
 
@@ -169,6 +176,8 @@ authority: normative
 | 2026-08-22 | 涂装线只是验收 fixture，不是公共内核领域 | 用户强调产品不只面向涂装线 | 以通用事件/实体/资源/队列/路由契约和多领域验收防止业务污染 |
 | 2026-08-22 | 本轮只交付 Proposed ExecPlan/ADR，不实施代码 | 用户要求“先出 ExecPlan” | 先审查大型边界、契约和里程，获批后再转 Active/Accepted |
 | 2026-08-22 | 接受 ADR-0005 并激活 EP-DES-001 | 用户要求评估后整体认可即先提交推送文档、再完成全部阶段 | 审查确认模块边界、状态所有权和回滚方案可执行；将 53 个公共 DES 测试与 1 个 Toray 项目测试分离，并补齐创作/项目作用域实施路径 |
+| 2026-08-22 | 公开 DES runner 在首次进入 DES 时按需加载 | 现有入口包预算与 `SimulationKernel.setMode()` 同步契约 | 不提高 3,520,000 B 门槛；同步 facade 立即提供模式/控制面，真实 runner 加载前 `ready=false`，加载完成后重放 start/设置，快速切回取消待启动请求 |
+| 2026-08-22 | `tests.glb`/SwiftShader 作为本地全量 Browser 环境偏差记录，不删除或放宽测试 | P0 测试完整性规则与逐套件复跑证据 | 保留失败结果并用 DES 全套、产物断言、关键失败套件单跑和 Playwright 黄金流程界定本计划行为；不声称全量 Browser 门禁通过 |
 
 ## Validation
 
@@ -177,15 +186,16 @@ authority: normative
 - `./scripts/verify.sh governance`：要求新规格、ADR、ExecPlan、索引和链接通过。
 - `git diff --check`：要求文档无空白/补丁格式问题。
 
-计划实施阶段必须记录：
+实施结果（2026-08-22，本机 Chromium/SwiftShader）：
 
-- 聚焦纯算法、组件、适配、快照、实验、存储与 UI 测试的逐里程结果；
-- `node scripts/gen-private-test-excludes.mjs` 后的生成物漂移测试，确认 DES 不再被公开门禁排除；
-- `./scripts/verify.sh governance`、`static`、`node`、`browser`、`build` 和聚焦 `e2e`；
-- 四模式等价、快照续跑、项目保存/重开、模型清理/插件停用与错误路径；
-- 100k/1M 事件、500/5,000 组件和可配置 MU 数的性能/内存基线，不用未实测数字做产品声称；
-- 纯通用、物料搬运和涂装线三类浏览器证据；
-- 真实 PLC/MQTT、客户模型、生产连接、多浏览器/GPU 和人工 UX 的已验证/未验证边界。
+- `node scripts/gen-private-test-excludes.mjs`：生成 110 个 private-dependent 文件；公共 DES 的 `@rv-private/plugins/des` 导入为 0，仅 `tests/des/toray-oee-simulation.test.ts` 因 `@rv-projects/Toray` 保持排除。
+- DES 聚焦 Browser：68 个文件、365 例全部通过，覆盖事件队列、runner、通用组件、稳定拓扑、四模式、故障/恢复、MU 代次/载具、快照续跑、checkpoint、IndexedDB 实验、参数脚本、真实 facade、批处理取消/错误、公开 UI、通用/物料搬运/涂装消费者。
+- Node：59 个文件、622 例通过，2 个文件/7 例按既有条件跳过；公开架构门禁确认 DES core/plugin 不导入 PaintLine/Demo/项目私有实现。
+- Playwright：`e2e/public-des-flow.spec.ts` 1/1 通过；从真实 Library/Planner 放置 PalletSource → Station → Storage → Sink，得到 6 个稳定配对端口，进入 DES FastForward 后产出/KPI/瓶颈可见，打开诊断，再由真实 `rv-layout-autosave` 删除/重建并同种子复现业务终态。
+- 性能基线（诊断数据，不是跨设备 SLA）：100k 事件 enqueue/dequeue 48.6/92.7 ms，1M 为 278.7/1,989.1 ms；500 组件/5,000 MU 快照 3.05 MiB、写/恢复 41.7/89.9 ms，5,000 组件/10,000 MU 为 8.58 MiB、237.1/1,720.4 ms；固定模型 FastForward 129,596 事件两次约 389k/426k events/s。
+- `./scripts/verify.sh governance`、`static`、`node`、`build` 在最终源/文档状态通过；`tests/bundle-splitting.test.ts` 14/14 通过。最终入口 3,516,780 / 3,520,000 B（余 3,220 B），真实 DES runner 为 80.42 kB 按需 chunk；没有提高预算。
+- `./scripts/verify.sh browser` 全量结果为 991 文件通过、27 失败、5 跳过；10,688 例通过、106 失败、24 跳过、2 todo、11 errors。失败集中于 130 B Git LFS pointer `public/models/tests.glb` 的解析错误及长跑 SwiftShader/WebGL context loss；`embed-rehydrate` 单跑中非 `tests.glb` 用例通过、两个依赖该资产的用例稳定失败。故本地不声称全量 Browser 绿色。
+- 未验证：真实 PLC/MQTT（本计划未改写权限）、客户/生产模型与连接、多浏览器/GPU 性能、生产配额压力和人工全界面/双语 UX 巡检。
 
 ## Rollback
 
@@ -196,4 +206,8 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-待计划获批、实施并完成后填写实际行为、全部验证证据、性能数据、迁移偏差、未验证真实环境和后续债务。
+公开构建现在拥有行业无关的确定性 DES 内核和真实工作区闭环：用户可从公开 Library 组装稳定端口拓扑，以 Animated/Hybrid/FastForward/Step 运行，观察事件/KPI/瓶颈，保存/恢复快照，记录运行和 checkpoint，并通过实验矩阵执行参数化复制与导出。没有为涂装线加入内核分支；纯通用、物料搬运和涂装消费者共用同一 runner。
+
+迁移后公共 DES 测试全部从 `@rv-private/plugins/des` 脱离，Toray 项目测试仍留在正确的项目边界；rv-ODT v1.1、旧 GLB/项目、稳定 NodeId/端口、连续仿真和工业接口未迁移。Planner 持久化新增稳定端口子树投影，重开后显式拓扑不再退化为距离猜测。
+
+主要后续债务有两项：入口离 3,520,000 B 预算仅余 3,220 B，新增启动代码必须继续经过产物断言；仓库/执行环境应安装 Git LFS 并恢复 `tests.glb` 实体，再在具备稳定 GPU/WebGL 上下文的 runner 上重跑全量 Browser。真实设备、客户模型和人工 UX 验收仍需独立环境执行，不能由本计划的自动化结果代替。

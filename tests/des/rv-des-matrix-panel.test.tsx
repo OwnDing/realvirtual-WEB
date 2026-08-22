@@ -14,8 +14,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
-import { IndexedDBSnapshotStore, type ManifestMetaPatch } from '@rv-private/plugins/des/rv-des-experiment-store';
-import type { RunResult } from '@rv-private/plugins/des/rv-des-experiment-model';
+import { IndexedDBSnapshotStore, type ManifestMetaPatch } from '../../src/plugins/des/rv-des-experiment-store';
+import type { RunResult } from '../../src/plugins/des/rv-des-experiment-model';
 import { DESExperimentMatrixPanel } from '../../src/plugins/sim-controller/DESExperimentMatrixPanel';
 import {
   desMatrixWindowStore, openDesMatrixWindow, closeDesMatrixWindow, toggleDesMatrixWindow,

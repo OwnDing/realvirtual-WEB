@@ -13,14 +13,14 @@
  *
  * Repo boundary (Plan 194 V7): this component imports ONLY the PUBLIC kernel
  * facade (`SimulationKernel` types + `viewer.simulationKernel`). It NEVER
- * imports `DESRunner` or anything private — it drives the DES sub-mode/KPI
+ * imports the concrete `DESRunner` — it drives the DES sub-mode/KPI
  * surface through the STRUCTURAL `SimDesControl` interface the kernel returns
  * from `desControl()`. The `tests/sim-mode-toggle.node.test.ts` import-boundary
  * test asserts this.
  *
  * Availability:
  *   - `viewer.simulationKernel === null` (flag OFF / no model) → renders nothing.
- *   - `kernel.hasDesRunner() === false` (public build, no DES) → the DES segment
+ *   - `kernel.hasDesRunner() === false` (continuous-only composition) → the DES segment
  *     is DISABLED (the toggle still shows so the mode is discoverable).
  */
 

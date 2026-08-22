@@ -11,14 +11,14 @@
 
 import { describe, it, expect } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager } from '@rv-private/plugins/des/rv-des-manager';
-import { DES } from '@rv-private/plugins/des/rv-des-api';
-import { DESStation } from '@rv-private/plugins/des/rv-des-station';
-import type { DESComponent } from '@rv-private/plugins/des/rv-des-component';
-import { createSnapshot, restoreSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
-import { createDESMU, resetDESMUCounter } from '@rv-private/plugins/des/rv-des-mu';
-import type { DESMU, DESMUSnapshot } from '@rv-private/plugins/des/rv-des-mu';
-import { registerAction, ACTION_INDEX } from '@rv-private/plugins/des/rv-des-named-actions';
+import { DESManager } from '../../src/plugins/des/rv-des-manager';
+import { DES } from '../../src/plugins/des/rv-des-api';
+import { DESStation } from '../../src/plugins/des/rv-des-station';
+import type { DESComponent } from '../../src/plugins/des/rv-des-component';
+import { createSnapshot, restoreSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import { createDESMU, resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import type { DESMU, DESMUSnapshot } from '../../src/plugins/des/rv-des-mu';
+import { registerAction, ACTION_INDEX } from '../../src/plugins/des/rv-des-named-actions';
 
 // Guarded registration — a no-op action for the synthetic pending workload.
 if (!ACTION_INDEX.has('ScaleTest.Noop')) registerAction('ScaleTest.Noop', () => {});

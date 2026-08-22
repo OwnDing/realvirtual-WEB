@@ -33,6 +33,7 @@ import { LazyPanelBoundary } from '../src/core/hmi/LazyPanelBoundary';
 import { LayoutLibraryPanelHost } from '../src/plugins/layout-planner/LayoutLibraryPanelHost';
 import { DESControllerToolbar } from '../src/plugins/sim-controller/DESControllerToolbar';
 import { toggleDesMatrixWindow, closeDesMatrixWindow } from '../src/plugins/sim-controller/des-matrix-window-store';
+import { isEventQueueWindowOpen, setEventQueueWindowOpen } from '../src/plugins/sim-controller/event-queue-window-store';
 import { LeftPanelManager } from '../src/core/hmi/left-panel-manager';
 import { activateContext, deactivateContext } from '../src/core/hmi/ui-context-store';
 import { rvDarkTheme } from '../src/core/hmi/theme';
@@ -126,6 +127,7 @@ beforeEach(() => { localStorage.clear(); });
 afterEach(() => {
   cleanup();
   closeDesMatrixWindow();
+  setEventQueueWindowOpen(false);
   deactivateContext('planner');
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -141,6 +143,14 @@ describe('lazy panels — nothing loads before the first open', () => {
     render(themed(<DESControllerToolbar viewer={makeDesViewer()} />, makeDesViewer()));
     await act(async () => { await new Promise((r) => setTimeout(r, 100)); });
     expect(moduleRequested(MATRIX_MODULE)).toBe(false);
+  });
+
+  it('the public DES toolbar exposes the event and KPI diagnostics toggle', () => {
+    const viewer = makeDesViewer();
+    render(themed(<DESControllerToolbar viewer={viewer} />, viewer));
+    expect(isEventQueueWindowOpen()).toBe(false);
+    fireEvent.click(screen.getByTestId('des-event-queue'));
+    expect(isEventQueueWindowOpen()).toBe(true);
   });
 
   it('T4a the planner overlay host with the library closed does not request its chunk', async () => {

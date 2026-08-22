@@ -17,7 +17,7 @@ import {
   parseExperimentMeta,
   type ExperimentMeta,
   type ParamOverride,
-} from '@rv-private/plugins/des/rv-des-experiment-model';
+} from '../../src/plugins/des/rv-des-experiment-model';
 
 const OV: ParamOverride = { path: 'Src', component: 'DESSource', field: 'InterArrivalTime', value: 3.0 };
 

@@ -4,18 +4,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Object3D } from 'three';
 import { RVMovingUnit } from '../../src/core/engine/rv-mu';
-import { DESManager } from '@rv-private/plugins/des/rv-des-manager';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
+import { DESManager } from '../../src/plugins/des/rv-des-manager';
+import { DESRunner } from '../../src/plugins/des/des-runner';
 import {
   freeCarrierSlots,
   loadMUOnCarrier,
   topmostPickable,
-} from '@rv-private/plugins/des/rv-des-component';
-import { createDESMU, resetDESMUCounter, type DESMU } from '@rv-private/plugins/des/rv-des-mu';
-import { migrateSnapshotToV3, type DESSnapshot } from '@rv-private/plugins/des/rv-des-snapshot';
-import { MaterialFlowAdapter } from '@rv-private/plugins/des/material-flow-adapter';
-import { PalletSource } from '@rv-private/plugins/des/material-flow/PalletSource';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
+} from '../../src/plugins/des/rv-des-component';
+import { createDESMU, resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
+import { migrateSnapshotToV3, type DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
+import { PalletSource } from '../../src/plugins/des/material-flow/PalletSource';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
 import {
   createSelf,
   type MaterialFlowSelf,
