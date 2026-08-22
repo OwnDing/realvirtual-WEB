@@ -50,10 +50,11 @@ interface Stage {
 const STAGES: Stage[] = [
   { node: 'PretreatTunnel-8m', captionKey: 'paintline.tourPretreat', position: [-11, 7, -1], target: [0, 1.8, 6], dwell: 5 },
   { node: 'DryOven-6m', captionKey: 'paintline.tourOven', position: [-11, 7.5, 7], target: [0, 2, 14], dwell: 5 },
-  // Inside the booth, just past the entry: the shells are opaque, so this is
-  // the only angle from which the reciprocator and the passing hangers are
-  // actually visible — the same cut the reference process animation makes.
-  { node: 'SprayBooth', captionKey: 'paintline.tourBooth', position: [1.6, 1.8, 18.4], target: [-0.3, 1.9, 23.8], dwell: 9, outline: false },
+  // Inside the booth, opposite the robot: the shells are opaque, so this is the
+  // only angle from which the six-axis arm and the passing hangers are actually
+  // visible — the same cut the reference process animation makes. The robot
+  // stands at world (1.5, 20.4), so the camera looks at it across the track.
+  { node: 'SprayBooth', captionKey: 'paintline.tourBooth', position: [-1.7, 2.1, 18.3], target: [1.5, 1.5, 20.6], dwell: 9, outline: false },
   { node: 'CoolingZone-4m', captionKey: 'paintline.tourCooling', position: [-11, 7, 20], target: [0, 1.8, 27], dwell: 5 },
   { node: 'LoadUnloadStation', captionKey: 'paintline.tourLoadUnload', position: [7, 8, -18], target: [7, 1.8, -6], dwell: 5 },
 ];

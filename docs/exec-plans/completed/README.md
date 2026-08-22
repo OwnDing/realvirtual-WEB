@@ -16,4 +16,6 @@ authority: normative-registry
 - [`EP-DEMO-001-paintline-demo.md`](EP-DEMO-001-paintline-demo.md)：连续输送式涂装线演示场景黄金切片，2026-08-22 完成；遗留的核心分类缺陷移交 `EP-CONV-001`。
 - [`EP-CONV-001-overhead-conveyor-accumulation.md`](EP-CONV-001-overhead-conveyor-accumulation.md)：按 Accepted `ADR-0002` 实现悬挂链积放模式与放行闸，并建成涂装线蛇形积放缓冲段；2026-08-22 完成。
 
+- [`EP-DEMO-002-paintline-robot-kpi.md`](EP-DEMO-002-paintline-robot-kpi.md)：涂装线的实测节拍/产量 KPI 与喷房六轴机器人；2026-08-22 完成。
+
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

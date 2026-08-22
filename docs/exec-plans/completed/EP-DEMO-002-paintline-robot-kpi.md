@@ -2,7 +2,7 @@
 doc_id: EP-DEMO-002
 title: 涂装线喷房机器人与真实产线 KPI
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-22
 authority: normative-process
@@ -126,8 +126,8 @@ authority: normative-process
 ## Progress
 
 - [x] M1 真实 KPI —— 2026-08-22 完成，证据见 Validation「M1 实际执行证据」
-- [ ] M2 喷房六轴机器人
-- [ ] Outcomes 与证据补齐
+- [x] M2 喷房六轴机器人 —— 2026-08-22 完成，证据见 Validation「M2 实际执行证据」
+- [x] Outcomes 与证据补齐
 
 ## Surprises & Discoveries
 
@@ -144,6 +144,18 @@ M1 执行期发现：
 
 4. **节拍与产量必须互相印证，但要用相对容差**。节拍磁贴显示一位小数、产量显示整数，6.735 s 印成 6.7 后反推产量差约 5 p/h。绝对容差会因显示取整而失败；改为 3% 相对容差——仍足以证明两块磁贴出自同一测量，而不是各自的生成器。
 
+M2 执行期发现：
+
+5. **计划标注的最大风险没有发生**。担心 `RobotIK.Axis` 的引用路径在放置后因层级前缀而解析不通；实测注册表按后缀匹配吸收了前缀，加载日志给出 **`RobotIK: Robot axes=6 wrist=Spherical`**，六轴全部解析。三种写法（`SprayBooth/Robot/A1`、`Robot/A1`、`A1`）都能解析。
+
+6. **`RobotIK` 不走 `Drive-Rot-*` 命名约定**。拆开仓库自带的 `public/models/DemoRobotIK.glb` 才看清真实契约：关节节点名是任意的（`A1…A6`），各自携带 `rv_extras.realvirtual.Drive`，由根节点的 `Axis` 数组按**嵌套路径**引用。这反而绕开了「同对象内只能有一个 `Drive-Rot-Y`」的锚定命名限制——六个旋转关节可以共存。**先读现成的可用资产，比从 schema 文档反推快得多也准得多。**
+
+7. **世界坐标与局部坐标混用，让机器人「看起来在忙」却什么也没跟踪**。基座偏航用 `robot.position`（喷房局部，z = −0.6）去减挂具的世界坐标（z ≈ 18…24），差值恒为 +19…+25，偏航算出来恒为约 95°。A1 跨度实测为 **0°**，而 A5 腕部照常摆动——**动着的那一轴掩盖了不动的那一轴**。改为在 `onStart` 从 `matrixWorld` 读一次基座世界坐标。
+
+8. **偏航必须相对机器人自身朝向测量**。修好坐标系后 A1 跨度变成 **321°**：每当「最近挂具」切换，`atan2` 在 +146° 与 −146° 之间跳变，机械臂绕远路甩 293°。改为相对朝向（−X）计算后是平稳的 **±34°**，已由「不得超过 180°」的断言锁定。
+
+9. **三条 EP-DEMO-001 的往复机用例被删除而非弱化**。它们描述的 `Drive-Lin-Y` 台车已被机器人取代，断言的是不存在的资产。新增用例中有一条专门断言 `Drive-Lin-Y` 不再存在，防止两者同时复活。
+
 ## Decision Log
 
 | 日期 | 决定 | 批准依据 | 原因 |
@@ -151,7 +163,29 @@ M1 执行期发现：
 | 2026-08-22 | 创建本计划并直接以 `approved / active` 开工 | 用户在会话中的明确指令（「收尾 EP-CONV-001，然后继续 M4 剩下两项」） | 批准来源按 `exec-plans/proposed/README.md` 要求记录于此 |
 | 2026-08-22 | KPI 自建涂装线专用组件，不复用 `KpiDemoPlugin` 与共享图表 | Agent 的实施决定 | 前者是明确标注的静态假数据，挂到涂装线上即违反 P0；后者数据源内嵌且由另一个演示共用，改动会外溢 |
 | 2026-08-22 | 不做 OEE | Agent 的实施决定 | 可用率/性能/质量需要停机与废品模型，本次无可信数据源；凑数即假数据 |
+| 2026-08-22 | 机器人的关节由演示层直接给定角度，不做 IK 解算到移动目标 | Agent 的实施决定 | 喷涂是一条排练好的轨迹而非取放作业；直接给角度使运动确定、可断言（关节角是测试能读的数）。`RobotIK` 组件仍然绑定并解析出六轴——资产本身是合规的机器人——日后改用 IK 目标无需改资产。计划原文写「用 RobotIK 驱动」，此处如实记为偏离 |
+| 2026-08-22 | 用机器人替换往复台车，而非并存 | Agent 的实施决定 | 真实喷房要么用往复机要么用机器人，不会同时装两套；参考动画用的是机器人 |
 | 2026-08-22 | 先做 KPI 再做机器人 | Agent 的实施决定 | KPI 不涉及新几何、风险低，且能先给出可观测的产线数字，机器人改动后可用同一组数字确认主线未受影响 |
+
+### M2 实际执行证据（2026-08-22）
+
+| 项 | 命令 | 实际结果 |
+| --- | --- | --- |
+| 资产结构单测 | `npx vitest run --config vitest.node.config.ts tests/paintline-library.node.test.ts` | **47 passed**（含 6 条机器人用例） |
+| 全部涂装线 / 输送链 E2E | `npx playwright test e2e/paintline-*.spec.ts e2e/overhead-conveyor-render.spec.ts` | **20 passed**（7.5 分钟） |
+| 静态 / Node / 治理 / i18n | `./scripts/verify.sh static｜node｜governance`、`npm run i18n:inventory` | 0 / 568 passed / 通过 / 0 |
+| 可复现性 | `npm run build:paintline` 两次后 `shasum` 对比 | 字节一致 |
+
+浏览器实测：
+
+- 加载日志 **`RobotIK: Robot axes=6 wrist=Spherical`**；场景注册 6 个关节 Drive（`A1…A6`）。
+- 8 秒内关节角度跨度：**A1 = 60.9°**（基座跟随挂具）、**A5 = 68.7°**（腕部摆动，即 2 × 35°）；A2/A3 保持喷涂姿态常量，A4/A6 本次不参与运动。
+- 截图确认喷房内为六轴机械臂，肩肘腕姿态正确，正对通过的挂具。
+- 无 pageerror。
+
+资产断言覆盖：`RobotIK` 存在且声明六轴 · **每条 `Axis` 引用都落在真正带 `Drive` 的节点上** · 关节逐层嵌套（`A2` 是 `A1` 的子节点，依此类推）· 每关节有旋转方向与有限限位 · 关节名唯一 · 旧的 `Drive-Lin-Y` 已不存在。
+
+**M2 未验证项**：`RobotIK` 的**逆解**未被使用（关节由演示层直接给定，见 Decision Log）；无挂具时回待机位的分支在当前链密度下**从未触发**（喷房内几乎始终有挂具），如实登记为未验证；硬件加速环境下的表现。
 
 ### M1 实际执行证据（2026-08-22）
 
@@ -192,4 +226,19 @@ M1 执行期发现：
 
 ## Outcomes & Retrospective
 
-（完成后记录实际结果、验证证据、偏差、未验证项、债务与后续任务。）
+**结果**：涂装线演示原定 M4 的三项全部完成。产线现在有**实测**的节拍、产量与缓冲在库量（停线即回到「无读数」而非保留旧值），喷房内是一台六轴机器人，跟随挂具摆动喷枪。
+
+**最终验证（2026-08-22）**：governance 通过 · static 0 · node 568 passed / 7 skipped · 涂装线与输送链 E2E **20 passed** · i18n 0 · 生成器与场景字节可复现。
+
+**交付物**：`paintline-kpi-math.ts` / `paintline-kpi.ts` / `paintline-kpi-store.ts` / `PaintLineKpiBar.tsx`（真实 KPI）· 重写的 `spray-motion.ts`（六轴机器人）· 库生成器中的 `addPaintRobot` · `tests/paintline-kpi-math.node.test.ts`（16 用例）与 `tests/paintline-library.node.test.ts` 的机器人用例（6 条）· 中英各 6 条 KPI 词条。
+
+**偏差**：机器人关节由演示层直接给定角度而非 IK 解算到移动目标（Decision Log 已记录理由与影响）；计划原文写「用 `RobotIK` 驱动」，实际是 `RobotIK` 绑定并解析、运动由插件给定。
+
+**最值得记取的一条**：M2 的两个真缺陷都是**「一轴在动掩盖了另一轴不动」**——基座偏航因坐标系混用恒为 95°（跨度 0°），而腕部照常摆动，画面上看「机器人在工作」。随后修好坐标系又暴露第二个问题：偏航在世界系下于 ±146° 之间跳变，机械臂绕远路甩 321°。两次都是**逐轴测量跨度**才发现的；只看画面或只测「有没有动」都会漏掉。这与本项目反复出现的模式一致：一个正常的现象足以掩盖旁边不正常的现象。
+
+**遗留债务**：
+- `RobotIK` 的逆解能力未被使用；若要做真正的轨迹跟随（喷枪始终垂直于工件表面），需要 `IKPath`/`IKTarget` 与一次独立设计。
+- 「无挂具时回待机位」分支未被触发验证；要验证需临时降低挂具密度或延长喷房区间。
+- 承自前序计划：积放的 DES 支持、`Conveyor` 与 `OverheadConveyor` 的 glob 重叠、`SpacingController` 大规模性能、`doc-layout-planner.md` §4.1 的文档漂移。
+
+**未验证项**：硬件加速环境下的画质与性能（全部证据来自 SwiftShader）；OEE（明确列为 Non-goal，无可信数据源）；PLC/工业接口；长时间运行后 KPI 时间戳窗口的稳定性；窄视口下 KPI 磁贴布局。

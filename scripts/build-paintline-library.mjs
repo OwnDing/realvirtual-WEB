@@ -511,6 +511,97 @@ function buildProcessSection(name, { length, width, height, zone, plenum }) {
 
 // ─── Object 4 — spray booth ─────────────────────────────────────────────────
 
+/**
+ * Six-axis paint robot (EP-DEMO-002 M2).
+ *
+ * Authored the way the shipped `public/models/DemoRobotIK.glb` is, because that
+ * is what the runtime actually reads — NOT the `Drive-Rot-*` name convention:
+ *
+ *   - each joint is a node NESTED inside the previous one, so the scene graph
+ *     itself is the kinematic chain;
+ *   - each joint carries its own `rv_extras.realvirtual.Drive` with a
+ *     `Direction` and limits — the name plays no part, which also sidesteps the
+ *     "one `Drive-Rot-Y` per object" collision the anchored name parser imposes;
+ *   - the root carries `RobotIK` whose `Axis` array holds one
+ *     `ComponentReference` per joint, addressed by its NESTED PATH
+ *     (`SprayBooth/Robot/A1/A2/...`), resolved through the node registry by
+ *     `resolveAxisDrivesFromNode` (src/core/engine/rv-ik-path.ts:760).
+ *
+ * A wrong path resolves to nothing and the component reports `axes=0` in the
+ * loader log while the asset still renders perfectly — so the node test asserts
+ * every reference lands on a node that really carries a Drive.
+ */
+function addPaintRobot(doc, out, { at, rootPath }) {
+  // Joint chain, base upward. `dir` is the rv-ODT Drive Direction; `at` is the
+  // joint's offset from its PARENT joint.
+  const JOINTS = [
+    { name: 'A1', dir: 'RotationY', at: [0, 0.45, 0],    limit: 170, mesh: { size: [0.34, 0.30, 0.34], at: [0, 0.15, 0] } },
+    { name: 'A2', dir: 'RotationX', at: [0, 0.30, 0],    limit: 100, mesh: { size: [0.24, 0.90, 0.24], at: [0, 0.45, 0] } },
+    { name: 'A3', dir: 'RotationX', at: [0, 0.90, 0],    limit: 120, mesh: { size: [0.20, 0.70, 0.20], at: [0, 0.35, 0] } },
+    { name: 'A4', dir: 'RotationY', at: [0, 0.70, 0],    limit: 180, mesh: { size: [0.16, 0.26, 0.16], at: [0, 0.13, 0] } },
+    { name: 'A5', dir: 'RotationX', at: [0, 0.26, 0],    limit: 120, mesh: { size: [0.15, 0.20, 0.15], at: [0, 0.10, 0] } },
+    { name: 'A6', dir: 'RotationY', at: [0, 0.20, 0],    limit: 360, mesh: { size: [0.12, 0.14, 0.12], at: [0, 0.07, 0] } },
+  ];
+
+  // Build innermost-first: each joint node must exist before its parent lists
+  // it as a child.
+  let childIdx = [];
+  const axisPaths = [];
+  for (let i = JOINTS.length - 1; i >= 0; i--) {
+    const j = JOINTS[i];
+    const parts = [j.mesh
+      ? doc.box(`${j.name}-Link`, { at: j.mesh.at, size: j.mesh.size, material: 'GunBody' })
+      : null].filter((v) => v !== null);
+
+    if (i === JOINTS.length - 1) {
+      // Tool: the spray gun and its fan ride the last joint.
+      parts.push(doc.box('Gun-Head', { at: [0, 0.16, 0], size: [0.10, 0.18, 0.10], material: 'GunBody' }));
+      parts.push(doc.box('Spray-Fan', { at: [0, 0.55, 0], size: [0.50, 0.60, 0.50], material: 'SprayFan' }));
+    }
+    childIdx = [doc.empty(j.name, {
+      at: j.at,
+      children: [...parts, ...childIdx],
+      realvirtual: {
+        Drive: {
+          Direction: j.dir,
+          TargetSpeed: 120,       // deg/s
+          Acceleration: 300,      // deg/s²
+          UseAcceleration: true,
+          UseLimits: true,
+          LowerLimit: -j.limit,
+          UpperLimit: j.limit,
+        },
+      },
+    })];
+  }
+
+  // Nested reference paths, exactly the shape DemoRobotIK.glb uses.
+  let path = `${rootPath}/Robot`;
+  for (const j of JOINTS) {
+    path = `${path}/${j.name}`;
+    axisPaths.push(path);
+  }
+
+  const pedestal = doc.box('Robot-Base', { at: [0, 0.22, 0], size: [0.5, 0.44, 0.5], material: 'Steel' });
+  out.push(doc.empty('Robot', {
+    at,
+    children: [pedestal, ...childIdx],
+    realvirtual: {
+      RobotIK: {
+        WristType: 'Spherical',
+        ElbowInUnityX: false,
+        DrawGizmos: false,
+        Axis: axisPaths.map((p) => ({
+          type: 'ComponentReference',
+          path: p,
+          componentType: 'realvirtual.Drive',
+          componentIndex: 0,
+        })),
+      },
+    },
+  }));
+}
+
 function buildSprayBooth() {
   const LENGTH = 6, WIDTH = 4.4, HEIGHT = 3.4;
   const doc = new GlbDoc('SprayBooth');
@@ -523,44 +614,8 @@ function buildSprayBooth() {
     at: [0, HEIGHT / 2, 0], size: [WIDTH - 0.5, HEIGHT - 0.4, LENGTH - 0.1], material: 'ZoneSpray',
   }));
 
-  // Reciprocator carriage. The name is EXACTLY `Drive-Lin-Y` — the parser is
-  // anchored, so no descriptive suffix is allowed and only one such node may
-  // exist per object. Both gun arms therefore ride this single carriage, which
-  // is also how a real reciprocator gantry works.
-  const gunParts = [];
-  for (const side of [-1, 1]) {
-    const tag = side < 0 ? 'L' : 'R';
-    gunParts.push(doc.box(`Gun-Arm-${tag}`, {
-      at: [side * 1.35, 0, 0], size: [0.7, 0.16, 0.16], material: 'GunBody',
-    }));
-    for (let i = 0; i < 3; i++) {
-      const z = -1.2 + i * 1.2;
-      gunParts.push(doc.box(`Gun-Head-${tag}${i + 1}`, {
-        at: [side * 1.0, 0, z], size: [0.12, 0.12, 0.30], material: 'GunBody',
-      }));
-      // Spray fan — M3 toggles these with the reciprocator stroke.
-      gunParts.push(doc.box(`Spray-Fan-${tag}${i + 1}`, {
-        at: [side * 0.55, 0, z], size: [0.75, 0.55, 0.55], material: 'SprayFan',
-      }));
-    }
-  }
-  out.push(doc.empty('Drive-Lin-Y', {
-    at: [0, 1.25, 0],
-    children: gunParts,
-    realvirtual: {
-      // Units are millimetres (schema/v1 §7a.1). 1.2 m stroke, no motion until
-      // something jogs it — M3's plugin owns the stroke reversal.
-      Drive: {
-        Direction: 'LinearY',
-        TargetSpeed: 700,
-        Acceleration: 1400,
-        UseAcceleration: true,
-        UseLimits: true,
-        LowerLimit: 0,
-        UpperLimit: 1200,
-      },
-    },
-  }));
+  // Floor-standing robot beside the track, which runs down the booth centre.
+  addPaintRobot(doc, out, { at: [1.5, 0.1, -0.6], rootPath: 'SprayBooth' });
 
   addSegmentSnaps(doc, out, LENGTH);
   return { doc, root: doc.empty('SprayBooth', { children: out }) };

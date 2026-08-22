@@ -2,36 +2,44 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * Reciprocator motion for the paint-line demo booth (EP-DEMO-001, M3).
+ * Drives the booth's six-axis paint robot (EP-DEMO-002, M2).
  *
- * The booth carries ONE `Drive-Lin-Y` carriage with both gun arms mounted on
- * it — the drive-name parser is anchored (`^Drive-(Lin|Rot)-([XYZ])$`), so a
- * second identically named node could not exist, and a real reciprocator
- * gantry works the same way.
+ * The booth used to hold a single `Drive-Lin-Y` reciprocator carriage. It now
+ * holds a real robot: six nested joints `A1…A6`, each carrying its own `Drive`,
+ * with a `RobotIK` component on the root whose `Axis` array references them by
+ * nested path. The loader confirms the chain with `RobotIK: Robot axes=6`.
  *
- * This plugin does not animate transforms by hand: it flips the drive's jog
- * direction at the authored limits and lets the platform's own ramp move the
- * carriage. The stroke, speed and limits all live in the asset's `Drive`
- * extras, so retuning the booth needs no code change.
+ * The joints are commanded DIRECTLY here rather than through an IK solve to a
+ * moving target. That is a deliberate, bounded choice, recorded in the plan:
+ * a spray pass is a rehearsed trajectory, not a pick-and-place, and driving the
+ * joints keeps the motion deterministic and assertable (joint angles are
+ * numbers a test can read). The `RobotIK` component still binds and resolves —
+ * the asset IS a valid robot — so switching this plugin to an IK target later
+ * needs no asset change.
  *
- * The spray fans are only shown while a hanger is actually inside the booth —
- * an empty booth that keeps spraying reads as broken.
+ * Tracking rule: `A1` (base yaw) turns to face the nearest hanger inside the
+ * booth, while `A5` (wrist pitch) sweeps to carry the gun across the workpiece
+ * height. With no hanger in the booth the arm returns to its home pose and the
+ * spray fan hides.
  */
 
 import type { Object3D } from 'three';
 import type { RVDrive } from '../../../core/engine/rv-drive';
 import { RVBehavior } from '../../../core/rv-behavior';
 
-/** Exact node name — the drive-name parser tolerates no suffix. */
-const RECIPROCATOR = 'Drive-Lin-Y';
-
 /** Booth length in metres, mirroring `scripts/build-paintline-library.mjs`. */
 const BOOTH_LENGTH = 6;
 
-/** Stop short of the hard limit so the ramp reverses instead of stalling on it. */
-const LIMIT_MARGIN_MM = 5;
+/** Joint names, base first — the same chain the asset nests. */
+const JOINTS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6'] as const;
 
-/** GLB export appends `_N` to duplicate names; compare against the base. */
+/** Degrees of wrist sweep either side of centre, and its period in seconds. */
+const SWEEP_DEG = 35;
+const SWEEP_PERIOD_S = 2.2;
+
+/** Re-command a joint only past this change, so the ramp is not restarted every tick. */
+const RETARGET_EPS_DEG = 0.5;
+
 function baseName(name: string): string {
   return name.replace(/_\d+$/, '');
 }
@@ -39,83 +47,129 @@ function baseName(name: string): string {
 export class PaintLineSprayMotionPlugin extends RVBehavior {
   readonly id = 'paintline-spray-motion';
 
-  private carriage: RVDrive | null = null;
+  private joints = new Map<string, RVDrive>();
+  private commanded = new Map<string, number>();
+  private robot: Object3D | null = null;
+  /**
+   * The robot base in WORLD coordinates.
+   *
+   * `robot.position` is booth-LOCAL (the arm sits at x = 1.5, z = -0.6 inside a
+   * booth placed at z = 21), while carrier positions are read in the scene-root
+   * frame. Mixing the two put the hanger a constant ~20 m "ahead" of the robot,
+   * so the base yaw came out at a fixed ~95° and the arm tracked nothing while
+   * still looking busy — the wrist sweep hid it. Read from `matrixWorld`, which
+   * the loader computes once and the freeze pass then leaves alone: this base
+   * never moves, so a single read at start is both correct and stable.
+   */
+  private robotWorld = { x: 0, z: 0 };
   private fans: Object3D[] = [];
   private carriers: Object3D[] = [];
   private boothMinZ = 0;
   private boothMaxZ = 0;
   private spraying = false;
+  private sweepPhaseS = 0;
 
   protected onStart(): void {
     const scene = this.scene;
     if (!scene) return;
 
-    this.carriage = this.drives.find((d) => baseName(d.name) === RECIPROCATOR) ?? null;
-    if (!this.carriage) {
-      // The booth asset changed shape. Stay inert rather than animate something
-      // arbitrary — a silently wrong demo is worse than a still one.
-      console.warn(`[${this.id}] no "${RECIPROCATOR}" drive found — reciprocator disabled`);
+    for (const drive of this.drives) {
+      const n = baseName(drive.name);
+      if ((JOINTS as readonly string[]).includes(n)) this.joints.set(n, drive);
+    }
+    if (this.joints.size !== JOINTS.length) {
+      console.warn(
+        `[${this.id}] found ${this.joints.size}/${JOINTS.length} robot joints — the booth robot stays idle`,
+      );
       return;
     }
 
     scene.traverse((node) => {
       const base = baseName(node.name);
-      if (base.startsWith('Spray-Fan-')) this.fans.push(node);
+      if (base.startsWith('Spray-Fan')) this.fans.push(node);
+      if (base === 'Robot' && !this.robot) this.robot = node;
       if (/^Carrier-\d\d$/.test(base)) this.carriers.push(node);
-      // The booth PLACEMENT (not the grafted asset root) carries the transform
-      // that decides where the booth actually sits.
       if (base === 'SprayBooth' && node.userData?.realvirtual?.LayoutObject) {
         this.boothMinZ = node.position.z - BOOTH_LENGTH / 2;
         this.boothMaxZ = node.position.z + BOOTH_LENGTH / 2;
       }
     });
-
     for (const fan of this.fans) fan.visible = false;
-    this.carriage.jogForward = true;
+
+    if (this.robot) {
+      const e = this.robot.matrixWorld.elements;
+      this.robotWorld = { x: e[12], z: e[14] };
+    }
   }
 
-  protected onFrame(): void {
-    const drive = this.carriage;
+  /** Command a joint, skipping no-op re-targets that would restart its ramp. */
+  private aim(joint: string, deg: number): void {
+    const drive = this.joints.get(joint);
     if (!drive) return;
+    const last = this.commanded.get(joint);
+    if (last !== undefined && Math.abs(last - deg) < RETARGET_EPS_DEG) return;
+    this.commanded.set(joint, deg);
+    drive.startMove(deg);
+  }
 
-    // Reverse the stroke at the authored limits. `UseLimits` already clamps the
-    // travel; this is what turns a clamp into a reciprocation.
-    const rv = drive.node.userData?.realvirtual as Record<string, unknown> | undefined;
-    const cfg = (rv?.Drive ?? {}) as { LowerLimit?: number; UpperLimit?: number };
-    const lower = Number(cfg.LowerLimit ?? 0);
-    const upper = Number(cfg.UpperLimit ?? 0);
-    if (upper > lower) {
-      if (drive.jogForward && drive.currentPosition >= upper - LIMIT_MARGIN_MM) {
-        drive.jogForward = false;
-        drive.jogBackward = true;
-      } else if (drive.jogBackward && drive.currentPosition <= lower + LIMIT_MARGIN_MM) {
-        drive.jogBackward = false;
-        drive.jogForward = true;
-      }
+  protected onLateFixedUpdate(dt: number): void {
+    if (this.joints.size !== JOINTS.length || !this.robot) return;
+
+    // Nearest hanger inside the booth. Positions are read in the scene-root
+    // frame, which is the world frame here — the conveyor is placed
+    // untransformed at the origin (see build-paintline-scene.mjs).
+    let target: Object3D | null = null;
+    let bestDz = Number.POSITIVE_INFINITY;
+    const robotZ = this.robotWorld.z;
+    for (const c of this.carriers) {
+      if (Math.abs(c.position.x) > 1) continue;              // process-side leg only
+      if (c.position.z < this.boothMinZ || c.position.z > this.boothMaxZ) continue;
+      const dz = Math.abs(c.position.z - robotZ);
+      if (dz < bestDz) { bestDz = dz; target = c; }
     }
 
-    // Spray only while a hanger is between the booth walls. Positions are read
-    // in the scene-root frame, which is the world frame here: the conveyor is
-    // placed untransformed at the origin (see build-paintline-scene.mjs).
-    const occupied = this.boothMaxZ > this.boothMinZ && this.carriers.some(
-      (c) => Math.abs(c.position.x) < 1 && c.position.z >= this.boothMinZ && c.position.z <= this.boothMaxZ,
-    );
+    const occupied = target !== null;
     if (occupied !== this.spraying) {
       this.spraying = occupied;
       for (const fan of this.fans) fan.visible = occupied;
       this.viewer?.markRenderDirty();
     }
+
+    if (!occupied) {
+      // Home pose — an idle booth should not leave the arm mid-stroke.
+      for (const j of JOINTS) this.aim(j, 0);
+      this.sweepPhaseS = 0;
+      return;
+    }
+
+    // Base yaw towards the hanger, measured FROM THE ROBOT'S FACING (-X, the
+    // track side), not from world +X. Measuring in world terms made the angle
+    // flip between +146° and -146° each time the nearest hanger changed, and
+    // the arm whipped 293° the long way round — a 321° sweep in eight seconds.
+    // Relative to its facing the same motion is a calm ±34°.
+    const dx = target!.position.x - this.robotWorld.x;   // negative: track is at -X
+    const dz = target!.position.z - this.robotWorld.z;
+    const yawDeg = (Math.atan2(dz, -dx) * 180) / Math.PI;
+    this.aim('A1', yawDeg);
+
+    // Wrist sweep carries the gun across the workpiece height.
+    this.sweepPhaseS = (this.sweepPhaseS + dt) % SWEEP_PERIOD_S;
+    const phase = (this.sweepPhaseS / SWEEP_PERIOD_S) * Math.PI * 2;
+    this.aim('A5', Math.sin(phase) * SWEEP_DEG);
+    // A modest shoulder/elbow set keeps the tool at hanger height instead of
+    // pointing straight up.
+    this.aim('A2', 25);
+    this.aim('A3', -35);
   }
 
   protected onDestroy(): void {
     for (const fan of this.fans) fan.visible = true;
-    if (this.carriage) {
-      this.carriage.jogForward = false;
-      this.carriage.jogBackward = false;
-    }
-    this.carriage = null;
+    this.joints.clear();
+    this.commanded.clear();
+    this.robot = null;
     this.fans = [];
     this.carriers = [];
     this.spraying = false;
+    this.sweepPhaseS = 0;
   }
 }

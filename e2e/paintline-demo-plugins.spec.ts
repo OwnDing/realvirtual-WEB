@@ -53,59 +53,56 @@ async function openScene(page: Page, locale = 'zh-CN'): Promise<void> {
   }
   await page.waitForTimeout(4_000);
   // Wait for the pack to actually bind rather than guessing a sleep: the chain
-  // behavior and the model plugins come up together, and the reciprocator only
-  // exists once they have.
+  // behavior and the model plugins come up together, and the booth robot's six
+  // joint drives only exist once they have.
   await expect.poll(
     async () => page.evaluate(() => {
       const v = (window as unknown as { viewer?: { drives?: { name: string }[] } }).viewer;
-      return (v?.drives ?? []).some((d) => d.name.replace(/_\d+$/, '') === 'Drive-Lin-Y');
+      return (v?.drives ?? []).filter((d) => /^A[1-6]$/.test(d.name.replace(/_\d+$/, ''))).length;
     }),
     { timeout: 45_000, message: 'the DemoPaintLine plugin pack never bound' },
-  ).toBe(true);
+  ).toBe(6);
 }
 
 /**
- * Sample the reciprocator's position IN-PAGE for `ms`, returning the extremes.
+ * Sample every robot joint IN-PAGE for `ms`, returning each one's travel.
  *
  * Sampling by repeated `page.evaluate` round-trips aliases badly: each call
- * traverses a 600-node scene, so the interval drifts towards the stroke period
- * and every sample lands at the same phase — which reads as "the carriage never
- * moved" while it is in fact running its full 1.2 m stroke.
+ * traverses a 600-node scene, so the interval drifts towards the motion period
+ * and every sample lands at the same phase — which reads as "nothing moved"
+ * while the arm is in fact running its full sweep.
  */
-function strokeExtremes(page: Page, ms: number) {
+function jointTravel(page: Page, ms: number) {
   return page.evaluate(async (durationMs) => {
     const viewer = (window as unknown as {
       viewer: { drives?: { name: string; currentPosition: number }[] };
     }).viewer;
     const base = (n: string) => n.replace(/_\d+$/, '');
-    const find = () => (viewer.drives ?? []).find((d) => base(d.name) === 'Drive-Lin-Y') ?? null;
+    const span: Record<string, { min: number; max: number }> = {};
 
-    let min = Number.POSITIVE_INFINITY;
-    let max = Number.NEGATIVE_INFINITY;
     const until = performance.now() + durationMs;
     while (performance.now() < until) {
-      const d = find();
-      if (d) {
-        min = Math.min(min, d.currentPosition);
-        max = Math.max(max, d.currentPosition);
+      for (const d of viewer.drives ?? []) {
+        const n = base(d.name);
+        if (!/^A[1-6]$/.test(n)) continue;
+        const s = span[n] ?? (span[n] = { min: Infinity, max: -Infinity });
+        s.min = Math.min(s.min, d.currentPosition);
+        s.max = Math.max(s.max, d.currentPosition);
       }
       await new Promise((r) => requestAnimationFrame(() => r(null)));
     }
-    return { min, max };
+    return Object.fromEntries(Object.entries(span).map(([k, s]) => [k, s.max - s.min]));
   }, ms);
 }
 
-/** Reciprocator drive state, workpiece finish split, spray-fan visibility. */
+/** Workpiece finish split and per-instance material count. */
 function readPack(page: Page) {
   return page.evaluate(() => {
     const viewer = (window as unknown as { viewer: Record<string, never> }).viewer as unknown as {
-      drives?: { name: string; currentPosition: number; jogForward: boolean; jogBackward: boolean }[];
       scene?: { traverse(cb: (o: Record<string, never>) => void): void };
     };
     const base = (n: string) => n.replace(/_\d+$/, '');
-    const drive = (viewer.drives ?? []).find((d) => base(d.name) === 'Drive-Lin-Y') ?? null;
 
-    let fans = 0;
     let painted = 0;
     let raw = 0;
     const materials = new Set<string>();
@@ -115,7 +112,6 @@ function readPack(page: Page) {
         material?: { uuid: string; color?: { r: number; g: number; b: number } };
       };
       const bn = base(n.name);
-      if (bn.startsWith('Spray-Fan-')) fans++;
       if (/^Workpiece-[AB]$/.test(bn) && n.material?.color) {
         materials.add(n.material.uuid);
         const c = n.material.color;
@@ -129,17 +125,7 @@ function readPack(page: Page) {
         else raw++;
       }
     });
-    return {
-      drive: drive && {
-        position: drive.currentPosition,
-        jogForward: drive.jogForward,
-        jogBackward: drive.jogBackward,
-      },
-      fans,
-      painted,
-      raw,
-      distinctMaterials: materials.size,
-    };
+    return { painted, raw, distinctMaterials: materials.size };
   });
 }
 
@@ -147,33 +133,29 @@ test.describe('paint-line demo plugin pack', () => {
   test.describe.configure({ mode: 'serial' });
   test.setTimeout(180_000);
 
-  test('binds by folder name and drives the booth reciprocator', async ({ page }) => {
+  test('binds by folder name and moves the booth robot', async ({ page }) => {
     await openScene(page);
 
-    const first = await readPack(page);
-    expect(first.drive, 'the pack did not bind — no Drive-Lin-Y under its control').not.toBeNull();
-    expect(first.fans, 'spray fans should exist in the booth asset').toBe(6);
+    const travel = await jointTravel(page, 8_000);
+    expect(Object.keys(travel).sort(), 'the six-axis chain did not bind')
+      .toEqual(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
 
-    // Sample a SPREAD rather than two endpoints, and do it in-page so the
-    // sampling interval cannot drift onto the stroke period.
-    const { min, max } = await strokeExtremes(page, 6_000);
-    expect(max - min, 'the carriage never moved').toBeGreaterThan(200);
-
-    // Exactly one jog direction is active at a time.
-    const last = await readPack(page);
-    expect(last.drive!.jogForward).not.toBe(last.drive!.jogBackward);
+    // The wrist sweeps across the workpiece and the base tracks the hanger
+    // along the booth; the remaining joints hold a fixed spray posture, so
+    // only these two are asserted to travel.
+    expect(travel.A5, 'the wrist never swept').toBeGreaterThan(30);
+    expect(travel.A1, 'the base never tracked a hanger').toBeGreaterThan(10);
   });
 
-  test('reverses the stroke at the authored limits', async ({ page }) => {
+  test('keeps the base yaw within a working arc, not whipping round', async ({ page }) => {
     await openScene(page);
 
-    // Sample in-page across more than one full stroke and assert the travel
-    // stays inside the authored limits.
-    const { min, max } = await strokeExtremes(page, 8_000);
-    expect(min, 'carriage dropped below the lower limit').toBeGreaterThanOrEqual(-1);
-    expect(max, 'carriage rose above the upper limit').toBeLessThanOrEqual(1201);
-    // A full stroke was actually traversed, so the reversal at both ends ran.
-    expect(max - min, 'the stroke never reversed').toBeGreaterThan(900);
+    // Measuring the yaw in WORLD terms made it flip between +146° and -146°
+    // whenever the nearest hanger changed, and the arm swung 293° the long way
+    // round — 321° of travel in eight seconds. Measured from the robot's own
+    // facing it is a calm arc, and this pins that.
+    const travel = await jointTravel(page, 8_000);
+    expect(travel.A1, 'the base whipped round instead of tracking').toBeLessThan(180);
   });
 
   test('gives every workpiece its own material and paints past the booth', async ({ page }) => {
