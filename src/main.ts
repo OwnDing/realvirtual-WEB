@@ -44,14 +44,6 @@ import { showInstruction, hideInstruction } from './core/hmi/instruction-store';
 import { initHMI } from '@rv-private/custom/hmi-entry';
 import { registerPrivatePlugins } from '@rv-private/private-plugins';
 
-// Hide AGPL watermark only for explicitly commercial builds (RV_COMMERCIAL=1).
-// Presence of the private folder alone no longer hides it, so the AGPL
-// watermark stays visible in normal dev/private builds as well.
-if (__RV_COMMERCIAL__) {
-  const wm = document.getElementById('rv-watermark');
-  if (wm) wm.style.display = 'none';
-}
-
 // Core Plugins (always included in public AGPL build)
 import { SensorMonitorPlugin } from './plugins/sensor-monitor-plugin';
 import { TransportStatsPlugin } from './plugins/transport-stats-plugin';
@@ -551,10 +543,6 @@ async function init() {
   // Set singleton — from here all stores have access via getAppConfig()
   setAppConfig(appConfig);
   const connectEmbedEnabled = initializeConnectEmbedStore(appConfig);
-  if (appConfig.sourceUrl) {
-    const sourceLink = document.getElementById('rv-watermark');
-    if (sourceLink instanceof HTMLAnchorElement) sourceLink.href = appConfig.sourceUrl;
-  }
 
   // MU-accumulation kill-switch (plan-255 §2.8): settings.json
   // `simulation.accumulateDefault: false` disables the transport gap clamp

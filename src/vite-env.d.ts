@@ -12,7 +12,9 @@ interface ImportMeta {
 /** True when the private sibling folder (realvirtual-WebViewer-Private~) is present at build time. */
 declare const __RV_HAS_PRIVATE__: boolean;
 
-/** True when building with RV_COMMERCIAL=1 env var. Hides AGPL watermark. */
+/** True when building with RV_COMMERCIAL=1 env var (set by the demo/private
+ *  deploy scripts). Retained as the commercial-tier build flag; the branding
+ *  watermark it used to hide no longer exists in this build. */
 declare const __RV_COMMERCIAL__: boolean;
 
 /** True on the dev server (and vitest) or when building with RV_INTERNAL=1.

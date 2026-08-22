@@ -383,52 +383,6 @@
 
   <div id="react-root"></div>
 
-  <!-- AGPL Watermark — removal requires a commercial license -->
-  <a id="rv-watermark" href="https://github.com/xyvirtual/XYvirtual-WEB" target="_blank" rel="noopener noreferrer">
-    Powered by <strong>XYvirtual WEB</strong> · AGPL-3.0
-  </a>
-  <style>
-    #rv-watermark {
-      position: fixed;
-      bottom: 60px;
-      right: 8px;
-      z-index: 9999;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.5);
-      text-decoration: none;
-      pointer-events: auto;
-      letter-spacing: 0.4px;
-      transition: color 0.2s;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px 10px;
-      border-radius: 4px;
-    }
-    #rv-watermark:hover {
-      color: rgba(255, 255, 255, 0.9);
-      background: rgba(0, 0, 0, 0.5);
-    }
-    #rv-watermark strong {
-      font-weight: 600;
-    }
-    /* Compact layout (phones): shrink the AGPL attribution to a tiny, pill-less
-       line tucked into the bottom-right corner so it no longer overlaps the
-       centered mobile library tab / bottom nav. Stays visible + linked (AGPL). */
-    @media (max-width: 899px) {
-      #rv-watermark {
-        bottom: 2px;
-        right: 4px;
-        font-size: 8px;
-        letter-spacing: 0;
-        background: transparent;
-        padding: 0;
-      }
-      #rv-watermark:hover {
-        background: transparent;
-      }
-    }
-  </style>
-
   <!-- On-screen DevTools console (opt-in via ?debug=1 URL param) -->
   <script>
     if (new URLSearchParams(location.search).has('debug')) {

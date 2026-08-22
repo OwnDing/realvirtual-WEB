@@ -72,9 +72,9 @@ export function formatServeRoot(root: string): string {
   return root.replace(/\//g, '\\');
 }
 
-/** Short session label, e.g. "Plan 353" / "Plan 353+354" / "canonical". */
+/** Short session label, e.g. "Plan 353" / "Plan 353+354" / "Xianyu". */
 export function formatSessionLabel(info: RVServeInfo | null = RV_SERVE_INFO): string {
   if (!info) return '';
-  if (isCanonicalCheckout(info)) return 'canonical';
+  if (isCanonicalCheckout(info)) return 'Xianyu';
   return `Plan ${info.plans!.join('+')}`;
 }
