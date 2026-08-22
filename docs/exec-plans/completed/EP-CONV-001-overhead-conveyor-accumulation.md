@@ -2,7 +2,7 @@
 doc_id: EP-CONV-001
 title: 悬挂链积放模式与蛇形缓冲段
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-22
 authority: normative-process
@@ -87,7 +87,7 @@ authority: normative-process
 - `public/library/PaintLine/`、`public/library/catalog.json`、`public/scenes/DemoPaintLine.glb`
 - `src/plugins/models/DemoPaintLine/`（仅在核心修好后评估精简绕开手段）
 - `tests/`、`e2e/`
-- `docs/exec-plans/active/EP-CONV-001-overhead-conveyor-accumulation.md`、`docs/exec-plans/active/README.md`
+- 本计划文件与 `docs/exec-plans/` 下的对应索引（执行期在 `active/`，完成后随文件移入 `completed/`）
 
 ## Forbidden Paths
 
@@ -135,7 +135,7 @@ authority: normative-process
 - [x] M2 积放模式 —— 2026-08-22 完成，证据见 Validation「M2 实际执行证据」
 - [x] M3 放行闸 —— 2026-08-22 完成（Node 16 用例 + M4 交付的场景级断言）
 - [x] M4 蛇形缓冲段 —— 2026-08-22 完成，证据见 Validation「M4 实际执行证据」
-- [ ] Outcomes 与证据补齐
+- [x] Outcomes 与证据补齐
 
 ## Surprises & Discoveries
 
@@ -287,4 +287,23 @@ M4 执行期发现：
 
 ## Outcomes & Retrospective
 
-（完成后记录实际结果、验证证据、偏差、未验证项、债务与后续任务。）
+**结果**：`ADR-0002` 的积放模式已按决定落地，四个里程碑全部交付。`OverheadConveyor` 现在支持 `Mode: 'rigid' | 'accumulating'`（默认 rigid，既有资产零影响）；积放模式下每挂具一个 `PathTraveler` 接入共享 `SpacingController`，配合信号控制的放行闸，可以真正形成并疏散队列。涂装线演示的环线重设计为 145.4 m，含三道蛇形积放缓冲段，工艺侧坐标一寸未动。
+
+**最终验证（2026-08-22）**：governance 通过 · static 0 · node 557 passed / 7 skipped · 组件用例 25 passed（刚性 9 + 积放/闸 16）· 涂装线与输送链 E2E **18 passed** · 两个生成器与场景字节可复现。浏览器实测：关闸 45 s 缓冲段密集邻接对 0→6，重新开闸 30 s 回落到 1。
+
+**交付物**：`src/behaviors/OverheadConveyor.ts`（模式分支、traveler、车跟随、闸）· `src/core/engine/rv-freeze-static.ts` 与 `rv-scene-loader.ts`（两套静态分类纳入挂具）· `tests/path/overhead-conveyor-accumulation.test.ts`（16 用例）· `e2e/overhead-conveyor-render.spec.ts`（2 用例）· 涂装线库/场景生成器的蛇形几何与 `paintline-geometry.json` sidecar。
+
+**偏差**：Allowed Paths 两次追加并逐条记录理由——`src/plugins/models/DemoPaintLine/`（拓扑改变后变色区域判定与 Tour 镜头必须同步更新）与 `paintline-geometry.json`（生成器间的派生事实载体）。
+
+**最值得记取的一条**：本轮四个自造缺陷全部是**测试写错而非实现写错**，且每一个的失败信息都指向错误的方向——「线被刹停了」（实为多传一个被忽略的参数）、「闸没拦住」（实为把队尾当队首）、「几何变了所以数字对不上」（实为把常数写死）。其中最危险的一条是把「信号已声明」断言成 store 里的值：无头 harness 从不落 `initialValue`，而未定义恰好被读成「开闸」，**该断言即使组件一个信号都没声明也会通过**。教训是：断言要落在**被测对象的产出**上（此处是 kinematics spec 里的声明），而不是落在恰好能读到的旁证上。
+
+**遗留债务（未修，已交接）**：
+- 积放模式的 DES 支持：`ADR-0002` Decision 第 5 条明确排除，需独立设计与新 ADR。
+- `SpacingController` 每 tick 排序在大规模载具数下的开销未实测；本计划只对 72 挂具场景负责。
+- 缓冲段蓄积规模受演示链速限制（45 s 仅到达约 13.5 m 链长），要更饱满的堆积需提高链速或延长观察时间。
+- `Conveyor` 与 `OverheadConveyor` 的 glob 必然重叠（承自 `EP-DEMO-001` Surprises 第 8 条），仍需另立计划。
+- KD-002 名称身份张力：本次让核心加载器对齐 `isCarrierName`，判定为不扩大依赖；日后 KD-002 推进到稳定端口 ID 时本处需随之迁移（只需改一处）。
+
+**未验证项**：硬件加速环境下的画质与性能（全部证据来自 SwiftShader 软件渲染）；DES 模式；PLC/工业接口驱动闸信号；浏览器门禁的 22 个既有失败文件与本计划无关（已用 `git stash` 基线逐行比对确认）。
+
+**后续任务**：M4 原定三项中的另外两项——喷房六轴机器人 IK、节拍与产量 KPI——均未在本计划承诺，另立计划。

@@ -390,7 +390,7 @@ M3 执行期发现：
 **最值得记取的一条**：M1–M3 的全部断言测的都是**仿真状态**（信号、`position`、tick、四元数、间距），没有一条测渲染结果。因此两个只在真实渲染管线中才显形的缺陷完整穿过了三个里程碑的验证——法线缺失（画面全黑）与静态分类冻结（画面不动），两次都由用户在真机上发现。教训不是「断言写少了」，而是**验证层次选错了**：资产类工作必须有一条断言落在渲染输出上。已补 `loads every mesh with real surface normals` 与 `actually repaints the moving chain`（后者刻意先停掉喷房 drive，防止它替代性地让测试通过）。
 
 **遗留债务（未修，已交接）**：
-- `OverheadConveyor` 对加载器的两套静态分类（`rv-freeze-static.ts` 的 `MOVER_KEY`、`rv-scene-loader.ts` 的 `MOTION_KEY`）不可见，单独使用该库对象仍会画面冻结（实测 `?model=` 加载仍冻结）。演示场景已用挂具上的 `Kinematic` 标记 + `chain-redraw.ts` 绕开。核心修复移交 [`EP-CONV-001`](../active/EP-CONV-001-overhead-conveyor-accumulation.md)。
+- `OverheadConveyor` 对加载器的两套静态分类（`rv-freeze-static.ts` 的 `MOVER_KEY`、`rv-scene-loader.ts` 的 `MOTION_KEY`）不可见，单独使用该库对象仍会画面冻结（实测 `?model=` 加载仍冻结）。演示场景已用挂具上的 `Kinematic` 标记 + `chain-redraw.ts` 绕开。核心修复移交 [`EP-CONV-001`](EP-CONV-001-overhead-conveyor-accumulation.md)。
 - `Conveyor` 与 `OverheadConveyor` 的 glob 必然重叠，悬挂链上多 4 个惰性 `Flow.*` 信号（Surprises 第 8 条）。
 - 变色插件为 80 个工件各克隆一份 uber 材质，对批处理的影响未实测。
 - 喷房「无工件时停喷」分支从未被触发验证（Surprises 第 13 条）。

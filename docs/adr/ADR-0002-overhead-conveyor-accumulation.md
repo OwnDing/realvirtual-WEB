@@ -11,7 +11,7 @@ authority: normative
 # ADR-0002：悬挂链积放（power-and-free）的状态模型
 
 > **Accepted 2026-08-22.** 批准来源：用户在会话中的明确指令（「批准 ADR-0002，建 ExecPlan 开工」）。
-> 实施由 [`EP-CONV-001`](../exec-plans/active/EP-CONV-001-overhead-conveyor-accumulation.md) 承接；本 ADR 本身不授权其 Allowed Paths 之外的任何改动。
+> 实施由 [`EP-CONV-001`](../exec-plans/completed/EP-CONV-001-overhead-conveyor-accumulation.md) 承接；本 ADR 本身不授权其 Allowed Paths 之外的任何改动。
 
 ## Context
 
