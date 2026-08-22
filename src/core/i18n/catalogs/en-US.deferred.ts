@@ -1476,6 +1476,12 @@ export const enUSDeferred = {
       tourCooling: 'Cooling — the cured film cools down before the hangers return to the load station',
       tourLoadUnload: 'Load / unload room — parts are hung and stripped here, closing the loop',
       tourSpeedNote: 'This demo runs the chain at 300 mm/s so it is watchable; a real continuous paint line runs 2–6 m/min',
+      kpiCycle: 'Cycle',
+      kpiCycleHint: 'Interval between hangers passing the unload station',
+      kpiThroughput: 'Throughput',
+      kpiTotal: '{{count}} pieces this run',
+      kpiBuffer: 'Buffer WIP',
+      kpiBufferHint: 'Pieces held in the serpentine buffer',
     },
     hmi: {
       oeeTarget: 'Target: 90%',

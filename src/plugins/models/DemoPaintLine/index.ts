@@ -20,6 +20,7 @@ import type { RVViewer } from '../../../core/rv-viewer';
 import type { ModelPluginModule } from '../../../core/rv-model-plugin-manager';
 import type { KioskPlugin } from '../../kiosk-plugin';
 
+import { PaintLineKpiPlugin } from './paintline-kpi';
 import { PaintLineSprayMotionPlugin } from './spray-motion';
 import { PaintLineWorkpieceCoatingPlugin } from './workpiece-coating';
 import { paintLineKioskTour } from './paintline-kiosk-tour';
@@ -38,6 +39,7 @@ const registeredIds: string[] = [];
 
 export function registerModelPlugins(viewer: RVViewer): void {
   const instances = [
+    new PaintLineKpiPlugin(),
     new PaintLineSprayMotionPlugin(),
     new PaintLineWorkpieceCoatingPlugin(),
   ];

@@ -1817,6 +1817,12 @@ export const zhCN = {
       tourCooling: '冷却段 — 漆膜固化后降温，随后返回上下件工位',
       tourLoadUnload: '上下件室 — 在此装挂与卸件，闭环回到起点',
       tourSpeedNote: '本演示链速为 300 mm/s，便于观看；真实连续涂装线通常为 2–6 m/min',
+      kpiCycle: '节拍',
+      kpiCycleHint: '相邻挂具通过下件位的间隔',
+      kpiThroughput: '产量',
+      kpiTotal: '本次运行累计 {{count}} 件',
+      kpiBuffer: '缓冲在库',
+      kpiBufferHint: '蛇形缓冲段内的工件数',
     },
     hmi: {
       oeeTarget: '目标：90%',
