@@ -170,8 +170,8 @@ interface EditorMods {
   create: typeof import('@rv-private/plugins/asset-editor/kinematics/create-actions');
   group: typeof import('@rv-private/plugins/asset-editor/group-actions');
   del: typeof import('@rv-private/plugins/asset-editor/delete-selection');
-  save: typeof import('@rv-private/plugins/asset-editor/save-flow');
-  pending: typeof import('@rv-private/plugins/asset-editor/pending-open-store');
+  save: typeof import('../smart-asset-editor/save-flow');
+  pending: typeof import('../../core/editor/pending-asset-open');
   quickEdit: typeof import('@rv-private/plugins/asset-editor/kinematics/quick-edit-context');
   presets: typeof import('@rv-private/plugins/asset-editor/materials/material-presets');
   gizmoSource: typeof import('@rv-private/plugins/asset-editor/editor-drive-gizmo-source');
@@ -225,8 +225,8 @@ export class McpEditorTools {
       create: await import('@rv-private/plugins/asset-editor/kinematics/create-actions'),
       group: await import('@rv-private/plugins/asset-editor/group-actions'),
       del: await import('@rv-private/plugins/asset-editor/delete-selection'),
-      save: await import('@rv-private/plugins/asset-editor/save-flow'),
-      pending: await import('@rv-private/plugins/asset-editor/pending-open-store'),
+      save: await import('../smart-asset-editor/save-flow'),
+      pending: await import('../../core/editor/pending-asset-open'),
       quickEdit: await import('@rv-private/plugins/asset-editor/kinematics/quick-edit-context'),
       presets: await import('@rv-private/plugins/asset-editor/materials/material-presets'),
       gizmoSource: await import('@rv-private/plugins/asset-editor/editor-drive-gizmo-source'),

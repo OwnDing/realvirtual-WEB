@@ -784,9 +784,9 @@ export const ThumbnailCard = memo(function ThumbnailCard({ entry, isPlacing, isP
         <CameraAlt sx={{ fontSize: 14, mr: 1 }} />
         {entry.thumbnailUrl ? 'Update Preview' : 'Generate Preview'}
       </MenuItem>
-      {/* Local work-folder GLBs can be opened in the asset editor. Saving
-          always lands in library/Custom/, regardless of where the source
-          asset lives. */}
+      {/* Local work-folder GLBs can be opened in the asset editor. Owned
+          project assets save in place; explicit Save as creates a new asset
+          under library/Custom/. */}
       {entry.localPath && entry.glbUrl && !entry.splatUrl && !entry.localPath.startsWith('splats/') && (
         <MenuItem
           onClick={() => {

@@ -51,10 +51,14 @@ import rvOdt from '../schema/v1/rv-odt.json';
  *    `schema/v1/rv-odt.json` stays untouched. Its inline schema lives in
  *    `src/core/engine/rv-node-knowledge.ts`, which `doc-extending-webviewer.md`
  *    sanctions for exactly this case.
+ *  - Paint-line domain components (ADR-0003) — project/library behavior data,
+ *    deliberately outside the cross-industry rv-ODT interchange surface.
  */
 const OUT_OF_SCOPE_EXACT = new Set([
   'Conveyor', 'Turntable', 'ChainTransfer',
   'NodeKnowledge',
+  'PaintLineTrackModule', 'PaintProcessZone', 'PaintLineGate',
+  'PaintProcessRobot', 'PaintLineController',
 ]);
 function isInScope(name: string): boolean {
   if (name.startsWith('DES')) return false;
@@ -187,6 +191,7 @@ describe('rv-ODT spec loading', () => {
   it('every CONSUMED type in rv-extras-validator.ts has a $def in rv-odt.json', () => {
     const defs = (rvOdt as unknown as { $defs: Record<string, unknown> }).$defs;
     for (const type of getValidatorConsumedTypes()) {
+      if (!isInScope(type)) continue;
       expect(defs[type],
         `validator CONSUMED type '${type}' has no $def in schema/v1/rv-odt.json — add it or put it on the documented out-of-scope list`,
       ).toBeDefined();

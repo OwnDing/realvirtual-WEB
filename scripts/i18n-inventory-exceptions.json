@@ -300,18 +300,6 @@
       "category": "pre-boot",
       "match": "重新加载页面",
       "reason": "Required zero-JavaScript zh-CN action copy duplicated from preboot:reloadPage and parity-checked by tests/i18n-preboot.node.test.ts."
-    },
-    {
-      "file": "index.html",
-      "category": "pre-boot",
-      "match": "Powered by",
-      "reason": "AGPL attribution prefix in the immutable watermark; it is legal/product attribution rather than application copy."
-    },
-    {
-      "file": "index.html",
-      "category": "pre-boot",
-      "match": "AGPL-3.0",
-      "reason": "SPDX license identifier in the no-script link and watermark. License identifiers must stay exact across locales."
     }
   ]
 }

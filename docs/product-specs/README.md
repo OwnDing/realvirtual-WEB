@@ -13,11 +13,12 @@ authority: normative-registry
 
 - [`MULTILINGUAL_LOCALIZATION.md`](MULTILINGUAL_LOCALIZATION.md)：Approved 多语言与本地化产品规格；首批 `zh-CN`/`en-US`、默认中文、中文最终回退、AI 直接翻译。
 - [`PAINTLINE_ASSEMBLY_MVP.md`](PAINTLINE_ASSEMBLY_MVP.md)：Approved 可手工组装涂装线 MVP；Library、稳定端口、模块库、数据驱动运行与保存重开闭环。
+- [`SMART_ASSET_EDITOR.md`](SMART_ASSET_EDITOR.md)：Approved 智能资产编辑器；GLB 导入、端口/行为/信号向导、发布校验、统一保存与 Planner Library 复用。
 
 后续建议规格：
 
 1. 分层配置与配置编辑；
-2. 通用设备库版本、预览和资产治理；
+2. 通用设备库版本、资产治理与团队发布；
 3. 项目导入导出和协作。
 
 规格必须引用相关 OD/ADR、正式契约和 [`../acceptance/ACCEPTANCE_MATRIX.md`](../acceptance/ACCEPTANCE_MATRIX.md)。

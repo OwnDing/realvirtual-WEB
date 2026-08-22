@@ -792,27 +792,26 @@ async function init() {
     viewer.use(new PerfTestPlugin(), 'core');
   }
 
-  // --- Asset editor: NOT registered here (plan-434).
-  // The GLB asset authoring UI is a COMMERCIAL feature living in the private
-  // sibling (`@rv-private/plugins/asset-editor`). It registers itself — plugin
-  // AND the Editor mode — through the `asset-editor` feature adapter, exactly
-  // like every other licensed subsystem: customer tier in private-plugins.ts on
-  // our machines, and the manifest-generated registration in a customer
-  // workspace. Registering it from here as well would double-register it.
-  // A community clone has no private sibling, so there is no editor and no
-  // Editor mode entry — see the modes block below.
-
-  // --- Unified CAD import (plan-238): "Import" button + provider registry.
-  // Registers the core GLB-file provider; private providers (STEP, Asset
-  // Manager, Onshape) add themselves in registerPrivatePlugins below.
-  const { UnifiedImportPlugin } = await import('./plugins/unified-import');
-  viewer.use(new UnifiedImportPlugin(), 'core');
-
   // --- Register Private Plugins (no-op in public build) ---
   // Awaited: internal-tier features load via a __RV_INTERNAL__-gated dynamic
   // import and must finish registering (modes, components) before the mode
   // registration below and the mode-boot block later in this function.
   await registerPrivatePlugins(viewer);
+
+  // --- Smart Asset Editor (EP-ASSET-001) ---
+  // Public builds now carry the complete GLB/rv_extras authoring loop. Keep a
+  // compatibility guard for extension bundles that already registered the
+  // stable `asset-editor` id; one id must always resolve to one plugin.
+  if (!viewer.getPlugin('asset-editor')) {
+    const { SmartAssetEditorPlugin } = await import('./plugins/smart-asset-editor');
+    viewer.use(new SmartAssetEditorPlugin(), 'core');
+  }
+
+  // --- Unified CAD import (plan-238): "Import" button + provider registry.
+  // The public GLB provider feeds the public editor sink; optional providers
+  // registered above continue to feed the same ImportResultItem contract.
+  const { UnifiedImportPlugin } = await import('./plugins/unified-import');
+  viewer.use(new UnifiedImportPlugin(), 'core');
 
   // --- Workspace modes (plan-198): Viewer / HMI / DES / Planner / Commissioning / Editor ---
   // Registered after all plugins so the dropdown reflects the full set. The
@@ -841,9 +840,15 @@ async function init() {
     .register({ id: 'des', label: 'DES', icon: 'AccountTree', order: 20 })
     .register({ id: 'planner', get label() { return rvT('tools', 'finalSweep.workspace.planner'); }, icon: 'GridView', order: 30 })
     .register({ id: 'commissioning', get label() { return rvT('tools', 'finalSweep.workspace.commissioning'); }, icon: 'Handyman', order: 35 });
-  // The Editor mode is registered by the asset-editor feature adapter (plan-434),
-  // which runs inside registerPrivatePlugins above. A community build has no
-  // editor, so the dropdown must not offer a mode that would open an empty shell.
+  if (!viewer.modes.has('editor')) {
+    viewer.modes.register({
+      id: 'editor',
+      get label() { return rvT('assets', 'smartEditor.title'); },
+      icon: 'Edit',
+      order: 40,
+      runtime: 'detached',
+    });
+  }
   if (connectEmbedEnabled) attachConnectEmbedModeManager(viewer.modes);
 
   // --- Mode-driven highlight profiles (single policy point) ---

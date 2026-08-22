@@ -86,7 +86,7 @@ import { NO_PROJECT } from '../../thumbnails';
 import type { ThumbnailKeyParts } from '../../thumbnails/thumbnail-key';
 import { AddLibraryDialog } from '../../library/AddLibraryDialog';
 import { getLibraryStore } from '../../library/library-store-singleton';
-import { setPendingAssetOpen } from '@rv-private/plugins/asset-editor/pending-open-store';
+import { setPendingAssetOpen } from '../../editor/pending-asset-open';
 import { useViewer } from '../../../hooks/use-viewer';
 import { getSceneStore } from '../scene/scene-store-singleton';
 import { SceneConfirmDialog } from '../scene/rv-scene-confirm-dialog';

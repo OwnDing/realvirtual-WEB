@@ -48,9 +48,9 @@ _15 tools in this family, generated from the @McpTool decorators — do not edit
 | `web_layout_move` | write | `id` string **req**, `x` number **req**, `y` number **req**, `z` number **req**, `rx` number, `ry` number, `rz` number | Move/rotate a placement (position meters, rotation degrees XYZ). |
 | `web_layout_place` | write | `catalogId` string **req**, `x` number **req**, `y` number **req**, `z` number **req** | Place a library component on the ground plane (planner mode; catalogId from web_library_list). |
 | `web_layout_remove` | write | `id` string **req** | Remove a placed component by id (from web_layout_list). |
-| `web_layout_snap_attach` | write | `targetId` string **req**, `catalogId` string **req**, `targetSnapName` string | Attach a library component onto a free snap of a placement, auto-aligned — THE way to build connected conveyor lines. |
-| `web_layout_snap_list` | read | `id` string **req** | List the free (unoccupied) snap points of a placement (id from web_layout_list): snapName, typeId, flow, axis, dirCode per open port. |
-| `web_layout_snap_suggest` | read | `targetId` string **req**, `targetSnapName` string | Suggest library components compatible with a free snap (same typeId + compatible flow). |
+| `web_layout_snap_attach` | write | `targetId` string **req**, `catalogId` string **req**, `targetSnapName` string | Attach a library component onto a free assembly port, auto-aligned. |
+| `web_layout_snap_list` | read | `id` string **req** | List free assembly ports of a placement. Prefer portId for subsequent calls; snapName remains for legacy assets. |
+| `web_layout_snap_suggest` | read | `targetId` string **req**, `targetSnapName` string | Suggest library components compatible with a free assembly port. |
 | `web_library_describe` | read | `catalogId` string **req** | Describe one library component for building: purpose, material-flow direction, snap connections, key config. |
 | `web_library_list` | read | — | List the parts catalog: catalogId, name, category, footprintMm [x,z], short description. |
 | `web_scene_export` | read | — | Export the current layout as raw JSON (placements + catalogs + grid) without persisting anything. |
