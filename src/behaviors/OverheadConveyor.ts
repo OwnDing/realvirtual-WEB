@@ -60,6 +60,11 @@ import { defineLibraryComponent, type RV } from './_shared/behavior-kit';
 import { pathFromNode, type RVPath } from '../core/engine/rv-path';
 import { getDefaultPathNetwork } from '../core/engine/rv-path-network';
 import { computeRampedSpeed } from '../core/engine/rv-drive';
+import { PathTraveler } from '../core/engine/rv-path-traveler';
+import {
+  computeCarFollowingSpeed,
+  getDefaultSpacingController,
+} from '../core/engine/rv-spacing-controller';
 import { lookRotation } from '../core/engine/rv-pose-align';
 import type { Object3D } from 'three';
 import { rvT } from '../core/i18n';
@@ -80,12 +85,37 @@ const DEFAULTS = {
   PathId: '',
   Pitch: 0,              // mm — carrier spacing; <= 0 → automatic L/N
   StartPhase: 0,         // mm — initial chain phase (deterministic reset seed)
+
+  // ── Accumulation (ADR-0002) ──
+  /** 'rigid' = one chain scalar (unchanged); 'accumulating' = per-carrier travelers. */
+  Mode: 'rigid',
+  SafetyDistance: 1000,  // mm — car-following standstill separation
+  MinGap: 800,           // mm — HARD floor; a hanger crossbar is ~720 mm wide
+  LookAhead: 5000,       // mm — leader search window across path ends
+  HeadwayGain: 2,        // 1/s — car-following proportional gain
 } as const;
+
+/** Accumulating mode only: this tick's advance may never eat into MinGap. */
+const HARD_CLAMP_BACKOFF_MM = 1e-6;
+/** Below this remaining budget the carrier parks instead of creeping. */
+const PARK_EPS_MM = 1e-3;
 
 interface OverheadLocal {
   path: RVPath | null;
   carriers: Object3D[];
-  /** The ONE chain phase scalar, in METERS on the closed path. */
+  /**
+   * ADR-0002: the two state models are MUTUALLY EXCLUSIVE per instance.
+   * `rigid` owns `sChainM` and leaves `travelers` empty; `accumulating` owns one
+   * traveler per carrier and never reads `sChainM`.
+   */
+  accumulating: boolean;
+  /** Accumulating mode: one traveler per carrier, index-aligned with `carriers`. */
+  travelers: PathTraveler[];
+  safetyDistanceMm: number;
+  minGapMm: number;
+  lookAheadMm: number;
+  headwayGain: number;
+  /** The ONE chain phase scalar, in METERS on the closed path (rigid only). */
   sChainM: number;
   /** Current chain speed in mm/s (drive ramp output). */
   v: number;
@@ -156,6 +186,32 @@ function applyPoses(self: OverheadSelf): void {
 }
 
 /**
+ * Accumulating mode (ADR-0002): pose each carrier from ITS OWN traveler's `s`.
+ *
+ * Same gravity-oriented rule as {@link applyPoses} — up is the path's align
+ * axis and only the yaw comes from the flattened tangent, so a hanger never
+ * rolls on the loop. The only difference is where `s` comes from: N independent
+ * travelers instead of `(s_chain + i·pitch)`.
+ */
+function applyTravelerPoses(self: OverheadSelf): void {
+  const l = self.local;
+  const p = l.path;
+  if (!p) return;
+  for (let i = 0; i < l.travelers.length; i++) {
+    const carrier = l.carriers[i];
+    const si = wrapPhase(l.travelers[i].s, p.length);
+    p.getAbsPosition(si, l._pos);
+    p.getAbsDirection(si, l._tan);
+    l._flat.copy(l._tan).addScaledVector(l._up, -l._tan.dot(l._up));
+    if (l._flat.lengthSq() >= 1e-12) {
+      lookRotation(l._flat, l._up, l._quat);
+      carrier.quaternion.copy(l._quat);
+    }
+    carrier.position.copy(l._pos);
+  }
+}
+
+/**
  * Ask for a redraw after the poses moved.
  *
  * The viewer renders ON DEMAND and, during a tick, only a RUNNING `RVDrive`
@@ -171,6 +227,77 @@ function applyPoses(self: OverheadSelf): void {
  */
 function requestRedraw(self: OverheadSelf): void {
   (self.viewer as { markRenderDirty?: () => void } | null | undefined)?.markRenderDirty?.();
+}
+
+/**
+ * Accumulating tick (ADR-0002): every carrier decides its own speed.
+ *
+ * The chain is gone here — there is no `s_chain`, only N travelers on the same
+ * closed path. Each one runs at the commanded chain speed until the carrier
+ * ahead limits it, which is what turns a moving line into a queue:
+ *
+ *   1. `gapOf` — the shared start-of-tick arc-length snapshot. On a CLOSED path
+ *      the frontmost traveler's leader is the hindmost (gap mod L), so a full
+ *      loop queues correctly instead of leaving the leader unconstrained.
+ *   2. `computeCarFollowingSpeed` — the smooth ramp target, reaching exactly 0
+ *      at `SafetyDistance` (HEADWAY_STOP_EPS_MM_S makes that terminate in
+ *      finite ticks rather than asymptotically).
+ *   3. `computeRampedSpeed` — the DRIVE's own accel/decel, so accumulating and
+ *      rigid share one speed profile.
+ *   4. A HARD no-penetration clamp on the tick's advance: whatever the ramp
+ *      decided, a carrier may never eat into `MinGap`. This is the 1D
+ *      arc-length analogue of the transport-surface gap clamp, copied from the
+ *      Agv rather than re-derived.
+ *
+ * The published `.Position` is the FIRST traveler's arc length (ADR-0002
+ * Compatibility): a per-carrier model has no single chain phase, and inventing
+ * an average would be a number that matches nothing on screen.
+ */
+function tickAccumulating(self: OverheadSelf, dt: number, run: boolean): void {
+  const l = self.local;
+  const path = l.path;
+  if (!path || l.travelers.length === 0) return;
+
+  const spacing = getDefaultSpacingController();
+  let anyMoving = false;
+
+  for (const t of l.travelers) {
+    const gapM = spacing.gapOf(t.id);
+    let headwayCap = Number.POSITIVE_INFINITY;   // mm/s ramp target cap
+    let headwayFreeMm = Number.POSITIVE_INFINITY; // hard advance budget
+    let headwayStopMm = Number.POSITIVE_INFINITY; // braking target distance
+    if (Number.isFinite(gapM)) {
+      const gapMm = gapM * 1000;
+      headwayCap = computeCarFollowingSpeed(gapMm, l.safetyDistanceMm, l.headwayGain, l.targetSpeed);
+      headwayFreeMm = Math.max(0, gapMm - l.minGapMm);
+      headwayStopMm = Math.max(0, gapMm - l.safetyDistanceMm);
+    }
+
+    const target = run ? Math.min(l.targetSpeed, headwayCap) : 0;
+    if (headwayStopMm <= 0) {
+      t.v = 0;   // inside the leader's safety envelope — hold
+    } else {
+      t.v = computeRampedSpeed(t.v, target, l.acceleration, l.useAcceleration, headwayStopMm, dt);
+    }
+
+    // Hard floor, applied after the ramp and regardless of it.
+    if (t.v > 0 && Number.isFinite(headwayFreeMm)) {
+      const allowedMm = Math.max(0, headwayFreeMm - HARD_CLAMP_BACKOFF_MM);
+      if (t.v * dt > allowedMm) t.v = allowedMm <= PARK_EPS_MM ? 0 : allowedMm / dt;
+    }
+
+    t.advance(dt);
+    // A closed loop has no end to hand off at; `advance` clamps at the path end
+    // when the graph has no successor, so wrap the scalar explicitly.
+    t.s = wrapPhase(t.s, path.length);
+    t.blocked = run && t.v === 0;
+    if (t.v > 1e-3) anyMoving = true;
+  }
+
+  applyTravelerPoses(self);
+  if (anyMoving) requestRedraw(self);
+  self.sig.Moving.set(anyMoving);
+  self.sig.Position.set(wrapPhase(l.travelers[0].s, path.length) * 1000);
 }
 
 const def = {
@@ -194,6 +321,12 @@ const def = {
     PathId:          { type: 'string' as const, default: DEFAULTS.PathId },
     Pitch:           { type: 'number' as const, default: DEFAULTS.Pitch },
     StartPhase:      { type: 'number' as const, default: DEFAULTS.StartPhase },
+    // ADR-0002 — accumulation. Absent `Mode` keeps every existing asset rigid.
+    Mode:            { type: 'string' as const,  default: DEFAULTS.Mode },
+    SafetyDistance:  { type: 'number' as const, default: DEFAULTS.SafetyDistance },
+    MinGap:          { type: 'number' as const, default: DEFAULTS.MinGap },
+    LookAhead:       { type: 'number' as const, default: DEFAULTS.LookAhead },
+    HeadwayGain:     { type: 'number' as const, default: DEFAULTS.HeadwayGain },
   },
 
   signals: SIGNALS,
@@ -201,6 +334,12 @@ const def = {
   state: (): OverheadLocal => ({
     path: null,
     carriers: [],
+    accumulating: false,
+    travelers: [],
+    safetyDistanceMm: DEFAULTS.SafetyDistance,
+    minGapMm: DEFAULTS.MinGap,
+    lookAheadMm: DEFAULTS.LookAhead,
+    headwayGain: DEFAULTS.HeadwayGain,
     sChainM: 0,
     v: 0,
     pitchM: 0,
@@ -215,7 +354,7 @@ const def = {
     _quat: new Quaternion(),
   }),
 
-  logic: { applyPoses },
+  logic: { applyPoses, applyTravelerPoses },
 
   // Mode-agnostic init: resolve the closed path, bind the carrier nodes.
   setup(self: OverheadSelf): void {
@@ -229,6 +368,24 @@ const def = {
     const pathId = typeof bag['PathId'] === 'string' ? (bag['PathId'] as string) : DEFAULTS.PathId;
     const pitchMm = cfgNumber(bag, 'Pitch', DEFAULTS.Pitch);
     const startPhaseMm = cfgNumber(bag, 'StartPhase', DEFAULTS.StartPhase);
+
+    // ADR-0002: the mode is decided ONCE here and never re-read, so the two
+    // state models can never interleave mid-run. Anything other than the exact
+    // string 'accumulating' stays rigid — an unknown value must not silently
+    // change a shipped asset's behaviour.
+    l.accumulating = String(bag['Mode'] ?? DEFAULTS.Mode) === 'accumulating';
+    l.safetyDistanceMm = Math.max(0, cfgNumber(bag, 'SafetyDistance', DEFAULTS.SafetyDistance));
+    l.minGapMm = Math.max(0, cfgNumber(bag, 'MinGap', DEFAULTS.MinGap));
+    l.lookAheadMm = Math.max(0, cfgNumber(bag, 'LookAhead', DEFAULTS.LookAhead));
+    l.headwayGain = Math.max(0, cfgNumber(bag, 'HeadwayGain', DEFAULTS.HeadwayGain));
+    if (l.accumulating && l.minGapMm > l.safetyDistanceMm) {
+      console.warn(
+        `[OverheadConveyor] MinGap (${l.minGapMm}) exceeds SafetyDistance ` +
+          `(${l.safetyDistanceMm}) — the hard floor would fight the car-following ` +
+          'ramp; clamping MinGap to SafetyDistance.',
+      );
+      l.minGapMm = l.safetyDistanceMm;
+    }
 
     // Path resolution — same convention as the Agv: PathId → shared network;
     // else the first rv_extras.Path node under the root (payload-detected).
@@ -268,10 +425,26 @@ const def = {
     l.sChainM = l.startPhaseM;
     l.v = 0;
 
+    if (l.accumulating) {
+      // One traveler per carrier, seeded at the SAME arc lengths the rigid
+      // chain would have used — so both modes start from an identical picture
+      // and `StartPhase`/`Pitch` keep their documented meaning as the
+      // deterministic initial layout (ADR-0002 Compatibility).
+      const net2 = getDefaultPathNetwork();
+      for (let i = 0; i < carriers.length; i++) {
+        const t = new PathTraveler(`${self.root.name || 'OverheadConveyor'}#${i}`, path, net2);
+        t.s = wrapPhase(l.startPhaseM + i * l.pitchM, path.length);
+        getDefaultSpacingController().add(t, { lookAhead: l.lookAheadMm / 1000 });
+        l.travelers.push(t);
+      }
+    }
+
     // The chain runs unless told to stop (a live CONNECT source owns Run when bound).
     if (!self.isWired) self.sig.Run.set(true);
-    self.stamp('OverheadConveyorBehavior', { Path: path.id, Carriers: carriers.length });
-    applyPoses(self);
+    self.stamp('OverheadConveyorBehavior', {
+      Path: path.id, Carriers: carriers.length, Mode: l.accumulating ? 'accumulating' : 'rigid',
+    });
+    if (l.accumulating) applyTravelerPoses(self); else applyPoses(self);
 
     self.contextMenu(self.root, [
       { id: 'run',  label: () => rvT('tools', 'finalSweep.action.run'),  action: () => self.sig.Run.set(true) },
@@ -284,7 +457,20 @@ const def = {
     const l = self.local;
     l.sChainM = l.startPhaseM;
     l.v = 0;
-    if (l.path) applyPoses(self);
+    if (l.accumulating && l.path) {
+      // Deterministic re-seed: the same arc lengths setup() used, so a reset is
+      // reproducible in both modes (ADR-0002 Compatibility — traveler state is
+      // runtime-only and rebuilt from StartPhase + Pitch).
+      for (let i = 0; i < l.travelers.length; i++) {
+        const t = l.travelers[i];
+        t.s = wrapPhase(l.startPhaseM + i * l.pitchM, l.path.length);
+        t.v = 0;
+        t.blocked = false;
+      }
+      applyTravelerPoses(self);
+    } else if (l.path) {
+      applyPoses(self);
+    }
     self.sig.Moving.set(false);
     self.sig.Position.set(l.startPhaseM * 1000);
   },
@@ -299,6 +485,7 @@ const def = {
       if (self.isWired) return;          // an interface controls the chain → stay silent
 
       const run = self.sig.Run.get() === true;
+      if (l.accumulating) return tickAccumulating(self, dt, run);
       const target = run ? l.targetSpeed : 0;
       // The DRIVE's ramp (computeRampedSpeed IS RVDrive.update's ramp). A loop
       // has no positional stop — the remaining distance is unbounded.
@@ -312,6 +499,16 @@ const def = {
       if (moving) requestRedraw(self);
       self.sig.Moving.set(moving);
       self.sig.Position.set(l.sChainM * 1000); // mm — drive parity
+    },
+
+    teardown(self: OverheadSelf): void {
+      // The spacing controller is SHARED with every Agv in the scene. A
+      // surviving entry would keep braking vehicles behind a hanger that no
+      // longer exists, so removal must be exhaustive (same contract Agv's
+      // teardown documents for zone claims).
+      const l = self.local;
+      for (const t of l.travelers) getDefaultSpacingController().remove(t.id);
+      l.travelers.length = 0;
     },
   },
 };

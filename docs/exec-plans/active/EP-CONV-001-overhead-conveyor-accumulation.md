@@ -132,7 +132,7 @@ authority: normative-process
 ## Progress
 
 - [x] M1 先决渲染修复 —— 2026-08-22 完成，证据见 Validation「M1 实际执行证据」
-- [ ] M2 积放模式
+- [x] M2 积放模式 —— 2026-08-22 完成，证据见 Validation「M2 实际执行证据」
 - [ ] M3 放行闸
 - [ ] M4 蛇形缓冲段
 - [ ] Outcomes 与证据补齐
@@ -150,6 +150,14 @@ M1 执行期发现：
 4. **演示层的两处绕开手段已按 M1 要求移除并验证**：挂具上的 `Kinematic` 标记与 `chain-redraw.ts` 插件全部删除后，三个场景（完整场景 / 停掉喷房 drive / 单独加载库对象）画面均刷新。核心修复独立成立，不再依赖任何演示层补丁。
 
 5. **浏览器门禁的 22 个失败文件是本机既有失败**。改动前后用 `git stash` 做了基线对照：两次均为 22 文件 / 82 用例失败，**失败文件集逐行相同**（clipping、dissolve、embed、thumbnail、webgpu 等，本机无硬件 GPU 且缺 `dist-embed`）。与本次改动无关，如实登记而非声称门禁全绿。
+
+M2 执行期发现：
+
+6. **`iterateFixedUpdate(handle, dt)` 只有两个参数，没有次数**。我按 `(handle, dt, n)` 写了测试，多余的第三个参数被静默忽略，于是每次调用只推进一个 tick。症状极具误导性：断言失败信息是「走了 0.0167 m，期望 > 0.9」，看上去像积放把整条线刹停了，实际上组件完全正常。加了本地 `tick(handle, n)` 辅助函数并写明原因。**既有的刚性链测试没有这个问题**——它们本来就用 `for (…) iterateFixedUpdate(handle, TICK)` 循环，所以「9 条特征用例未修改且通过」这条兼容性证据不受影响。
+
+7. **未知 `Mode` 值一律按 `rigid` 处理**。实现里用严格等于 `'accumulating'` 判定，而不是「非 rigid 即积放」。理由是拼写错误绝不能静默改变已发布资产的行为；已由 `Mode: 'accumulate'`（少一个 g）的用例锁定为 0 个 traveler。
+
+8. **`MinGap > SafetyDistance` 会让硬钳制与车跟随斜坡互相打架**，实现中检测到即告警并把 `MinGap` 收敛到 `SafetyDistance`，而不是放任两者冲突产生抖动。
 
 ## Decision Log
 
@@ -180,6 +188,27 @@ M1 执行期发现：
 | **单独加载库对象（无插件包、零 drive）** | 4.087 → 6.304 m | **在刷新** |
 
 **M1 未验证项**：硬件加速环境下的表现（全部证据来自 SwiftShader）；把挂具从静态合并中排除对大场景的性能影响未实测（40 挂具无可见影响）。
+
+### M2 实际执行证据（2026-08-22）
+
+| 项 | 命令 | 实际结果 |
+| --- | --- | --- |
+| **刚性链特征用例（兼容性护栏）** | `npx vitest run tests/path/overhead-conveyor-loop.test.ts` | **9 passed，文件 diff 为空** |
+| 新增积放用例 | `npx vitest run tests/path/overhead-conveyor-accumulation.test.ts` | **9 passed** |
+| 静态门禁 | `./scripts/verify.sh static` | 退出码 0 |
+| Node 门禁 | `./scripts/verify.sh node` | 556 passed / 7 skipped |
+| 治理门禁 | `./scripts/verify.sh governance` | 通过 |
+
+积放用例覆盖（均为 ADR-0002 点名的静默失败点）：
+
+- `rigid` 模式注册 **0** 个 traveler；`accumulating` 注册 **N** 个；dispose 后归 **0**——共享的 `SpacingController` 是全场景的，残留条目会给真实 AGV 制造不存在的前车。
+- 未知 `Mode` 退回 `rigid`。
+- 稀疏环线（2 挂具 / 20 m）不被车头时距拖慢，1 秒走满 1 m。
+- 紧密播种（pitch 0.5 m < SafetyDistance 1 m）下，600 tick 内相邻间距**从未跌破 `MinGap`**。
+- **闭环回绕确实生效**：满环紧密播种时间距离散度不随时间发散（若队首的前车不是队尾，它会无约束跑掉并把环拉开）。
+- `Run=false` 后全部挂具静止且 `Moving` 为 false。
+
+**M2 未验证项**：视觉表现（本里程碑无可见的排队现象——要形成队列需要 M3 的放行闸，届时补渲染层断言）；大规模载具数下 `SpacingController` 每 tick 排序的性能。
 
 ## Validation
 
