@@ -1,0 +1,10 @@
+{
+  "loopLengthM": 145.415927,
+  "carrierCount": 72,
+  "gates": [
+    {
+      "name": "BufferExit",
+      "sM": 111.991149
+    }
+  ]
+}

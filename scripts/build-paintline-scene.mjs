@@ -54,6 +54,16 @@ const SCENES_DIR = join(ROOT, 'public', 'scenes');
 const SCENE_FILE = 'DemoPaintLine.glb';
 const LIB_DIR = join(ROOT, 'public', 'library', 'PaintLine');
 
+/**
+ * Geometry derived by the LIBRARY generator (loop length, gate arc lengths).
+ * Read rather than re-derived: a second copy of the segment table here would
+ * drift the first time the loop changes shape.
+ */
+const GEOMETRY = JSON.parse(readFileSync(join(LIB_DIR, 'paintline-geometry.json'), 'utf8'));
+const BUFFER_EXIT_GATE_MM = Math.round(
+  GEOMETRY.gates.find((g) => g.name === 'BufferExit').sM * 1000,
+);
+
 /** Stable UUID from a key — keeps the generator reproducible run to run. */
 function stableId(key) {
   const h = createHash('sha256').update(`EP-DEMO-001/${key}`).digest('hex');
@@ -90,13 +100,27 @@ const PLACEMENTS = [
     config: {
       OverheadConveyorBehavior: {
         // Demo pacing, NOT an engineering value — a real continuous paint line
-        // runs 2–6 m/min. At 300 mm/s the ~78.85 m loop closes in ~4.4 min.
+        // runs 2–6 m/min. At 300 mm/s the ~145 m loop closes in ~8 min.
         TargetSpeed: 300,
         Acceleration: 150,
         UseAcceleration: true,
         PathId: 'PaintLineLoop',
         Pitch: 0,        // 0 → the component distributes L / N evenly
         StartPhase: 0,   // deterministic reset seed
+
+        // ADR-0002: every hanger gets its own traveler, so the serpentine can
+        // actually accumulate instead of riding a rigid ring.
+        Mode: 'accumulating',
+        // Accumulated pitch 1.2 m against a running pitch of ~2.0 m — dense
+        // enough to read as a queue, wide enough that the 0.72 m crossbars do
+        // not visually overlap. MinGap is the hard floor beneath that.
+        SafetyDistance: 1200,
+        MinGap: 900,
+        HeadwayGain: 2,
+        LookAhead: 8000,
+        // One gate at the buffer exit: closed, the queue backs up through all
+        // three serpentine passes; open, it drains onto the return sweep.
+        Gates: [BUFFER_EXIT_GATE_MM],
       },
     },
   },
@@ -104,7 +128,10 @@ const PLACEMENTS = [
   { name: 'DryOven-6m',                file: 'DryOven-6m.glb',                at: [0, 0, 14], span: [11, 17] },
   { name: 'SprayBooth',                file: 'SprayBooth.glb',                at: [0, 0, 21], span: [18, 24] },
   { name: 'CoolingZone-4m',            file: 'CoolingZone-4m.glb',            at: [0, 0, 27], span: [25, 29] },
-  { name: 'LoadUnloadStation',         file: 'LoadUnloadStation.glb',         at: [6, 0, 12], span: [8, 16] },
+  // On the RETURN sweep below the line (the z = -6 straight), rotated a quarter
+  // turn because the station is authored along Z while that straight runs -X.
+  // Its old spot at x = 6 is now the buffer's first serpentine pass.
+  { name: 'LoadUnloadStation', file: 'LoadUnloadStation.glb', at: [7, 0, -6], yaw: 90, span: null },
 ];
 
 /** Catalog id, as `scripts/build-local-library-catalog.mjs` derives it. */
@@ -137,9 +164,11 @@ if (existsSync(catalogPath)) {
 
 const nodes = [{ children: PLACEMENTS.map((_, i) => i + 1) }];
 for (const p of PLACEMENTS) {
+  const yawRad = ((p.yaw ?? 0) * Math.PI) / 180;
   nodes.push({
     name: p.name,
     ...(p.at.some((v) => v !== 0) ? { translation: p.at } : {}),
+    ...(p.yaw ? { rotation: [0, Math.sin(yawRad / 2), 0, Math.cos(yawRad / 2)] } : {}),
     extras: {
       realvirtual: {
         NodeId: stableId(p.name),
@@ -218,7 +247,9 @@ writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
 
 console.log(`${SCENE_FILE}  (${glb.length} bytes)  ${PLACEMENTS.length} placements`);
 for (const p of PLACEMENTS) {
-  const where = p.span ? `z ${p.span[0]}–${p.span[1]} m` : 'origin, untransformed';
+  const where = p.span
+    ? `z ${p.span[0]}–${p.span[1]} m`
+    : (p.yaw ? `yaw ${p.yaw}°` : 'origin, untransformed');
   console.log(`  ${p.name.padEnd(28)} @ [${p.at.join(', ')}]  ${where}`);
 }
 console.log(`registered in scenes/index.json as "${entry.name}"`);

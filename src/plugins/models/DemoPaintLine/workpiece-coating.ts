@@ -29,8 +29,11 @@ import { RVBehavior } from '../../../core/rv-behavior';
 /** Booth length in metres, mirroring `scripts/build-paintline-library.mjs`. */
 const BOOTH_LENGTH = 6;
 
-/** Return-side X of the loop; carriers beyond this are heading back. */
-const RETURN_SIDE_X = 3;
+/** X beyond which a carrier has left the process side for the buffer. */
+const BUFFER_SIDE_X = 4;
+
+/** Z below which a carrier is on the return sweep under the line. */
+const RETURN_SWEEP_Z = -1;
 
 /**
  * Two finishes, alternating per hanger, echoing a mixed-colour batch line.
@@ -64,7 +67,8 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
 
   private parts: CoatedPart[] = [];
   private boothExitZ = Number.POSITIVE_INFINITY;
-  private unloadZ = Number.POSITIVE_INFINITY;
+  /** X of the unload station on the return sweep; parts strip as they pass it. */
+  private unloadX = Number.POSITIVE_INFINITY;
 
   protected onStart(): void {
     const scene = this.scene;
@@ -76,9 +80,10 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
       if (base === 'SprayBooth' && rv?.LayoutObject) {
         this.boothExitZ = node.position.z + BOOTH_LENGTH / 2;
       }
-      // Parts are stripped at the unload room's midpoint.
+      // Parts are stripped as they pass the unload room, which now sits on the
+      // return sweep (running -X) rather than on a Z leg.
       if (base === 'LoadUnloadStation' && rv?.LayoutObject) {
-        this.unloadZ = node.position.z;
+        this.unloadX = node.position.x;
       }
     });
 
@@ -112,9 +117,15 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
     let changed = false;
     for (const part of this.parts) {
       const { x, z } = part.carrier.position;
-      // Process side: painted only past the booth exit. Return side (and the
-      // far turn, which lands here too): painted until the unload point.
-      const painted = x < RETURN_SIDE_X ? z >= this.boothExitZ : z >= this.unloadZ;
+      // Three regions of the circuit, decided by position because the carriers'
+      // arc lengths live inside the component:
+      //   • process side (x < 4, above the sweep) — painted only past the booth;
+      //   • serpentine buffer and the far turns (x >= 4) — always painted, the
+      //     buffer sits entirely downstream of the booth;
+      //   • return sweep (z < -1, running -X) — painted until the unload room.
+      const painted = z < RETURN_SWEEP_Z
+        ? x > this.unloadX
+        : (x >= BUFFER_SIDE_X ? true : z >= this.boothExitZ);
       if (painted === part.painted) continue;
       part.painted = painted;
       const mat = part.mesh.material as { color?: Color };
@@ -131,6 +142,6 @@ export class PaintLineWorkpieceCoatingPlugin extends RVBehavior {
     }
     this.parts = [];
     this.boothExitZ = Number.POSITIVE_INFINITY;
-    this.unloadZ = Number.POSITIVE_INFINITY;
+    this.unloadX = Number.POSITIVE_INFINITY;
   }
 }

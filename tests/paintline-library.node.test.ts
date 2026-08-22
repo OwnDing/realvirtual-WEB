@@ -36,6 +36,11 @@ import { parseSnapName } from '@rv/plugins/snap-point/snap-name-parser';
 
 const LIB_DIR = resolve(__dirname, '..', 'public', 'library', 'PaintLine');
 
+/** Derived facts the library generator publishes for the scene generator. */
+function geometry(): { loopLengthM: number; carrierCount: number; gates: { name: string; sM: number }[] } {
+  return JSON.parse(readFileSync(resolve(LIB_DIR, 'paintline-geometry.json'), 'utf8'));
+}
+
 const OBJECT_FILES = [
   'PaintLineOverheadConveyor.glb',
   'PretreatTunnel-8m.glb',
@@ -181,11 +186,14 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
       expect(root.name).toContain('OverheadConveyor');
     });
 
-    it('keeps all 40 carriers as DIRECT children of the root', () => {
+    it('keeps every carrier as a DIRECT child of the root', () => {
       const carriers = doc.nodes
         .map((n, i) => ({ n, i }))
         .filter(({ n }) => n.name !== undefined && isCarrierName(n.name));
-      expect(carriers).toHaveLength(40);
+      // Count comes from the generator (`CARRIER_COUNT`) and is republished in
+      // the geometry sidecar, so the loop can change shape without this test
+      // pinning a stale number.
+      expect(carriers).toHaveLength(geometry().carrierCount);
 
       const directChildren = new Set(root.children ?? []);
       for (const { n, i } of carriers) {
@@ -200,8 +208,23 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
       const path = parsePathExtras(pathNode!.extras!.realvirtual!.Path, 'PaintLineLoop');
       expect(path).not.toBeNull();
       expect(path!.closed).toBe(true);
-      // Racetrack: 2 straights of 30 m + 2 half-turns of radius 3.
-      expect(path!.length).toBeCloseTo(60 + 6 * Math.PI, 6);
+      // Length is asserted against the SIDECAR the generator emits, not against
+      // a hand-computed constant: the scene generator reads that same file for
+      // the gate arc length, so pinning it here is what stops the two from
+      // drifting when the loop changes shape.
+      expect(path!.length).toBeCloseTo(geometry().loopLengthM, 5);
+    });
+
+    it('publishes gate arc lengths that lie on the path', () => {
+      // The scene generator turns these into `Gates: [mm]` on the placement. A
+      // value past the end of the loop would be silently dropped by the
+      // component, leaving the demo with a buffer that never holds anything.
+      const g = geometry();
+      expect(g.gates.length).toBeGreaterThan(0);
+      for (const gate of g.gates) {
+        expect(gate.sM).toBeGreaterThan(0);
+        expect(gate.sM).toBeLessThan(g.loopLengthM);
+      }
     });
 
     it('bakes preview poses that agree with the runtime path parser', () => {

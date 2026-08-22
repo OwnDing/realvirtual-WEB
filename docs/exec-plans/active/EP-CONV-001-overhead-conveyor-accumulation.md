@@ -133,8 +133,8 @@ authority: normative-process
 
 - [x] M1 先决渲染修复 —— 2026-08-22 完成，证据见 Validation「M1 实际执行证据」
 - [x] M2 积放模式 —— 2026-08-22 完成，证据见 Validation「M2 实际执行证据」
-- [ ] M3 放行闸
-- [ ] M4 蛇形缓冲段
+- [x] M3 放行闸 —— 2026-08-22 完成（Node 16 用例 + M4 交付的场景级断言）
+- [x] M4 蛇形缓冲段 —— 2026-08-22 完成，证据见 Validation「M4 实际执行证据」
 - [ ] Outcomes 与证据补齐
 
 ## Surprises & Discoveries
@@ -159,12 +159,37 @@ M2 执行期发现：
 
 8. **`MinGap > SafetyDistance` 会让硬钳制与车跟随斜坡互相打架**，实现中检测到即告警并把 `MinGap` 收敛到 `SafetyDistance`，而不是放任两者冲突产生抖动。
 
+M3 执行期发现：
+
+9. **闸的钳制不能沿用车头时距的「安全距离」语义**。前车有 `SafetyDistance` 缓冲带，闸没有——挂具应当**正好停在闸上**。因此闸的停止距离与硬预算都直接取到闸的弧长距离，不做任何余量扣减；只有 `HARD_CLAMP_BACKOFF_MM` 那 1e-6 的防越界回退。测试用 20 m/s（每 tick 333 mm，远大于任何剩余间隙）跑 600 tick 断言从未越闸，确保拦停靠的是硬预算而不是恰好的斜坡。
+
+10. **闸状态每 tick 只读一次快照**，与 `SpacingController` 的 start-of-tick 快照同一套规矩，使结果与挂具遍历顺序无关。
+
+11. **越界的闸位置直接丢弃并告警，不做回绕**。20 m 环线上写 999 m 是作者笔误，把它折回真实位置会在没人要求的地方停线。
+
+12. **两条自造的测试错误，都指向同一个坏习惯：把「数组下标 0」当成「队首」**。`carriers[0]` 播种在 s=0，是队**尾**；真正先到闸的是下标最大的那个。断言写成读 `carriers[0]` 后失败信息是「期望停在 19.5，实得 17.5」，看起来像闸没拦住，实际队列完全正确（17.5 / 18.5 / 19.5）。改为断言「最前方的挂具停在闸上，且队列都在其后」。另一条把「信号已声明」断言成 store 里的值，但无头 harness 从不把 `initialValue` 落到 store，而未定义恰好被读成「开闸」——这条断言即使组件一个信号都没声明也会通过。改为断言 kinematics spec 里的**声明本身**。
+
+M4 执行期发现：
+
+13. **环线重新设计为 145.4 m 的三道蛇形缓冲段**，工艺侧（x=0，z 0…30）**一寸未动**，四个工艺段的放置坐标完全不变。缓冲段占 x 6…16，返程从 z=−6 下方兜回起点。闭合性与切线连续性用运行时解析器实测：起止点重合、最大切线跃变 0.57°（即 0.02 m 采样步长在 2 m 半径上的固有曲率，非不连续）。
+
+14. **闸的弧长由库生成器算出并写进 `paintline-geometry.json`，场景生成器读取而非重算**。在场景侧复制一份段表，第一次改环线形状就会漂移。测试同时断言该 sidecar 与 GLB 内 Path 的实际长度一致，把漂移风险交给测试而不是纪律。
+
+15. **上下件房必须搬家**：它原来在 x=6，而那正好成了缓冲段第一道回折。已移到返程直道（z=−6）并旋转 90°——为此给场景生成器加了 `yaw` 支持。
+
+16. **变色插件的区域判定从「两条腿」重写为「三段」**。原规则用 `x < 3` 区分工艺侧与返程侧，在新拓扑下完全失效。改为：工艺侧过喷房才算已喷、缓冲段全部已喷（它整体位于喷房下游）、返程扫掠段过上下件房即卸漆。
+
+17. **三处测试把几何常数写死了**，环线一改就报「期望 40 实得 72」「期望 80 实得 144」这类数字错。全部改为读 `paintline-geometry.json`。这类断言的价值在于**关系**（每挂具两个工件、间距不低于硬底线），不在于具体数字。
+
+18. **「间距恒等于 pitch」是刚性模式的性质，不是积放的**。演示场景现在跑积放，间距由车头时距决定，因此该场景级断言改为断言**下限**（不得跌破 `MinGap`）与上限（不得超过播种 pitch 太多）；精确 pitch 仍由 `overhead-conveyor-loop.test.ts` 在无头刚性模式下守着。
+
 ## Decision Log
 
 | 日期 | 决定 | 批准依据 | 原因 |
 | --- | --- | --- | --- |
 | 2026-08-22 | 接受 `ADR-0002`，创建本计划并直接以 `approved / active` 开工 | 用户在会话中的明确指令（「批准 ADR-0002，建 ExecPlan 开工」） | 用户已审阅 ADR 的 Decision 与 Alternatives 后批准；批准来源按 `exec-plans/proposed/README.md` 要求记录于此 |
 | 2026-08-22 | 先把 `EP-DEMO-001` 补齐 Outcomes 并转入 `completed/`，再开本计划 | Agent 的流程决定 | 本计划要写 `public/library/PaintLine/` 与两个生成器，与 `EP-DEMO-001` 的 Allowed Paths 重叠；`CHANGE_MANAGEMENT` §4 要求同一批路径单写者，两个活动计划同时持有会违反该规则 |
+| 2026-08-22 | Allowed Paths 追加 `src/plugins/models/DemoPaintLine/`（不再限于「精简绕开手段」）与 `public/library/PaintLine/paintline-geometry.json` | Agent 的实施决定 | M4 改变了环线拓扑，变色插件的区域判定与 Tour 的镜头位置必须随之更新，否则演示场景直接坏掉；这属于 M4「把缓冲段并进场景且主线不受影响」的必要组成 |
 | 2026-08-22 | 先决渲染修复列为 M1 而非与积放并行 | `ADR-0002` Decision 第 7 条与 Validation 节 | 积放让每挂具独立运动；若分类缺陷未修，M2/M3 的任何视觉验证都不可信 |
 
 ### M1 实际执行证据（2026-08-22）
@@ -188,6 +213,39 @@ M2 执行期发现：
 | **单独加载库对象（无插件包、零 drive）** | 4.087 → 6.304 m | **在刷新** |
 
 **M1 未验证项**：硬件加速环境下的表现（全部证据来自 SwiftShader）；把挂具从静态合并中排除对大场景的性能影响未实测（40 挂具无可见影响）。
+
+### M4 实际执行证据（2026-08-22）
+
+| 项 | 命令 | 实际结果 |
+| --- | --- | --- |
+| 库 + 场景生成 | `npm run build:paintline` | 环线 145.42 m，72 挂具，缓冲出口闸 @ 111.99 m；输送链 532 节点 / 52 KB |
+| 可复现性 | 连续两次生成后 `shasum -a 256` 对比 | 库对象 + 场景 + sidecar 全部字节一致 |
+| 几何正确性 | 用运行时 `parsePathExtras` 采样 | 起止点重合（闭合）；最大切线跃变 0.57°（= 0.02 m 步长在 r=2 m 上的固有曲率） |
+| Node 库用例 | `npx vitest run --config vitest.node.config.ts tests/paintline-library.node.test.ts` | 52 passed |
+| 组件用例 | `overhead-conveyor-loop` + `overhead-conveyor-accumulation` | **25 passed**（刚性 9 条 diff 仍为空） |
+| 全部涂装线 / 输送链 E2E | `npx playwright test e2e/paintline-*.spec.ts e2e/overhead-conveyor-render.spec.ts` | **18 passed**（6.3 分钟） |
+| 静态 / Node / 治理 | `./scripts/verify.sh static｜node｜governance` | 0 / 557 passed / 通过 |
+
+浏览器实测（画布逐字节 + 场景图，SwiftShader）：
+
+- 场景加载 72 挂具，`Run`/`Moving` 为真，闸信号作用域为 `PaintLineOverheadConveyor.Gate1.Release`，初值 **true（开）**，画面持续刷新，无 pageerror。
+- **关闸 45 s**：缓冲段内间距小于 1.35 m 的邻接对由 **0 → 6**，队列在三道回折上可见地堆积。
+- **重新开闸 30 s**：回落到 **1**，队列疏散。
+- 截图确认蛇形三道回折、工艺段与返程上下件房均正确渲染。
+
+**M4 未验证项**：硬件加速环境下的画质与性能（全部证据来自 SwiftShader）；72 挂具下 `SpacingController` 每 tick 排序的实际开销未单独计量；缓冲段的蓄积规模受演示链速限制（45 s 只到达约 13.5 m 链长），更饱满的堆积需要更长时间或更高链速。
+
+### M3 实际执行证据（2026-08-22）
+
+| 项 | 命令 | 实际结果 |
+| --- | --- | --- |
+| 积放 + 闸用例 | `npx vitest run tests/path/overhead-conveyor-accumulation.test.ts` | **16 passed**（9 积放 + 7 闸） |
+| 刚性链特征用例 | `npx vitest run tests/path/overhead-conveyor-loop.test.ts` | 9 passed，diff 为空 |
+| 静态 / Node / 治理 | `./scripts/verify.sh static｜node｜governance` | 0 / 556 passed / 通过 |
+
+闸用例覆盖：每闸声明一个 `Gate<N>.Release`（`PLCInputBool`，初值 true=开）· 越界闸位丢弃 · 闸关时队首**正好停在闸上**且队列按 `MinGap` 在其后排开 · 20 m/s 冲击下 600 tick 从不越闸 · 开闸后队列疏散 · 回绕点附近的闸与别处行为一致 · 两闸互不干扰。
+
+**M3 未交付项**：渲染层断言（闸开关时画布变化）——需要闸出现在已加载场景中，随 M4 一并交付。
 
 ### M2 实际执行证据（2026-08-22）
 

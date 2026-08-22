@@ -13,7 +13,18 @@
  * than pixels, so they do not depend on the renderer or the camera.
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test, expect, type Page } from 'playwright/test';
+
+/** Carrier count comes from the generator's sidecar, never a pinned literal. */
+const CARRIER_COUNT = (JSON.parse(readFileSync(resolve(
+  dirname(fileURLToPath(import.meta.url)), '..',
+  'public', 'library', 'PaintLine', 'paintline-geometry.json',
+), 'utf8')) as { carrierCount: number }).carrierCount;
+/** Two workpieces hang from every carrier. */
+const WORKPIECES = CARRIER_COUNT * 2;
 
 test.use({
   launchOptions: {
@@ -151,9 +162,10 @@ test.describe('paint-line demo plugin pack', () => {
     await openScene(page);
     const state = await readPack(page);
 
-    // 40 hangers x 2 parts, each cloned — a shared material would recolour all.
-    expect(state.distinctMaterials).toBe(80);
-    expect(state.painted + state.raw).toBe(80);
+    // Every part is cloned — a shared material would recolour all of them at
+    // once, which is exactly the bug this pins.
+    expect(state.distinctMaterials).toBe(WORKPIECES);
+    expect(state.painted + state.raw).toBe(WORKPIECES);
     // Both finishes are present at once: the loop always has parts on each side
     // of the booth, so neither count may be zero.
     expect(state.painted, 'no painted parts — coating never ran').toBeGreaterThan(0);

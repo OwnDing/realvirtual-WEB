@@ -55,10 +55,11 @@ const STAGES: Stage[] = [
   // actually visible — the same cut the reference process animation makes.
   { node: 'SprayBooth', captionKey: 'paintline.tourBooth', position: [1.6, 1.8, 18.4], target: [-0.3, 1.9, 23.8], dwell: 9, outline: false },
   { node: 'CoolingZone-4m', captionKey: 'paintline.tourCooling', position: [-11, 7, 20], target: [0, 1.8, 27], dwell: 5 },
-  { node: 'LoadUnloadStation', captionKey: 'paintline.tourLoadUnload', position: [15, 7, 5], target: [6, 1.8, 12], dwell: 5 },
+  { node: 'LoadUnloadStation', captionKey: 'paintline.tourLoadUnload', position: [7, 8, -18], target: [7, 1.8, -6], dwell: 5 },
 ];
 
-const OVERVIEW = { position: [26, 20, -10] as [number, number, number], target: [3, 1, 15] as [number, number, number] };
+// Widened for the serpentine buffer: the circuit now spans x 0…16, z −8…32.
+const OVERVIEW = { position: [40, 30, -22] as [number, number, number], target: [7, 1, 14] as [number, number, number] };
 
 /**
  * One stable id for every caption. `showInstruction` replaces by id, so a fixed

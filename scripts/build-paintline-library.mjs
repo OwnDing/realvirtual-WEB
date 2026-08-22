@@ -255,27 +255,59 @@ class GlbDoc {
 // library convention.
 
 const TRACK_Y = 2.6;      // m — path height (carrier attachment)
-const LOOP_LEN_Z = 30;    // m — straight length
+const LOOP_LEN_Z = 30;    // m — process-side straight length
 const LOOP_R = 3;         // m — end-loop radius
-const LOOP_W = 2 * LOOP_R; // m — distance between the two straights
-const CARRIER_COUNT = 40;
+const LOOP_W = 2 * LOOP_R; // m — distance from the process side to the buffer entry
+const BUF_R = 2;          // m — serpentine switchback radius
+const CARRIER_COUNT = 72;
 
+/**
+ * The closed circuit, in flow order.
+ *
+ * Process side runs +Z along x = 0 and is UNCHANGED from the four-stage layout,
+ * so the pre-treat / oven / booth / cooling placements keep their coordinates.
+ * The return is folded into a three-pass serpentine ACCUMULATION BUFFER beside
+ * the line (x 6…16, z 8…32) — the shape the reference process animation gives
+ * the largest share of its floor to — and then sweeps back below z = 0 to close
+ * on the start.
+ *
+ *      x=0        x=6   x=10  x=14
+ *   ┌─ process ──┐ ┌buf1┐ ┌buf2┐ ┌buf3┐
+ *   │     +Z     │ │ -Z │ │ +Z │ │ -Z │
+ *   └────────────┘ └────┘ └────┘ └────┘
+ *                    (gate at the buffer exit)
+ */
 const LOOP_SEGMENTS = [
-  // Process side: +Z from z=0 to z=30 at x=0.
+  // Process side: +Z past all four process stages.
   { kind: 'line', from: [0, TRACK_Y, 0], to: [0, TRACK_Y, LOOP_LEN_Z] },
-  // Far end: 180° turn, clockwise sweep keeps the tangent continuous (+Z → -Z).
-  {
-    kind: 'arc', center: [LOOP_R, TRACK_Y, LOOP_LEN_Z], radius: LOOP_R,
-    startAngle: 180, degrees: 180, clockwise: true, plane: 'XZ',
-  },
-  // Return side: -Z from z=30 back to z=0 at x=6.
-  { kind: 'line', from: [LOOP_W, TRACK_Y, LOOP_LEN_Z], to: [LOOP_W, TRACK_Y, 0] },
-  // Near end: 180° turn back onto the process side.
-  {
-    kind: 'arc', center: [LOOP_R, TRACK_Y, 0], radius: LOOP_R,
-    startAngle: 0, degrees: 180, clockwise: true, plane: 'XZ',
-  },
+  // Far end: 180° onto the buffer entry.
+  { kind: 'arc', center: [LOOP_R, TRACK_Y, LOOP_LEN_Z], radius: LOOP_R,
+    startAngle: 180, degrees: 180, clockwise: true, plane: 'XZ' },
+  // ── Serpentine accumulation buffer: three passes, two switchbacks ──
+  { kind: 'line', from: [6, TRACK_Y, LOOP_LEN_Z], to: [6, TRACK_Y, 10] },
+  { kind: 'arc', center: [8, TRACK_Y, 10], radius: BUF_R,
+    startAngle: 180, degrees: 180, clockwise: false, plane: 'XZ' },
+  { kind: 'line', from: [10, TRACK_Y, 10], to: [10, TRACK_Y, 30] },
+  { kind: 'arc', center: [12, TRACK_Y, 30], radius: BUF_R,
+    startAngle: 180, degrees: 180, clockwise: true, plane: 'XZ' },
+  { kind: 'line', from: [14, TRACK_Y, 30], to: [14, TRACK_Y, 10] },
+  // ── Buffer exit → return sweep below the line, back to the start ──
+  { kind: 'line', from: [14, TRACK_Y, 10], to: [14, TRACK_Y, -3] },
+  { kind: 'arc', center: [11, TRACK_Y, -3], radius: 3,
+    startAngle: 0, degrees: 90, clockwise: true, plane: 'XZ' },
+  { kind: 'line', from: [11, TRACK_Y, -6], to: [3, TRACK_Y, -6] },
+  { kind: 'arc', center: [3, TRACK_Y, -3], radius: 3,
+    startAngle: 270, degrees: 90, clockwise: true, plane: 'XZ' },
+  { kind: 'line', from: [0, TRACK_Y, -3], to: [0, TRACK_Y, 0] },
 ];
+
+/**
+ * Index of the segment the release gate sits at the END of — the buffer exit,
+ * where a closed gate backs the queue up through all three serpentine passes.
+ * Exported into the scene as an arc length so the asset and the scene config
+ * cannot drift apart.
+ */
+const GATE_AFTER_SEGMENT = 6;   // end of the third buffer pass
 
 // A local evaluator mirroring rv-path.ts's ArcSegment/LineSegment basis. It
 // exists ONLY to bake preview poses (thumbnails, and any viewer that renders
@@ -386,15 +418,17 @@ function buildOverheadConveyor() {
       }
     }
   }
-  for (let i = 0; i < 6; i++) {
-    const z = 2.5 + i * 5;
-    for (const x of [0, LOOP_W]) {
-      track.push(doc.box('TrackPost', {
-        at: [x, (TRACK_Y + 0.2) / 2, z],
-        size: [0.12, TRACK_Y + 0.2, 0.12],
-        material: 'Steel',
-      }));
-    }
+  // Support posts sampled ALONG the path rather than at hardcoded x/z pairs:
+  // the serpentine has six straights at four different x values, and a fixed
+  // table would leave whole passes unsupported.
+  const POST_SPACING_M = 5;
+  for (let sM = 0; sM < LOOP_LENGTH; sM += POST_SPACING_M) {
+    const { pos } = loopPose(sM);
+    track.push(doc.box('TrackPost', {
+      at: [pos[0], (TRACK_Y + 0.2) / 2, pos[2]],
+      size: [0.12, TRACK_Y + 0.2, 0.12],
+      material: 'Steel',
+    }));
   }
   children.push(doc.empty('Track', { children: track }));
 
@@ -592,5 +626,19 @@ for (const [name, build] of OBJECTS) {
   total += glb.length;
   console.log(`  ${name}.glb  ${String(glb.length).padStart(7)} bytes  ${doc.nodes.length} nodes`);
 }
+// Derived geometry, written for the SCENE generator to consume.
+//
+// The gate's arc length is a fact about the path in the asset. Re-deriving it in
+// `build-paintline-scene.mjs` would mean a second copy of the segment table,
+// and the two would drift the first time this loop changes shape. Emitted here,
+// asserted against the GLB's own Path by `tests/paintline-library.node.test.ts`.
+const gateSM = LOOP_PREFIX[GATE_AFTER_SEGMENT] + segmentLength(LOOP_SEGMENTS[GATE_AFTER_SEGMENT]);
+writeFileSync(join(OUT_DIR, 'paintline-geometry.json'), `${JSON.stringify({
+  loopLengthM: r6(LOOP_LENGTH),
+  carrierCount: CARRIER_COUNT,
+  gates: [{ name: 'BufferExit', sM: r6(gateSM) }],
+}, null, 2)}\n`);
+
+console.log(`  paintline-geometry.json   loop ${LOOP_LENGTH.toFixed(2)} m, buffer-exit gate at ${gateSM.toFixed(2)} m`);
 console.log(`\n${OBJECTS.length} paint-line library objects → ${OUT_DIR}  (${total} bytes)`);
 console.log('Next: npm run build:library  (regenerates public/library/catalog.json)');

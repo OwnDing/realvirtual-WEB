@@ -23,6 +23,9 @@
  * positions wherever possible, so the suite does not depend on frame rate.
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test, expect, type Page } from 'playwright/test';
 
 /** Software rendering — headless Chromium here has no usable GPU WebGL. */
@@ -37,10 +40,19 @@ test.use({
   },
 });
 
-/** Loop geometry, mirroring `scripts/build-paintline-library.mjs`. */
-const LOOP_LENGTH = 60 + 6 * Math.PI;   // two 30 m straights + two half-turns of r=3
-const CARRIER_COUNT = 40;
-const PITCH = LOOP_LENGTH / CARRIER_COUNT;
+/**
+ * Loop geometry, read from the sidecar the library generator emits rather than
+ * restated here — the circuit gained a three-pass accumulation buffer in
+ * EP-CONV-001 M4, and a hand-copied constant would have gone stale silently.
+ */
+const GEOMETRY = JSON.parse(
+  readFileSync(resolve(
+    dirname(fileURLToPath(import.meta.url)), '..',
+    'public', 'library', 'PaintLine', 'paintline-geometry.json',
+  ), 'utf8'),
+) as { loopLengthM: number; carrierCount: number; gates: { name: string; sM: number }[] };
+const CARRIER_COUNT = GEOMETRY.carrierCount;
+const PITCH = GEOMETRY.loopLengthM / CARRIER_COUNT;
 
 const EXPECTED_PLACEMENTS: Record<string, [number, number, number]> = {
   'PaintLineOverheadConveyor': [0, 0, 0],
@@ -48,7 +60,7 @@ const EXPECTED_PLACEMENTS: Record<string, [number, number, number]> = {
   'DryOven-6m': [0, 0, 14],
   'SprayBooth': [0, 0, 21],
   'CoolingZone-4m': [0, 0, 27],
-  'LoadUnloadStation': [6, 0, 12],
+  'LoadUnloadStation': [7, 0, -6],
 };
 
 async function openScene(page: Page): Promise<void> {
@@ -210,7 +222,12 @@ test.describe('paint-line demo scene', () => {
       .toBeCloseTo(second.phase - first.phase, 3);
   });
 
-  test('spaces carriers exactly one pitch apart', async ({ page }) => {
+  // Fixed pitch is a RIGID-mode property. The demo scene runs `accumulating`
+  // since EP-CONV-001 M4, where spacing is whatever the headway controller
+  // decides — so the invariant asserted here is the FLOOR (MinGap), not
+  // equality. `tests/path/overhead-conveyor-*.test.ts` still pin exact pitch
+  // for rigid mode headlessly.
+  test('never spaces carriers closer than the hard MinGap floor', async ({ page }) => {
     await openScene(page);
     await waitForChainRunning(page);
     const carriers = await readCarriers(page);
@@ -227,10 +244,15 @@ test.describe('paint-line demo scene', () => {
     let pairs = 0;
     for (let i = 1; i < idx.length; i++) {
       if (idx[i] - idx[i - 1] !== 1) continue;
-      expect(onStraight.get(idx[i])! - onStraight.get(idx[i - 1])!).toBeCloseTo(PITCH, 6);
+      const gap = onStraight.get(idx[i])! - onStraight.get(idx[i - 1])!;
+      // MinGap is the component's HARD no-penetration floor (0.9 m in this
+      // scene); free-running carriers sit near PITCH, queued ones close to the
+      // floor, and neither may ever go below it.
+      expect(gap, `carriers ${idx[i - 1]} and ${idx[i]} penetrated MinGap`).toBeGreaterThan(0.899);
+      expect(gap, 'carriers drifted further apart than the seeded pitch').toBeLessThan(PITCH + 0.5);
       pairs++;
     }
-    expect(pairs, 'the straight should hold several adjacent carriers').toBeGreaterThan(5);
+    expect(pairs, 'the straight should hold several adjacent carriers').toBeGreaterThan(3);
   });
 
   test('hangs every carrier plumb through both turns', async ({ page }) => {
@@ -329,6 +351,42 @@ test.describe('paint-line demo scene', () => {
 
     expect(Buffer.compare(before, after), 'the chain moved but the canvas never repainted')
       .not.toBe(0);
+  });
+
+  test('backs the buffer up behind a closed gate and drains it again', async ({ page }) => {
+    await openScene(page);
+    await waitForChainRunning(page);
+
+    // Hangers on the serpentine buffer passes; the process side is x < 4.
+    const buffered = async () => (await readCarriers(page)).filter((c) => c.x >= 4);
+    const crowdedPairs = (cs: { x: number; z: number }[]) => {
+      let n = 0;
+      for (let i = 0; i < cs.length; i++) {
+        for (let j = i + 1; j < cs.length; j++) {
+          const d = Math.hypot(cs[i].x - cs[j].x, cs[i].z - cs[j].z);
+          if (d < 1.35) n++;   // below the free-running pitch → queued
+        }
+      }
+      return n;
+    };
+
+    const setGate = (open: boolean) => page.evaluate((v) => {
+      const store = (window as unknown as {
+        viewer: { signalStore?: { set(n: string, b: boolean): void } };
+      }).viewer.signalStore;
+      store?.set('PaintLineOverheadConveyor.Gate1.Release', v);
+    }, open);
+
+    expect(crowdedPairs(await buffered()), 'the buffer should start free-running').toBe(0);
+
+    await setGate(false);
+    await page.waitForTimeout(45_000);
+    const queued = crowdedPairs(await buffered());
+    expect(queued, 'a closed gate did not back the buffer up').toBeGreaterThan(2);
+
+    await setGate(true);
+    await page.waitForTimeout(30_000);
+    expect(crowdedPairs(await buffered()), 'the queue never drained').toBeLessThan(queued);
   });
 
   test('restores identical placement transforms on reload', async ({ page }) => {

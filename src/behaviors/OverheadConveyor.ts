@@ -93,6 +93,13 @@ const DEFAULTS = {
   MinGap: 800,           // mm — HARD floor; a hanger crossbar is ~720 mm wide
   LookAhead: 5000,       // mm — leader search window across path ends
   HeadwayGain: 2,        // 1/s — car-following proportional gain
+  /**
+   * Release gates: arc-length positions in mm along the path. Each one gets a
+   * `Gate<N>.Release` PLCInputBool (true = pass). Only meaningful in
+   * accumulating mode — headway alone makes a line dense, but nothing makes it
+   * QUEUE until something holds the front of it (ADR-0002 Decision 4).
+   */
+  Gates: [] as readonly number[],
 } as const;
 
 /** Accumulating mode only: this tick's advance may never eat into MinGap. */
@@ -115,6 +122,10 @@ interface OverheadLocal {
   minGapMm: number;
   lookAheadMm: number;
   headwayGain: number;
+  /** Gate positions in METERS along the path, ascending. Empty = no gates. */
+  gatesM: number[];
+  /** Per-tick snapshot of each gate's Release signal (true = pass). */
+  gateOpen: boolean[];
   /** The ONE chain phase scalar, in METERS on the closed path (rigid only). */
   sChainM: number;
   /** Current chain speed in mm/s (drive ramp output). */
@@ -230,6 +241,21 @@ function requestRedraw(self: OverheadSelf): void {
 }
 
 /**
+ * Distance in mm from `sM` forward to the nearest CLOSED gate, or Infinity when
+ * every gate ahead is open. Wraps on the closed loop, so a gate just behind a
+ * carrier is a full lap away rather than a phantom stop right in front of it.
+ */
+function gateAheadMm(l: OverheadLocal, sM: number, lengthM: number): number {
+  let best = Number.POSITIVE_INFINITY;
+  for (let g = 0; g < l.gatesM.length; g++) {
+    if (l.gateOpen[g]) continue;
+    const d = wrapPhase(l.gatesM[g] - sM, lengthM);
+    if (d < best) best = d;
+  }
+  return best === Number.POSITIVE_INFINITY ? best : best * 1000;
+}
+
+/**
  * Accumulating tick (ADR-0002): every carrier decides its own speed.
  *
  * The chain is gone here — there is no `s_chain`, only N travelers on the same
@@ -261,6 +287,13 @@ function tickAccumulating(self: OverheadSelf, dt: number, run: boolean): void {
   const spacing = getDefaultSpacingController();
   let anyMoving = false;
 
+  // Read every gate ONCE per tick, so all carriers in this tick see the same
+  // gate state — the same start-of-tick snapshot rule the spacing controller
+  // uses, and what keeps the result independent of carrier iteration order.
+  for (let g = 0; g < l.gatesM.length; g++) {
+    l.gateOpen[g] = self.signals.get<boolean>(`Gate${g + 1}.Release`) !== false;
+  }
+
   for (const t of l.travelers) {
     const gapM = spacing.gapOf(t.id);
     let headwayCap = Number.POSITIVE_INFINITY;   // mm/s ramp target cap
@@ -273,16 +306,23 @@ function tickAccumulating(self: OverheadSelf, dt: number, run: boolean): void {
       headwayStopMm = Math.max(0, gapMm - l.safetyDistanceMm);
     }
 
+    // Nearest CLOSED gate ahead. Unlike headway there is no safety envelope:
+    // a carrier is meant to come to rest exactly ON the gate.
+    const gateStopMm = gateAheadMm(l, t.s, path.length);
+
+    const stopMm = Math.min(headwayStopMm, gateStopMm);
     const target = run ? Math.min(l.targetSpeed, headwayCap) : 0;
-    if (headwayStopMm <= 0) {
-      t.v = 0;   // inside the leader's safety envelope — hold
+    if (stopMm <= 0) {
+      t.v = 0;   // inside the leader's envelope, or held at a closed gate
     } else {
-      t.v = computeRampedSpeed(t.v, target, l.acceleration, l.useAcceleration, headwayStopMm, dt);
+      t.v = computeRampedSpeed(t.v, target, l.acceleration, l.useAcceleration, stopMm, dt);
     }
 
-    // Hard floor, applied after the ramp and regardless of it.
-    if (t.v > 0 && Number.isFinite(headwayFreeMm)) {
-      const allowedMm = Math.max(0, headwayFreeMm - HARD_CLAMP_BACKOFF_MM);
+    // Hard budget, applied after the ramp and regardless of it: this tick may
+    // neither eat into MinGap nor cross a closed gate.
+    const hardMm = Math.min(headwayFreeMm, gateStopMm);
+    if (t.v > 0 && Number.isFinite(hardMm)) {
+      const allowedMm = Math.max(0, hardMm - HARD_CLAMP_BACKOFF_MM);
       if (t.v * dt > allowedMm) t.v = allowedMm <= PARK_EPS_MM ? 0 : allowedMm / dt;
     }
 
@@ -327,6 +367,7 @@ const def = {
     MinGap:          { type: 'number' as const, default: DEFAULTS.MinGap },
     LookAhead:       { type: 'number' as const, default: DEFAULTS.LookAhead },
     HeadwayGain:     { type: 'number' as const, default: DEFAULTS.HeadwayGain },
+    Gates:           { type: 'json' as const,   default: [] as number[] },
   },
 
   signals: SIGNALS,
@@ -340,6 +381,8 @@ const def = {
     minGapMm: DEFAULTS.MinGap,
     lookAheadMm: DEFAULTS.LookAhead,
     headwayGain: DEFAULTS.HeadwayGain,
+    gatesM: [],
+    gateOpen: [],
     sChainM: 0,
     v: 0,
     pitchM: 0,
@@ -426,6 +469,26 @@ const def = {
     l.v = 0;
 
     if (l.accumulating) {
+      // Gates: arc-length positions in mm. Out-of-range and non-finite entries
+      // are dropped rather than wrapped — a gate at 999 m on a 79 m loop is an
+      // authoring mistake, and silently folding it onto a real position would
+      // stop the line somewhere nobody asked for.
+      const rawGates = Array.isArray(bag['Gates']) ? (bag['Gates'] as unknown[]) : [];
+      for (const raw of rawGates) {
+        const mm = Number(raw);
+        if (!Number.isFinite(mm) || mm < 0 || mm / 1000 > path.length) {
+          console.warn(`[OverheadConveyor] gate position ${String(raw)} mm is outside the path (0..${path.length * 1000} mm) — ignored`);
+          continue;
+        }
+        l.gatesM.push(mm / 1000);
+      }
+      l.gatesM.sort((a, b) => a - b);
+      for (let g = 0; g < l.gatesM.length; g++) {
+        // Default OPEN: adding a gate must never silently stop a running line.
+        self.signal(`Gate${g + 1}.Release`, { type: 'PLCInputBool', initialValue: true });
+        l.gateOpen.push(true);
+      }
+
       // One traveler per carrier, seeded at the SAME arc lengths the rigid
       // chain would have used — so both modes start from an identical picture
       // and `StartPhase`/`Pitch` keep their documented meaning as the

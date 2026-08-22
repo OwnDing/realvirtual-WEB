@@ -122,12 +122,12 @@ function tick(handle: BindContextHandle, n: number): void {
   for (let i = 0; i < n; i++) iterateFixedUpdate(handle, TICK);
 }
 
-function bind(root: Object3D, host: Host): BindContextHandle {
+function bind(root: Object3D, host: Host): { handle: BindContextHandle; accum: KinematicsSpec } {
   const accum: KinematicsSpec = {};
   const { ctx, handle } = createBindContext(root, host, accum);
   OverheadConveyorBehavior.bind(ctx);
   applyKinematicsSpec(root, accum);
-  return handle;
+  return { handle, accum };
 }
 
 /** Registered travelers on the loop — the shared controller's own count. */
@@ -162,7 +162,7 @@ afterEach(() => {
 describe('OverheadConveyor — mode isolation (ADR-0002)', () => {
   it('registers NO travelers in rigid mode', () => {
     const { root } = makeRoot('RigidChain', 4);   // no Mode → rigid
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
     tick(handle, 30);
 
     // The controller is shared with every Agv in the scene: a stray entry here
@@ -173,7 +173,7 @@ describe('OverheadConveyor — mode isolation (ADR-0002)', () => {
 
   it('registers exactly one traveler per carrier in accumulating mode', () => {
     const { root } = makeRoot('AccumChain', 4, { Mode: 'accumulating' });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
     expect(registered()).toBe(4);
     handle.dispose();
   });
@@ -181,14 +181,14 @@ describe('OverheadConveyor — mode isolation (ADR-0002)', () => {
   it('treats an unknown Mode as rigid rather than guessing', () => {
     // A typo must never silently change a shipped asset's behaviour.
     const { root } = makeRoot('TypoChain', 4, { Mode: 'accumulate' });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
     expect(registered()).toBe(0);
     handle.dispose();
   });
 
   it('leaves nothing registered after dispose', () => {
     const { root } = makeRoot('AccumChain', 4, { Mode: 'accumulating' });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
     expect(registered()).toBe(4);
     handle.dispose();
     expect(registered(), 'a surviving traveler would brake real vehicles').toBe(0);
@@ -202,7 +202,7 @@ describe('OverheadConveyor — accumulating motion', () => {
     const { root, carriers } = makeRoot('Sparse', 2, {
       Mode: 'accumulating', SafetyDistance: 1000, MinGap: 400,
     });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
 
     const before = carriers[0].position.clone();
     tick(handle, 60);          // 1 s at 1000 mm/s → 1 m
@@ -220,7 +220,7 @@ describe('OverheadConveyor — accumulating motion', () => {
     const { root, carriers } = makeRoot('Tight', 8, {
       Mode: 'accumulating', Pitch: 500, SafetyDistance: 1000, MinGap: 400,
     });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
 
     let worst = Number.POSITIVE_INFINITY;
     for (let step = 0; step < 40; step++) {
@@ -241,7 +241,7 @@ describe('OverheadConveyor — accumulating motion', () => {
     const { root, carriers } = makeRoot('Ring', 8, {
       Mode: 'accumulating', Pitch: 500, SafetyDistance: 1000, MinGap: 400,
     });
-    const handle = bind(root, makeHost());
+    const { handle } = bind(root, makeHost());
 
     const spread = () => {
       const gs = gapsOf(carriers);
@@ -260,7 +260,7 @@ describe('OverheadConveyor — accumulating motion', () => {
   it('publishes Moving and a Position that tracks a real carrier', () => {
     const { root } = makeRoot('Signals', 3, { Mode: 'accumulating' });
     const host = makeHost();
-    const handle = bind(root, host);
+    const { handle } = bind(root, host);
 
     tick(handle, 60);
     expect(host.values.get('OverheadConveyor.Moving')).toBe(true);
@@ -276,7 +276,7 @@ describe('OverheadConveyor — accumulating motion', () => {
   it('stops every carrier when Run goes false', () => {
     const { root, carriers } = makeRoot('Stopper', 4, { Mode: 'accumulating' });
     const host = makeHost();
-    const handle = bind(root, host);
+    const { handle } = bind(root, host);
 
     tick(handle, 30);
     host.signalStore!.set('OverheadConveyor.Run', false);
@@ -288,6 +288,160 @@ describe('OverheadConveyor — accumulating motion', () => {
       expect(carriers[i].position.distanceTo(parked[i])).toBeLessThan(1e-6);
     }
     expect(host.values.get('OverheadConveyor.Moving')).toBe(false);
+    handle.dispose();
+  });
+});
+
+/**
+ * Arc length of a carrier on the square loop, recovered from its world point.
+ * Sides run +Z (x=0), +X (z=5), −Z (x=5), −X (z=0); L = 20 m.
+ */
+function arcLengthOf(p: { x: number; z: number }): number {
+  const eps = 1e-6;
+  if (Math.abs(p.x) < eps && p.z <= 5 + eps) return p.z;                 // 0..5
+  if (Math.abs(p.z - 5) < eps) return 5 + p.x;                            // 5..10
+  if (Math.abs(p.x - 5) < eps) return 10 + (5 - p.z);                     // 10..15
+  return 15 + (5 - p.x);                                                  // 15..20
+}
+
+describe('OverheadConveyor — release gates (ADR-0002 Decision 4)', () => {
+  it('declares one Release signal per gate, seeded open', () => {
+    const { root } = makeRoot('Gated', 4, { Mode: 'accumulating', Gates: [5000, 15000] });
+    const { handle, accum } = bind(root, makeHost());
+
+    // Asserted on the DECLARATION rather than a store read: this headless
+    // harness never materialises `initialValue` into the store, and an
+    // undefined store entry reads as "open" either way — which would make a
+    // store-based assertion pass even if nothing had been declared at all.
+    const gates = (accum.signals ?? []).filter((sig) => sig.name.includes('Gate'));
+    expect(gates.map((sig) => sig.name)).toEqual(['Gate1.Release', 'Gate2.Release']);
+    for (const sig of gates) {
+      expect(sig.type).toBe('PLCInputBool');
+      // Default OPEN: adding a gate must never silently stop a running line.
+      expect(sig.initialValue).toBe(true);
+    }
+    handle.dispose();
+  });
+
+  it('ignores a gate positioned off the path instead of folding it onto one', () => {
+    // 999 m on a 20 m loop is an authoring mistake; wrapping it would stop the
+    // line at an arc length nobody asked for.
+    const { root } = makeRoot('BadGate', 4, { Mode: 'accumulating', Gates: [999_000] });
+    const { handle, accum } = bind(root, makeHost());
+    expect((accum.signals ?? []).some((sig) => sig.name.includes('Gate'))).toBe(false);
+    handle.dispose();
+  });
+
+  it('holds carriers at a closed gate and queues them behind it', () => {
+    const { root, carriers } = makeRoot('Queue', 6, {
+      Mode: 'accumulating', Pitch: 1500, StartPhase: 0,
+      SafetyDistance: 1000, MinGap: 600, Gates: [10_000],
+    });
+    const host = makeHost();
+    const { handle } = bind(root, host);
+
+    host.signalStore!.set('Gate1.Release', false);
+    tick(handle, 900);                       // 15 s — long enough to pile up
+
+    const s = carriers.map((c) => arcLengthOf(c.position));
+    const atGate = s.filter((v) => Math.abs(v - 10) < 1e-3);
+    // Exactly one carrier rests ON the gate; nobody is beyond it.
+    expect(atGate.length, 'a carrier should be parked exactly on the gate').toBe(1);
+
+    // The queue sits behind the gate, spaced at least MinGap apart.
+    const behind = s.filter((v) => v < 10 - 1e-6).sort((a, b) => b - a);
+    expect(behind.length).toBeGreaterThan(2);
+    for (let i = 1; i < behind.length; i++) {
+      expect(behind[i - 1] - behind[i]).toBeGreaterThan(0.599);
+    }
+    handle.dispose();
+  });
+
+  it('never lets a carrier cross a closed gate, whatever the ramp decides', () => {
+    const { root, carriers } = makeRoot('NoCross', 4, {
+      Mode: 'accumulating', TargetSpeed: 20_000, UseAcceleration: false,
+      Pitch: 2000, Gates: [8000], SafetyDistance: 1000, MinGap: 600,
+    });
+    const host = makeHost();
+    const { handle } = bind(root, host);
+    host.signalStore!.set('Gate1.Release', false);
+
+    // 20 m/s at 1/60 s is 333 mm per tick — far more than any remaining gap,
+    // so only the HARD budget can stop an overshoot.
+    for (let i = 0; i < 600; i++) {
+      tick(handle, 1);
+      for (const c of carriers) {
+        const a = arcLengthOf(c.position);
+        // Carriers start at 0/2/4/6 m and may only approach the gate at 8 m.
+        expect(a).toBeLessThanOrEqual(8 + 1e-6);
+      }
+    }
+    handle.dispose();
+  });
+
+  it('releases the queue when the gate opens', () => {
+    const { root, carriers } = makeRoot('Release', 6, {
+      Mode: 'accumulating', Pitch: 1500, SafetyDistance: 1000, MinGap: 600,
+      Gates: [10_000],
+    });
+    const host = makeHost();
+    const { handle } = bind(root, host);
+
+    host.signalStore!.set('Gate1.Release', false);
+    tick(handle, 900);
+    const queued = carriers.map((c) => arcLengthOf(c.position));
+
+    host.signalStore!.set('Gate1.Release', true);
+    tick(handle, 300);                       // 5 s of free running
+    const released = carriers.map((c) => arcLengthOf(c.position));
+
+    // Everyone moved on, and the pack is no longer bunched at the gate.
+    const spreadOf = (v: number[]) => Math.max(...v) - Math.min(...v);
+    expect(spreadOf(released)).toBeGreaterThan(spreadOf(queued));
+    expect(host.values.get('OverheadConveyor.Moving')).toBe(true);
+    handle.dispose();
+  });
+
+  it('treats a gate near the wrap point exactly like any other', () => {
+    // Gate at 19.5 m on a 20 m loop: carriers seeded at 0/1.5/3 m must approach
+    // it the LONG way round, not be held instantly by a phantom gate behind.
+    const { root, carriers } = makeRoot('Wrap', 3, {
+      Mode: 'accumulating', Pitch: 1500, Gates: [19_500],
+      SafetyDistance: 1000, MinGap: 600,
+    });
+    const host = makeHost();
+    const { handle } = bind(root, host);
+    host.signalStore!.set('Gate1.Release', false);
+
+    tick(handle, 60);                        // 1 s — the line must be running
+    expect(arcLengthOf(carriers[0].position)).toBeGreaterThan(0.9);
+
+    tick(handle, 2400);                      // plenty to reach 19.5 m
+    // `carriers[0]` is seeded at s = 0 and is therefore the LAST in the queue;
+    // the front-most carrier is the one that meets the gate.
+    const s = carriers.map((c) => arcLengthOf(c.position));
+    expect(Math.abs(Math.max(...s) - 19.5), 'the front carrier should rest on the wrap-side gate')
+      .toBeLessThan(1e-3);
+    // …and the queue is behind it, not scattered past the wrap.
+    expect(Math.min(...s)).toBeGreaterThan(17);
+    handle.dispose();
+  });
+
+  it('keeps two gates independent', () => {
+    const { root, carriers } = makeRoot('TwoGates', 6, {
+      Mode: 'accumulating', Pitch: 1500, Gates: [6000, 14_000],
+      SafetyDistance: 1000, MinGap: 600,
+    });
+    const host = makeHost();
+    const { handle } = bind(root, host);
+
+    // Close only the FAR gate: the near one must not hold anybody.
+    host.signalStore!.set('Gate2.Release', false);
+    tick(handle, 1200);
+
+    const s = carriers.map((c) => arcLengthOf(c.position));
+    expect(s.some((v) => Math.abs(v - 14) < 1e-3), 'a carrier should rest on gate 2').toBe(true);
+    expect(s.every((v) => Math.abs(v - 6) > 1e-3), 'gate 1 is open and must hold nobody').toBe(true);
     handle.dispose();
   });
 });
