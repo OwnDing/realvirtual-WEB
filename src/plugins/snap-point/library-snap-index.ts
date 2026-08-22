@@ -8,7 +8,7 @@
  * library catalog entries, loads each GLB once via GLTFLoader, parses snap
  * names, and caches the result in memory + localStorage.
  *
- * Cache key: `rv-snap-index-v1:<glbUrl>`
+ * Cache key: `rv-snap-index-v3:<glbUrl>`
  * Cache TTL: implicit (forever) unless invalidated by the caller; manual
  * clear via `clearCache()` for tests.
  */
@@ -17,13 +17,16 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import type { LibraryCatalogEntry } from '../layout-planner/rv-layout-store';
 import {
-  parseSnapName,
   flowsCompatible,
-  forcesBidiPort,
   type SnapDirection,
   type SnapDirectionCode,
   type SnapFlow,
 } from './snap-name-parser';
+import {
+  resolveAssemblyPort,
+  type AssemblyPortDirectionTuple,
+  type AssemblyPortIdentitySource,
+} from './assembly-port';
 
 export interface LibraryAssetSnapEntry {
   /** Library catalog entry id. */
@@ -33,16 +36,18 @@ export interface LibraryAssetSnapEntry {
   /** Snap point inside the asset. */
   snaps: Array<{
     nodeName: string;
+    portId: string;
+    identitySource: AssemblyPortIdentitySource;
+    localDirection?: AssemblyPortDirectionTuple;
     dir: SnapDirection;
     typeId: string;
     flow: SnapFlow;
   }>;
 }
 
-// v2: snap flow is now normalized through `forcesBidiPort` at index time (e.g.
-// the ChainTransfer's convchain port → bidi), so v1 caches that stored the raw
-// authored flow must be discarded.
-const LS_PREFIX = 'rv-snap-index-v2:';
+// v3 adds stable PortId/source/direction. v1/v2 caches lack that identity and
+// must never be reused for placement selection.
+const LS_PREFIX = 'rv-snap-index-v3:';
 const _memoryCache = new Map<string, LibraryAssetSnapEntry>();
 let _loader: GLTFLoader | null = null;
 let _dracoLoader: DRACOLoader | null = null;
@@ -92,19 +97,28 @@ export async function ensureAssetIndex(
   const loader = _getLoader();
   const gltf = await loader.loadAsync(glbUrl);
   const snaps: LibraryAssetSnapEntry['snaps'] = [];
+  const seenMetadataPortIds = new Set<string>();
   gltf.scene.traverse((node) => {
-    const parsed = parseSnapName(node.name);
-    if (parsed) {
+    const resolved = resolveAssemblyPort(node, glbUrl);
+    if (
+      resolved.kind === 'port'
+      && (resolved.port.source !== 'metadata' || !seenMetadataPortIds.has(resolved.port.portId))
+    ) {
+      const parsed = resolved.port;
+      if (parsed.source === 'metadata') seenMetadataPortIds.add(parsed.portId);
       snaps.push({
         nodeName: node.name,
+        portId: parsed.portId,
+        identitySource: parsed.source,
+        localDirection: parsed.localDirection,
         dir: parsed.dir,
         typeId: parsed.typeId,
-        // Apply the same bidi-force the runtime scanner uses, keyed off the GLB
-        // url (it contains the model keyword, e.g. "ChainTransfer"), so the
-        // quick-add picker matches a forced-bidi port (convchain) the same way a
-        // placed asset would.
-        flow: forcesBidiPort(glbUrl, parsed.typeId) ? 'bidi' : parsed.flow,
+        flow: parsed.flow,
       });
+    } else if (resolved.kind === 'invalid') {
+      console.warn(`[LibrarySnapIndex] ${glbUrl}#${node.name}: ${resolved.reason}`);
+    } else if (resolved.kind === 'port' && resolved.port.source === 'metadata') {
+      console.warn(`[LibrarySnapIndex] ${glbUrl}: duplicate AssemblyPort.PortId '${resolved.port.portId}'`);
     }
   });
   const entry: LibraryAssetSnapEntry = { catalogId, glbUrl, snaps };
@@ -130,8 +144,8 @@ export async function findCompatibleLibraryAssets(
   typeId: string,
   preferOppositeDirCode?: SnapDirectionCode,
   targetFlow?: SnapFlow,
-): Promise<Array<{ entry: LibraryCatalogEntry; ownSnapName: string }>> {
-  const out: Array<{ entry: LibraryCatalogEntry; ownSnapName: string }> = [];
+): Promise<Array<{ entry: LibraryCatalogEntry; ownPortId: string; ownSnapName: string }>> {
+  const out: Array<{ entry: LibraryCatalogEntry; ownPortId: string; ownSnapName: string }> = [];
   for (const e of entries) {
     if (!e.glbUrl) continue;
     let idx: LibraryAssetSnapEntry;
@@ -148,7 +162,7 @@ export async function findCompatibleLibraryAssets(
       ? matches.find((s) => s.dir.code === preferOppositeDirCode)
       : undefined;
     const chosen = preferred ?? matches[0];
-    out.push({ entry: e, ownSnapName: chosen.nodeName });
+    out.push({ entry: e, ownPortId: chosen.portId, ownSnapName: chosen.nodeName });
   }
   return out;
 }

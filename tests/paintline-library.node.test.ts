@@ -44,6 +44,14 @@ function geometry(): { loopLengthM: number; carrierCount: number; gates: { name:
 const OBJECT_FILES = [
   'PaintRobot.glb',
   'PaintLineOverheadConveyor.glb',
+  'PaintLineController.glb',
+  'PaintTrackStraight-2m.glb',
+  'PaintTrackStraight-4m.glb',
+  'PaintTrackCurve-90L.glb',
+  'PaintTrackCurve-90R.glb',
+  'PaintTrackReturn-180.glb',
+  'PaintTrackBuffer-6m.glb',
+  'PaintTrackGate-2m.glb',
   'PretreatTunnel-8m.glb',
   'DryOven-6m.glb',
   'SprayBooth.glb',
@@ -127,7 +135,7 @@ function childIndices(doc: GltfDoc): Set<number> {
 }
 
 describe('paint-line library objects (EP-DEMO-001 M1)', () => {
-  it('generates all seven objects', () => {
+  it('generates the complete demo and modular assembly kit', () => {
     for (const file of OBJECT_FILES) {
       expect(existsSync(resolve(LIB_DIR, file)), `${file} missing — run scripts/build-paintline-library.mjs`).toBe(true);
     }
@@ -365,6 +373,60 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
       const asset = (doc as unknown as { asset: { extras?: { extractedFrom?: string } } }).asset;
       expect(asset.extras?.extractedFrom).toContain('DemoRobotIK.glb#FanucCRX-10iA_L');
     });
+
+    it('publishes a stable robot.mount assembly port', () => {
+      const mount = doc.nodes.find((n) =>
+        (n.extras?.realvirtual?.AssemblyPort as { PortId?: string } | undefined)?.PortId === 'robot.mount',
+      );
+      expect(mount).toBeDefined();
+      expect(mount?.name).toBe('Snap-YB-paintline-robot-mount-v1');
+      expect(mount?.extras?.realvirtual?.NodeId).toBe('urn:rv:paintline:paintrobot:port:robot.mount');
+    });
+  });
+
+  describe('modular assembly contract (EP-PLANNER-001)', () => {
+    const trackFiles = [
+      'PaintTrackStraight-2m.glb', 'PaintTrackStraight-4m.glb',
+      'PaintTrackCurve-90L.glb', 'PaintTrackCurve-90R.glb',
+      'PaintTrackReturn-180.glb', 'PaintTrackBuffer-6m.glb', 'PaintTrackGate-2m.glb',
+      'PretreatTunnel-8m.glb', 'DryOven-6m.glb', 'SprayBooth.glb',
+      'CoolingZone-4m.glb', 'LoadUnloadStation.glb',
+    ];
+
+    it.each(trackFiles)('%s has topology plus unique stable in/out ports', (file) => {
+      const doc = readGlb(file);
+      const root = doc.nodes[doc.scenes[doc.scene].nodes[0]];
+      const module = root.extras?.realvirtual?.PaintLineTrackModule as {
+        Points?: unknown[]; EntryPortId?: string; ExitPortId?: string;
+      };
+      expect(module.Points?.length).toBeGreaterThanOrEqual(2);
+      expect([module.EntryPortId, module.ExitPortId]).toEqual(['track.in', 'track.out']);
+
+      const ports = doc.nodes
+        .map((node) => node.extras?.realvirtual?.AssemblyPort as Record<string, unknown> | undefined)
+        .filter((value): value is Record<string, unknown> => value !== undefined)
+        .filter((value) => value.TypeId === 'paintseg');
+      expect(ports).toHaveLength(2);
+      expect(ports.map((p) => p.PortId).sort()).toEqual(['track.in', 'track.out']);
+      expect(new Set(ports.map((p) => p.PortId)).size).toBe(2);
+      expect(ports.map((p) => p.Flow).sort()).toEqual(['in', 'out']);
+      for (const port of ports) {
+        expect(port.Direction).toMatchObject({ x: expect.any(Number), y: expect.any(Number), z: expect.any(Number) });
+      }
+    });
+
+    it('controller owns reusable carrier templates and runtime configuration', () => {
+      const doc = readGlb('PaintLineController.glb');
+      const rootIndex = doc.scenes[doc.scene].nodes[0];
+      const root = doc.nodes[rootIndex];
+      const cfg = root.extras?.realvirtual?.PaintLineController as Record<string, unknown>;
+      expect(cfg).toMatchObject({ TargetSpeed: 300, Pitch: 1500, RunOnStart: true, PiecesPerCarrier: 2 });
+      const direct = new Set(root.children ?? []);
+      const carriers = doc.nodes.map((node, index) => ({ node, index }))
+        .filter(({ node }) => isCarrierName(node.name ?? ''));
+      expect(carriers).toHaveLength(16);
+      expect(carriers.every(({ index }) => direct.has(index))).toBe(true);
+    });
   });
 
   describe('process sections', () => {
@@ -374,7 +436,8 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
         const doc = readGlb(file);
         const snaps = doc.nodes
           .filter((n) => n.name?.startsWith('Snap-'))
-          .map((n) => parseSnapName(n.name!)!);
+          .map((n) => parseSnapName(n.name!)!)
+          .filter((snap) => snap.typeId === 'paintseg');
         expect(snaps).toHaveLength(2);
         expect(snaps.every((s) => s.typeId === 'paintseg')).toBe(true);
         expect(snaps.map((s) => s.flow).sort()).toEqual(['in', 'out']);

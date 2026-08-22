@@ -11,12 +11,16 @@
  *   - Indexed by id (Object3D.uuid) for direct access
  *   - Tracks occupancy so a snap cannot accept a second asset
  *
- * Compatibility:
- *   typeId(a) === typeId(b)  AND  dir(a) is the opposite axis-sign of dir(b)
+ * Compatibility requires the same TypeId and compatible Flow. Placement
+ * alignment then makes the declared outward Directions antiparallel.
  */
 
 import type { Object3D } from 'three';
 import type { SnapDirection, SnapDirectionCode, SnapFlow } from '../../plugins/snap-point/snap-name-parser';
+import type {
+  AssemblyPortDirectionTuple,
+  AssemblyPortIdentitySource,
+} from '../../plugins/snap-point/assembly-port';
 import { flowsCompatible } from '../../plugins/snap-point/snap-name-parser';
 
 /** Opaque placement id (matches PlacedComponent.id from rv-layout-store). */
@@ -25,10 +29,16 @@ export type PlacedComponentId = string;
 /** Runtime snap-point entity living in the registry. */
 export interface SnapPoint {
   /**
-   * Stable id == Three.js Object3D.uuid. Three.js generates collision-free
-   * UUIDs automatically; this avoids the duplicate-name collision problem.
+   * Runtime id == Three.js Object3D.uuid. Stable cross-session identity is
+   * `portId`; keeping the two concepts separate avoids persisting UUIDs.
    */
   readonly id: string;
+  /** Stable semantic identity within the owning asset. Optional for literal
+   * test fixtures and third-party registrants created before rv-ODT 1.1. */
+  readonly portId?: string;
+  readonly identitySource?: AssemblyPortIdentitySource;
+  /** Explicit normalized direction in the port-node local frame. */
+  readonly localDirection?: AssemblyPortDirectionTuple;
   /** The empty node in the GLB hierarchy. */
   readonly object3D: Object3D;
   readonly dir: SnapDirection;
@@ -64,6 +74,7 @@ export class SnapPointRegistry {
    *  to avoid the previous O(n × deg) full registry traversal. */
   private readonly _byOwnerRoot = new Map<Object3D, SnapPoint[]>();
   private readonly _all: SnapPoint[] = [];
+  private _revision = 0;
 
   /** Register a snap point. Idempotent on id. */
   register(sp: SnapPoint): void {
@@ -76,6 +87,7 @@ export class SnapPointRegistry {
     const ownerBucket = this._byOwnerRoot.get(sp.ownerRoot);
     if (ownerBucket) ownerBucket.push(sp);
     else this._byOwnerRoot.set(sp.ownerRoot, [sp]);
+    this._revision++;
   }
 
   /** Remove a single snap by id. */
@@ -108,6 +120,7 @@ export class SnapPointRegistry {
       if (oi >= 0) ownerBucket.splice(oi, 1);
       if (ownerBucket.length === 0) this._byOwnerRoot.delete(sp.ownerRoot);
     }
+    this._revision++;
   }
 
   /**
@@ -202,6 +215,7 @@ export class SnapPointRegistry {
     if (!sp) return;
     sp.occupied = true;
     sp.occupiedBy = by;
+    this._revision++;
   }
 
   markFree(id: string): void {
@@ -223,6 +237,7 @@ export class SnapPointRegistry {
     sp.occupied = false;
     sp.occupiedBy = undefined;
     sp.pairedSnapId = undefined;
+    this._revision++;
   }
 
   /** Establish a bidirectional pairing between two snaps. Both must already
@@ -234,6 +249,7 @@ export class SnapPointRegistry {
     if (!a || !b || a === b) return;
     a.pairedSnapId = b.id;
     b.pairedSnapId = a.id;
+    this._revision++;
   }
 
   /** Drop everything (e.g. on model unload). */
@@ -242,12 +258,16 @@ export class SnapPointRegistry {
     this._byTypeId.clear();
     this._byOwnerRoot.clear();
     this._all.length = 0;
+    this._revision++;
   }
 
   /** Current snap-point count. */
   get size(): number {
     return this._all.length;
   }
+
+  /** Monotonic topology/occupancy revision for O(1) change detection. */
+  get revision(): number { return this._revision; }
 }
 
 const EMPTY_SNAP_ARRAY: readonly SnapPoint[] = Object.freeze([]);

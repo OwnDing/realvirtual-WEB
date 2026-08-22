@@ -25,6 +25,7 @@ import { useMobileLayout } from '../../hooks/use-mobile-layout';
 
 interface CompatibleEntry {
   entry: LibraryCatalogEntry;
+  ownPortId: string;
   ownSnapName: string;
 }
 
@@ -133,7 +134,7 @@ export function SnapPointPickerPopup({ viewer }: UISlotProps): ReactElement | nu
         placeAtSnap?: (entry: LibraryCatalogEntry, target: SnapPoint, ownSnapName: string) => Promise<string | null>;
       };
       if (typeof plannerWithSnap.placeAtSnap === 'function') {
-        const id = await plannerWithSnap.placeAtSnap(item.entry, target, item.ownSnapName);
+        const id = await plannerWithSnap.placeAtSnap(item.entry, target, item.ownPortId);
         if (id) {
           snapHoverStore.closePicker();
         } else {

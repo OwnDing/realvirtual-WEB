@@ -21,6 +21,12 @@
       "glbUrl": "PaintLine/LoadUnloadStation.glb"
     },
     {
+      "id": "paintline-paintlinecontroller",
+      "name": "Paint Line Controller",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintLineController.glb"
+    },
+    {
       "id": "paintline-paintlineoverheadconveyor",
       "name": "Paint Line Overhead Conveyor",
       "category": "Paint Line",
@@ -31,6 +37,48 @@
       "name": "Paint Robot",
       "category": "Paint Line",
       "glbUrl": "PaintLine/PaintRobot.glb"
+    },
+    {
+      "id": "paintline-painttrackbuffer-6m",
+      "name": "Paint Track Buffer 6m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackBuffer-6m.glb"
+    },
+    {
+      "id": "paintline-painttrackcurve-90l",
+      "name": "Paint Track Curve 90 L",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackCurve-90L.glb"
+    },
+    {
+      "id": "paintline-painttrackcurve-90r",
+      "name": "Paint Track Curve 90 R",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackCurve-90R.glb"
+    },
+    {
+      "id": "paintline-painttrackgate-2m",
+      "name": "Paint Track Gate 2m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackGate-2m.glb"
+    },
+    {
+      "id": "paintline-painttrackreturn-180",
+      "name": "Paint Track Return 180",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackReturn-180.glb"
+    },
+    {
+      "id": "paintline-painttrackstraight-2m",
+      "name": "Paint Track Straight 2m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackStraight-2m.glb"
+    },
+    {
+      "id": "paintline-painttrackstraight-4m",
+      "name": "Paint Track Straight 4m",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintTrackStraight-4m.glb"
     },
     {
       "id": "paintline-pretreattunnel-8m",

@@ -24,9 +24,10 @@
  *   2. flows must be compatible: in↔out, bidi↔anything. in↔in / out↔out are
  *      REJECTED (two inputs or two outputs would clash).
  *
- * Outward direction (alignment math): derived from the snap's POSITION inside
- * its owning asset, NOT from the name sign. See `snap-alignment.ts`. The name
- * sign-letter is reserved exclusively for flow semantics.
+ * Legacy outward direction (alignment math): derived from the snap's POSITION
+ * inside its owning asset, NOT from the name sign. rv-ODT 1.1 AssemblyPort
+ * metadata supplies an explicit Direction instead. See `snap-alignment.ts`.
+ * The name sign-letter is reserved exclusively for flow semantics.
  */
 
 /** Axis component of a snap direction. */

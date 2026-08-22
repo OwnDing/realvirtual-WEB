@@ -17,7 +17,8 @@
 import type { Object3D } from 'three';
 import type { RVViewer } from '../../core/rv-viewer';
 import type { SnapPoint, SnapPointRegistry } from '../../core/engine/rv-snap-point-registry';
-import { parseSnapName, flowsCompatible } from './snap-name-parser';
+import { flowsCompatible } from './snap-name-parser';
+import { findAssemblyPortNode, resolveAssemblyPort } from './assembly-port';
 
 export interface CanPlaceResult {
   ok: boolean;
@@ -41,12 +42,12 @@ export class SnapPlacementService {
    *
    * @param target          The target snap (already in the scene)
    * @param assetRoot       The library asset root about to be placed
-   * @param ownSnapName     The name of the snap inside the asset to pair
+   * @param ownSnapSelector Stable PortId, or a legacy snap node name
    */
   canPlace(
     target: SnapPoint,
     assetRoot: Object3D,
-    ownSnapName: string,
+    ownSnapSelector: string,
   ): CanPlaceResult {
     // Occupied
     if (target.occupied) {
@@ -67,28 +68,32 @@ export class SnapPlacementService {
     }
 
     // Asset must contain the named snap
-    const ownSnap = this._findOwnSnap(assetRoot, ownSnapName);
+    const ownSnap = this._findOwnSnap(assetRoot, ownSnapSelector);
     if (!ownSnap) {
-      return { ok: false, reason: `Snap point '${ownSnapName}' not found in asset` };
+      return { ok: false, reason: `Assembly port '${ownSnapSelector}' not found in asset` };
     }
 
     // Compatibility check:
     //   1. same typeId
     //   2. flow-compatible (in↔out, bidi↔any; in↔in / out↔out rejected)
-    // Axis direction code is intentionally NOT validated — outward axis comes
-    // from the snap's position relative to its asset root, not from the name.
-    const parsedOwn = parseSnapName(ownSnap.name);
-    if (parsedOwn) {
+    // Axis direction code is intentionally NOT part of compatibility. Alignment
+    // uses explicit AssemblyPort.Direction, or legacy position inference.
+    const resolvedOwn = resolveAssemblyPort(ownSnap, assetRoot.name);
+    if (resolvedOwn.kind === 'invalid') {
+      return { ok: false, reason: resolvedOwn.reason };
+    }
+    if (resolvedOwn.kind === 'port') {
+      const parsedOwn = resolvedOwn.port;
       if (parsedOwn.typeId !== target.typeId) {
         return {
           ok: false,
-          reason: `Snap '${ownSnapName}' has typeId '${parsedOwn.typeId}', target needs '${target.typeId}'`,
+          reason: `Port '${ownSnapSelector}' has typeId '${parsedOwn.typeId}', target needs '${target.typeId}'`,
         };
       }
       if (!flowsCompatible(target.flow, parsedOwn.flow)) {
         return {
           ok: false,
-          reason: `Flow mismatch: target is '${target.flow ?? 'bidi'}', '${ownSnapName}' is '${parsedOwn.flow}' (need in↔out or bidi pairing)`,
+          reason: `Flow mismatch: target is '${target.flow ?? 'bidi'}', '${ownSnapSelector}' is '${parsedOwn.flow}' (need in↔out or bidi pairing)`,
         };
       }
     }
@@ -96,12 +101,8 @@ export class SnapPlacementService {
   }
 
   /** Find a snap inside an asset by name (traverses children). */
-  private _findOwnSnap(assetRoot: Object3D, name: string): Object3D | null {
-    let found: Object3D | null = null;
-    assetRoot.traverse((n) => {
-      if (!found && n.name === name) found = n;
-    });
-    return found;
+  private _findOwnSnap(assetRoot: Object3D, selector: string): Object3D | null {
+    return findAssemblyPortNode(assetRoot, selector);
   }
 
   /** Public helper for the executor flow. */

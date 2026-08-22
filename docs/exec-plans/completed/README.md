@@ -22,4 +22,6 @@ authority: normative-registry
 
 - [`EP-DEMO-004-paintline-spray-aim.md`](EP-DEMO-004-paintline-spray-aim.md)：恢复喷幅、放大机械臂，并修复提取器搬运捐赠站位导致的喷枪指向错误；2026-08-22 完成。
 
+- [`EP-PLANNER-001-paintline-assembly-mvp.md`](EP-PLANNER-001-paintline-assembly-mvp.md)：交付 Library 开箱可见、rv-ODT 1.1 稳定端口、16 项涂装线模块、数据驱动闭环行为与 autosave 冷重建黄金流程；2026-08-22 完成，保留本机 SwiftShader 全量 Browser 偏差。
+
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

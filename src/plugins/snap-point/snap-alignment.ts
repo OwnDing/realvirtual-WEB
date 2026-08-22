@@ -4,15 +4,14 @@
 /**
  * Pure-math snap alignment.
  *
- * Two snap points are compatible whenever they share a TypeId. The named
- * direction suffix (ZN, ZP, XN, XP, YN, YP) only describes the outward
- * direction of that snap in its OWN local frame — it does NOT restrict
- * which other snap it can mate with.
+ * Compatibility is checked by the placement service (`TypeId` + `Flow`). This
+ * module only aligns geometry. rv-ODT 1.1 ports declare an outward `Direction`
+ * in the port node's local frame; legacy `Snap-*` assets fall back to the
+ * historic axis/position inference.
  *
  * To place `newSnap` against `targetSnap` we therefore:
  *
- *   1. Compute each snap's outward direction in its OWN local frame from
- *      the name suffix (ZN -> -Z, ZP -> +Z, …).
+ *   1. Resolve each snap's outward direction in the owning asset's frame.
  *   2. Rotate `newAssetRoot` so newSnap's outward axis ends up anti-parallel
  *      to targetSnap's outward axis in world space. This is a free single
  *      "swing" rotation (Rodrigues / quaternion-from-unit-vectors). There is
@@ -29,6 +28,7 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import type { Object3D } from 'three';
 import type { SnapAxis, SnapDirection } from './snap-name-parser';
+import { assemblyPortDirectionInOwner } from './assembly-port';
 
 /**
  * @deprecated Kept for backwards compat with older call sites. Always returns
@@ -42,9 +42,9 @@ export function flipMatrixForAxis(_axis: SnapAxis): Matrix4 {
 /**
  * Compute the outward direction of a snap in the snap's OWN LOCAL FRAME.
  *
- *   - the snap NAME's axis letter (X/Y/Z) picks the axis
- *   - the Empty's POSITION on that axis (in the owner's local frame) picks
- *     the sign — robust against Unity → glTF X-flip
+ *   - rv-ODT 1.1: transform the declared port-node-local `Direction`
+ *   - legacy: the snap NAME's axis letter picks the axis and the Empty's
+ *     POSITION in the owner's frame picks the sign
  *   - NO world-space transformation here; that's the caller's job
  *
  * Returning the local-frame outward (instead of pre-rotating to world)
@@ -53,8 +53,8 @@ export function flipMatrixForAxis(_axis: SnapAxis): Matrix4 {
  * orientation. Mixing "current world rotation" and "post-basePlacement
  * rotation" was the source of a double-rotation bug for rotated targets.
  *
- * Falls back to the name's sign-letter if the position on the named
- * axis is exactly zero (snap at the asset centre on that axis).
+ * Legacy nodes fall back to the name's sign-letter if their position on the
+ * named axis is exactly zero (snap at the asset centre on that axis).
  */
 function outwardLocalByPosition(
   snap: Object3D,
@@ -63,6 +63,9 @@ function outwardLocalByPosition(
   fallbackSign: SnapDirection['sign'],
   out: Vector3 = new Vector3(),
 ): Vector3 {
+  const explicit = assemblyPortDirectionInOwner(snap, ownerRoot, out);
+  if (explicit) return explicit;
+
   ownerRoot.updateMatrixWorld(true);
   snap.updateWorldMatrix(true, false);
 

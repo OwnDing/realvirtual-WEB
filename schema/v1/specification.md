@@ -1,7 +1,7 @@
-# realvirtual Open Digital Twin Format (rv-ODT) — Specification v1.0
+# realvirtual Open Digital Twin Format (rv-ODT) — Specification v1.1
 
 **Status:** Released
-**Format version:** 1.0
+**Format version:** 1.1
 **Canonical machine-readable schema:** [`rv-odt.json`](./rv-odt.json) (`$id: https://realvirtual.io/schema/odt/v1/rv-odt.json`)
 **License:** This specification and the accompanying `rv-odt.json` are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) — see [`../LICENSE`](../LICENSE). The reference implementation (XYvirtual WEB) is separately licensed under AGPL-3.0-only.
 
@@ -13,7 +13,7 @@
 
 ## 1. Title and Status
 
-This document specifies version 1.0 of the **realvirtual Open Digital Twin Format
+This document specifies version 1.1 of the **realvirtual Open Digital Twin Format
 (rv-ODT)**: a convention for embedding industrial digital-twin component data —
 drives, sensors, transport surfaces, material sources and sinks, grippers, robot
 kinematics, PLC signal wiring, and 3D-HMI markers — inside standard
@@ -110,7 +110,7 @@ Rules:
   (millimeters, mm/s) regardless of the glTF unit (meters). Vector-valued fields
   marked with the `unityCoords` keyword are serialized in **Unity** coordinates and
   readers MUST negate the X component when applying them in glTF space (Section 8).
-- **Format version:** writers SHOULD stamp `_formatVersion: "1.0"` at the root of
+- **Format version:** writers SHOULD stamp `_formatVersion: "1.1"` at the root of
   `extras.realvirtual`. Readers MUST report an incompatibility when the major
   version is greater than the version they implement.
 - **Reserved key `NodeId`:** a **string** (not a component object) directly under
@@ -1843,6 +1843,21 @@ preference.
 | `catalogUrls` | string[] | - | Library catalogue URLs the scene draws its placements from. |
 | `gridSizeMm` | number | 500 | Layout grid and translation snap step, in millimetres. |
 
+#### 7d.13 AssemblyPort
+
+Stable assembly port on a library-asset node. `PortId` is unique within the
+asset and remains unchanged when the node display name changes. `Direction` is
+in the port node's glTF-local frame and is intentionally not marked
+`unityCoords`. The complete migration and compatibility rules are in the
+repository contract `CONTRACT-ASSEMBLY-PORTS-001` (`docs/contracts/ASSEMBLY_PORTS.md`).
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `PortId` | string | - | Stable semantic port identity, unique within the containing library asset. |
+| `TypeId` | string | - | Exact compatibility type shared by ports that may connect. |
+| `Flow` | enum(in, out, bidi) | - | Directed material-flow role; bidi may connect to either in or out. |
+| `Direction` | Vector3 | - | Finite non-zero outward direction in the port node's glTF-local frame; writers should normalize it. |
+
 ### 7e. Recording
 
 #### 7e.1 DrivesRecorder
@@ -1992,7 +2007,7 @@ A conforming writer:
 2. MUST emit field values that validate against the component `$def` in `rv-odt.json`.
 3. MUST emit enum values as canonical strings from the `enum` array.
 4. MUST emit primary field names (never aliases).
-5. SHOULD stamp `_formatVersion: "1.0"` at the root of `extras.realvirtual`.
+5. SHOULD stamp `_formatVersion: "1.1"` at the root of `extras.realvirtual`.
 6. SHOULD omit fields whose value equals the declared default.
 
 ### 9.2 Conforming reader
@@ -2017,7 +2032,7 @@ XYvirtual WEB is the reference implementation and runs this suite in CI
 
 ## 10. Versioning
 
-- The format uses semantic versioning; this document specifies **1.0**.
+- The format uses semantic versioning; this document specifies **1.1**.
 - **Minor versions** (1.x) are additive only: new components, new OPTIONAL fields,
   new enum values. A 1.0 reader remains conforming when reading 1.x data (unknown
   keys are ignored).

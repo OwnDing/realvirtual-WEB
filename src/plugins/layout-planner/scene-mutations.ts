@@ -42,7 +42,11 @@ import { disposePlaceholderNode } from './placeholder-node';
 import type { FloorGizmo } from './floor-gizmo';
 import type { GaussianSplatPluginApi } from './gaussian-splat-plugin-type';
 import { computeSnapAlignedWorldMatrix } from '../snap-point/snap-alignment';
-import { parseSnapName } from '../snap-point/snap-name-parser';
+import {
+  findAssemblyPortNode,
+  matchesAssemblyPortSelector,
+  resolveAssemblyPort,
+} from '../snap-point/assembly-port';
 import { scanAndRegisterSnaps } from '../snap-point/snap-scanner';
 import type { SnapPointPlugin } from '../snap-point';
 
@@ -655,11 +659,8 @@ export function placeAtSnapPoint(
     return null;
   }
 
-  // Find the named snap inside the asset
-  let ownSnap: Object3D | null = null;
-  clone.traverse((n) => {
-    if (!ownSnap && n.name === ownSnapName) ownSnap = n;
-  });
+  // Stable PortId first, legacy node name second.
+  const ownSnap = findAssemblyPortNode(clone, ownSnapName);
   if (!ownSnap) return null;
 
   // Normalize the clone to the floor-center pivot frame BEFORE computing the
@@ -679,13 +680,14 @@ export function placeAtSnapPoint(
   // swing rotation that aligns outward axes anti-parallel (handles same-axis
   // chains AND cross-axis attachments).
   clone.updateMatrixWorld(true);
-  const parsedOwn = parseSnapName((ownSnap as Object3D).name);
+  const resolvedOwn = resolveAssemblyPort(ownSnap, clone.name);
+  if (resolvedOwn.kind !== 'port') return null;
   const M = computeSnapAlignedWorldMatrix(
     target.object3D,
     clone,
     ownSnap,
     target.dir,
-    parsedOwn?.dir,
+    resolvedOwn.port.dir,
   );
   // Apply
   clone.matrixAutoUpdate = false;
@@ -811,7 +813,7 @@ export function registerPlacedAtSnap(
   // The own snap that was paired with `target` is now also occupied. Locate
   // it by name (the picker passed `ownSnapName`) and establish the
   // bidirectional pairing so chain-resolver walks across this edge.
-  const ownSnapReg = placedSnaps.find((sp) => sp.object3D.name === ownSnapName);
+  const ownSnapReg = placedSnaps.find((sp) => matchesAssemblyPortSelector(sp, ownSnapName));
   if (ownSnapReg) {
     snapRegistry.markOccupied(ownSnapReg.id, target.occupiedBy ?? id);
     snapRegistry.pair(target.id, ownSnapReg.id);
@@ -855,7 +857,9 @@ export function markSnapOccupied(
 ): void {
   if (target.occupied) return;
   snapRegistry.markOccupied(target.id, id);
-  const ownSnap = snapRegistry.getByOwnerRoot(node).find((sp) => sp.object3D.name === ownSnapName);
+  const ownSnap = snapRegistry.getByOwnerRoot(node).find(
+    (sp) => matchesAssemblyPortSelector(sp, ownSnapName),
+  );
   if (ownSnap) {
     snapRegistry.markOccupied(ownSnap.id, target.occupiedBy ?? id);
     snapRegistry.pair(target.id, ownSnap.id);

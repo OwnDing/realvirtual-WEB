@@ -119,7 +119,10 @@ import { resolveResumeTarget } from './core/project/rv-project-open';
 import { forgetRememberedSession, readRememberedSession } from './core/project/rv-project-resume-store';
 import { reportMissingDocument } from './core/hmi/scene/rv-scene-live-sync';
 import { openProjectsDashboard } from './core/hmi/projects/projects-dashboard-store';
-import { DEMO_PROJECT_FOLDER } from './core/project/backends/bundled-backend';
+import {
+  DEMO_PROJECT_FOLDER,
+  REALVIRTUAL_LIBRARY_PATH,
+} from './core/project/backends/bundled-backend';
 import { getLibraryStore } from './core/library/library-store-singleton';
 import { installProjectLibraryProvider } from './core/library/project-library-provider';
 import { installGlobalLibraryProvider } from './core/library/global-library-provider';
@@ -728,7 +731,11 @@ async function init() {
     .use(new SharePlugin(), 'core')
     .use(new HistorianTrendPlugin(), 'core')
     .use(new OrientationGizmoPlugin(), 'core')
-    .use(new LayoutPlannerPlugin(), 'core')
+    // This deployment explicitly ships and subscribes its starter equipment
+    // library. LayoutPlanner itself keeps an empty implicit-default list, so a
+    // customer composition root can still choose a different catalog (or no
+    // catalog) without a hidden fallback.
+    .use(new LayoutPlannerPlugin({ catalogUrls: [REALVIRTUAL_LIBRARY_PATH] }), 'core')
     .use(new SignalBindPlugin(), 'core')
     .use(new SnapPointPlugin(), 'core')
     .use(new SnapFlipIconOverlay(), 'core')

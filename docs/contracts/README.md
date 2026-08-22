@@ -14,5 +14,6 @@ authority: normative-registry
 - [`../../schema/v1/rv-odt.json`](../../schema/v1/rv-odt.json)
 - [`../../schema/v1/specification.md`](../../schema/v1/specification.md)
 - [`../../schema/v1/conformance/README.md`](../../schema/v1/conformance/README.md)
+- [`ASSEMBLY_PORTS.md`](ASSEMBLY_PORTS.md)：稳定装配端口身份、方向、兼容与旧 Snap 迁移契约。
 
-后续契约应逐步覆盖：项目清单、配置层级、插件 API、稳定装配端口、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。
+后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。

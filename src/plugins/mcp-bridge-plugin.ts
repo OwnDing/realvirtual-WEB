@@ -2120,13 +2120,13 @@ export class McpBridgePlugin extends RVBehavior {
 
   // ── Snap-attach helpers/tools (connect a matching next component) ──
 
-  /** Resolve a target snap from a free-snap list by name, or auto-pick the only
+  /** Resolve a target port by stable PortId or legacy node name, or auto-pick the only
    *  one (helper — not an MCP tool). Mirrors the UI's free-snap derivation. */
   private _pickSnap(free: readonly SnapPoint[], name?: string):
     { snap: SnapPoint } | { error: string; available: string[] } {
-    const available = free.map(s => s.object3D.name);
+    const available = free.map(s => s.portId ?? s.object3D.name);
     if (name) {
-      const s = free.find(sp => sp.object3D.name === name);
+      const s = free.find(sp => sp.portId === name || sp.object3D.name === name);
       return s ? { snap: s } : { error: `Snap "${name}" not free or not found`, available };
     }
     if (free.length === 1) return { snap: free[0] };
@@ -2141,7 +2141,7 @@ export class McpBridgePlugin extends RVBehavior {
     return reg.getByOwnerRoot(root).filter(s => !s.occupied && s.object3D.parent);
   }
 
-  @McpTool('List the free (unoccupied) snap points of a placement (id from web_layout_list): snapName, typeId, flow, axis, dirCode per open port. Feed snapName + id into web_layout_snap_attach.', { readOnly: true })
+  @McpTool('List free assembly ports of a placement. Prefer portId for subsequent calls; snapName remains for legacy assets.', { readOnly: true })
   async webLayoutSnapList(
     @McpParam('id', 'Placement id (from web_layout_place / web_layout_list)') id: string,
   ): Promise<string> {
@@ -2157,6 +2157,7 @@ export class McpBridgePlugin extends RVBehavior {
       id,
       label: root.name,
       freeSnaps: free.map(s => ({
+        portId: s.portId ?? s.object3D.name,
         snapName: s.object3D.name,
         typeId: s.typeId,
         flow: s.flow ?? 'bidi',
@@ -2167,10 +2168,10 @@ export class McpBridgePlugin extends RVBehavior {
     });
   }
 
-  @McpTool('Suggest library components compatible with a free snap (same typeId + compatible flow). Returns [{catalogId, name, ownSnapName}] — pass catalogId into web_layout_snap_attach.', { readOnly: true })
+  @McpTool('Suggest library components compatible with a free assembly port. Returns stable ownPortId plus legacy ownSnapName.', { readOnly: true })
   async webLayoutSnapSuggest(
     @McpParam('targetId', 'Placement id to attach onto') targetId: string,
-    @McpParam('targetSnapName', 'Target snap node name (from web_layout_snap_list); omit to auto-pick the only free snap', 'string', false) targetSnapName: string,
+    @McpParam('targetSnapName', 'Target portId (preferred) or legacy snap node name; omit to auto-pick the only free port', 'string', false) targetSnapName: string,
   ): Promise<string> {
     const planner = this._planner();
     if (!planner) return JSON.stringify({ error: 'Layout planner not available — call web_mode_set(\"planner\") first' });
@@ -2185,17 +2186,18 @@ export class McpBridgePlugin extends RVBehavior {
     return JSON.stringify({
       targetId,
       targetSnapName: target.object3D.name,
+      targetPortId: target.portId ?? target.object3D.name,
       typeId: target.typeId,
       flow: target.flow ?? 'bidi',
-      suggestions: compat.map(m => ({ catalogId: m.entry.id, name: m.entry.name, ownSnapName: m.ownSnapName })),
+      suggestions: compat.map(m => ({ catalogId: m.entry.id, name: m.entry.name, ownPortId: m.ownPortId, ownSnapName: m.ownSnapName })),
     });
   }
 
-  @McpTool('Attach a library component onto a free snap of a placement, auto-aligned — THE way to build connected conveyor lines. targetId from web_layout_list, catalogId from web_library_list / web_layout_snap_suggest; targetSnapName optional (defaults to the only free snap). Returns the new placement id. Planner mode.', { readOnly: false })
+  @McpTool('Attach a library component onto a free assembly port, auto-aligned. targetSnapName accepts stable portId or a legacy node name.', { readOnly: false })
   async webLayoutSnapAttach(
     @McpParam('targetId', 'Placement id to attach onto') targetId: string,
     @McpParam('catalogId', 'Library entry id to attach (from web_library_list / web_layout_snap_suggest)') catalogId: string,
-    @McpParam('targetSnapName', 'Target snap node name (from web_layout_snap_list); omit to auto-pick the only free snap', 'string', false) targetSnapName: string,
+    @McpParam('targetSnapName', 'Target portId (preferred) or legacy snap node name; omit to auto-pick the only free port', 'string', false) targetSnapName: string,
   ): Promise<string> {
     const planner = this._planner();
     if (!planner) return JSON.stringify({ error: 'Layout planner not available — call web_mode_set(\"planner\") first' });
@@ -2218,12 +2220,13 @@ export class McpBridgePlugin extends RVBehavior {
       return JSON.stringify({ error: `"${catalogId}" has no snap compatible with typeId=${target.typeId}, flow=${target.flow ?? 'bidi'}` });
     }
 
-    const newId = await planner.placeAtSnap(entry, target, chosen.ownSnapName);
+    const newId = await planner.placeAtSnap(entry, target, chosen.ownPortId);
     if (!newId) return JSON.stringify({ error: 'Placement rejected (snap occupied, non-uniform scale, or own-snap not found)' });
     return JSON.stringify({
       id: newId,
       catalogId,
-      attachedTo: { placementId: targetId, snapName: target.object3D.name, typeId: target.typeId },
+      attachedTo: { placementId: targetId, portId: target.portId ?? target.object3D.name, snapName: target.object3D.name, typeId: target.typeId },
+      ownPortId: chosen.ownPortId,
       ownSnapName: chosen.ownSnapName,
     });
   }

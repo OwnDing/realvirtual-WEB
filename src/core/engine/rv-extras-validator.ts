@@ -103,6 +103,19 @@ const CONSUMED: Record<string, string[]> = {
   // BoxCollider — used by createAABBFromExtras()
   BoxCollider: ['center', 'size'],
 
+  // rv-ODT 1.1 stable library-assembly port. Parsed by the snap-point
+  // compatibility resolver rather than a behavior factory.
+  AssemblyPort: ['PortId', 'TypeId', 'Flow', 'Direction'],
+
+  // Paint-line domain extension (EP-PLANNER-001). These stay outside the
+  // cross-industry rv-ODT component index; the controller behavior consumes
+  // them as one data-driven assembly contract.
+  PaintLineTrackModule: ['Version', 'EntryPortId', 'ExitPortId', 'Points'],
+  PaintProcessZone: ['ZoneId', 'Kind', 'Center', 'Size'],
+  PaintLineGate: ['GateId', 'DefaultOpen'],
+  PaintProcessRobot: ['RobotId', 'SpraySweepDegrees', 'SprayPeriodSeconds'],
+  PaintLineController: ['TargetSpeed', 'Pitch', 'RunOnStart', 'PiecesPerCarrier'],
+
   // Signal types — connection-relevant fields editable, Status read-only (object)
   PLCOutputBool: ['Comment', 'OriginDataType', 'Settings', 'Metadata', 'Active'],
   PLCInputBool: ['Comment', 'OriginDataType', 'Settings', 'Metadata', 'Active'],

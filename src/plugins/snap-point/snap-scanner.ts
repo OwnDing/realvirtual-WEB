@@ -9,7 +9,7 @@
 
 import type { Object3D } from 'three';
 import type { SnapPoint, SnapPointRegistry } from '../../core/engine/rv-snap-point-registry';
-import { parseSnapName, forcesBidiPort } from './snap-name-parser';
+import { resolveAssemblyPort } from './assembly-port';
 
 /**
  * Walk the subtree, register every node whose name matches Snap-<DIR>-<TYPEID>.
@@ -25,21 +25,30 @@ export function scanAndRegisterSnaps(
   ownerRoot?: Object3D,
 ): SnapPoint[] {
   const owner = ownerRoot ?? root;
-  // Some assets expose BIDIRECTIONAL ports: a conveyor may attach in either
-  // flow, and the component behavior decides the role (input vs output) at
-  // runtime from the connected transport direction. We keep the authored axis
-  // (e.g. `Snap-XP` → axis X) but override the flow to 'bidi' so snap-pairing
-  // (in↔out only) doesn't reject an otherwise valid physical connection.
   const added: SnapPoint[] = [];
+  const seenMetadataPortIds = new Set<string>();
   root.traverse((node: Object3D) => {
-    const parsed = parseSnapName(node.name);
-    if (!parsed) return;
+    const resolved = resolveAssemblyPort(node, owner.name);
+    if (resolved.kind === 'none') return;
+    if (resolved.kind === 'invalid') {
+      console.warn(`[SnapPoint] ${computeScenePath(node)}: ${resolved.reason}`);
+      return;
+    }
+    const parsed = resolved.port;
+    if (parsed.source === 'metadata' && seenMetadataPortIds.has(parsed.portId)) {
+      console.warn(`[SnapPoint] Duplicate AssemblyPort.PortId '${parsed.portId}' under '${owner.name}'`);
+      return;
+    }
+    if (parsed.source === 'metadata') seenMetadataPortIds.add(parsed.portId);
     const sp: SnapPoint = {
       id: node.uuid,
+      portId: parsed.portId,
+      identitySource: parsed.source,
+      localDirection: parsed.localDirection,
       object3D: node,
       dir: parsed.dir,
       typeId: parsed.typeId,
-      flow: forcesBidiPort(owner.name, parsed.typeId) ? 'bidi' : parsed.flow,
+      flow: parsed.flow,
       ownerRoot: owner,
       scenePath: computeScenePath(node),
       occupied: false,

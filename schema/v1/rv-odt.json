@@ -3,7 +3,7 @@
   "$id": "https://realvirtual.io/schema/odt/v1/rv-odt.json",
   "title": "realvirtual Open Digital Twin Format (rv-ODT)",
   "description": "Machine-readable specification of the realvirtual Open Digital Twin Format. Component data is carried per glTF node under extras.realvirtual. Where the human-readable specification.md and this file disagree, this file is normative. Licensed under CC BY 4.0 (see schema/LICENSE).",
-  "formatVersion": "1.0",
+  "formatVersion": "1.1",
   "$defs": {
     "ComponentReference": {
       "type": "object",
@@ -3012,6 +3012,32 @@
         }
       }
     },
+    "AssemblyPort": {
+      "type": "object",
+      "description": "Stable assembly port on a library-asset node. PortId is unique within the asset; TypeId and Flow determine compatibility; Direction is the outward vector in the port node's glTF-local frame.",
+      "properties": {
+        "PortId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable semantic port identity, unique within the containing library asset."
+        },
+        "TypeId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact compatibility type shared by ports that may connect."
+        },
+        "Flow": {
+          "type": "string",
+          "enum": ["in", "out", "bidi"],
+          "description": "Directed material-flow role; bidi may connect to either in or out."
+        },
+        "Direction": {
+          "$ref": "#/$defs/Vector3",
+          "description": "Finite non-zero outward direction in the port node's glTF-local frame; writers SHOULD normalize it. This field is not in Unity coordinates."
+        }
+      },
+      "required": ["PortId", "TypeId", "Flow", "Direction"]
+    },
     "LayoutObject": {
       "type": "object",
       "description": "Layout-planner marker on a placed library object.",
@@ -3764,6 +3790,9 @@
     },
     "BoxCollider": {
       "$ref": "#/$defs/BoxCollider"
+    },
+    "AssemblyPort": {
+      "$ref": "#/$defs/AssemblyPort"
     },
     "LayoutObject": {
       "$ref": "#/$defs/LayoutObject"

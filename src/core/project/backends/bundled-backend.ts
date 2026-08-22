@@ -86,8 +86,10 @@ export const DEMO_PROJECT_SLUG = 'demorealvirtual';
 export const DEMO_PROJECT_FOLDER = 'demo-realvirtual';
 /**
  * Catalog of the realvirtual component library, relative to the deploy root.
- * NOT read by any boot path — a deploy manifest must reference it explicitly
- * (`libraries[]`) for the library to exist at runtime.
+ * This product deployment passes it explicitly to `LayoutPlannerPlugin` from
+ * the application composition root. `BundledBackend` itself still never
+ * discovers or injects it: other deployments and project manifests retain
+ * full control over their own subscriptions.
  */
 export const REALVIRTUAL_LIBRARY_PATH = 'library/catalog.json';
 
@@ -482,4 +484,3 @@ function normaliseBase(base: string): string {
   const b = base || '/';
   return b.endsWith('/') ? b : `${b}/`;
 }
-

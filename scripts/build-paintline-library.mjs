@@ -173,7 +173,7 @@ class GlbDoc {
   /** rv_extras wrapper — omitted entirely when there is nothing to carry. */
   static extras(realvirtual) {
     return realvirtual
-      ? { extras: { realvirtual: { _formatVersion: '1.0', ...realvirtual } } }
+      ? { extras: { realvirtual: { _formatVersion: '1.1', ...realvirtual } } }
       : {};
   }
 
@@ -255,6 +255,7 @@ class GlbDoc {
 // library convention.
 
 const TRACK_Y = 2.6;      // m — path height (carrier attachment)
+const TRACK_TYPE_ID = 'paintseg'; // preserves the shipped process-section contract
 const LOOP_LEN_Z = 30;    // m — process-side straight length
 const LOOP_R = 3;         // m — end-loop radius
 const LOOP_W = 2 * LOOP_R; // m — distance from the process side to the buffer entry
@@ -369,6 +370,131 @@ function loopPose(s) {
  */
 function yawFromTangent(tan) {
   return Math.atan2(tan[0], tan[2]);
+}
+
+function vectorObject([x, y, z]) {
+  return { x: r6(x), y: r6(y), z: r6(z) };
+}
+
+function normalized(v) {
+  const length = Math.hypot(...v) || 1;
+  return v.map((n) => r6(n / length));
+}
+
+function portAxis(direction) {
+  const abs = direction.map(Math.abs);
+  return abs[0] >= abs[1] && abs[0] >= abs[2] ? 'X' : abs[1] >= abs[2] ? 'Y' : 'Z';
+}
+
+/** Stable rv-ODT 1.1 port plus legacy-compatible Snap name (ADR-0003). */
+function addAssemblyPort(doc, out, assetName, {
+  portId, flow, at, direction, typeId = TRACK_TYPE_ID, legacyName,
+}) {
+  const dir = normalized(direction);
+  const sign = flow === 'in' ? 'N' : flow === 'out' ? 'P' : 'B';
+  out.push(doc.empty(legacyName ?? `Snap-${portAxis(dir)}${sign}-${typeId}`, {
+    at,
+    realvirtual: {
+      NodeId: `urn:rv:paintline:${assetName.toLowerCase()}:port:${portId}`,
+      AssemblyPort: {
+        PortId: portId,
+        TypeId: typeId,
+        Flow: flow,
+        Direction: vectorObject(dir),
+      },
+    },
+  }));
+}
+
+function trackModuleMetadata(points) {
+  return {
+    Version: 1,
+    EntryPortId: 'track.in',
+    ExitPortId: 'track.out',
+    Points: points.map(vectorObject),
+  };
+}
+
+function tangentBetween(a, b) {
+  return normalized([b[0] - a[0], b[1] - a[1], b[2] - a[2]]);
+}
+
+/** Minimal connectable overhead-track module with a topology polyline. */
+function buildTrackModule(name, points, {
+  zoneKind, zoneSize, gate = false, entryTangent, exitTangent,
+} = {}) {
+  if (points.length < 2) throw new Error(`${name}: at least two track points required`);
+  const doc = new GlbDoc(name);
+  const out = [];
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const tan = tangentBetween(a, b);
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    out.push(doc.box('TrackBeam', {
+      at: [(a[0] + b[0]) / 2, TRACK_Y + 0.12, (a[2] + b[2]) / 2],
+      size: [0.16, 0.16, length * 1.04],
+      yaw: yawFromTangent(tan),
+      material: 'Track',
+    }));
+  }
+  for (const point of [points[0], points[points.length - 1]]) {
+    out.push(doc.box('TrackPost', {
+      at: [point[0], (TRACK_Y + 0.2) / 2, point[2]],
+      size: [0.12, TRACK_Y + 0.2, 0.12],
+      material: 'Steel',
+    }));
+  }
+  // Curves must publish their analytic endpoint tangents, not the first/last
+  // chord of the render polyline. A 12-chord semicircle differs by 7.5° at
+  // each end; using those chords as connector directions accumulates visible
+  // loop-closure error even though every individual placement snapped.
+  const firstTan = entryTangent
+    ? normalized(entryTangent)
+    : tangentBetween(points[0], points[1]);
+  const lastTan = exitTangent
+    ? normalized(exitTangent)
+    : tangentBetween(points[points.length - 2], points[points.length - 1]);
+  addAssemblyPort(doc, out, name, {
+    portId: 'track.in', flow: 'in', at: points[0], direction: firstTan.map((n) => -n),
+  });
+  addAssemblyPort(doc, out, name, {
+    portId: 'track.out', flow: 'out', at: points[points.length - 1], direction: lastTan,
+  });
+  if (zoneKind && zoneSize) {
+    out.push(doc.box('ProcessZone', {
+      at: [0, zoneSize[1] / 2, 0], size: zoneSize,
+      material: zoneKind === 'buffer' ? 'ZoneCool' : 'ZonePretreat',
+    }));
+  }
+  return {
+    doc,
+    root: doc.empty(name, {
+      children: out,
+      realvirtual: {
+        NodeId: `urn:rv:paintline:${name.toLowerCase()}`,
+        PaintLineTrackModule: trackModuleMetadata(points),
+        ...(zoneKind && zoneSize ? {
+          PaintProcessZone: {
+            ZoneId: `${name.toLowerCase()}.zone`, Kind: zoneKind,
+            Center: vectorObject([0, zoneSize[1] / 2, 0]), Size: vectorObject(zoneSize),
+          },
+        } : {}),
+        ...(gate ? {
+          PaintLineGate: { GateId: `${name.toLowerCase()}.release`, DefaultOpen: true },
+        } : {}),
+      },
+    }),
+  };
+}
+
+function curvePoints({ centerX, centerZ, radius, fromAngle, toAngle, samples = 12 }) {
+  const out = [];
+  for (let i = 0; i <= samples; i++) {
+    const a = fromAngle + (toAngle - fromAngle) * (i / samples);
+    out.push([centerX + radius * Math.cos(a), TRACK_Y, centerZ + radius * Math.sin(a)]);
+  }
+  return out;
 }
 
 // ─── Object 1 — the circulating overhead conveyor ───────────────────────────
@@ -487,12 +613,27 @@ function addTunnelShell(doc, out, { length, width, height, wall = 0.18 }) {
 }
 
 /** The two typed connectors every process section carries (flow along Z). */
-function addSegmentSnaps(doc, out, length) {
-  out.push(doc.empty('Snap-ZN-paintseg', { at: [0, TRACK_Y, -length / 2] }));
-  out.push(doc.empty('Snap-ZP-paintseg', { at: [0, TRACK_Y, length / 2] }));
+function addSegmentSnaps(doc, out, assetName, length) {
+  addAssemblyPort(doc, out, assetName, {
+    portId: 'track.in', flow: 'in', at: [0, TRACK_Y, -length / 2], direction: [0, 0, -1],
+  });
+  addAssemblyPort(doc, out, assetName, {
+    portId: 'track.out', flow: 'out', at: [0, TRACK_Y, length / 2], direction: [0, 0, 1],
+  });
 }
 
-function buildProcessSection(name, { length, width, height, zone, plenum }) {
+/** Preserve LoadUnloadStation's historic single bidi connector name for old consumers. */
+function addLoadUnloadSnaps(doc, out, length) {
+  addAssemblyPort(doc, out, 'LoadUnloadStation', {
+    portId: 'track.in', flow: 'in', at: [0, TRACK_Y, -length / 2], direction: [0, 0, -1],
+    legacyName: `Snap-ZB-${TRACK_TYPE_ID}`,
+  });
+  addAssemblyPort(doc, out, 'LoadUnloadStation', {
+    portId: 'track.out', flow: 'out', at: [0, TRACK_Y, length / 2], direction: [0, 0, 1],
+  });
+}
+
+function buildProcessSection(name, { length, width, height, zone, kind, plenum }) {
   const doc = new GlbDoc(name);
   const out = [];
   addTunnelShell(doc, out, { length, width, height });
@@ -505,8 +646,23 @@ function buildProcessSection(name, { length, width, height, zone, plenum }) {
       at: [0, height + 0.62, 0], size: [width * 0.7, 0.9, length * 0.75], material: plenum,
     }));
   }
-  addSegmentSnaps(doc, out, length);
-  return { doc, root: doc.empty(name, { children: out }) };
+  addSegmentSnaps(doc, out, name, length);
+  const points = [[0, TRACK_Y, -length / 2], [0, TRACK_Y, length / 2]];
+  return {
+    doc,
+    root: doc.empty(name, {
+      children: out,
+      realvirtual: {
+        NodeId: `urn:rv:paintline:${name.toLowerCase()}`,
+        PaintLineTrackModule: trackModuleMetadata(points),
+        PaintProcessZone: {
+          ZoneId: `${name.toLowerCase()}.zone`, Kind: kind,
+          Center: vectorObject([0, height / 2, 0]),
+          Size: vectorObject([width - 0.4, height - 0.4, length - 0.1]),
+        },
+      },
+    }),
+  };
 }
 
 // ─── Object 4 — spray booth ─────────────────────────────────────────────────
@@ -532,8 +688,27 @@ function buildSprayBooth() {
   // stands the real FANUC CRX extracted from `public/models/DemoRobotIK.glb`,
   // placed as its own object by `build-paintline-scene.mjs`.
 
-  addSegmentSnaps(doc, out, LENGTH);
-  return { doc, root: doc.empty('SprayBooth', { children: out }) };
+  addSegmentSnaps(doc, out, 'SprayBooth', LENGTH);
+  addAssemblyPort(doc, out, 'SprayBooth', {
+    portId: 'robot.mount', flow: 'bidi', at: [-2.2, 0, 0], direction: [0, 1, 0],
+    typeId: 'paintline-robot-mount-v1',
+  });
+  const points = [[0, TRACK_Y, -LENGTH / 2], [0, TRACK_Y, LENGTH / 2]];
+  return {
+    doc,
+    root: doc.empty('SprayBooth', {
+      children: out,
+      realvirtual: {
+        NodeId: 'urn:rv:paintline:spraybooth',
+        PaintLineTrackModule: trackModuleMetadata(points),
+        PaintProcessZone: {
+          ZoneId: 'spraybooth.zone', Kind: 'spray',
+          Center: vectorObject([0, HEIGHT / 2, 0]),
+          Size: vectorObject([WIDTH - 0.5, HEIGHT - 0.4, LENGTH - 0.1]),
+        },
+      },
+    }),
+  };
 }
 
 // ─── Object 6 — load / unload station ───────────────────────────────────────
@@ -552,8 +727,22 @@ function buildLoadUnloadStation() {
   out.push(doc.box('PartRack', {
     at: [1.5, 0.55, 0], size: [1.1, 1.10, 5.0], material: 'Shell',
   }));
-  out.push(doc.empty('Snap-ZB-paintseg', { at: [0, TRACK_Y, -LENGTH / 2] }));
-  return { doc, root: doc.empty('LoadUnloadStation', { children: out }) };
+  addLoadUnloadSnaps(doc, out, LENGTH);
+  const points = [[0, TRACK_Y, -LENGTH / 2], [0, TRACK_Y, LENGTH / 2]];
+  return {
+    doc,
+    root: doc.empty('LoadUnloadStation', {
+      children: out,
+      realvirtual: {
+        NodeId: 'urn:rv:paintline:loadunloadstation',
+        PaintLineTrackModule: trackModuleMetadata(points),
+        PaintProcessZone: {
+          ZoneId: 'loadunloadstation.zone', Kind: 'load-unload',
+          Center: vectorObject([0, HEIGHT / 2, 0]), Size: vectorObject([WIDTH, HEIGHT, LENGTH]),
+        },
+      },
+    }),
+  };
 }
 
 // ─── Object 7 — the standalone workpiece ────────────────────────────────────
@@ -567,19 +756,81 @@ function buildWorkpiece() {
   return { doc, root: doc.empty('Workpiece-Bracket', { children: out }) };
 }
 
+// ─── Assembly controller — carriers + data-driven runtime configuration ────
+
+function buildPaintLineController() {
+  const doc = new GlbDoc('PaintLineController');
+  const children = [
+    doc.box('ControllerCabinet', {
+      at: [0, 0.75, 0], size: [0.8, 1.5, 0.45], material: 'Shell',
+    }),
+  ];
+  const count = 16;
+  for (let i = 0; i < count; i++) {
+    const parts = [
+      doc.box('Trolley', { at: [0, -0.07, 0], size: [0.14, 0.10, 0.22], material: 'Steel' }),
+      doc.box('Rod', { at: [0, -0.57, 0], size: [0.05, 0.90, 0.05], material: 'Steel' }),
+      doc.box('Crossbar', { at: [0, -1.04, 0], size: [0.72, 0.05, 0.05], material: 'Steel' }),
+      doc.box('Workpiece-A', { at: [-0.26, -1.22, 0], size: [0.30, 0.34, 0.04], material: 'PartRaw' }),
+      doc.box('Workpiece-B', { at: [0.26, -1.22, 0], size: [0.30, 0.34, 0.04], material: 'PartRaw' }),
+    ];
+    children.push(doc.empty(`Carrier-${String(i + 1).padStart(2, '0')}`, {
+      at: [1.2 + (i % 4) * 0.45, TRACK_Y, -0.7 + Math.floor(i / 4) * 0.45],
+      children: parts,
+    }));
+  }
+  return {
+    doc,
+    root: doc.empty('PaintLineController', {
+      children,
+      realvirtual: {
+        NodeId: 'urn:rv:paintline:controller',
+        PaintLineController: {
+          TargetSpeed: 300,
+          Pitch: 1500,
+          RunOnStart: true,
+          PiecesPerCarrier: 2,
+        },
+      },
+    }),
+  };
+}
+
 // ─── Emit ───────────────────────────────────────────────────────────────────
 
 const OBJECTS = [
   ['PaintLineOverheadConveyor', buildOverheadConveyor],
+  ['PaintTrackStraight-2m', () => buildTrackModule('PaintTrackStraight-2m', [
+    [0, TRACK_Y, -1], [0, TRACK_Y, 1],
+  ])],
+  ['PaintTrackStraight-4m', () => buildTrackModule('PaintTrackStraight-4m', [
+    [0, TRACK_Y, -2], [0, TRACK_Y, 2],
+  ])],
+  ['PaintTrackCurve-90L', () => buildTrackModule('PaintTrackCurve-90L', curvePoints({
+    centerX: -2, centerZ: -2, radius: 2, fromAngle: 0, toAngle: Math.PI / 2,
+  }), { entryTangent: [0, 0, 1], exitTangent: [-1, 0, 0] })],
+  ['PaintTrackCurve-90R', () => buildTrackModule('PaintTrackCurve-90R', curvePoints({
+    centerX: 2, centerZ: -2, radius: 2, fromAngle: Math.PI, toAngle: Math.PI / 2,
+  }), { entryTangent: [0, 0, 1], exitTangent: [1, 0, 0] })],
+  ['PaintTrackReturn-180', () => buildTrackModule('PaintTrackReturn-180', curvePoints({
+    centerX: -2, centerZ: -2, radius: 2, fromAngle: 0, toAngle: Math.PI,
+  }), { entryTangent: [0, 0, 1], exitTangent: [0, 0, -1] })],
+  ['PaintTrackBuffer-6m', () => buildTrackModule('PaintTrackBuffer-6m', [
+    [0, TRACK_Y, -3], [0, TRACK_Y, 3],
+  ], { zoneKind: 'buffer', zoneSize: [2.5, 3.0, 6] })],
+  ['PaintTrackGate-2m', () => buildTrackModule('PaintTrackGate-2m', [
+    [0, TRACK_Y, -1], [0, TRACK_Y, 1],
+  ], { gate: true })],
+  ['PaintLineController', buildPaintLineController],
   ['PretreatTunnel-8m', () => buildProcessSection('PretreatTunnel-8m', {
-    length: 8, width: 3.2, height: 3.0, zone: 'ZonePretreat',
+    length: 8, width: 3.2, height: 3.0, zone: 'ZonePretreat', kind: 'pretreat',
   })],
   ['DryOven-6m', () => buildProcessSection('DryOven-6m', {
-    length: 6, width: 3.4, height: 3.2, zone: 'ZoneOven', plenum: 'Plenum',
+    length: 6, width: 3.4, height: 3.2, zone: 'ZoneOven', kind: 'dry', plenum: 'Plenum',
   })],
   ['SprayBooth', buildSprayBooth],
   ['CoolingZone-4m', () => buildProcessSection('CoolingZone-4m', {
-    length: 4, width: 3.2, height: 3.0, zone: 'ZoneCool',
+    length: 4, width: 3.2, height: 3.0, zone: 'ZoneCool', kind: 'cool',
   })],
   ['LoadUnloadStation', buildLoadUnloadStation],
   ['Workpiece-Bracket', buildWorkpiece],
