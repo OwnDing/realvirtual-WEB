@@ -27,6 +27,12 @@
       "glbUrl": "PaintLine/PaintLineOverheadConveyor.glb"
     },
     {
+      "id": "paintline-paintrobot",
+      "name": "Paint Robot",
+      "category": "Paint Line",
+      "glbUrl": "PaintLine/PaintRobot.glb"
+    },
+    {
       "id": "paintline-pretreattunnel-8m",
       "name": "Pretreat Tunnel 8m",
       "category": "Paint Line",

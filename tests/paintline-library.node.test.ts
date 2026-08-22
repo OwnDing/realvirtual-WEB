@@ -42,6 +42,7 @@ function geometry(): { loopLengthM: number; carrierCount: number; gates: { name:
 }
 
 const OBJECT_FILES = [
+  'PaintRobot.glb',
   'PaintLineOverheadConveyor.glb',
   'PretreatTunnel-8m.glb',
   'DryOven-6m.glb',
@@ -268,14 +269,15 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
   });
 
   /**
-   * Supersedes the `SprayBooth` reciprocator suite from EP-DEMO-001 M1: the
-   * booth's single `Drive-Lin-Y` carriage was replaced by a six-axis robot in
-   * EP-DEMO-002 M2, so those assertions described an asset that no longer
-   * exists. The last case below pins the removal so the two cannot both
-   * reappear.
+   * The booth's robot has been three things: a `Drive-Lin-Y` reciprocator
+   * carriage (EP-DEMO-001), a procedurally generated six-axis arm
+   * (EP-DEMO-002), and now the real FANUC CRX extracted from
+   * `public/models/DemoRobotIK.glb` (EP-DEMO-003). It lives in its OWN library
+   * object rather than inside the booth, so the booth asset stays small and the
+   * robot can be placed independently.
    */
-  describe('spray booth robot (EP-DEMO-002 M2)', () => {
-    const doc = readGlb('SprayBooth.glb');
+  describe('spray booth robot (EP-DEMO-003)', () => {
+    const doc = readGlb('PaintRobot.glb');
     const robot = doc.nodes.find((n) => n.extras?.realvirtual?.RobotIK !== undefined);
 
     /** Node reached by walking a `/`-separated path from the scene root. */
@@ -296,7 +298,8 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
     it('carries a RobotIK component', () => {
       expect(robot, 'no node declares RobotIK').toBeDefined();
       const cfg = robot!.extras!.realvirtual!.RobotIK as Record<string, unknown>;
-      expect(cfg.WristType).toBe('Spherical');
+      // A CRX is a cobot with wrist offsets — the loader reports NonSpherical.
+      expect(cfg.WristType).toBe('NonSpherical');
       expect(Array.isArray(cfg.Axis)).toBe(true);
       expect((cfg.Axis as unknown[]).length, 'a six-axis robot needs six axes').toBe(6);
     });
@@ -343,8 +346,24 @@ describe('paint-line library objects (EP-DEMO-001 M1)', () => {
       expect(names.sort()).toEqual(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
     });
 
-    it('no longer ships the single-axis reciprocator it replaced', () => {
-      expect(doc.nodes.some((n) => n.name === 'Drive-Lin-Y')).toBe(false);
+    it('leaves the pick-and-place gripper and trajectory behind', () => {
+      // The source arm carries a Schunk two-finger gripper (8.1 MB, useless for
+      // painting) and an `IKPath` of Pick/Place targets that would give the arm
+      // a trajectory unrelated to spraying. Both are excluded at extraction.
+      const names = doc.nodes.map((n) => n.name ?? '');
+      expect(names.some((n) => /Schunk|Finger/i.test(n))).toBe(false);
+      expect(names.some((n) => /Robotpath|^Pick|^Place|^Home$/.test(n))).toBe(false);
+      for (const n of doc.nodes) {
+        expect(n.extras?.realvirtual?.IKPath, `${n.name} still carries an IKPath`).toBeUndefined();
+        expect(n.extras?.realvirtual?.IKTarget, `${n.name} still carries an IKTarget`).toBeUndefined();
+      }
+    });
+
+    it('records where the geometry came from', () => {
+      // Provenance: this arm is vendor CAD reused from a shipped demo asset,
+      // not authored here.
+      const asset = (doc as unknown as { asset: { extras?: { extractedFrom?: string } } }).asset;
+      expect(asset.extras?.extractedFrom).toContain('DemoRobotIK.glb#FanucCRX-10iA_L');
     });
   });
 

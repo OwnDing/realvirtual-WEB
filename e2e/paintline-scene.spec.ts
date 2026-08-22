@@ -61,6 +61,8 @@ const EXPECTED_PLACEMENTS: Record<string, [number, number, number]> = {
   'SprayBooth': [0, 0, 21],
   'CoolingZone-4m': [0, 0, 27],
   'LoadUnloadStation': [7, 0, -6],
+  // The booth's FANUC CRX, placed as its own object since EP-DEMO-003.
+  'PaintRobot': [-1.9, 0.1, 20.4],
 };
 
 async function openScene(page: Page): Promise<void> {
@@ -152,7 +154,7 @@ test.describe('paint-line demo scene', () => {
   test.describe.configure({ mode: 'serial' });
   test.setTimeout(180_000);
 
-  test('composes all six placements at their authored transforms', async ({ page }) => {
+  test('composes every placement at its authored transform', async ({ page }) => {
     await openScene(page);
     const placed = await readPlacements(page);
 

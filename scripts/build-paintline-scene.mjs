@@ -128,6 +128,15 @@ const PLACEMENTS = [
   { name: 'DryOven-6m',                file: 'DryOven-6m.glb',                at: [0, 0, 14], span: [11, 17] },
   { name: 'SprayBooth',                file: 'SprayBooth.glb',                at: [0, 0, 21], span: [18, 24] },
   { name: 'CoolingZone-4m',            file: 'CoolingZone-4m.glb',            at: [0, 0, 27], span: [25, 29] },
+  // The booth's paint robot: the FANUC CRX lifted out of DemoRobotIK.glb
+  // (EP-DEMO-003), standing against the far booth wall and reaching across to
+  // the track at x = 0.
+  //
+  // The X here was measured, not guessed: in its home pose the arm's TCP sits
+  // a fixed 2.3 m in +X of the base and NO shoulder/elbow angle changes that
+  // offset (only the base swivel does), so the base has to sit that far to the
+  // -X side for the gun to arrive beside the hangers.
+  { name: 'PaintRobot', file: 'PaintRobot.glb', at: [-1.9, 0.1, 20.4], span: null },
   // On the RETURN sweep below the line (the z = -6 straight), rotated a quarter
   // turn because the station is authored along Z while that straight runs -X.
   // Its old spot at x = 6 is now the buffer's first serpentine pass.

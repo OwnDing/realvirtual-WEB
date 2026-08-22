@@ -18,4 +18,6 @@ authority: normative-registry
 
 - [`EP-DEMO-002-paintline-robot-kpi.md`](EP-DEMO-002-paintline-robot-kpi.md)：涂装线的实测节拍/产量 KPI 与喷房六轴机器人；2026-08-22 完成。
 
+- [`EP-DEMO-003-paintline-fanuc-robot.md`](EP-DEMO-003-paintline-fanuc-robot.md)：把 default demo 的 FANUC CRX 提取为库对象并换装进涂装线喷房；2026-08-22 完成。
+
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

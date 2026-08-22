@@ -4,10 +4,24 @@
 /**
  * Drives the booth's six-axis paint robot (EP-DEMO-002, M2).
  *
- * The booth used to hold a single `Drive-Lin-Y` reciprocator carriage. It now
- * holds a real robot: six nested joints `A1…A6`, each carrying its own `Drive`,
- * with a `RobotIK` component on the root whose `Axis` array references them by
- * nested path. The loader confirms the chain with `RobotIK: Robot axes=6`.
+ * The booth used to hold a single `Drive-Lin-Y` reciprocator carriage, then a
+ * box-and-cylinder six-axis stand-in. Since EP-DEMO-003 it holds the real FANUC
+ * CRX-10iA/L lifted out of `public/models/DemoRobotIK.glb`: six nested joints
+ * `A1…A6`, each with its own `Drive`, under a `RobotIK` root. The loader
+ * confirms the chain with `RobotIK: PaintRobot… axes=6 wrist=NonSpherical`
+ * (a cobot with wrist offsets — correctly detected).
+ *
+ * Joint roles were MEASURED by jogging each axis 40° and reading the TCP's
+ * world position, not read off the `Direction` fields (which are in Unity local
+ * frames and do not map to a guessable world axis):
+ *
+ *   A1 base swivel (moves the TCP in X/Z)   A4 wrist roll (small)
+ *   A2 shoulder    (largest vertical move)  A5 wrist pitch
+ *   A3 elbow                                A6 tool roll (TCP on the axis)
+ *
+ * The home pose already places the TCP beside the track, so the shoulder and
+ * elbow are LEFT AT ZERO — the previous stand-in needed a posture offset, this
+ * arm does not, and forcing one swings the gun away from the hangers.
  *
  * The joints are commanded DIRECTLY here rather than through an IK solve to a
  * moving target. That is a deliberate, bounded choice, recorded in the plan:
@@ -87,7 +101,11 @@ export class PaintLineSprayMotionPlugin extends RVBehavior {
     scene.traverse((node) => {
       const base = baseName(node.name);
       if (base.startsWith('Spray-Fan')) this.fans.push(node);
-      if (base === 'Robot' && !this.robot) this.robot = node;
+      // The robot root is `PaintRobot` since EP-DEMO-003 (it used to be the
+      // generated `Robot` node inside the booth). Matching the old name left
+      // `this.robot` null, and the whole tick returned early — the arm simply
+      // stood still with nothing logged.
+      if (base === 'PaintRobot' && !this.robot) this.robot = node;
       if (/^Carrier-\d\d$/.test(base)) this.carriers.push(node);
       if (base === 'SprayBooth' && node.userData?.realvirtual?.LayoutObject) {
         this.boothMinZ = node.position.z - BOOTH_LENGTH / 2;
@@ -142,24 +160,26 @@ export class PaintLineSprayMotionPlugin extends RVBehavior {
       return;
     }
 
-    // Base yaw towards the hanger, measured FROM THE ROBOT'S FACING (-X, the
-    // track side), not from world +X. Measuring in world terms made the angle
-    // flip between +146° and -146° each time the nearest hanger changed, and
-    // the arm whipped 293° the long way round — a 321° sweep in eight seconds.
-    // Relative to its facing the same motion is a calm ±34°.
-    const dx = target!.position.x - this.robotWorld.x;   // negative: track is at -X
+    // Base yaw towards the hanger, measured FROM THE ROBOT'S FACING rather than
+    // from world +X. In world terms the angle flips between +146° and -146°
+    // every time the nearest hanger changes and the arm whips the long way
+    // round — 321° of travel in eight seconds.
+    //
+    // The facing is derived, not hardcoded: the robot looks at the process
+    // track (x = 0), so its forward X is `sign(-robotX)`. Writing that as a
+    // constant broke the moment the base moved from +1.5 to -1.9 in
+    // EP-DEMO-003 — the sign flipped and the whipping came straight back
+    // (202° measured). Derived, a reposition cannot reintroduce it.
+    const facingX = this.robotWorld.x >= 0 ? -1 : 1;
+    const dx = (target!.position.x - this.robotWorld.x) * facingX;
     const dz = target!.position.z - this.robotWorld.z;
-    const yawDeg = (Math.atan2(dz, -dx) * 180) / Math.PI;
+    const yawDeg = (Math.atan2(dz, dx) * 180) / Math.PI;
     this.aim('A1', yawDeg);
 
     // Wrist sweep carries the gun across the workpiece height.
     this.sweepPhaseS = (this.sweepPhaseS + dt) % SWEEP_PERIOD_S;
     const phase = (this.sweepPhaseS / SWEEP_PERIOD_S) * Math.PI * 2;
     this.aim('A5', Math.sin(phase) * SWEEP_DEG);
-    // A modest shoulder/elbow set keeps the tool at hanger height instead of
-    // pointing straight up.
-    this.aim('A2', 25);
-    this.aim('A3', -35);
   }
 
   protected onDestroy(): void {
