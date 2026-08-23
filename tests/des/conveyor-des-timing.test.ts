@@ -19,7 +19,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Mesh, BoxGeometry } from 'three';
 import { DESRunner } from '../../src/plugins/des/des-runner';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import { ConveyorFlow } from '../../src/behaviors/Conveyor';
 import {
   createSelf,

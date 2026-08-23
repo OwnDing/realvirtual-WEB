@@ -18,8 +18,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Object3D } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
 import { EventEmitter } from '../../src/core/rv-events';
 import { ContextMenuStore } from '../../src/core/hmi/context-menu-store';
 import {
@@ -405,6 +405,11 @@ describe('Agv task — DES mode (event-driven dwell)', () => {
       runner.tick(TICK);
       runner.lateTick(TICK);
     }
+    // Read the run's outcome BEFORE teardown: dispose() resets every bound
+    // definition (AgvFlow.reset re-seeds phase, pose and Position), so a value
+    // sampled afterwards describes the reset, not the run.
+    const endPhase = fleet.get('V1')!.phase;
+    const endPosition = sig(host, 'V1', 'Position');
     runner.dispose();
 
     expect(marks.map(m => m[0])).toEqual(['arrive', 'serviceEnd', 'idle']);
@@ -412,8 +417,8 @@ describe('Agv task — DES mode (event-driven dwell)', () => {
     expect(marks[0][1]).toBeGreaterThan(3.8);
     expect(marks[0][1]).toBeLessThan(4.3);
     expect(marks[1][1] - marks[0][1]).toBeCloseTo(2, 1);
-    expect(fleet.get('V1')!.phase).toBe('idle');
-    expect(sig(host, 'V1', 'Position')).toBeCloseTo(2000, 0); // end of B (2 m segment)
+    expect(endPhase).toBe('idle');
+    expect(endPosition).toBeCloseTo(2000, 0); // end of B (2 m segment)
   });
 });
 
@@ -441,8 +446,9 @@ describe('Agv docks — DES mode', () => {
     expect(sig(host, 'V1', 'Position')).toBeCloseTo(2000, 0); // still at B's end
     releaseFn!();
     for (let i = 0; i < 60 * 4; i++) { runner.tick(TICK); runner.lateTick(TICK); }
+    const endPosition = sig(host, 'V1', 'Position');
     runner.dispose();
-    expect(sig(host, 'V1', 'Position')).toBeCloseTo(2000, 0); // end of C (2 m segment)
+    expect(endPosition).toBeCloseTo(2000, 0); // end of C (2 m segment)
   });
 });
 
@@ -488,11 +494,13 @@ describe('Agv DES parity — segment occupancy queueing (Stau an Pfadenden)', ()
       }
       if (fleet.get('Lead')!.phase === 'idle' && fleet.get('Follow')!.phase === 'idle') break;
     }
+    const leadPhase = fleet.get('Lead')!.phase;
+    const followPhase = fleet.get('Follow')!.phase;
     runner.dispose();
     expect(violations).toBe(0);
     expect(followWaitedAtBoundary).toBe(true);
-    expect(fleet.get('Lead')!.phase).toBe('idle');
-    expect(fleet.get('Follow')!.phase).toBe('idle');
+    expect(leadPhase).toBe('idle');
+    expect(followPhase).toBe('idle');
     void selfL;
   });
 });

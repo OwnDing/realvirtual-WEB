@@ -14,13 +14,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { DESManager, DESMode } from '../../src/plugins/des/rv-des-manager';
+import { DESManager, DESMode } from '../../src/core/material-flow/des/rv-des-manager';
 import {
   ensureScriptHookAction,
   makeScriptHookScheduler,
   SCRIPT_HOOK_ACTION,
 } from '../../src/plugins/des/rv-des-script-hook';
-import { ACTION_INDEX } from '../../src/plugins/des/rv-des-named-actions';
+import { ACTION_INDEX } from '../../src/core/material-flow/des/rv-des-named-actions';
 import type { ScriptHookDispatcher, ScriptMuRef } from '../../src/core/sdk/rv-script-hook';
 
 interface Dispatched {

@@ -23,8 +23,8 @@ import {
   replicationSeed,
   createExperimentMeta,
 } from '../../src/plugins/des/rv-des-experiment-model';
-import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
-import { SFC32 } from '../../src/plugins/des/rv-des-distribution';
+import type { DESSnapshot } from '../../src/core/material-flow/des/rv-des-snapshot';
+import { SFC32 } from '../../src/core/material-flow/des/rv-des-distribution';
 
 function makeSnapshot(simTime: number, payload = 'x'): DESSnapshot {
   return {

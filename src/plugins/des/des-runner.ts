@@ -879,7 +879,14 @@ export class DESRunner implements SimulationExecutor {
     } else if (tween.kind === 'drive') {
       return this.tweens.addDrive(tween.drive as DriveTweenTarget | null, tween.from, tween.to, t0, duration);
     } else if (tween.kind === 'path') {
-      return this.tweens.addPath(tween.path as PathTweenSampler | null, tween.target as PathTweenTarget | null, tween.fromS, tween.toS, t0, duration, tween.muId, tween.pathRef ?? '');
+      // `self.pathTween()` emits `pathRef` INSTEAD of an inline sampler whenever
+      // the path has a stable id — that is the JSON-safe form, and it is what
+      // every registered `RVPath` produces. Failing to resolve it here handed
+      // `addPath` a null sampler, which it drops silently: the DES leg still ran
+      // its events, but nothing ever moved the visual along the path.
+      const sampler = (tween.path as PathTweenSampler | null | undefined)
+        ?? (tween.pathRef ? getDefaultPathNetwork().get(tween.pathRef) : null);
+      return this.tweens.addPath(sampler ?? null, tween.target as PathTweenTarget | null, tween.fromS, tween.toS, t0, duration, tween.muId, tween.pathRef ?? '');
     }
     return -1;
   }

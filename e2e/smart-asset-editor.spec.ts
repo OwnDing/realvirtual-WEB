@@ -5,6 +5,21 @@ import { expect, test } from 'playwright/test';
 import path from 'node:path';
 import { pinLocale } from './helpers/pin-locale';
 
+// Same software-GL launch options as the DES and paint-line golden flows. This
+// spec is the only public E2E that omitted them, so headless Chromium never got
+// a WebGL context here and the run timed out waiting for the viewer canvas —
+// the editor assertions below had never actually executed.
+test.use({
+  launchOptions: {
+    args: [
+      '--use-gl=angle',
+      '--use-angle=swiftshader',
+      '--enable-unsafe-swiftshader',
+      '--disable-gpu-sandbox',
+    ],
+  },
+});
+
 test('public smart asset editor authors, validates and publishes a reusable GLB', async ({ page }) => {
   test.setTimeout(180_000);
   const errors: string[] = [];

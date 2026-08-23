@@ -10,7 +10,7 @@ import { createSelf, type MaterialFlowSelf, type MU } from '../../src/core/mater
 import { DESRunner } from '../../src/plugins/des/des-runner';
 import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
 import { Station } from '../../src/plugins/des/material-flow/Station';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 
 const SHIFT = 8 * 60 * 60;
 const LINE_SPEED_METRES_PER_SECOND = 0.1;

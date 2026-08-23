@@ -33,6 +33,7 @@ import { DESControllerToolbar } from '../sim-controller/DESControllerToolbar';
 import { setEventQueueWindowOpen } from '../sim-controller/event-queue-window-store';
 import { ensureDesManagerNode } from '../../core/material-flow/des-manager-node';
 import { DESHMIPlugin } from './hmi/des-hmi-plugin';
+import { EventQueueOverlay } from './hmi/event-queue-overlay';
 import './des-plugin';
 
 export class DESWorkspacePlugin implements RVViewerPlugin {
@@ -47,6 +48,14 @@ export class DESWorkspacePlugin implements RVViewerPlugin {
     // `mode:des` because of `modes: ['des']`. Same order as the continuous
     // SimControllerToolbar (which is hidden in DES), so they swap cleanly.
     { slot: 'toolbar-button-leading', component: DESControllerToolbar, order: 10 },
+    // The event-queue diagnostics window is a floating panel, not toolbar
+    // furniture. `EventQueueOverlay` was written for this slot but never
+    // registered, so the panel ended up nested inside the toolbar component
+    // instead — which left the overlay module (and its private stub) dead and
+    // this plugin without the overlay slot it is documented to provide. Both
+    // render the same store-driven panel, so mounting it here is behaviourally
+    // identical and keeps one owner for it.
+    { slot: 'overlay', component: EventQueueOverlay, order: 10 },
   ];
 
   // ── Kernel coupling (plan-194 ⇄ plan-198) ──

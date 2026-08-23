@@ -23,21 +23,21 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager } from '../../src/plugins/des/rv-des-manager';
-import { DES } from '../../src/plugins/des/rv-des-api';
-import { DESSource } from '../../src/plugins/des/rv-des-source';
-import { DESSink } from '../../src/plugins/des/rv-des-sink';
-import { DESStation } from '../../src/plugins/des/rv-des-station';
-import type { DESComponent } from '../../src/plugins/des/rv-des-component';
-import { createSnapshot, restoreSnapshot } from '../../src/plugins/des/rv-des-snapshot';
-import type { DESSnapshot } from '../../src/plugins/des/rv-des-snapshot';
-import { resetDESMUCounter, createDESMU } from '../../src/plugins/des/rv-des-mu';
-import type { DESMU, DESMUSnapshot } from '../../src/plugins/des/rv-des-mu';
+import { DESManager } from '../../src/core/material-flow/des/rv-des-manager';
+import { DES } from '../../src/core/material-flow/des/rv-des-api';
+import { DESSource } from '../../src/core/material-flow/des/rv-des-source';
+import { DESSink } from '../../src/core/material-flow/des/rv-des-sink';
+import { DESStation } from '../../src/core/material-flow/des/rv-des-station';
+import type { DESComponent } from '../../src/core/material-flow/des/rv-des-component';
+import { createSnapshot, restoreSnapshot } from '../../src/core/material-flow/des/rv-des-snapshot';
+import type { DESSnapshot } from '../../src/core/material-flow/des/rv-des-snapshot';
+import { resetDESMUCounter, createDESMU } from '../../src/core/material-flow/des/rv-des-mu';
+import type { DESMU, DESMUSnapshot } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   RunLifecycleController, CheckpointController, CHECKPOINT_LABEL, nextCheckpointBoundary,
 } from '../../src/plugins/des/rv-des-run-lifecycle';
-import { CHECKPOINT_ACTION } from '../../src/plugins/des/rv-des-event';
-import { registerAction, ACTION_INDEX } from '../../src/plugins/des/rv-des-named-actions';
+import { CHECKPOINT_ACTION } from '../../src/core/material-flow/des/rv-des-event';
+import { registerAction, ACTION_INDEX } from '../../src/core/material-flow/des/rv-des-named-actions';
 import { IndexedDBSnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
 import type { SnapshotStore } from '../../src/plugins/des/rv-des-experiment-store';
 import { NodeRegistry } from '../../src/core/engine/rv-node-registry';

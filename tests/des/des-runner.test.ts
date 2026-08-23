@@ -23,7 +23,7 @@ import { Object3D, Vector3 } from 'three';
 import { DESRunner } from '../../src/plugins/des/des-runner';
 import { createDesRunner } from '../../src/plugins/des/register-des-runner';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

@@ -5,10 +5,10 @@ import {
   desRunSettingsStore, getDesRunSettings, rollSeed,
 } from '../../core/hmi/des-run-settings-store';
 import type { SimDesStatistics } from '../../core/material-flow/simulation-kernel';
-import type { DESManager } from './rv-des-manager';
+import type { DESManager } from '../../core/material-flow/des/rv-des-manager';
 import type { SnapshotStore } from './rv-des-experiment-store';
 import type { RunResult } from './rv-des-experiment-model';
-import type { DESSnapshot } from './rv-des-snapshot';
+import type { DESSnapshot } from '../../core/material-flow/des/rv-des-snapshot';
 
 export interface RunLifecycleOptions {
   manager: DESManager;

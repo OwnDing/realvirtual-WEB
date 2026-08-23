@@ -58,8 +58,6 @@
   "tests/model-plugin-manager.test.ts",
   "tests/node-registry-generic-resolve.test.ts",
   "tests/panel-primitives-section.test.tsx",
-  "tests/path/agv-des-parity.test.ts",
-  "tests/path/agv-task-control.test.ts",
   "tests/plc-inline-watch.test.ts",
   "tests/plc-lifecycle.test.ts",
   "tests/plc-persistence.test.ts",

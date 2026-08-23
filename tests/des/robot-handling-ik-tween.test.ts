@@ -10,8 +10,8 @@ import {
   cycleDuration,
 } from '../../src/plugins/des/material-flow/RobotHandling';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import type { DESMU } from '../../src/plugins/des/rv-des-mu';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import type { DESMU } from '../../src/core/material-flow/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

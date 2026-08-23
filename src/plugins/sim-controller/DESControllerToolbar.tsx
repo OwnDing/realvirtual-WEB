@@ -46,7 +46,6 @@ import {
   isEventQueueWindowOpen, setEventQueueWindowOpen, subscribeEventQueueWindow,
 } from './event-queue-window-store';
 import { useRvTranslation } from '../../core/i18n';
-import { DESEventQueuePanel } from './DESEventQueuePanel';
 
 /**
  * The Experiment Matrix is a 46 KB panel that most sessions never open, so it is
@@ -442,7 +441,6 @@ export function DESControllerToolbar({ viewer }: UISlotProps) {
           )}
         </>
       )}
-      <DESEventQueuePanel viewer={viewer} open={eventQueueOpen} />
     </>
   );
 }

@@ -11,7 +11,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
 import { DESRunner } from '../../src/plugins/des/des-runner';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import { createBindContext, type BindContextHost, type KinematicsSpec } from '../../src/core/behavior-runtime';
 import { ContextMenuStore } from '../../src/core/hmi/context-menu-store';
 import { defineMaterialFlow, type MaterialFlowDefinition } from '../../src/core/material-flow/define-material-flow';

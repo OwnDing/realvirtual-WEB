@@ -15,17 +15,16 @@
  * is by design; no shared discretised conflict model exists (or should).
  *
  * Continuous side: the real Agv library component (createBindContext +
- * iterateFixedUpdate). DES side: the PRIVATE DESRunner (`@rv-private/...`) —
- * this suite runs in the standard test run because the vitest/tsc config
- * resolves `@rv-private` against the sibling Private~ checkout (its stub
- * fallback has no des-runner, so a stub-only environment would skip here —
- * see the conveyor DES suites, same pattern).
+ * iterateFixedUpdate). DES side: the PUBLIC `DESRunner` (EP-DES-001). This
+ * suite used to import the runner through `@rv-private`, which meant it
+ * exercised a DIFFERENT runner (and a different module-global action table)
+ * from the one the product actually ships — see EP-DES-002.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Object3D, Vector3 } from 'three';
-import { DESRunner } from '@rv-private/plugins/des/des-runner';
-import { _resetDesHookCache } from '@rv-private/plugins/des/des-hook-adapter';
+import { DESRunner } from '../../src/plugins/des/des-runner';
+import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
 import { EventEmitter } from '../../src/core/rv-events';
 import { ContextMenuStore } from '../../src/core/hmi/context-menu-store';
 import {
@@ -349,8 +348,12 @@ describe('Agv DES ↔ continuous — contention: order + end state only (§2.4 b
       if (order.indexOf('AgvA') < 0 && doneA(rootA)) order.push('AgvA');
       if (order.indexOf('AgvB') < 0 && doneB(rootB)) order.push('AgvB');
     }
+    // Clone the end poses BEFORE teardown — dispose() re-seeds every vehicle on
+    // its start path, which would report the reset pose as the run's end state.
+    const posA = rootA.position.clone();
+    const posB = rootB.position.clone();
     runner.dispose();
-    return { order, posA: rootA.position.clone(), posB: rootB.position.clone(), bWasBlocked, bothHeldZone };
+    return { order, posA, posB, bWasBlocked, bothHeldZone };
   }
 
   it('same arrival ORDER and same end state in both modes; momentary positions are NOT compared', () => {

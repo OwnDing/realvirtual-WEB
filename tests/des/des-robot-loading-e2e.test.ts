@@ -7,7 +7,7 @@ import { EventEmitter } from '../../src/core/rv-events';
 import { ContextMenuStore } from '../../src/core/hmi/context-menu-store';
 import { getDefaultPathNetwork } from '../../src/core/engine/rv-path-network';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   ROBOT_LOADING_REFERENCE_DURATION_SECONDS,
   ROBOT_LOADING_REFERENCE_SEED,

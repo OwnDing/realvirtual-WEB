@@ -7,7 +7,7 @@ import { DESRunner } from '../../src/plugins/des/des-runner';
 import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter';
 import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingConveyor';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter, type DESMU } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

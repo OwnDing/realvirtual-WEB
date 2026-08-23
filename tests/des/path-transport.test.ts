@@ -8,7 +8,7 @@ import { MaterialFlowAdapter } from '../../src/plugins/des/material-flow-adapter
 import { PathTransport } from '../../src/plugins/des/material-flow/PathTransport';
 import { Processing } from '../../src/plugins/des/material-flow/Processing';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter, type DESMU } from '../../src/core/material-flow/des/rv-des-mu';
 import { RVMovingUnit } from '../../src/core/engine/rv-mu';
 import { getDefaultPathNetwork } from '../../src/core/engine/rv-path-network';
 import {

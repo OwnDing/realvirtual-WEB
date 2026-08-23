@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { gzipString, gunzipToString } from '../../core/persistence/rv-gzip-utils';
-import type { DESSnapshot } from './rv-des-snapshot';
+import type { DESSnapshot } from '../../core/material-flow/des/rv-des-snapshot';
 import {
   createExperimentMeta,
   type ExperimentMeta,

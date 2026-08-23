@@ -248,10 +248,18 @@ test('Library drag → stable-port loop → runtime → saved rehydrate', async 
   await expect.poll(async () => (await runtimeState(page)).valid, { timeout: 45_000 }).toBe(true);
   await expect.poll(async () => (await runtimeState(page)).moving, { timeout: 30_000 }).toBe(true);
 
-  const reopened = await runtimeState(page);
   expect(persistedIds).toEqual(assembled.ids);
+  // The published runtime record lands on a later tick than the `valid` flag
+  // polled above, so reading it once raced the rebuild — this assertion failed
+  // roughly one run in three. Same expected values, read the same
+  // eventually-consistent way as every other runtime read in this spec.
+  await expect.poll(async () => (await runtimeState(page)).runtime, {
+    timeout: 30_000,
+    message: 'runtime assembly record did not republish after saved rehydrate',
+  }).toMatchObject({ AssemblyValid: true, ModuleCount: 4 });
+
+  const reopened = await runtimeState(page);
   expect(reopened.placements.map((item) => item.id).sort()).toEqual(assembled.ids);
-  expect(reopened.runtime).toMatchObject({ AssemblyValid: true, ModuleCount: 4 });
   await expect.poll(async () => (await runtimeState(page)).paintedPieces, {
     timeout: 30_000,
     message: 'spray processing did not resume after saved rehydrate',

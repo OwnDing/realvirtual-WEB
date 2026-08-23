@@ -61,7 +61,13 @@ function makeViewer(hasDes: boolean): { viewer: RVViewer; kernel: SimulationKern
     topology: TOPO,
     desRunnerFactory: hasDes ? makeFakeDesExecutor : null,
   });
-  const viewer = { simulationKernel: kernel } as unknown as RVViewer;
+  // `DESHMIPlugin.ensureViewer` (reached through onModeActivate) looks up the
+  // layout-planner to mirror its store, so the stub has to answer plugin
+  // lookups — without it the coupling assertions never run.
+  const viewer = {
+    simulationKernel: kernel,
+    getPlugin: () => undefined,
+  } as unknown as RVViewer;
   return { viewer, kernel };
 }
 
@@ -101,7 +107,7 @@ describe('DESWorkspacePlugin — kernel coupling (plan-194 ⇄ plan-198)', () =>
   });
 
   it('tolerates a null kernel (no model loaded yet)', () => {
-    const viewer = { simulationKernel: null } as unknown as RVViewer;
+    const viewer = { simulationKernel: null, getPlugin: () => undefined } as unknown as RVViewer;
     const plugin = new DESWorkspacePlugin();
     expect(() => plugin.onModeActivate!('des', viewer)).not.toThrow();
     expect(() => plugin.onModeDeactivate!('des', viewer)).not.toThrow();

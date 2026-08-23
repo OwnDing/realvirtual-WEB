@@ -11,8 +11,8 @@ import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingCo
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
 import {
   loadMUOnCarrier,
-} from '../../src/plugins/des/rv-des-component';
-import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
+} from '../../src/core/material-flow/des/rv-des-component';
+import { resetDESMUCounter, type DESMU } from '../../src/core/material-flow/des/rv-des-mu';
 import {
   createSelf,
   type MaterialFlowSelf,

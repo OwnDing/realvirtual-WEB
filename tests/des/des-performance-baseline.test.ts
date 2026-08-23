@@ -9,11 +9,11 @@
  */
 import { describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
-import { DESEventQueue } from '../../src/plugins/des/rv-des-event-queue';
-import { DESManager } from '../../src/plugins/des/rv-des-manager';
-import { DESStation } from '../../src/plugins/des/rv-des-station';
-import { createDESMU, resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
-import { createSnapshot, restoreSnapshot } from '../../src/plugins/des/rv-des-snapshot';
+import { DESEventQueue } from '../../src/core/material-flow/des/rv-des-event-queue';
+import { DESManager } from '../../src/core/material-flow/des/rv-des-manager';
+import { DESStation } from '../../src/core/material-flow/des/rv-des-station';
+import { createDESMU, resetDESMUCounter, type DESMU } from '../../src/core/material-flow/des/rv-des-mu';
+import { createSnapshot, restoreSnapshot } from '../../src/core/material-flow/des/rv-des-snapshot';
 
 function eventQueueBaseline(eventCount: number): { enqueueMs: number; dequeueMs: number } {
   const queue = new DESEventQueue(256);

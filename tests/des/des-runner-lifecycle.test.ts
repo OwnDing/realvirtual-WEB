@@ -12,7 +12,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
 import { DESRunner } from '../../src/plugins/des/des-runner';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
 import { SimulationKernel } from '../../src/core/material-flow/simulation-kernel';
 import { ContinuousRunner } from '../../src/core/material-flow/continuous-runner';
 import type { SimulationExecutor } from '../../src/core/material-flow/simulation-executor';

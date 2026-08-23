@@ -10,9 +10,9 @@ import { Processing } from '../../src/plugins/des/material-flow/Processing';
 import { IndexingConveyor } from '../../src/plugins/des/material-flow/IndexingConveyor';
 import { PathTransport } from '../../src/plugins/des/material-flow/PathTransport';
 import { RobotHandling } from '../../src/plugins/des/material-flow/RobotHandling';
-import { loadMUOnCarrier } from '../../src/plugins/des/rv-des-component';
+import { loadMUOnCarrier } from '../../src/core/material-flow/des/rv-des-component';
 import { _resetDesHookCache } from '../../src/plugins/des/des-hook-adapter';
-import { resetDESMUCounter, type DESMU } from '../../src/plugins/des/rv-des-mu';
+import { resetDESMUCounter, type DESMU } from '../../src/core/material-flow/des/rv-des-mu';
 import { ConveyorFlow } from '../../src/behaviors/Conveyor';
 import {
   createSelf,

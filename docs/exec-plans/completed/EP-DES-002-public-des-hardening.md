@@ -126,6 +126,12 @@ authority: normative
 
 验证：`npx vitest run tests/smart-asset-model.test.ts tests/des/rv-des-distribution.test.ts tests/simulation-kernel.test.ts`
 
+### M8 — 关闭具名债务并跑通全量门禁
+
+删除 16 个一行 re-export shim 并把测试导入改指核心路径；把 `tests/path/agv-*.test.ts` 从 `@rv-private` 迁到公开 runner 并重新生成排除列表；运行全量 Browser 与三条公开 Playwright 黄金流程，逐条归因剩余失败。
+
+验证：`./scripts/verify.sh static`、`npm run test:node`、`npm test`、`npx playwright test e2e/public-des-flow.spec.ts e2e/paintline-assembly.spec.ts e2e/smart-asset-editor.spec.ts`
+
 ### M7 — 门禁与证据
 
 运行 governance / static / node / 聚焦 browser / build，更新本计划与 `EP-DES-001` 的证据行、验收矩阵与契约备注，移入 completed。
@@ -139,6 +145,7 @@ authority: normative
 - [x] M5 热点与基线
 - [x] M6 数值/编辑器/装配一致性
 - [x] M7 门禁与证据
+- [x] M8 关闭具名债务并跑通全量门禁（2026-08-23 重新激活后完成）
 
 ## Surprises & Discoveries
 
@@ -154,6 +161,8 @@ authority: normative
 | --- | --- | --- | --- |
 | 2026-08-23 | 按复审结论执行 P0+P1 加固，不改契约与 Schema | 用户当前明确指令“同意评审，完成优化” | 缺陷均为实现层；保持交换格式与已保存数据不变可让修复独立回滚 |
 | 2026-08-23 | 修正 `EP-DES-001` 的浏览器证据行而非重写其结论 | P0 测试完整性规则 | 完成计划是历史证据，应就地更正事实并注明来源，不得追溯粉饰 |
+| 2026-08-23 | 本计划在 M7 完成后重新激活并追加 M8，而不是另开新计划 | 用户当前明确指令“完成未做的遗留项” | 债务是本计划自己具名的，闭环记录在同一份文档里比拆成孤立后续更可追溯；重新激活的事实在此显式登记 |
+| 2026-08-23 | agv 测试迁移暴露的失败逐条归因后再处理，不整体接受也不整体跳过 | P0 测试完整性规则 | 7 例失败在 `f012911` 上同样存在；区分“公开 runner 真实缺陷”“测试观测点错误”后分别修复，避免用迁移掩盖产品缺口 |
 
 ## Validation
 
@@ -168,7 +177,14 @@ authority: normative
   - `cancelEvent`：改动前 10k 挂起时单次 0.32 ms（200 次 ≈ 64 ms）；改动后 40k 挂起下 200 次 ≈ 0.00–0.10 ms。
   - 参考负载：改动前 `totalEventsProcessed = 1`、`wallMs = 0`；改动后 12,196 事件、2,000 件产出、两次运行结果逐字段相同、`wallMs` 8.6–12.9 ms。
 - 缺陷可复现性已逐条验证：M3 的缩放用例在临时回退实现后确认变红、恢复后变绿；M1 的半恢复状态与 M2 的单事件退化均由改动前探针实测记录在 Current Repository Facts。
-- 未验证：真实 PLC/MQTT、客户/生产模型与连接、多浏览器/GPU 性能、Playwright 全量 E2E（本轮未重跑 `e2e/public-des-flow.spec.ts`）、人工双语 UX 巡检。本机全量 `./scripts/verify.sh browser` 未重跑，`EP-DES-001` 登记的 `tests.glb` LFS 与 SwiftShader 偏差依然存在，故不声称全量 Browser 门禁通过。
+- 未验证：真实 PLC/MQTT、客户/生产模型与连接、多浏览器/GPU 性能、人工双语 UX 巡检。
+
+M8 追加验证（2026-08-23，同机）：
+
+- `./scripts/verify.sh static`、`npm run test:node`（59 文件 / 622 例通过、7 跳过）、`npm run build` 通过；入口 3,517,097 / 3,520,000 B（余 2,903 B），`tests/bundle-splitting.test.ts` 14/14。
+- `tests/des/` + `tests/path/`：85 文件 / 529 例全绿（agv 两个套件从 `@rv-private` 迁入后 18/18 通过）。
+- 全量 Browser（`npm test`，排除 `drop-target-overlay`）：1,031 文件中 1,004 通过 / 22 失败 / 5 跳过；10,869 例中 10,761 通过 / 82 失败 / 24 跳过 / 2 todo。对照 `EP-DES-001` 记录的 27 文件 / 106 例失败。剩余失败逐文件归因见 Outcomes，均为 headless SwiftShader 上下文偏差，且在 `f012911` 上同样复现。**仍不声称全量 Browser 门禁通过。**
+- Playwright 公开黄金流程 3/3 通过：`public-des-flow`、`paintline-assembly`、`smart-asset-editor`。`e2e/` 其余 spec 本轮未运行。
 
 ## Rollback
 
@@ -189,9 +205,22 @@ authority: normative
 
 同时收敛：每帧 O(n log n) 完成检查、O(n log n) `cancelEvent`、O(n²) 自动连接、快照迁移整体深克隆、大数组 `Math.max(...)` 展开、`freeMuIds` 的 O(N² log N) 维护、`getComponentByPath` 的后缀误匹配、`normal()` 的静默钳位、组件 RNG 不随种子重播、`RuntimeMetadata` XML 未转义，以及 DES private-stub 与实际装配的不一致。
 
-遗留债务（未做，已具名）：
+### M8 追加交付（2026-08-23，本计划重新激活后）
 
-- `dispatch()` 的 `onTimeAdvance` 仍每事件触发（见 Surprises，权衡后主动保留）；
-- `src/plugins/des/rv-des-*.ts` 的 16 个一行 re-export 兼容 shim 仍在，删除需同时改约 50 个测试的导入路径，属独立清理任务；
-- `tests/path/agv-*.test.ts` 仍导入 `@rv-private/plugins/des/des-runner`，私有 sibling 在场时会加载第二套 DESRunner 与动作表，需要单独迁移；
-- 入口预算余量仅 3,015 B，下一个特性前应安排一次入口瘦身。
+M7 收尾时具名的债务已关闭，过程中又暴露并修复了 3 个既有缺陷：
+
+| 事项 | 结果 |
+| --- | --- |
+| 16 个一行 re-export shim | 已删除；46 个文件的导入改指 `src/core/material-flow/des/`，`src/plugins/des/` 只保留 4 个真实模块 |
+| `tests/path/agv-*.test.ts` 迁到公开 runner | 已迁移并从私有排除列表移出（生成器重跑：110 → 108 个私有依赖文件） |
+| **`registerTweenSpec` 不解析 `pathRef`（既有 P0）** | `self.pathTween()` 对带 id 的路径只发 `pathRef`，`addPath` 收到 null 采样器后静默丢弃：DES 腿的事件照跑，但视觉从不沿路径移动。只有 `restoreFrozenTween` 解析该 ref，所以缺陷只在故障/恢复路径之外全程隐身。已修复并加 `tests/des/des-path-tween-ref.test.ts`（临时回退实现确认变红） |
+| **`EventQueueOverlay` 从未被注册（既有）** | 事件队列诊断面板被嵌在 `DESControllerToolbar` 内渲染，overlay 模块及其私有 stub 成为死代码，`des-workspace-coupling` 的 overlay 断言自 EP-DES-001 起长红。已按设计接入 `overlay` slot 并移除工具栏内的重复挂载（同一 store 驱动，行为等价，Playwright 黄金流程验证通过） |
+| **`smart-asset-editor.spec.ts` 从未真正执行（既有）** | 该 spec 是唯一没有设置软件 GL 启动参数的公开 E2E，headless Chromium 拿不到 WebGL 上下文，30 s 后卡在等待 canvas —— 其后所有编辑器断言从未运行。补齐与 DES/涂装线 spec 相同的参数后 16.6 s 通过 |
+| **`paintline-assembly.spec.ts` 既有 flake** | 在 poll 到 `valid` 之后用非 poll 方式读同一个最终一致的 runtime 记录，约三次一失败（`f012911` 上 3 次跑 2 通过 1 失败，确认非本轮引入）。断言值不变，改为与相邻读取一致的 poll；连跑 4 次全绿 |
+| `tests/des-workspace-coupling.test.ts` 的假 viewer | 缺 `getPlugin`，导致 `DESHMIPlugin.ensureViewer` 抛错、5 例耦合断言从未执行。补全 stub |
+
+遗留债务（仍未做，已具名）：
+
+- `dispatch()` 的 `onTimeAdvance` 仍每事件触发（见 Surprises，权衡后主动保留：回调默认为 null，按时间戳去重会改变 `samplesLiveGeometry` 组件在同一时刻多事件下的观测语义）；
+- 入口预算余量 2,903 B，下一个特性前应安排一次入口瘦身；
+- 全量 Browser 仍有 22 个文件 / 82 例失败，全部落在 headless SwiftShader 的 WebGL/WebGPU 上下文创建失败（14 个文件）与 `embed-*` 组（8 个文件）。**注意**：`EP-DES-001` 把 `embed-*` 归因为“130 B Git LFS 指针 + 缺 git-lfs”，本机复核不成立——`public/models/tests.glb` 是真实的 36 MB 文件且 `git-lfs` 已安装；这些用例单独重跑仍报 WebGL 上下文创建失败，属同一 SwiftShader 偏差。该归因更正登记在此，未进一步排查。

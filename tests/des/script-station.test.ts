@@ -19,7 +19,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Object3D } from 'three';
-import { DESManager, DESMode } from '../../src/plugins/des/rv-des-manager';
+import { DESManager, DESMode } from '../../src/core/material-flow/des/rv-des-manager';
 import { makeScriptHookScheduler } from '../../src/plugins/des/rv-des-script-hook';
 import { RVScriptHost } from '../../src/core/engine/rv-script-host';
 import { createSdkComponent } from '../../src/core/sdk/rv-component-sdk';

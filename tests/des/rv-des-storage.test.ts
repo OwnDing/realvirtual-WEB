@@ -7,13 +7,13 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Object3D, Scene } from 'three';
-import { DESManager } from '../../src/plugins/des/rv-des-manager';
-import { DES } from '../../src/plugins/des/rv-des-api';
-import { DESSource } from '../../src/plugins/des/rv-des-source';
-import { DESSink } from '../../src/plugins/des/rv-des-sink';
-import { DESStorage } from '../../src/plugins/des/rv-des-storage';
-import { resetDESMUCounter } from '../../src/plugins/des/rv-des-mu';
-import type { DESMU } from '../../src/plugins/des/rv-des-mu';
+import { DESManager } from '../../src/core/material-flow/des/rv-des-manager';
+import { DES } from '../../src/core/material-flow/des/rv-des-api';
+import { DESSource } from '../../src/core/material-flow/des/rv-des-source';
+import { DESSink } from '../../src/core/material-flow/des/rv-des-sink';
+import { DESStorage } from '../../src/core/material-flow/des/rv-des-storage';
+import { resetDESMUCounter } from '../../src/core/material-flow/des/rv-des-mu';
+import type { DESMU } from '../../src/core/material-flow/des/rv-des-mu';
 import { NodeRegistry } from '../../src/core/engine/rv-node-registry';
 import { SignalStore } from '../../src/core/engine/rv-signal-store';
 

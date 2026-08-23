@@ -12,10 +12,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
-import { DESManager } from '../../src/plugins/des/rv-des-manager';
-import { DESEventQueue } from '../../src/plugins/des/rv-des-event-queue';
-import { DESStation } from '../../src/plugins/des/rv-des-station';
-import { ACTION_INDEX, registerAction } from '../../src/plugins/des/rv-des-named-actions';
+import { DESManager } from '../../src/core/material-flow/des/rv-des-manager';
+import { DESEventQueue } from '../../src/core/material-flow/des/rv-des-event-queue';
+import { DESStation } from '../../src/core/material-flow/des/rv-des-station';
+import { ACTION_INDEX, registerAction } from '../../src/core/material-flow/des/rv-des-named-actions';
 
 const NOOP_ACTION = 'HotPathBaseline.Noop';
 if (!ACTION_INDEX.has(NOOP_ACTION)) registerAction(NOOP_ACTION, () => {});
