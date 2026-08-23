@@ -20,7 +20,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
 const GIB = 1024 ** 3;
 
-export const BROWSER_SHARDS = Object.freeze(['1/2', '2/2']);
+export const BROWSER_SHARDS = Object.freeze(['1/4', '2/4', '3/4', '4/4']);
 export const PERFORMANCE_TEST = 'tests/drop-target-overlay.test.ts';
 
 export function buildBrowserGateCommands() {

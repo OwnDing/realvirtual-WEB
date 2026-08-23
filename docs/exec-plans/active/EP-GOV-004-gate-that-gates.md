@@ -122,7 +122,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 ### M4 — 大型 Browser Gate 稳定性
 
-保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/2`、`2/2` 两个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第三个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。
+保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/4` 至 `4/4` 四个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第五个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。
 
 失败语义不变：任一 shard 或性能套件非零即整项 Browser Gate 非零；不使用 retry、`continue-on-error`、`passWithNoTests`、changed/related 子集，也不从分支保护 required checks 中移除 Browser Gate。
 
@@ -133,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
-- [~] M4 Browser Gate 稳定性（本地实现与两轮完整门禁通过；远程 fresh-run 证据待 push/PR 授权）
+- [~] M4 Browser Gate 稳定性（初版两分片未通过远程重复验证；四分片本地全量通过，fresh-run 证据进行中）
 
 ## Surprises & Discoveries
 
@@ -189,7 +189,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 | 2026-08-23 | 追加保护 `develop`，配置与 `main` 一致 | 用户当前明确指令，在被告知"仅保护 main 不阻止触发证据重演"之后 | 两个分支自此都不接受直接 push；所有改动走特性分支 + PR，等五项 Gate 全绿。这是本计划目标的实际达成点 |
 | 2026-08-23 | 分支保护不要求 PR review | 单人仓库无法自审 | 要求 review 会使 `main` 完全不可合入；required checks 与 review 是两件事，前者已全选 |
 | 2026-08-23 | 选择方案 A，专项修复 Browser Gate，不临时移除 required，也不靠重跑碰绿 | 用户当前明确指令“按照A来，帮我全部完成” | required 语义保持不变；修复、结构自检、资源证据和重复验证属于本计划 M4 |
-| 2026-08-23 | Vitest 4 主套件采用两个顺序、独立进程的确定性 shard | 上游根因证据 + 当前 PR 对照证据 | 不升级到 Vitest 5 RC，不 backport 上游内部实现；无重试、无跳过，两个 shard 并集仍覆盖完整主套件 |
+| 2026-08-23 | Vitest 4 主套件采用四个顺序、独立进程的确定性 shard | 上游根因证据 + 当前 PR 对照证据 + PR #3 attempt 2 | 初版两个 shard 本地两轮和远程 attempt 1 通过，但 attempt 2 在第一个 shard 已通过 512 文件 / 5,428 例后复现同一 import flake；四分片把单进程上限降至约 258 文件。无重试、无跳过，四个 shard 并集仍覆盖完整主套件 |
 
 ## Validation
 
@@ -205,8 +205,9 @@ M1/M3（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 
 M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 
-- `npx vitest run --config vitest.node.config.ts tests/browser-gate-runner.node.test.ts`：**4/4**；守住两个互补 shard、隔离性能套件、无 retry/子集/false-green、workflow 仍从 `Browser Gate` 调用失败关闭入口，以及 `.mjs`/`.d.mts` 导出一致。
-- 两轮完整 `./scripts/verify.sh browser` 均退出 0；每轮的 `1/2`、`2/2` 两个主套件进程和隔离性能进程全部通过。第二 shard 两轮均为 **514 文件 / 5,395 例通过**（另 2 skip、1 todo），性能套件均 11/11；第二轮使用 `CI=1`，临时盘最低值 54.36 GiB。
+- `npx vitest run --config vitest.node.config.ts tests/browser-gate-runner.node.test.ts`：**4/4**；守住四个互补 shard、隔离性能套件、无 retry/子集/false-green、workflow 仍从 `Browser Gate` 调用失败关闭入口，以及 `.mjs`/`.d.mts` 导出一致。
+- 初版两分片的两轮完整本地 `./scripts/verify.sh browser` 均退出 0；PR #3 run `32628728580` attempt 1 五项全绿，Browser 10 分 35 秒。attempt 2 在第一个 shard 已通过 **512 文件 / 5,428 例**后，`commissioning-trust-activation.test.ts` 再次 dynamic import 失败，零断言失败；临时盘最低 77.68 GiB、内存最低 9.22 GiB。该证据否决两分片并推动四分片实现，不把 attempt 1 的绿色当完成。
+- 四分片调整后，`CI=1 ./scripts/verify.sh browser` 本地全量退出 0；四个主 shard 和隔离性能进程全部通过，单 shard 最大约 258 文件，性能套件 11/11。
 - `./scripts/verify.sh governance`、`static`、`node`、`build` 均通过；Node 为 **61 文件 / 633 例通过**（另 2 文件 / 7 例按既有条件 skip）。
 - 远程 fresh-run 尚未执行：当前实现位于本地分支 `codex/browser-gate-stability`，未获独立 commit/push/PR 授权，不把本地结论冒充 GitHub Actions 结论。
 
@@ -216,4 +217,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 已实现本地修复并完成两轮完整门禁验证；达到远程验收前保持 active，不声称 CI flake 已被远程关闭。
+M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的初版两分片被远程重复验证否决，现以四分片继续验证；达到远程验收前保持 active，不声称 CI flake 已被关闭。

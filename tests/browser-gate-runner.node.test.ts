@@ -11,15 +11,17 @@ import {
 
 describe('required browser gate process boundaries', () => {
   it('covers every shard exactly once before the isolated performance test', () => {
-    expect(BROWSER_SHARDS).toEqual(['1/2', '2/2']);
+    expect(BROWSER_SHARDS).toEqual(['1/4', '2/4', '3/4', '4/4']);
 
     const commands = buildBrowserGateCommands();
-    expect(commands).toHaveLength(3);
-    expect(commands.slice(0, 2).map(({ args }) => args)).toEqual([
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=1/2'],
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=2/2'],
+    expect(commands).toHaveLength(5);
+    expect(commands.slice(0, 4).map(({ args }) => args)).toEqual([
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=1/4'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=2/4'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=3/4'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=4/4'],
     ]);
-    expect(commands[2].args).toEqual(['test', '--', PERFORMANCE_TEST]);
+    expect(commands[4].args).toEqual(['test', '--', PERFORMANCE_TEST]);
   });
 
   it('does not turn an infrastructure failure into a retry or false green', () => {
