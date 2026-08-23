@@ -1005,7 +1005,35 @@ export default defineConfig(({ command }) => ({
     ],
     browser: {
       enabled: true,
-      provider: playwright(),
+      /**
+       * `channel: 'chromium'` selects Chrome for Testing — the FULL browser in
+       * new-headless mode — instead of Playwright's default `chromium-headless-shell`.
+       *
+       * The headless shell has no GPU stack at all. On Linux that is invisible,
+       * because ANGLE falls back to a software rasteriser that works; on macOS
+       * the fallback is SwiftShader-on-Vulkan, which cannot bind here
+       * (`BindToCurrentSequence failed`), so every WebGL context creation
+       * returned null. Probed directly against Playwright on this machine:
+       *
+       *   headless shell (default)        NO CONTEXT
+       *   channel: 'chromium'             OK — ANGLE Metal Renderer
+       *   headed                          OK — ANGLE Metal Renderer
+       *
+       * That single difference is why the local browser gate reported 22 failing
+       * files (82 tests) while the SAME command on CI reported zero test
+       * failures out of 10 843. A gate whose local result is dominated by a
+       * platform artefact is a gate developers learn to ignore — and it did hide
+       * a real one: `des-workspace-coupling` was red on CI for two commits.
+       *
+       * Applied unconditionally rather than per-platform so local and CI run the
+       * SAME browser. `playwright install chromium` already fetches both
+       * binaries, so CI needs no extra step.
+       *
+       * NOTE the shape: these options belong to the `playwright()` PROVIDER, not
+       * to an entry of `instances`. Passing `launch`/`launchOptions` on the
+       * instance is silently ignored — it type-checks and changes nothing.
+       */
+      provider: playwright({ launchOptions: { channel: 'chromium' } }),
       instances: [{ browser: 'chromium' }],
       api: { port: 5177 },
       /**
