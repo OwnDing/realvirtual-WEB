@@ -7,6 +7,21 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
   retries: 0,
+  /**
+   * `channel: 'chromium'` (set per project below) selects Chrome for Testing —
+   * the FULL browser in new-headless mode — instead of Playwright's default
+   * `chromium-headless-shell`, which has no GPU stack and therefore cannot
+   * create a WebGL context at all on macOS. Without it 24 of the 29 specs here
+   * simply timed out waiting for `locator('canvas')`, i.e. every assertion after
+   * that line had never run. `smoke.spec.ts` went from 4 failed / 1 passed to
+   * 5 passed with this one option.
+   *
+   * Four specs additionally force SOFTWARE rendering with their own
+   * `test.use({ launchOptions: { args: ['--use-angle=swiftshader', …] } })`.
+   * That is a deliberate determinism choice for the two that make pixel/render
+   * assertions, NOT the workaround this option replaces — do not copy those
+   * args into a new spec just to make a canvas appear.
+   */
   use: {
     baseURL: 'http://localhost:5177',
     headless: true,
@@ -15,7 +30,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
       testIgnore: /embed-smoke\.spec\.ts/,
     },
     {
@@ -23,6 +38,7 @@ export default defineConfig({
       testMatch: /embed-smoke\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
+        channel: 'chromium',
         baseURL: 'http://localhost:4178',
       },
     },

@@ -61,6 +61,8 @@ authority: normative
 ## Allowed Paths
 
 - `vite.config.ts`（仅 `test.browser` 段）
+- `playwright.config.ts`
+- `e2e/`
 - `.github/workflows/`
 - `scripts/verify.sh`
 - `docs/`
@@ -92,16 +94,36 @@ authority: normative
 
 对重型/端到端用例补充反退化断言（如参考负载的 `totalEventsProcessed > MU 数`），并排查现有套件中同类失效。
 
+已完成部分：`tests/e2e-suite-runnable.node.test.ts` 守住"spec 无法被收集"这一类；e2e 全局浏览器修复见下。
+
+验证：`npx vitest run --config vitest.node.config.ts tests/e2e-suite-runnable.node.test.ts`
+
 ## Progress
 
 - [x] M1 本机门禁 = CI
 - [ ] M2 OD-005 分支保护（待用户决策与管理员操作）
-- [ ] M3 反退化守卫
+- [~] M3 反退化守卫（e2e 可收集性已守卫；新暴露的 e2e 基线待处理）
 
 ## Surprises & Discoveries
 
 - 根因不是 SwiftShader 本身，而是 **Playwright 默认的 `chromium-headless-shell` 没有 GPU 栈**。Linux 上这一点不可见（ANGLE 回落到可用的软件光栅），macOS 上回落到 SwiftShader-on-Vulkan 并以 `BindToCurrentSequence failed` 失败。此前所有 ExecPlan 把它记为"SwiftShader 上下文耗尽"，方向是错的——单跑同样失败，与并发无关。此处更正该归因；历史计划中的记录保持原样，它们描述的是当时观测到的现象。
 - `@vitest/browser-playwright` 的启动选项属于 `playwright()` **provider**，不是 `instances[]` 的条目。把 `launch` 或 `launchOptions` 写在 instance 上**类型检查通过、静默无效**——本计划前两次尝试正是因此失败。这本身就是本计划要防的失效类别（配置看起来对，实际什么都没做）。
+
+## M3 中间结果（2026-08-23）
+
+同一失效类别在 e2e 侧一共找到三个实例，前两个已修：
+
+1. **29 个 spec 中 24 个没有 GL 启动参数**，headless Chromium 拿不到 canvas，断言全程不执行。`smoke.spec.ts` 4 失败/1 通过 → **5 通过**。修法是把 `channel: 'chromium'` 放进 `playwright.config.ts` 的两个 project，而不是继续往每个 spec 里抄参数；同时撤掉 EP-DES-002 期间给 `smart-asset-editor.spec.ts` 加的那段 workaround（它当时是权宜之计，现在根因已修）。仍保留自带软件渲染参数的 4 个 spec——其中 2 个有像素/渲染断言，那是**刻意的确定性选择**，不是同一回事，已在配置注释里写明不要照抄。
+2. **`camera-startpos.spec.ts` 导入 `@playwright/test`**（本仓依赖的是 `playwright/test`，该包未安装）。Playwright 在**收集阶段**就失败，因此这一行让整个 `npx playwright test` 无法启动——这正是历来所有计划都只跑"聚焦 spec"、从未跑过全量套件的原因。已改为 `playwright/test`，并由 `tests/e2e-suite-runnable.node.test.ts` 守住。
+3. **e2e 没有私有依赖排除机制**（未修，见下）。
+
+### 新暴露的 e2e 基线
+
+套件首次可整体收集后，真实状态为 **104 例中 63 通过 / 24 失败 / 6 跳过 / 11 未运行**。此前无人见过这个数字。
+
+24 个失败中 **11 个已归因**：`editor-continuity`（8）、`mechanism-force-analysis`、`mechanism-authoring-matrix`、`mechanism-force-benchmark` 都 `import('/src/plugins/asset-editor/...')`——该目录**在公开 checkout 中不存在**，只存在于私有 sibling。单元测试有 `tests/private-dependent-tests.json` 这一生成的排除机制，**e2e 从来没有**，所以公开 checkout 永远跑不绿这套。
+
+这需要一个设计决定（这些 spec 应迁入私有仓，还是为 e2e 建同类生成排除列表），不在本里程碑内自行拍板。剩余 13 个失败尚未归因。
 
 ## Decision Log
 
@@ -113,12 +135,14 @@ authority: normative
 
 ## Validation
 
-M1（2026-08-23，本机 Darwin 25.6 / Apple M5）：
+M1/M3（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 
 - `npm test -- --exclude tests/drop-target-overlay.test.ts`：**1,031 文件中 1,028 通过、3 跳过；10,869 例中 10,860 通过、7 跳过、2 todo、零失败**。改动前为 22 文件 / 82 例失败。
 - `npm test -- tests/drop-target-overlay.test.ts`（隔离性能套件）：11/11 通过。
 - `tsc -p tsconfig.json --noEmit` 通过。
-- 未验证：本改动在 CI（ubuntu-24.04）上的表现。CI 当前用默认 headless shell 且通过；切换后需由下一次 push 的 Browser Gate 确认。若 Chrome for Testing 在 CI 缺失，失败是启动期立即可见的，不是静默降级。
+- **CI 已确认**：run [`32616661537`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32616661537) 五个 Gate 全绿，Browser Gate 9 分 20 秒（切换前为 11 分 20 秒）。此前登记的"CI 侧未验证"风险已解除。
+- M3：`tests/e2e-suite-runnable.node.test.ts` 3/3 通过；`npx playwright test --list` 首次可收集全部 104 例 / 29 文件。
+- 未验证：新暴露的 24 个 e2e 失败中有 13 个尚未归因；e2e 私有依赖排除机制未建。**不声称 e2e 套件通过。**
 
 ## Rollback
 
@@ -126,4 +150,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动，`git rever
 
 ## Outcomes & Retrospective
 
-M1 完成后待补；M2/M3 未开始。
+M1 完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，新暴露的 e2e 基线（24 失败中 13 未归因）与私有依赖排除机制待后续。M2 未开始，待用户决定分支保护策略。
