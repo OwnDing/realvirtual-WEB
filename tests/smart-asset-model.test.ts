@@ -92,6 +92,22 @@ describe('smart asset authoring model', () => {
     doc.dispose();
   });
 
+  it('escapes XML-significant characters in the metadata template', async () => {
+    // `RuntimeMetadata.content` is read as markup (the tooltip and order manager
+    // both parse `<value label="…">` rows), so an unescaped node name such as
+    // "Motor & Pump <A>" produced a document neither of them could parse.
+    const { viewer, root } = fixture();
+    const doc = AssetDocument.newUntitled(viewer);
+    await applySmartTemplate(doc, root, root, 'metadata', { label: 'Motor & Pump <A>' });
+
+    const content = String(root.userData.realvirtual.RuntimeMetadata.content);
+    expect(content).toBe('<metadata><name>Motor &amp; Pump &lt;A&gt;</name></metadata>');
+    const parsed = new DOMParser().parseFromString(content, 'text/xml');
+    expect(parsed.getElementsByTagName('parsererror')).toHaveLength(0);
+    expect(parsed.querySelector('name')?.textContent).toBe('Motor & Pump <A>');
+    doc.dispose();
+  });
+
   it('creates all supported signal shapes and rejects a duplicate signal name', async () => {
     const { viewer, root, registry } = fixture();
     const doc = AssetDocument.newUntitled(viewer);

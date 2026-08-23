@@ -72,7 +72,20 @@ export class DESComponent {
 
   attachManager(manager: DESManager): void {
     this.manager = manager;
-    this.rng = new SFC32((manager.masterSeed + Math.imul(this.entityId + 1, 0x9e3779b9)) >>> 0);
+    this.reseedRandom();
+  }
+
+  /**
+   * Re-derive this component's private stream from the manager's master seed.
+   *
+   * Called on attach AND whenever the seed changes. Seeding only on attach meant
+   * every replication of an experiment reused the component streams of the very
+   * first run, so a per-replication seed changed the manager stream while the
+   * component streams stayed identical.
+   */
+  reseedRandom(): void {
+    const seed = this.manager?.masterSeed ?? 0;
+    this.rng = new SFC32((seed + Math.imul(this.entityId + 1, 0x9e3779b9)) >>> 0);
   }
 
   init(context: ComponentContext): void { this.context = context; }
@@ -127,8 +140,9 @@ export class DESComponent {
     if (this.isFailure === failed) return;
     if (this.manager && this.freezeEventsOnFailure) {
       if (failed) {
-        this.frozenEvents = this.manager.getEventQueueSnapshot()
-          .filter((event) => event.entityId === this.entityId)
+        // Targeted query: snapshotting the WHOLE queue and cancelling each hit
+        // one at a time made a single failure cost O(k · n log n).
+        this.frozenEvents = this.manager.getEventQueueSnapshotForEntity(this.entityId)
           .map((event) => {
             this.manager!.cancelEvent(event.id);
             return {

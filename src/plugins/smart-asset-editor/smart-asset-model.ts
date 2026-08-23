@@ -134,6 +134,18 @@ function componentRecord(node: Object3D, baseType: string): Record<string, unkno
   return key && isRecord(rv[key]) ? rv[key] : null;
 }
 
+/**
+ * Escape text destined for `RuntimeMetadata.content`, which downstream readers
+ * parse as markup (`<value label="…">` rows in the tooltip and order manager).
+ * A node called `Motor & Pump` or `Clamp <A>` produced an unparseable document.
+ */
+function escapeXmlText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function normalizeDirection(direction: [number, number, number]): [number, number, number] {
   const length = Math.hypot(...direction);
   if (!Number.isFinite(length) || length <= 1e-8) {
@@ -265,7 +277,7 @@ export async function applySmartTemplate(
     switch (template) {
       case 'metadata':
         await upsertComponent(doc, target, 'RuntimeMetadata', {
-          content: `<metadata><name>${options.label?.trim() || target.name}</name></metadata>`,
+          content: `<metadata><name>${escapeXmlText(options.label?.trim() || target.name)}</name></metadata>`,
         });
         break;
       case 'transport-surface':

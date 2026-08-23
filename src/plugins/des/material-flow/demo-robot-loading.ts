@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Robot-loading reference layout (plan-297 Phase 7, hardened by EP-DES-002 M2).
+ *
+ * This is a REFERENCE LOAD: its job is to put a known, reproducible amount of
+ * work through the public DES engine. Every stage therefore consumes simulated
+ * time and every hand-over goes through the event queue.
+ *
+ * The previous shape emitted all 2,110 MUs inside `runner.start()` and walked
+ * them to the sink in one synchronous call stack, leaving a single no-op
+ * horizon event on the heap. The totals looked right while
+ * `totalEventsProcessed` was 1 — the engine was never exercised, so the layout
+ * proved nothing about scheduling, blocking or back-pressure.
+ *
+ * The layout now models a single-server robot feeding a capacity-limited
+ * indexing conveyor and a single-server station, so the run exercises the
+ * blocked → `onDownstreamReady` → retry path that a real line depends on.
+ */
+
 import { Object3D } from 'three';
 import type { BindContextHost, KinematicsSpec } from '../../../core/behavior-runtime';
 import { createBindContext } from '../../../core/behavior-runtime';
@@ -10,6 +28,26 @@ import { DESRunner } from '../des-runner';
 
 export const ROBOT_LOADING_REFERENCE_DURATION_SECONDS = 8 * 60 * 60;
 export const ROBOT_LOADING_REFERENCE_SEED = 297;
+
+/**
+ * Stage timings, in simulated seconds.
+ *
+ * The station is the intended bottleneck (5 s × 2,000 parts = 10,000 s), which
+ * keeps the 8 h reference horizon comfortably drainable while still forcing
+ * back-pressure all the way to the source.
+ */
+export const ROBOT_LOADING_TIMINGS = {
+  sourceInterval: 4,
+  sourceRetry: 1,
+  robotCycle: 4,
+  indexCycle: 3,
+  stationProcess: 5,
+  transportTravel: 6,
+  bufferDwell: 2,
+} as const;
+
+const INDEXING_SLOTS = 5;
+const FREE_FLOW_CAPACITY = 1_000_000;
 
 export interface RobotLoadingDemoOptions {
   palletCount: number;
@@ -44,49 +82,129 @@ export interface RobotLoadingDemoResult {
   componentLoads: Record<string, number>;
 }
 
-const DemoSource = defineMaterialFlow<MaterialFlowSelf>({
+interface SourceLocal { pending: MU | null }
+
+/** Carrier composition is positional: pallets, then blisters, then parts. */
+function carrierTypeAt(index: number, pallets: number, blisters: number): string {
+  if (index < pallets) return 'pallet';
+  return index < pallets + blisters ? 'blister' : 'part';
+}
+
+const DemoSource = defineMaterialFlow<MaterialFlowSelf<SourceLocal>>({
   type: 'RobotLoadingDemoSource', kind: 'source', schema: {}, continuous: {},
+  state: () => ({ pending: null }),
   des: {
     onGenerate(self) {
       const pallets = Number(self.prop.palletCount ?? 0);
       const blisters = pallets * Number(self.prop.blistersPerPallet ?? 0);
       const parts = blisters * Number(self.prop.partsPerBlister ?? 0);
-      for (let index = 0; index < pallets + blisters; index++) {
-        const mu = self.spawn(); mu.carrierType = index < pallets ? 'pallet' : 'blister';
-        self.transfer(mu);
+      const total = pallets + blisters + parts;
+      if (self.prop.horizonArmed !== true) {
+        self.prop.horizonArmed = true;
+        self.prop.generatedPallets = pallets;
+        // One model event on the horizon keeps the run's end observable even
+        // when the layout drains early; it is never the only event in flight.
+        self.at(Number(self.prop.durationSeconds ?? 0), 'Horizon');
       }
-      for (let index = 0; index < parts; index++) {
-        const mu = self.spawn(); mu.carrierType = 'part'; self.transfer(mu);
+      const emitted = Number(self.prop.createdMUs ?? 0);
+      if (emitted >= total) return;
+
+      // Reuse the MU that could not be handed over, so a blocked robot does not
+      // inflate the MU id sequence and break run-to-run reproducibility.
+      const mu = self.local.pending ?? self.spawn();
+      mu.carrierType = carrierTypeAt(emitted, pallets, blisters);
+      if (!self.downstreamCanAccept(mu)) {
+        self.local.pending = mu;
+        self.in(ROBOT_LOADING_TIMINGS.sourceRetry, 'Generate');
+        return;
       }
-      self.prop.generatedPallets = pallets;
-      self.prop.createdMUs = pallets + blisters + parts;
-      self.at(Number(self.prop.durationSeconds ?? 0), 'Horizon');
+      self.local.pending = null;
+      self.prop.createdMUs = emitted + 1;
+      self.transfer(mu);
+      if (emitted + 1 < total) self.in(ROBOT_LOADING_TIMINGS.sourceInterval, 'Generate');
     },
     onHorizon() { /* explicit end-of-horizon model event */ },
   },
 });
 
-function passDefinition(type: string, kind: 'station' | 'conveyor' | 'storage' = 'station'): MaterialFlowDefinition {
-  return defineMaterialFlow<MaterialFlowSelf>({
-    type, kind, schema: {}, capacity: () => 1_000_000_000, continuous: {},
-    des: {
-      onAccept(self, mu) {
-        if (type === 'RobotLoadingDemoRobot') {
-          mu.prop ??= {};
-          mu.prop.routeIndex = mu.carrierType === 'part' ? 0 : 1;
-        }
-        self.transfer(mu);
-        return true;
-      },
-    },
-  }) as MaterialFlowDefinition;
+/** MUs whose processing finished but whose hand-over found no free downstream. */
+interface StageLocal { waiting: number[] }
+
+/**
+ * Route by carrier (parts continue down the line, empties leave at the buffer)
+ * and hand over. Returns false when every downstream was full: the MU stays
+ * held and must be retried on the next `onDownstreamReady`.
+ */
+function tryHandOver(self: MaterialFlowSelf<StageLocal>, mu: MU, routed: boolean): boolean {
+  if (routed) {
+    mu.prop ??= {};
+    mu.prop.routeIndex = mu.carrierType === 'part' ? 0 : 1;
+  }
+  self.transfer(mu);
+  return !self.mus.some((held) => held.id === mu.id);
 }
 
-const DemoRobot = passDefinition('RobotLoadingDemoRobot');
-const DemoIndex = passDefinition('RobotLoadingDemoIndex', 'conveyor');
-const DemoStation = passDefinition('RobotLoadingDemoStation');
-const DemoPath = passDefinition('RobotLoadingDemoPath', 'conveyor');
-const DemoBuffer = passDefinition('RobotLoadingDemoBuffer', 'storage');
+/**
+ * One staged server: accept, hold for `seconds`, then hand over.
+ *
+ * Blocked MUs are queued by id rather than re-scanning `self.mus`, because a
+ * held MU may equally be one that is still inside its processing time — moving
+ * that one early would silently erase the stage's cycle.
+ */
+function stagedDefinition(
+  type: string,
+  kind: 'station' | 'conveyor' | 'storage',
+  capacity: number,
+  seconds: number,
+  routed = false,
+): MaterialFlowDefinition {
+  return defineMaterialFlow<MaterialFlowSelf<StageLocal>>({
+    type, kind, schema: {}, capacity: () => capacity, continuous: {},
+    state: () => ({ waiting: [] }),
+    des: {
+      onAccept(self, mu) {
+        self.in(seconds, 'ProcessComplete', mu);
+        return true;
+      },
+      onProcessComplete(self, mu) {
+        if (mu && !tryHandOver(self, mu, routed)) self.local.waiting.push(mu.id);
+      },
+      onDownstreamReady(self) {
+        const waiting = self.local.waiting;
+        while (waiting.length > 0) {
+          const held = self.mus.find((candidate) => candidate.id === waiting[0]);
+          if (!held) { waiting.shift(); continue; }
+          // Keep strict arrival order: if the head is still blocked, so is the
+          // rest of the queue for this stage.
+          if (!tryHandOver(self, held, routed)) break;
+          waiting.shift();
+        }
+      },
+    },
+  }) as unknown as MaterialFlowDefinition;
+}
+
+/** Bound for topology coverage but intentionally not wired into the flow. */
+const DemoIdle = defineMaterialFlow<MaterialFlowSelf>({
+  type: 'RobotLoadingDemoIdle', kind: 'storage', schema: {}, continuous: {}, des: {},
+});
+
+const DemoRobot = stagedDefinition(
+  'RobotLoadingDemoRobot', 'station', 1, ROBOT_LOADING_TIMINGS.robotCycle, true,
+);
+const DemoIndex = stagedDefinition(
+  'RobotLoadingDemoIndex', 'conveyor', INDEXING_SLOTS, ROBOT_LOADING_TIMINGS.indexCycle,
+);
+const DemoStation = stagedDefinition(
+  'RobotLoadingDemoStation', 'station', 1, ROBOT_LOADING_TIMINGS.stationProcess,
+);
+const DemoPath = stagedDefinition(
+  'RobotLoadingDemoPath', 'conveyor', FREE_FLOW_CAPACITY, ROBOT_LOADING_TIMINGS.transportTravel,
+);
+const DemoBuffer = stagedDefinition(
+  'RobotLoadingDemoBuffer', 'storage', FREE_FLOW_CAPACITY, ROBOT_LOADING_TIMINGS.bufferDwell,
+);
+
 const DemoPartSink = defineMaterialFlow<MaterialFlowSelf>({
   type: 'RobotLoadingDemoPartSink', kind: 'sink', schema: {}, continuous: {},
   des: { onAccept(self) { self.prop.throughput = Number(self.prop.throughput ?? 0) + 1; return true; } },
@@ -94,9 +212,6 @@ const DemoPartSink = defineMaterialFlow<MaterialFlowSelf>({
 const DemoEmptySink = defineMaterialFlow<MaterialFlowSelf>({
   type: 'RobotLoadingDemoEmptySink', kind: 'sink', schema: {}, continuous: {},
   des: { onAccept(self) { self.prop.throughput = Number(self.prop.throughput ?? 0) + 1; return true; } },
-});
-const DemoIdle = defineMaterialFlow<MaterialFlowSelf>({
-  type: 'RobotLoadingDemoIdle', kind: 'storage', schema: {}, continuous: {}, des: {},
 });
 
 export function createRobotLoadingDemoRuntime(
@@ -129,9 +244,10 @@ export function createRobotLoadingDemoRuntime(
     let adapter!: MaterialFlowAdapter;
     const self = createSelf(ctx, def, {
       mode: 'des',
+      local: (def.state ?? def.local)?.() ?? {},
       scheduler: runner.makeScheduler(def, () => adapter.entityId),
       mus: () => adapter?.heldMUs as unknown as ReadonlyArray<MU> ?? [],
-      onTransfer: (mu) => runner.makeTransfer(adapter)(mu),
+      onTransfer: (mu, port) => runner.makeTransfer(adapter)(mu, port),
       canAcceptDownstream: (mu) => adapter.nextComponents.some((target) => target.canAccept(mu as never)),
       spawnMU: () => runner.createMU(),
     });
@@ -140,7 +256,7 @@ export function createRobotLoadingDemoRuntime(
     return adapter;
   };
 
-  const source = bind('PalletInput-01', DemoSource as MaterialFlowDefinition);
+  const source = bind('PalletInput-01', DemoSource as unknown as MaterialFlowDefinition);
   const robot = bind('RobotHandling', DemoRobot);
   const indexing = bind('IndexingConveyor', DemoIndex);
   const station = bind('Station', DemoStation);

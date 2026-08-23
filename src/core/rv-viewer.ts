@@ -3410,6 +3410,10 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     this.replayRecordings = result.replayRecordings;
     this.logicEngine = result.logicEngine;
     this.ikPaths = result.registry.getAll<RVIKPath>('IKPath').map((record) => record.instance);
+    // Release the DES executor (IndexedDB handle, checkpoint controller,
+    // manager listeners) before dropping the kernel; a bare reference drop
+    // leaks all of them for the life of the page.
+    this._kernel?.disposeDesRunner();
     this._kernel = null;
 
     // plan-386 F17: signal binding wires model slots to LIVE external signals.
@@ -3652,6 +3656,10 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     this.statisticsManager.clear(); // Plan 201: drop prior model's registrations (components re-register on bind)
     // Plan 194 P1: invalidate the unified kernel so it rebuilds against the new
     // transportManager on the next tick.
+    // Release the DES executor (IndexedDB handle, checkpoint controller,
+    // manager listeners) before dropping the kernel; a bare reference drop
+    // leaks all of them for the life of the page.
+    this._kernel?.disposeDesRunner();
     this._kernel = null;
     this.signalStore = result.signalStore;
     // MachiningVolume reads SignalSpindleOn/SignalReset and writes
@@ -4104,6 +4112,10 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     }
     this.statisticsManager.clear(); // Plan 201: drop all component stats registrations
     // Plan 194 P1: drop the unified kernel with the model it was built against.
+    // Release the DES executor (IndexedDB handle, checkpoint controller,
+    // manager listeners) before dropping the kernel; a bare reference drop
+    // leaks all of them for the life of the page.
+    this._kernel?.disposeDesRunner();
     this._kernel = null;
 
     // Collect every model root currently parented to the scene. Normally this

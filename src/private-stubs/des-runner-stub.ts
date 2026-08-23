@@ -2,32 +2,19 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
- * des-runner-stub.ts — No-op DES runner factory for public builds (Plan 194 §2.6).
+ * des-runner-stub.ts — compatibility shim for the former injected-DES seam.
  *
- * When the private folder (realvirtual-WebViewer-Private~) is absent, Vite
- * resolves `@rv-private/plugins/des/register-des-runner` (or equivalent) to
- * this stub. `createDesRunner` is `null`, so the `SimulationKernel`
- * (`hasDesRunner()`) reports the DES mode as unavailable and the Realtime/DES
- * toggle is hidden — the viewer runs continuous-only. The private build
- * replaces this with a real factory that builds a `DESRunner`.
+ * HISTORY: the public build used to have no DES runtime at all. `RVViewer`
+ * imported `@rv-private/plugins/des/register-des-runner`, which resolved here
+ * when the private sibling was absent, exported `createDesRunner = null`, and
+ * `SimulationKernel.hasDesRunner()` therefore reported DES as unavailable.
  *
- * The type below documents the factory shape the private side provides without
- * importing anything private (keeps the public build green).
+ * TODAY (EP-DES-001) the public build ships the complete DES runtime and
+ * `RVViewer` imports `src/plugins/des/register-des-runner` directly. Nothing in
+ * the application reaches this file any more; it stays only so extension
+ * bundles compiled against the old specifier keep resolving, and it now points
+ * at the same public factory the viewer uses rather than claiming DES is absent.
  */
 
-import type {
-  SimulationExecutor,
-  SimulationTopology,
-} from '../core/material-flow/simulation-executor';
-import type { MaterialFlowDefinition } from '../core/material-flow/define-material-flow';
-import type { CoreSubsystems } from '../core/engine/rv-core-subsystems';
-
-/** Factory the private DES side provides; `null` in the public build. The
- *  optional `core` is the viewer's CoreSubsystems pipeline the DES runner
- *  composes into its tick (drives/visuals keep running at 60 Hz). */
-export type CreateDesRunner =
-  | ((defs: MaterialFlowDefinition[], topology: SimulationTopology, core?: CoreSubsystems) => SimulationExecutor)
-  | null;
-
-/** Public build: no DES runner available. */
-export const createDesRunner: CreateDesRunner = null;
+export { createDesRunner } from '../plugins/des/register-des-runner';
+export type { CreateDesRunner } from '../plugins/des/register-des-runner';

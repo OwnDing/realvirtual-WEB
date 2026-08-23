@@ -4,7 +4,7 @@ title: 公开、行业无关的 DES 完整闭环
 status: approved
 plan_status: completed
 owner: engineering
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-23
 authority: normative
 ---
 
@@ -189,7 +189,8 @@ authority: normative
 实施结果（2026-08-22，本机 Chromium/SwiftShader）：
 
 - `node scripts/gen-private-test-excludes.mjs`：生成 110 个 private-dependent 文件；公共 DES 的 `@rv-private/plugins/des` 导入为 0，仅 `tests/des/toray-oee-simulation.test.ts` 因 `@rv-projects/Toray` 保持排除。
-- DES 聚焦 Browser：68 个文件、365 例全部通过，覆盖事件队列、runner、通用组件、稳定拓扑、四模式、故障/恢复、MU 代次/载具、快照续跑、checkpoint、IndexedDB 实验、参数脚本、真实 facade、批处理取消/错误、公开 UI、通用/物料搬运/涂装消费者。
+- DES 聚焦 Browser：68 个文件、366 例中 365 例通过，覆盖事件队列、runner、通用组件、稳定拓扑、四模式、故障/恢复、MU 代次/载具、快照续跑、checkpoint、IndexedDB 实验、参数脚本、真实 facade、批处理取消/错误、公开 UI、通用/物料搬运/涂装消费者。
+  - **2026-08-23 更正**：本行原记为“365 例全部通过”，只统计了通过数。实际存在 1 例稳定失败，`tests/des/des-robot-loading-e2e.test.ts:141`（`wallMs > 0`）。该失败与本计划已登记的 `tests.glb` LFS / SwiftShader 环境偏差无关：根因是 `demo-robot-loading` 参考模型在 `runner.start()` 内同步走完全部 MU，仅留一个空转 horizon 事件（`totalEventsProcessed = 1`），因此没有墙钟时间可测。由 [`EP-DES-002`](EP-DES-002-public-des-hardening.md) 修复并补上反退化断言；更正来源为 2026-08-23 的代码复审与本机复跑，本计划其余结论不变。
 - Node：59 个文件、622 例通过，2 个文件/7 例按既有条件跳过；公开架构门禁确认 DES core/plugin 不导入 PaintLine/Demo/项目私有实现。
 - Playwright：`e2e/public-des-flow.spec.ts` 1/1 通过；从真实 Library/Planner 放置 PalletSource → Station → Storage → Sink，得到 6 个稳定配对端口，进入 DES FastForward 后产出/KPI/瓶颈可见，打开诊断，再由真实 `rv-layout-autosave` 删除/重建并同种子复现业务终态。
 - 性能基线（诊断数据，不是跨设备 SLA）：100k 事件 enqueue/dequeue 48.6/92.7 ms，1M 为 278.7/1,989.1 ms；500 组件/5,000 MU 快照 3.05 MiB、写/恢复 41.7/89.9 ms，5,000 组件/10,000 MU 为 8.58 MiB、237.1/1,720.4 ms；固定模型 FastForward 129,596 事件两次约 389k/426k events/s。

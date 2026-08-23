@@ -18,6 +18,12 @@ export class MaterialFlowAdapter extends DESComponent {
   onFailureChanged: ((adapter: MaterialFlowAdapter, failed: boolean) => void) | null = null;
   onBeforeDispatch: ((adapter: MaterialFlowAdapter, hook: string, mu: MU | null) => void) | null = null;
   onMaterialize: ((mu: DESMU) => void) | null = null;
+  /**
+   * Drop the owning runner's bookkeeping for a fired event. Named actions live
+   * in a module-global table shared by every runner, so their handlers must
+   * reach the runner through the dispatched component instead of capturing it.
+   */
+  onScheduledRecordConsumed: ((eventId: number) => void) | null = null;
   reservedLoad = 0;
   attachedProcessingTime = 0;
   frozen: FrozenDescriptor[] = [];

@@ -3,7 +3,7 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-23
 authority: normative-registry
 ---
 
@@ -25,5 +25,7 @@ authority: normative-registry
 - [`EP-PLANNER-001-paintline-assembly-mvp.md`](EP-PLANNER-001-paintline-assembly-mvp.md)：交付 Library 开箱可见、rv-ODT 1.1 稳定端口、16 项涂装线模块、数据驱动闭环行为与 autosave 冷重建黄金流程；2026-08-22 完成，保留本机 SwiftShader 全量 Browser 偏差。
 - [`EP-ASSET-001-smart-asset-editor.md`](EP-ASSET-001-smart-asset-editor.md)：交付公开智能资产编辑器；新建/打开/导入、端口/行为/信号向导、发布校验、统一保存与 Project Library 即时复用；2026-08-22 完成，并留证 LFS 夹具与 SwiftShader Browser 偏差。
 - [`EP-DES-001-public-domain-neutral-des.md`](EP-DES-001-public-domain-neutral-des.md)：交付公开、行业无关的确定性 DES 内核、通用 MaterialFlow 组件、稳定拓扑、四运行模式、诊断/KPI、快照/实验/批处理与 Planner 保存重开黄金流程；2026-08-22 完成，并留证 LFS 夹具与 SwiftShader Browser 偏差。
+
+- [`EP-DES-002-public-des-hardening.md`](EP-DES-002-public-des-hardening.md)：修复公开 DES 的快照恢复原子性与动作预注册、显式 `routeIndex` 被下游满载改道、运行时生命周期泄漏、稳定端口在缩放父链下的方向取值，并收敛每帧/取消/自动连接等热点；同时把只处理 1 个事件的机器人上下料参考负载改为真实事件流并更正 `EP-DES-001` 的浏览器证据行；2026-08-23 完成。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

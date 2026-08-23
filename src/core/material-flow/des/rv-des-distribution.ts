@@ -41,17 +41,49 @@ export class SFC32 {
   }
 }
 
-const floor = (value: number): number => Math.max(0.001, Number.isFinite(value) ? value : 0.001);
+/**
+ * Every distribution here samples a DURATION, so results are guaranteed to be
+ * at least this many seconds — a zero-length activity would let a component
+ * re-enter itself at the same simulated instant.
+ */
+export const MIN_DURATION_SECONDS = 0.001;
+
+/** Max resample attempts before a truncated draw gives up on the floor. */
+const MAX_TRUNCATION_ATTEMPTS = 32;
+
+const floor = (value: number): number => Math.max(
+  MIN_DURATION_SECONDS,
+  Number.isFinite(value) ? value : MIN_DURATION_SECONDS,
+);
 const open01 = (rng: SFC32): number => Math.max(Number.EPSILON, Math.min(1 - Number.EPSILON, rng.next()));
 
 export function exponential(rng: SFC32, mean: number): number {
   return floor(-Math.log(open01(rng)) * Math.max(0, mean));
 }
 
+/**
+ * Normal duration, TRUNCATED (resampled) below `MIN_DURATION_SECONDS` rather
+ * than clamped to it.
+ *
+ * Clamping looks harmless but it is not a normal distribution any more: it
+ * collapses the whole negative tail onto a single value, so e.g. mean 5 with
+ * sigma 10 produced a ~31% point mass at exactly 0.001 s and a mean far above
+ * the one that was asked for. Resampling keeps the shape of the surviving
+ * (positive) part of the distribution.
+ *
+ * Draws that cannot succeed — a distribution lying entirely below the floor —
+ * fall back to the floor after a bounded number of attempts, so a mis-configured
+ * model degrades instead of hanging.
+ */
 export function normal(rng: SFC32, mean: number, sigma: number): number {
-  const u1 = open01(rng);
-  const u2 = open01(rng);
-  return floor(mean + Math.abs(sigma) * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2));
+  const spread = Math.abs(sigma);
+  for (let attempt = 0; attempt < MAX_TRUNCATION_ATTEMPTS; attempt++) {
+    const u1 = open01(rng);
+    const u2 = open01(rng);
+    const sample = mean + spread * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    if (Number.isFinite(sample) && sample >= MIN_DURATION_SECONDS) return sample;
+  }
+  return MIN_DURATION_SECONDS;
 }
 
 export function uniform(rng: SFC32, min: number, max: number): number {

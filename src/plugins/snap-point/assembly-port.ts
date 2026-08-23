@@ -151,6 +151,13 @@ const _ownerWorldQ = new Quaternion();
 /**
  * Convert explicit port-node-local Direction to the owning asset's local frame.
  * Returns null for legacy ports or invalid metadata.
+ *
+ * The world rotations MUST come from `getWorldQuaternion` (which decomposes the
+ * matrix) rather than `Quaternion.setFromRotationMatrix`, whose contract is an
+ * UNSCALED rotation matrix. Snap placement explicitly permits uniform scale, and
+ * a scaled `matrixWorld` fed to `setFromRotationMatrix` collapses towards the
+ * identity: an asset scaled by 0.001 read a 45° port as ~0°, so every rv-ODT 1.1
+ * port on a scaled asset aligned to the wrong axis.
  */
 export function assemblyPortDirectionInOwner(
   node: Object3D,
@@ -159,10 +166,8 @@ export function assemblyPortDirectionInOwner(
 ): Vector3 | null {
   const resolved = resolveAssemblyPort(node, ownerRoot.name);
   if (resolved.kind !== 'port' || !resolved.port.localDirection) return null;
-  node.updateWorldMatrix(true, false);
-  ownerRoot.updateWorldMatrix(true, false);
   _portLocal.fromArray(resolved.port.localDirection);
-  _portWorldQ.setFromRotationMatrix(node.matrixWorld);
-  _ownerWorldQ.setFromRotationMatrix(ownerRoot.matrixWorld).invert();
+  node.getWorldQuaternion(_portWorldQ);
+  ownerRoot.getWorldQuaternion(_ownerWorldQ).invert();
   return out.copy(_portLocal).applyQuaternion(_portWorldQ).applyQuaternion(_ownerWorldQ).normalize();
 }

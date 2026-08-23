@@ -18,17 +18,22 @@ const center = (node: Object3D): Vector3 => {
 
 export function autoConnectByDistance(instances: readonly ConnectableInstance[]): number {
   let created = 0;
-  for (const source of instances) {
+  // `center()` walks the whole sub-tree to build a Box3, so computing it inside
+  // the inner loop made auto-connect O(n² · subtree). One pass up front instead.
+  const centers = instances.map((instance) => center(instance.root));
+  for (let i = 0; i < instances.length; i++) {
+    const source = instances[i];
     if (!source.adapter.autoConnect.enabled || source.kind === 'sink' || source.adapter.nextComponents.length > 0) continue;
-    const sourcePos = center(source.root);
+    const sourcePos = centers[i];
     const maxDistance = source.adapter.autoConnect.maxDistance;
     let best: ConnectableInstance | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
-    for (const target of instances) {
+    for (let j = 0; j < instances.length; j++) {
+      const target = instances[j];
       if (target === source || target.kind === 'source' || !target.adapter.autoConnect.enabled) continue;
       if (target.connectionType !== source.connectionType) continue;
       if (source.subType && target.subType && source.subType !== target.subType) continue;
-      const distance = sourcePos.distanceTo(center(target.root));
+      const distance = sourcePos.distanceTo(centers[j]);
       if (distance <= maxDistance && distance < bestDistance) { best = target; bestDistance = distance; }
     }
     if (!best) continue;

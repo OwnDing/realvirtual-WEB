@@ -20,6 +20,12 @@ export interface ActionContext {
   data: unknown;
   manager: DESManager;
   entityId?: number;
+  /**
+   * Heap id of the event being dispatched. Lets a handler retire per-event
+   * bookkeeping without threading the id through the event payload — which
+   * only exists when the event carries data or an unregistered MU.
+   */
+  eventId?: number;
 }
 
 export type NamedAction = (ctx: ActionContext) => void;

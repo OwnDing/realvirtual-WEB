@@ -217,14 +217,28 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
 }) {
   const { t } = useRvTranslation('sim');
   const runs = [...exp.runs].sort((a, b) => a.index - b.index);
+  const [actionError, setActionError] = useState<string | null>(null);
+  // Restoring a snapshot can legitimately fail (a checkpoint whose model no
+  // longer matches). Swallowing that into an unhandled rejection left the user
+  // staring at an unchanged panel, so every action reports here instead.
   const act = (fn: (c: SimDesControl) => Promise<void> | void) => {
     const c = ctl(); if (!c) return;
-    void (async () => { await fn(c); onAction(); })();
+    void (async () => {
+      try {
+        setActionError(null);
+        await fn(c);
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : String(e));
+      }
+      onAction();
+    })();
   };
   const snapshotNow = () => act((c) => c.saveSnapshot?.(
     { model: exp.model, exp: exp.experiment, repl: runs.length ? runs[runs.length - 1].index : 0 }));
-  const loadCheckpoint = (r: RunInfo, t: number) => act((c) => {
-    void c.loadSnapshot?.({ model: exp.model, exp: exp.experiment, repl: r.index, t });
+  const loadCheckpoint = (r: RunInfo, t: number) => act(async (c) => {
+    // Await the restore: switching to Step against a half-applied restore would
+    // present a corrupted queue as a valid resume point.
+    await c.loadSnapshot?.({ model: exp.model, exp: exp.experiment, repl: r.index, t });
     c.setSubMode('step');
   });
 
@@ -237,6 +251,12 @@ function RunsDrilldown({ exp, ctl, onAction, onClose }: {
         </Tooltip>
       }>
       <Box sx={{ height: '100%', overflow: 'auto', px: 0.5, py: 0.5 }} data-testid="des-matrix-runs-panel">
+        {actionError && (
+          <Typography data-testid="des-matrix-runs-error"
+            sx={{ color: '#ef5350', fontSize: 11, px: 1, py: 0.5 }}>
+            {t('matrix.error', { message: actionError })}
+          </Typography>
+        )}
         {runs.length === 0 && (
           <Typography sx={{ fontSize: 11, color: 'text.secondary', p: 1, textAlign: 'center' }}>
             {t('matrix.noRuns')}

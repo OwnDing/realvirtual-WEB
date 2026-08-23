@@ -10,6 +10,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  MIN_DURATION_SECONDS,
   SFC32,
   exponential,
   normal,
@@ -132,5 +133,44 @@ describe('DESDistribution', () => {
 
     const correlation = cov / Math.sqrt(varA * varB);
     expect(Math.abs(correlation)).toBeLessThan(0.05);
+  });
+});
+
+describe('EP-DES-002 M6 — normal() truncates instead of clamping', () => {
+  /**
+   * Clamping the negative tail onto the floor turns the distribution into a
+   * point mass: with mean 5 / sigma 10 roughly a third of all draws landed on
+   * exactly 0.001 s, dragging the reported mean well above the configured one.
+   */
+  it('does not pile a third of the samples onto the floor', () => {
+    const rng = new SFC32(2026);
+    const N = 20_000;
+    let onFloor = 0;
+    let sum = 0;
+    for (let i = 0; i < N; i++) {
+      const v = normal(rng, 5, 10);
+      if (v <= MIN_DURATION_SECONDS) onFloor++;
+      sum += v;
+    }
+    expect(onFloor / N).toBeLessThan(0.01);
+    // A normal truncated at ~0 has a mean ABOVE its nominal one, never below.
+    expect(sum / N).toBeGreaterThan(5);
+    expect(sum / N).toBeLessThan(11);
+  });
+
+  it('keeps the shape when the floor is far away', () => {
+    const rng = new SFC32(7);
+    const N = 20_000;
+    let sum = 0;
+    for (let i = 0; i < N; i++) sum += normal(rng, 30, 2);
+    expect(sum / N).toBeGreaterThan(29.5);
+    expect(sum / N).toBeLessThan(30.5);
+  });
+
+  it('falls back to the floor for a distribution entirely below it', () => {
+    const rng = new SFC32(11);
+    for (let i = 0; i < 50; i++) {
+      expect(normal(rng, -1000, 0.0001)).toBe(MIN_DURATION_SECONDS);
+    }
   });
 });

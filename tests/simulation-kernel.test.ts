@@ -6,7 +6,8 @@
  *
  * Verifies the `SimulationKernel`:
  *  - default mode is 'continuous'; activeExecutor is the continuous runner.
- *  - hasDesRunner() is false with the public stub (createDesRunner = null).
+ *  - hasDesRunner() reflects the injected factory; the public build now ships
+ *    a real DES factory, and `null` still means continuous-only.
  *  - setMode('des') is a guarded no-op when no DES runner is registered.
  *  - rapid-toggle / same-mode guard (W4/W5).
  *  - setMode is try/catch-wrapped — a throwing executor never wedges the toggle.
@@ -61,12 +62,24 @@ describe('SimulationKernel — defaults & DES availability', () => {
     expect(k.activeExecutor.mode).toBe('continuous');
   });
 
-  it('hasDesRunner() is false with the public stub (createDesRunner === null)', () => {
-    expect(createDesRunner).toBe(null);
+  it('hasDesRunner() is true with the public DES factory (EP-DES-001)', () => {
+    // The former community stub exported `null` because the public build had no
+    // DES runtime. It ships one now, and the compatibility path re-exports the
+    // real factory rather than claiming DES is unavailable.
+    expect(createDesRunner).not.toBe(null);
     const k = new SimulationKernel({
       continuousRunner: makeContinuousRunner(),
       topology: TOPO,
       desRunnerFactory: createDesRunner,
+    });
+    expect(k.hasDesRunner()).toBe(true);
+  });
+
+  it('hasDesRunner() is false for an explicitly continuous-only composition', () => {
+    const k = new SimulationKernel({
+      continuousRunner: makeContinuousRunner(),
+      topology: TOPO,
+      desRunnerFactory: null,
     });
     expect(k.hasDesRunner()).toBe(false);
   });
@@ -87,7 +100,7 @@ describe('SimulationKernel — setMode guards (public / no DES runner)', () => {
     const k = new SimulationKernel({
       continuousRunner: runner,
       topology: TOPO,
-      desRunnerFactory: createDesRunner,
+      desRunnerFactory: null,
     });
     k.setMode('des');
     expect(k.mode).toBe('continuous');

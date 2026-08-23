@@ -69,6 +69,12 @@ function expectCleanCompletedRun(
   expect(result.activeReservations).toBe(0);
   expect(result.horizonReached).toBe(true);
   expect(Object.values(result.componentLoads).every((load) => load === 0)).toBe(true);
+  // Anti-degeneracy guard (EP-DES-002 M2). Every count above is also satisfied
+  // by a layout that walks all MUs to the sink synchronously inside start() and
+  // parks one no-op event on the horizon — which is exactly what this reference
+  // load used to do (totalEventsProcessed === 1). A reference LOAD has to move
+  // its material through the event queue, so demand at least one event per MU.
+  expect(result.totalEventsProcessed).toBeGreaterThan(expected.totalMUs);
 }
 
 describe('DES robot-loading reference layout (plan-297 Phase 7)', () => {

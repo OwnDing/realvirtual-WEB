@@ -91,6 +91,52 @@ ensureAction(DOWNTIME_REPAIR, ({ manager, entityId }) => {
   manager.scheduleIn(config.mtbf, DOWNTIME_FAIL, owner.entityId);
 });
 
+/**
+ * Register (once) the named action that fires one `${def.type}.${hook}` model
+ * event and return its name.
+ *
+ * `ACTION_BY_INDEX` is a module-global table that is never cleared, so the
+ * handler must not close over a `DESRunner`: the first runner to touch a hook
+ * would otherwise be pinned for the page's lifetime AND every later runner
+ * would reuse its closure, writing bookkeeping into the wrong instance. Both
+ * the component and the owning runner are reached through the dispatch context.
+ */
+function ensureHookAction(def: MaterialFlowDefinition, hook: string): string {
+  const action = `${def.type}.${hook}`;
+  ensureAction(action, ({ manager, entityId: id, muId, data: raw, eventId }) => {
+    const adapter = manager.getComponent(id ?? -1);
+    if (!(adapter instanceof MaterialFlowAdapter)) return;
+    const payload = raw as ScheduledPayload | null;
+    const resolved = muId >= 0 ? manager.getMU(muId) : payload?.mu ?? null;
+    // Retire the record for EVERY fired event, not only the ones that happen to
+    // carry a payload: a registered MU with no data produces no payload at all,
+    // so those records used to accumulate for the whole run.
+    const retiring = eventId ?? payload?.eventId;
+    if (retiring !== undefined) adapter.onScheduledRecordConsumed?.(retiring);
+    adapter.dispatchHook(hook, resolved as unknown as MU | null, payload?.data);
+    if (adapter.attachedProcessingTime > 0 && adapter.self.state === 'Processing') adapter.setState('Working');
+  });
+  return action;
+}
+
+/**
+ * Eagerly register every hook a definition can schedule.
+ *
+ * Lazy registration on first `schedule()` is not enough for snapshot restore:
+ * `DESManager.restore()` resolves persisted action NAMES back to indices, so a
+ * checkpoint taken in an earlier session would fail to load until the very hook
+ * it references happened to fire again. Definitions declare their hooks as
+ * `on<Name>` keys, which is exactly the set `dispatchHook` can reach.
+ */
+export function registerDefinitionHookActions(def: MaterialFlowDefinition): void {
+  const des = def.des as Record<string, unknown> | undefined;
+  if (!des) return;
+  for (const key of Object.keys(des)) {
+    if (!key.startsWith('on') || key.length < 3 || typeof des[key] !== 'function') continue;
+    ensureHookAction(def, key.slice(2));
+  }
+}
+
 interface ScriptComponentSourceEntry {
   path: string;
   adapter: {
@@ -171,16 +217,7 @@ export class DESRunner implements SimulationExecutor {
   makeScheduler(def: MaterialFlowDefinition, entityId: () => number): SelfScheduler {
     const runner = this;
     const schedule = (time: number, hook: string, mu?: MU | null, data?: unknown): number => {
-      const action = `${def.type}.${hook}`;
-      ensureAction(action, ({ manager, entityId: id, muId, data: raw }) => {
-        const adapter = manager.getComponent(id ?? -1);
-        if (!(adapter instanceof MaterialFlowAdapter)) return;
-        const payload = raw as ScheduledPayload | null;
-        const resolved = muId >= 0 ? manager.getMU(muId) : payload?.mu ?? null;
-        if (payload?.eventId !== undefined) this.scheduledRecords.delete(payload.eventId);
-        adapter.dispatchHook(hook, resolved as unknown as MU | null, payload?.data);
-        if (adapter.attachedProcessingTime > 0 && adapter.self.state === 'Processing') adapter.setState('Working');
-      });
+      const action = ensureHookAction(def, hook);
       const registeredMu = mu && typeof mu.id === 'number'
         ? this.manager.getMU(mu.id)
         : null;
@@ -215,6 +252,8 @@ export class DESRunner implements SimulationExecutor {
       this.warnIfUnsettled(`${target.def.type}.${hook}`, target.def, mu as DESMU | null);
     };
     adapter.onMaterialize = (mu) => { if (!this.headlessSpawnActive) void this.materializeMu(mu); };
+    adapter.onScheduledRecordConsumed = (eventId) => { this.scheduledRecords.delete(eventId); };
+    registerDefinitionHookActions(def);
     this.liveInstances.push({ def, self, adapter });
     if (this.manager.components.length > 0) {
       this.manager.registerComponent(adapter);
@@ -240,6 +279,11 @@ export class DESRunner implements SimulationExecutor {
     this.checkpoints = null;
     releaseAllAxes();
     if (this.liveInstances.length === 0 && _topology.host) bindSceneToRunner(this, _topology.root, _topology.host);
+    // Register every schedulable hook BEFORE a restore can be requested, so a
+    // checkpoint written in an earlier session resolves its persisted action
+    // names instead of failing on a hook that has not fired yet.
+    for (const def of _defs) registerDefinitionHookActions(def);
+    for (const instance of this.liveInstances) registerDefinitionHookActions(instance.def);
     for (const instance of this.liveInstances) instance.def.reset?.(instance.self);
     this.manager.reset();
     this.pendingConsumed.length = 0;
@@ -349,9 +393,22 @@ export class DESRunner implements SimulationExecutor {
     this.experimentStore = null;
     if (store) void store.close().catch(() => {});
     this.clearMUs();
+    for (const instance of this.liveInstances) {
+      instance.adapter.onConsumed = null;
+      instance.adapter.onFailureChanged = null;
+      instance.adapter.onBeforeDispatch = null;
+      instance.adapter.onMaterialize = null;
+      instance.adapter.onScheduledRecordConsumed = null;
+    }
     this.liveInstances.length = 0;
     this.manager.components.length = 0;
     this.manager.onTimeAdvance = null;
+    this.manager.onMURetired = null;
+    this.scheduledRecords.clear();
+    this.tweens.clear();
+    this.pendingConsumed.length = 0;
+    this.visualFactories.clear();
+    this.scriptComponentSource = null;
     this._topology = null;
   }
 
@@ -626,10 +683,20 @@ export class DESRunner implements SimulationExecutor {
         : port?.ownerComponent instanceof MaterialFlowAdapter
           ? port.ownerComponent
           : from.nextComponents.find((next) => next.node === port?.ownerRoot);
-      const candidates = (explicit ? [explicit] : from.nextComponents).filter((next) => next.canAccept(typed));
-      const routeIndex = typeof typed.prop.routeIndex === 'number' ? Math.max(0, Math.floor(typed.prop.routeIndex)) : 0;
+      const pool = explicit ? [explicit] : from.nextComponents;
+      const candidates = pool.filter((next) => next.canAccept(typed));
+      const routeIndex = typeof typed.prop.routeIndex === 'number' ? Math.max(0, Math.floor(typed.prop.routeIndex)) : null;
       delete typed.prop.routeIndex;
-      const target = from.onSelectNext?.(candidates, typed) ?? candidates[routeIndex] ?? candidates[0];
+      // An explicit routeIndex names a LANE in the declared topology, so it must
+      // be resolved against `pool` — never against the availability-filtered
+      // list. Indexing the filtered list meant a busy lane silently diverted the
+      // MU to whichever neighbour happened to be free (a part into the empty-
+      // carrier sink, an empty carrier into the part line). A configured but
+      // busy lane is back-pressure and must block. An OUT-OF-RANGE index still
+      // falls back, because that means the lane was never wired up at all.
+      const lane = routeIndex !== null && routeIndex < pool.length ? pool[routeIndex] : null;
+      const target = from.onSelectNext?.(candidates, typed)
+        ?? (lane ? (lane.canAccept(typed) ? lane : null) : candidates[0] ?? null);
       if (!target) { typed.isBlocked = true; from.setState('Blocked'); return; }
       if (target.acceptMU(typed)) {
         from.totalProcessed++;
@@ -926,7 +993,7 @@ export class DESRunner implements SimulationExecutor {
 
   private freezeAdapter(adapter: MaterialFlowAdapter): void {
     this.tweens.settle(this.manager.currentTime, 'event', false);
-    const events = this.manager.getEventQueueSnapshot().filter((event) => event.entityId === adapter.entityId);
+    const events = this.manager.getEventQueueSnapshotForEntity(adapter.entityId);
     const activeTweens = this.tweens.toSnapshot();
     const selectedMuIds = new Set<number>();
     for (const event of events) {

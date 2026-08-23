@@ -59,6 +59,8 @@ export interface DESManagerComponentLike {
   path: string;
   attachManager(manager: DESManager): void;
   resetStatistics(): void;
+  /** Re-derive the component's private RNG stream from the master seed. */
+  reseedRandom?(): void;
   snapshotState?(): unknown;
   restoreState?(state: unknown, mus?: Map<number, DESMU>): void;
 }
@@ -111,9 +113,17 @@ export class DESManager {
   get totalEventsProcessed(): number { return this.processedEventCount; }
   get activeReservationCount(): number { return this.reservations.size; }
   get hasScheduledCheckpoint(): boolean { return this.checkpointEventId !== null; }
+  /**
+   * Earliest pending MODEL event, ignoring the checkpoint system event.
+   *
+   * The runner reads this (twice, via `isComplete`) on every frame, so it must
+   * not clone-and-sort the heap: at 50k pending events that cost ~2.4 ms per
+   * frame in pure allocation and sorting.
+   */
   get nextModelEventTime(): number {
-    return this.queue.snapshot().find((event) => event.actionIndex !== CHECKPOINT_ACTION_INDEX)?.time
-      ?? Number.POSITIVE_INFINITY;
+    return this.checkpointEventId === null
+      ? this.queue.peekTime
+      : this.queue.peekTimeExcludingAction(CHECKPOINT_ACTION_INDEX);
   }
   get isComplete(): boolean {
     return this.currentTime >= this.duration || this.nextModelEventTime > this.duration;
@@ -138,8 +148,16 @@ export class DESManager {
   }
 
   getComponent(entityId: number): DESManagerComponentLike | undefined { return this.components[entityId]; }
+  /**
+   * Exact path first, then the leaf-name fallback. Testing both in ONE pass let
+   * an earlier component whose path merely ENDS with the query win over the
+   * component whose path actually equals it.
+   */
   getComponentByPath(path: string): DESManagerComponentLike | undefined {
-    return this.components.find((component) => component.path === path || component.path.endsWith(`/${path}`));
+    const exact = this.components.find((component) => component.path === path);
+    if (exact) return exact;
+    const suffix = `/${path}`;
+    return this.components.find((component) => component.path.endsWith(suffix));
   }
 
   registerMU(mu: DESMU): void {
@@ -158,7 +176,9 @@ export class DESManager {
   }
 
   createMU(): DESMU {
-    const id = this.freeMuIds.shift() ?? this.nextMuId++;
+    // `freeMuIds` is kept DESCENDING so reclaiming the lowest free id — which is
+    // what makes id assignment reproducible — is a pop() rather than a shift().
+    const id = this.freeMuIds.pop() ?? this.nextMuId++;
     const generation = this.generationCounters.get(id) ?? 0;
     const mu = createDESMUAt(id, generation, this.currentTime);
     this.registerMU(mu);
@@ -205,7 +225,11 @@ export class DESManager {
   restoreReservations(records: readonly ReservationRecord[], nextId?: number): void {
     this.reservations.clear();
     for (const record of records) if (record.state === 'reserved') this.reservations.set(record.id, structuredClone(record));
-    this.nextReservationId = Math.max(nextId ?? 1, ...[...this.reservations.keys()].map((id) => id + 1), 1);
+    // Reduce, never spread: a large reservation set would overflow the call
+    // stack of `Math.max(...array)`.
+    let highestReservation = Math.max(nextId ?? 1, 1);
+    for (const id of this.reservations.keys()) highestReservation = Math.max(highestReservation, id + 1);
+    this.nextReservationId = highestReservation;
   }
   getNextReservationId(): number { return this.nextReservationId; }
   retireMU(mu: DESMU): void {
@@ -239,6 +263,9 @@ export class DESManager {
     if (!Number.isFinite(seed)) throw new Error('DES seed must be finite');
     this.masterSeed = seed >>> 0;
     this.rng = new SFC32(this.masterSeed);
+    // Component streams are derived from the master seed, so they must follow
+    // it — otherwise every replication shares the first run's component draws.
+    for (const component of this.components) component.reseedRandom?.();
     this.statResetApplied = false;
   }
 
@@ -298,10 +325,19 @@ export class DESManager {
   }
 
   cancelEvent(id: number): boolean {
-    const event = this.queue.snapshot().find((candidate) => candidate.id === id);
+    const event = this.queue.find(id);
     const cancelled = this.queue.cancel(id);
     if (cancelled && event && event.muId >= 0) this.releaseEventRef(event.muId);
     return cancelled;
+  }
+
+  /** Ordered live events belonging to one component, without cloning the heap. */
+  getEventQueueSnapshotForEntity(entityId: number): DESEventQueueEntry[] {
+    return this.queue.snapshotWhere((event) => event.entityId === entityId).map((event) => ({
+      ...event,
+      actionName: getActionName(event.actionIndex),
+      cancelled: false,
+    }));
   }
 
   processAnimated(deltaSeconds: number): number {
@@ -396,6 +432,33 @@ export class DESManager {
       && snapshot.version !== 1 && snapshot.version !== 2 && snapshot.version !== 3)) {
       throw new Error(`unsupported DES snapshot version: ${String(snapshot?.version)}`);
     }
+    // PARSE PHASE — every input that can be rejected is resolved here, BEFORE a
+    // single field of this manager changes. A snapshot naming an action this
+    // session never registered (a checkpoint reopened in a fresh page) used to
+    // throw halfway through and leave the clock advanced over an empty queue.
+    const parsedEvents = (snapshot.events ?? [])
+      .filter(({ action }) => action !== CHECKPOINT_ACTION)
+      .map((raw, index) => {
+        const componentPath = 'componentPath' in raw ? raw.componentPath : undefined;
+        return {
+          id: raw.id ?? index,
+          time: raw.time,
+          entityId: raw.entityId
+            ?? (componentPath ? this.getComponentByPath(componentPath)?.entityId : undefined)
+            ?? -1,
+          muId: raw.muId,
+          priority: raw.priority,
+          ...('data' in raw && raw.data !== undefined ? { data: raw.data } : {}),
+          actionIndex: getActionIndex(raw.action),
+        };
+      });
+    for (const event of parsedEvents) {
+      if (!Number.isFinite(event.time) || event.time < 0) {
+        throw new Error(`invalid DES event time: ${event.time}`);
+      }
+    }
+
+    // COMMIT PHASE — from here on nothing may throw on snapshot content.
     this.currentTime = finiteOr(snapshot.currentTime, 0);
     this.duration = snapshot.duration === Number.POSITIVE_INFINITY ? snapshot.duration : finiteOr(snapshot.duration, Number.POSITIVE_INFINITY);
     this.processedEventCount = finiteOr(
@@ -422,35 +485,34 @@ export class DESManager {
     for (let id = 0; id < (snapshot.muGenerationCounters?.length ?? 0); id++) {
       this.generationCounters.set(id, snapshot.muGenerationCounters![id] ?? 0);
     }
-    this.nextMuId = Math.max(snapshot.nextMuId ?? 0, ...[...this.mus.keys()].map((id) => id + 1), 0);
-    for (let id = 0; id < this.nextMuId; id++) if (!this.mus.has(id)) this.freeMuIds.push(id);
+    let highestMuId = Math.max(snapshot.nextMuId ?? 0, 0);
+    for (const id of this.mus.keys()) highestMuId = Math.max(highestMuId, id + 1);
+    this.nextMuId = highestMuId;
+    // Descending, to match the pop()-the-lowest-id contract of `createMU`.
+    for (let id = this.nextMuId - 1; id >= 0; id--) if (!this.mus.has(id)) this.freeMuIds.push(id);
     setDESMUCounter(this.nextMuId);
+    // One index for the whole pass: `getComponentByPath` is linear, so looking
+    // each entry up individually made restore quadratic in component count.
+    const byExactPath = new Map<string, DESManagerComponentLike>();
+    for (const component of this.components) {
+      if (!byExactPath.has(component.path)) byExactPath.set(component.path, component);
+    }
     for (const entry of snapshot.componentStates ?? []) {
-      const component = this.getComponentByPath(entry.path);
+      const component = byExactPath.get(entry.path) ?? this.getComponentByPath(entry.path);
       if (!component) { console.warn(`[DES] snapshot component not found: ${entry.path}`); continue; }
       component.restoreState?.(entry.state, this.mus);
     }
-    const restoredEvents: DESEvent[] = (snapshot.events ?? [])
-      .filter(({ action }) => action !== CHECKPOINT_ACTION)
-      .map((raw, index) => {
-        const componentPath = 'componentPath' in raw ? raw.componentPath : undefined;
-        return {
-          id: raw.id ?? index,
-          time: raw.time,
-          entityId: raw.entityId
-            ?? (componentPath ? this.getComponentByPath(componentPath)?.entityId : undefined)
-            ?? -1,
-          muId: raw.muId,
-          priority: raw.priority,
-          ...('data' in raw && raw.data !== undefined ? { data: raw.data } : {}),
-          actionIndex: getActionIndex(raw.action),
-        };
-      });
+    const restoredEvents: DESEvent[] = parsedEvents;
     this.checkpointEventId = null;
     this.queue.restore(restoredEvents);
     for (const event of restoredEvents) {
       if (event.muId >= 0) this.pendingMuEventRefs.set(event.muId, (this.pendingMuEventRefs.get(event.muId) ?? 0) + 1);
     }
+    // A restore rewinds the clock, so both once-per-run latches must re-arm:
+    // otherwise the warm-up statistics baseline is never re-applied and a run
+    // resumed past its previous completion never reports completing again.
+    this.statResetApplied = false;
+    this.completeNotified = false;
   }
 
   private processUntil(target: number, maxEvents: number, advanceToTarget: boolean): number {
@@ -499,6 +561,7 @@ export class DESManager {
         data: event.data ?? null,
         manager: this,
         entityId: event.entityId,
+        eventId: event.id,
       });
       this.processedEventCount++;
     } finally {
@@ -533,11 +596,26 @@ export class DESManager {
     this.mus.delete(mu.id);
     const nextGeneration = mu.generation + 1;
     this.generationCounters.set(mu.id, nextGeneration);
-    if (!this.freeMuIds.includes(mu.id)) {
-      this.freeMuIds.push(mu.id);
-      this.freeMuIds.sort((a, b) => a - b);
-    }
+    insertFreeMuId(this.freeMuIds, mu.id);
   }
+}
+
+/**
+ * Insert into a DESCENDING free-id list, skipping duplicates.
+ *
+ * Retiring used to `includes()` then `sort()` the whole list on every MU, so a
+ * run that recycles N units paid O(N² log N) in bookkeeping alone.
+ */
+function insertFreeMuId(list: number[], id: number): void {
+  let low = 0;
+  let high = list.length;
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+    if (list[mid] > id) low = mid + 1;
+    else high = mid;
+  }
+  if (list[low] === id) return;
+  list.splice(low, 0, id);
 }
 
 function finiteOr(value: unknown, fallback: number): number {

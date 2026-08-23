@@ -456,12 +456,31 @@ export class SimulationKernel {
     this._active.reset();
   }
 
+  /**
+   * Tear down the DES executor and fall back to continuous, WITHOUT touching
+   * the continuous runner.
+   *
+   * Callers that invalidate the kernel on a model switch used to just drop the
+   * reference. That was inert while the public build had no DES factory, but a
+   * real runner owns an open IndexedDB connection, a checkpoint controller and
+   * a manager reset listener — none of which a dropped reference releases. The
+   * continuous runner is left alone here because its transport manager may
+   * already have been re-pointed at the incoming model.
+   */
+  disposeDesRunner(): void {
+    if (!this._desRunner) return;
+    const runner = this._desRunner;
+    this._desRunner = null;
+    if (this._active === runner) {
+      this._active = this.continuousRunner;
+      this._mode = 'continuous';
+    }
+    try { runner.dispose(); } catch (e) { console.error('[SimulationKernel] DES runner dispose threw:', e); }
+  }
+
   /** Tear down both executors (viewer dispose). */
   dispose(): void {
     try { this.continuousRunner.dispose(); } catch { /* ignore */ }
-    if (this._desRunner) {
-      try { this._desRunner.dispose(); } catch { /* ignore */ }
-      this._desRunner = null;
-    }
+    this.disposeDesRunner();
   }
 }

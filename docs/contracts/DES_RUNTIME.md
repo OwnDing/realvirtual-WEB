@@ -3,7 +3,7 @@ doc_id: CONTRACT-DES-RUNTIME-001
 title: DES 公开运行时与快照契约
 status: approved
 owner: architecture
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-23
 authority: normative
 ---
 
@@ -39,6 +39,8 @@ authority: normative
 - 父子/载具关系以 `childMUs`、`parentMU` 的 `MuRef` 为权威；`runtimeChildren` 仅为运行时投影。
 - 容量由 `currentLoad + reservedLoad <= MaxCapacity` 约束。多 MU 交接必须先预约并原子提交；任何部分失败都完整回滚。
 - 已配对稳定端口和显式逻辑连接优先于距离自动连接。输出端口只能连接兼容输入；没有目标、满容量和故障目标必须形成可观察阻塞或诊断。
+- 移交时的显式 `routeIndex` 按**声明拓扑**（`nextComponents`，或端口指定的唯一目标）解析，不按“当前可接收”的子集解析。被寻址的下游满载或故障时，MU 必须阻塞并被上游观察到，不得改投其他下游。索引越界（该车道根本没有配置）保留历史回退：选择第一个可接收的下游。未设置 `routeIndex` 时行为不变。
+- 模型动作名在组件定义绑定时即注册，不等到首次调度。快照只持久化动作名，因此恢复必须能在任何新会话解析它们；解析失败时恢复整体失败且管理器状态不变。
 - `canAccept`/`onDownstreamReady` 是 DES 回压权威。`Flow.*` 信号继续服务连续仿真与工业观测，不能替代确定性交接。
 - Sink 在接受后立即释放逻辑容量并统计产出；视觉销毁可延迟到安全渲染阶段，但不能造成线尾死锁。
 
