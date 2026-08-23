@@ -23,6 +23,7 @@ authority: normative
 - 本机浏览器门禁与 CI 使用同一浏览器与同一结论；
 - OD-005 的落地：required checks 与分支保护策略；
 - 针对"断言从未执行"这一失效类别的守卫模式与既有用例排查。
+- 修复大规模 Browser Mode 套件的 CI 基础设施抖动，同时保持 Browser Gate required、全量和失败关闭。
 
 ## Non-goals
 
@@ -53,6 +54,8 @@ authority: normative
 
 - CI 历史：`f012911` 与 `2c42c21` 的 Browser Gate 因 `tests/des-workspace-coupling.test.ts` 连续两次红，两个提交仍被推入 `develop`——`main`/`develop` 无 branch protection、无 required checks（OD-005）。
 - 最近四个功能提交中有四处"测试从未执行"：参考负载只处理 1 个事件、编辑器 E2E 缺 GL 参数卡在等 canvas、耦合测试的假 viewer 抛错、事件队列 overlay 从未注册。四处均已由 [`EP-DES-002`](../completed/EP-DES-002-public-des-hardening.md) 修复，但失效**类别**没有守卫。
+- 文档 PR #1（commit `d24936d`）只改 3 个治理文档，Browser Gate run `32625669475` 的两次 attempt 都在 `tests/commissioning-trust-activation.test.ts` 导入阶段失败：一次是 dynamic module fetch，一次是 Vitest runner 无法找到；两次均已有 **1,025 文件 / 10,822 例通过**，没有断言失败。包含同一文档提交的 PR #2（commit `53642db`）随后在 run `32625805452` 中五项 Gate 全绿，同一文件 33/33、全量 1,031 文件 / 10,869 例通过。证据指向 Browser runner/Chromium 生命周期，而不是文档或该测试的确定性回归。
+- 当前锁定 Vitest / `@vitest/browser-playwright` `4.0.18`。上游 [`vitest-dev/vitest#9437`](https://github.com/vitest-dev/vitest/issues/9437) 记录了 Ubuntu 24.04 + Chromium 在大型 Browser Mode 套件中保留已删除临时文件、最终以动态导入/iframe 错误失败的同形态问题；修复 [`#10912`](https://github.com/vitest-dev/vitest/pull/10912) 只进入 Vitest 5 RC。当前计划不把 required gate 押在 RC 升级或本地复刻上游补丁上。
 
 ## State Ownership and Compatibility
 
@@ -65,6 +68,7 @@ authority: normative
 - `e2e/`
 - `.github/workflows/`
 - `scripts/verify.sh`
+- `scripts/run-browser-gate.{mjs,d.mts}`
 - `docs/`
 - `tests/`
 - `scripts/gen-private-test-excludes.{mjs,d.mts}`
@@ -116,16 +120,27 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 验证：`npx vitest run --config vitest.node.config.ts tests/e2e-suite-runnable.node.test.ts`
 
+### M4 — 大型 Browser Gate 稳定性
+
+保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/2`、`2/2` 两个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第三个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。
+
+失败语义不变：任一 shard 或性能套件非零即整项 Browser Gate 非零；不使用 retry、`continue-on-error`、`passWithNoTests`、changed/related 子集，也不从分支保护 required checks 中移除 Browser Gate。
+
+本地验收：门禁 runner 结构自检通过；至少两轮完整 `./scripts/verify.sh browser` 通过。远程验收：同一提交至少 3 次 fresh Browser Gate 全绿并保留诊断日志；需要独立的 push/PR 授权后执行。
+
 ## Progress
 
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
+- [~] M4 Browser Gate 稳定性（本地实现与两轮完整门禁通过；远程 fresh-run 证据待 push/PR 授权）
 
 ## Surprises & Discoveries
 
 - 根因不是 SwiftShader 本身，而是 **Playwright 默认的 `chromium-headless-shell` 没有 GPU 栈**。Linux 上这一点不可见（ANGLE 回落到可用的软件光栅），macOS 上回落到 SwiftShader-on-Vulkan 并以 `BindToCurrentSequence failed` 失败。此前所有 ExecPlan 把它记为"SwiftShader 上下文耗尽"，方向是错的——单跑同样失败，与并发无关。此处更正该归因；历史计划中的记录保持原样，它们描述的是当时观测到的现象。
 - `@vitest/browser-playwright` 的启动选项属于 `playwright()` **provider**，不是 `instances[]` 的条目。把 `launch` 或 `launchOptions` 写在 instance 上**类型检查通过、静默无效**——本计划前两次尝试正是因此失败。这本身就是本计划要防的失效类别（配置看起来对，实际什么都没做）。
+- PR #1 的两次失败虽然落在同一测试文件，但错误文本不同、都发生在 import/runner 层；PR #2 对同一提交内容的同一文件 33/33 通过。按文件名追业务断言无法解释这组证据。
+- Vitest 4 的同形态上游问题与当前失败都发生在大套件接近结束时。通过测试级 retry 只会继续使用受污染的 Chromium 生命周期；进程边界才能释放被 Chromium 持有的资源。
 
 ## M3 中间结果（2026-08-23）
 
@@ -173,6 +188,8 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 | 2026-08-23 | e2e 私有依赖采用方案 A（生成排除列表），不迁仓、不让 spec 自行 skip | 用户当前明确指令"同意 A" | 与单元测试同一套已验证机制；自行 skip 会把"没跑"伪装成"通过"，正是本计划要消灭的那类 |
 | 2026-08-23 | 追加保护 `develop`，配置与 `main` 一致 | 用户当前明确指令，在被告知"仅保护 main 不阻止触发证据重演"之后 | 两个分支自此都不接受直接 push；所有改动走特性分支 + PR，等五项 Gate 全绿。这是本计划目标的实际达成点 |
 | 2026-08-23 | 分支保护不要求 PR review | 单人仓库无法自审 | 要求 review 会使 `main` 完全不可合入；required checks 与 review 是两件事，前者已全选 |
+| 2026-08-23 | 选择方案 A，专项修复 Browser Gate，不临时移除 required，也不靠重跑碰绿 | 用户当前明确指令“按照A来，帮我全部完成” | required 语义保持不变；修复、结构自检、资源证据和重复验证属于本计划 M4 |
+| 2026-08-23 | Vitest 4 主套件采用两个顺序、独立进程的确定性 shard | 上游根因证据 + 当前 PR 对照证据 | 不升级到 Vitest 5 RC，不 backport 上游内部实现；无重试、无跳过，两个 shard 并集仍覆盖完整主套件 |
 
 ## Validation
 
@@ -186,10 +203,17 @@ M1/M3（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - M3 方案 A：`tests/private-test-excludes.node.test.ts` 6/6；e2e 收集 82 例 / 25 文件；全量 63 通过 / 13 失败 / 6 跳过 / 0 未运行。
 - 未验证：剩余 13 个 e2e 失败尚未逐条归因。**不声称 e2e 套件通过。**
 
+M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
+
+- `npx vitest run --config vitest.node.config.ts tests/browser-gate-runner.node.test.ts`：**4/4**；守住两个互补 shard、隔离性能套件、无 retry/子集/false-green、workflow 仍从 `Browser Gate` 调用失败关闭入口，以及 `.mjs`/`.d.mts` 导出一致。
+- 两轮完整 `./scripts/verify.sh browser` 均退出 0；每轮的 `1/2`、`2/2` 两个主套件进程和隔离性能进程全部通过。第二 shard 两轮均为 **514 文件 / 5,395 例通过**（另 2 skip、1 todo），性能套件均 11/11；第二轮使用 `CI=1`，临时盘最低值 54.36 GiB。
+- `./scripts/verify.sh governance`、`static`、`node`、`build` 均通过；Node 为 **61 文件 / 633 例通过**（另 2 文件 / 7 例按既有条件 skip）。
+- 远程 fresh-run 尚未执行：当前实现位于本地分支 `codex/browser-gate-stability`，未获独立 commit/push/PR 授权，不把本地结论冒充 GitHub Actions 结论。
+
 ## Rollback
 
-M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动，`git revert` 即可回到 headless shell；不影响 `dist/`、运行时或任何产物。
+M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚时恢复 `scripts/verify.sh` 原 browser 段、删除 `scripts/run-browser-gate.mjs` 与对应 Node 守卫、移除 workflow 诊断环境变量即可；两者都不影响 `dist/`、运行时或产品契约。
 
 ## Outcomes & Retrospective
 
-M1 完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，新暴露的 e2e 基线（24 失败中 13 未归因）与私有依赖排除机制待后续。M2 未开始，待用户决定分支保护策略。
+M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 已实现本地修复并完成两轮完整门禁验证；达到远程验收前保持 active，不声称 CI flake 已被远程关闭。
