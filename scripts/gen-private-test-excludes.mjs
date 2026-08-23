@@ -20,14 +20,32 @@
  * The list is GENERATED — never edit it by hand. Run `node scripts/gen-private-test-excludes.mjs`
  * after adding or removing a private import in a test; the guard test
  * `tests/private-test-excludes.node.test.ts` fails when the list drifts.
+ *
+ * ── e2e (EP-GOV-004 M3) ────────────────────────────────────────────────
+ * Playwright specs need the SAME treatment and never had it, so a public
+ * checkout could not run the e2e suite green: 11 of its 24 failures were four
+ * specs reaching for `/src/plugins/asset-editor/…`, a directory that exists
+ * only in the private sibling.
+ *
+ * Their dependency looks different from a unit test's. A spec does not import
+ * the private module — the BROWSER does, through the Vite dev server, from a
+ * string like `import('/src/plugins/asset-editor/pending-open-store.ts')`. So
+ * `isPrivateSpecifier` cannot see it. The honest test is simply whether the
+ * file is there: an in-page `/src/…` path with nothing behind it can never
+ * load, whatever the reason. That also catches a plain typo or a module that
+ * was moved, which is the failure class this milestone exists for.
+ *
+ * Output is `e2e/private-dependent-specs.json`, consumed by
+ * `playwright.config.ts` as `testIgnore` when the private sibling is absent.
  */
 
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const LIST_PATH = join(ROOT, 'tests', 'private-dependent-tests.json');
+const E2E_LIST_PATH = join(ROOT, 'e2e', 'private-dependent-specs.json');
 const TSCONFIG_PATH = join(ROOT, 'tsconfig.json');
 // Sentinels are STRING entries, not comments: several scripts read tsconfig.json
 // with strict JSON.parse (scripts/_rv-fs-utils.mjs readJson, the embed staging),
@@ -65,6 +83,21 @@ function hasRequiresPrivateMarker(source) {
   return /@rv-requires-private\b/.test(source);
 }
 
+/**
+ * In-page module paths a spec hands to `import()` in the browser — the leading
+ * `/src/…` form the Vite dev server resolves. Query strings are stripped.
+ */
+function inPageModulePaths(source) {
+  const paths = [];
+  for (const m of source.matchAll(/['"](\/src\/[^'"]+\.tsx?)(\?[^'"]*)?['"]/g)) paths.push(m[1]);
+  return paths;
+}
+
+/** True when a spec names an in-page module that does not exist in this checkout. */
+function referencesMissingAppModule(source, root) {
+  return inPageModulePaths(source).some((path) => !existsSync(join(root, path.slice(1))));
+}
+
 /** Recursively collect test files under tests/. */
 function collectTestFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -85,6 +118,23 @@ export function computePrivateDependentTests(root = ROOT) {
       || referencesPrivatePath(source)
       || hasRequiresPrivateMarker(source);
     if (needsPrivate) result.push(relative(root, abs).replace(/\\/g, '/'));
+  }
+  return result.sort();
+}
+
+/** Compute the sorted list of e2e specs that cannot run without the private sibling. */
+export function computePrivateDependentSpecs(root = ROOT) {
+  const dir = join(root, 'e2e');
+  if (!existsSync(dir)) return [];
+  const result = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile() || !/\.spec\.ts$/.test(entry.name)) continue;
+    const source = readFileSync(join(dir, entry.name), 'utf8');
+    const needsPrivate = importSpecifiers(source).some(isPrivateSpecifier)
+      || referencesPrivatePath(source)
+      || hasRequiresPrivateMarker(source)
+      || referencesMissingAppModule(source, root);
+    if (needsPrivate) result.push(entry.name);
   }
   return result.sort();
 }
@@ -114,4 +164,8 @@ if (isMain) {
   writeFileSync(LIST_PATH, `${JSON.stringify(list, null, 2)}\n`);
   writeTsconfigExcludes(list);
   console.log(`${list.length} private-dependent test files → tests/private-dependent-tests.json + tsconfig.json exclude`);
+
+  const specs = computePrivateDependentSpecs();
+  writeFileSync(E2E_LIST_PATH, `${JSON.stringify(specs, null, 2)}\n`);
+  console.log(`${specs.length} private-dependent e2e specs → e2e/private-dependent-specs.json`);
 }

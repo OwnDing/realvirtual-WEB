@@ -67,6 +67,7 @@ authority: normative
 - `scripts/verify.sh`
 - `docs/`
 - `tests/`
+- `scripts/gen-private-test-excludes.{mjs,d.mts}`
 
 ## Forbidden Paths
 
@@ -119,7 +120,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
-- [~] M3 反退化守卫（e2e 可收集性已守卫；新暴露的 e2e 基线待处理）
+- [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
 
 ## Surprises & Discoveries
 
@@ -132,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 1. **29 个 spec 中 24 个没有 GL 启动参数**，headless Chromium 拿不到 canvas，断言全程不执行。`smoke.spec.ts` 4 失败/1 通过 → **5 通过**。修法是把 `channel: 'chromium'` 放进 `playwright.config.ts` 的两个 project，而不是继续往每个 spec 里抄参数；同时撤掉 EP-DES-002 期间给 `smart-asset-editor.spec.ts` 加的那段 workaround（它当时是权宜之计，现在根因已修）。仍保留自带软件渲染参数的 4 个 spec——其中 2 个有像素/渲染断言，那是**刻意的确定性选择**，不是同一回事，已在配置注释里写明不要照抄。
 2. **`camera-startpos.spec.ts` 导入 `@playwright/test`**（本仓依赖的是 `playwright/test`，该包未安装）。Playwright 在**收集阶段**就失败，因此这一行让整个 `npx playwright test` 无法启动——这正是历来所有计划都只跑"聚焦 spec"、从未跑过全量套件的原因。已改为 `playwright/test`，并由 `tests/e2e-suite-runnable.node.test.ts` 守住。
-3. **e2e 没有私有依赖排除机制**（未修，见下）。
+3. **e2e 没有私有依赖排除机制** —— 已修，见下。
 
 ### 新暴露的 e2e 基线
 
@@ -140,7 +141,26 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 24 个失败中 **11 个已归因**：`editor-continuity`（8）、`mechanism-force-analysis`、`mechanism-authoring-matrix`、`mechanism-force-benchmark` 都 `import('/src/plugins/asset-editor/...')`——该目录**在公开 checkout 中不存在**，只存在于私有 sibling。单元测试有 `tests/private-dependent-tests.json` 这一生成的排除机制，**e2e 从来没有**，所以公开 checkout 永远跑不绿这套。
 
-这需要一个设计决定（这些 spec 应迁入私有仓，还是为 e2e 建同类生成排除列表），不在本里程碑内自行拍板。剩余 13 个失败尚未归因。
+维护者于 2026-08-23 选择方案 A：为 e2e 建同类生成排除列表。已实现：
+
+- `scripts/gen-private-test-excludes.mjs` 扩展出 `computePrivateDependentSpecs()`，输出 `e2e/private-dependent-specs.json`；
+- 判据与单元测试**不同且必须不同**：spec 自己不导入私有模块，是**浏览器**通过 dev server 去 `import('/src/plugins/asset-editor/…')`，所以 `isPrivateSpecifier` 看不见它。改用"这个页面内 `/src/…` 路径在本 checkout 里是否存在"——文件不在就永远加载不了，无论是私有、被移动还是单纯拼错。这一判据顺带覆盖了本计划针对的整个失效类别；
+- `playwright.config.ts` 在**私有 sibling 缺失时**才应用该排除，完整 checkout 仍跑全部 spec；
+- `tests/private-test-excludes.node.test.ts` 扩展了漂移守卫。
+
+实现过程中撞上第四个同类实例，值得记下来：`scripts/gen-private-test-excludes.d.mts` 是**手写声明文件**，`allowJs` 关闭时 TypeScript 只读它、完全不看同名 `.mjs`。新增的 `computePrivateDependentSpecs` 因此编译报"has no exported member"，而反向错误更糟——声明了一个已被删除的函数，处处类型检查通过、运行时才炸。已补声明并加 `describe('generator declaration parity')` 守住两者一致（现 7/7 通过）。
+
+生成结果 4 个 spec：`editor-continuity`、`mechanism-authoring-matrix`、`mechanism-force-analysis`、`mechanism-force-benchmark`。
+
+### 方案 A 后的 e2e 基线
+
+**82 例：63 通过 / 13 失败 / 6 跳过 / 0 未运行**（此前 104 例：63 通过 / 24 失败 / 6 跳过 / 11 未运行）。通过数不变，11 个私有依赖失败与全部"未运行"消失。
+
+剩余 13 个失败按 spec 分布，**尚未逐条归因**：`connect-embed-e2e`（5）、`hmi-panels`（2）、`camera-startpos`（2）、`slot-authority`、`sink-test`、`signal-link-mode`、`embed-smoke` 各 1。错误形态以 `locator.click` 超时（5）、`element(s) not found`（4）、可见性/文本断言（6）为主，另有 1 个 `net::ERR_HTTP_RESPONSE_CODE_FAILURE` 与 1 个 `ECONNRESET`——后两个指向 embed preview server，不是页面断言。
+
+`camera-startpos` 的 2 个失败是**新增可见的**：该 spec 此前因导入 `@playwright/test` 从未运行过，修好收集后才第一次执行并失败。
+
+**不声称 e2e 套件通过。**
 
 ## Decision Log
 
@@ -150,6 +170,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 | 2026-08-23 | 浏览器切换无条件生效，不做按平台分支 | 本计划目标即"本机 = CI" | 两端跑不同浏览器就等于没解决问题；`playwright install chromium` 已同时安装两个二进制 |
 | 2026-08-23 | 不新增 gzip 传输预算断言 | 用户当前明确指令"3 不动" | 属产品决策，不在本计划范围 |
 | 2026-08-23 | 保护 `main`，五项检查全选，管理员不可绕过 | 用户当前明确指令 | 已配置并复核 |
+| 2026-08-23 | e2e 私有依赖采用方案 A（生成排除列表），不迁仓、不让 spec 自行 skip | 用户当前明确指令"同意 A" | 与单元测试同一套已验证机制；自行 skip 会把"没跑"伪装成"通过"，正是本计划要消灭的那类 |
 | 2026-08-23 | 追加保护 `develop`，配置与 `main` 一致 | 用户当前明确指令，在被告知"仅保护 main 不阻止触发证据重演"之后 | 两个分支自此都不接受直接 push；所有改动走特性分支 + PR，等五项 Gate 全绿。这是本计划目标的实际达成点 |
 | 2026-08-23 | 分支保护不要求 PR review | 单人仓库无法自审 | 要求 review 会使 `main` 完全不可合入；required checks 与 review 是两件事，前者已全选 |
 
@@ -162,7 +183,8 @@ M1/M3（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - `tsc -p tsconfig.json --noEmit` 通过。
 - **CI 已确认**：run [`32616661537`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32616661537) 五个 Gate 全绿，Browser Gate 9 分 20 秒（切换前为 11 分 20 秒）。此前登记的"CI 侧未验证"风险已解除。
 - M3：`tests/e2e-suite-runnable.node.test.ts` 3/3 通过；`npx playwright test --list` 首次可收集全部 104 例 / 29 文件。
-- 未验证：新暴露的 24 个 e2e 失败中有 13 个尚未归因；e2e 私有依赖排除机制未建。**不声称 e2e 套件通过。**
+- M3 方案 A：`tests/private-test-excludes.node.test.ts` 6/6；e2e 收集 82 例 / 25 文件；全量 63 通过 / 13 失败 / 6 跳过 / 0 未运行。
+- 未验证：剩余 13 个 e2e 失败尚未逐条归因。**不声称 e2e 套件通过。**
 
 ## Rollback
 
