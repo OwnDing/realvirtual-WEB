@@ -1,0 +1,6 @@
+[
+  "editor-continuity.spec.ts",
+  "mechanism-authoring-matrix.spec.ts",
+  "mechanism-force-analysis.spec.ts",
+  "mechanism-force-benchmark.spec.ts"
+]

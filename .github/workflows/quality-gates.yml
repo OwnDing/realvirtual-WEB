@@ -69,6 +69,8 @@ jobs:
         run: ./node_modules/.bin/playwright install chromium
         timeout-minutes: 10
       - name: Run browser tests
+        env:
+          RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
         run: ./scripts/verify.sh browser
         timeout-minutes: 20
 

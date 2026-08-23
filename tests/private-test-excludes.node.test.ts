@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line import/extensions
-import { computePrivateDependentTests } from '../scripts/gen-private-test-excludes.mjs';
+import { computePrivateDependentSpecs, computePrivateDependentTests } from '../scripts/gen-private-test-excludes.mjs';
 
 const ROOT = resolve(__dirname, '..');
 
@@ -42,5 +42,57 @@ describe('private-dependent test excludes (community parity)', () => {
 
   it('never lists itself or the generator guard infrastructure', () => {
     expect(expected).not.toContain('tests/private-test-excludes.node.test.ts');
+  });
+});
+
+/**
+ * EP-GOV-004 M3 — the same parity guard for the e2e suite.
+ *
+ * A public checkout could not run `npx playwright test` green because four
+ * specs reach into `/src/plugins/asset-editor/…`, which exists only in the
+ * private sibling. The unit suites have had a generated exclude list since
+ * plan-237; e2e never did, and 11 of the suite's 24 failures were exactly that.
+ */
+describe('private-dependent e2e specs (community parity)', () => {
+  const expected = computePrivateDependentSpecs(ROOT);
+
+  it('e2e/private-dependent-specs.json matches the actual private dependencies', () => {
+    const listed = JSON.parse(readFileSync(resolve(ROOT, 'e2e/private-dependent-specs.json'), 'utf8'));
+    expect(listed).toEqual(expected);
+  });
+
+  it('lists bare spec filenames, so playwright.config.ts can match them', () => {
+    for (const name of expected) {
+      expect(name).toMatch(/^[^/]+\.spec\.ts$/);
+    }
+  });
+
+  it('detects a spec that imports an in-page module which does not exist', () => {
+    // The detector's whole point: an `import('/src/…')` with nothing behind it
+    // can never load, whether the module is private, moved, or simply mistyped.
+    expect(expected).toContain('editor-continuity.spec.ts');
+  });
+});
+
+/**
+ * EP-GOV-004 M3 — the hand-written `.d.mts` must not drift from the `.mjs`.
+ *
+ * `scripts/gen-private-test-excludes.d.mts` is what TypeScript actually reads
+ * for this module; the implementation beside it is invisible to tsc. Adding
+ * `computePrivateDependentSpecs` to the `.mjs` therefore compiled to
+ * "has no exported member" — and the reverse mistake is worse: a declaration
+ * for a function that no longer exists type-checks everywhere and throws at
+ * runtime. Same failure class as the rest of this milestone: something that
+ * looks correct and is not wired to reality.
+ */
+describe('generator declaration parity', () => {
+  const DECL = resolve(ROOT, 'scripts/gen-private-test-excludes.d.mts');
+  const IMPL = resolve(ROOT, 'scripts/gen-private-test-excludes.mjs');
+
+  const names = (source: string): string[] =>
+    [...source.matchAll(/^export function (\w+)/gm)].map((match) => match[1]).sort();
+
+  it('declares exactly the functions the implementation exports', () => {
+    expect(names(readFileSync(DECL, 'utf8'))).toEqual(names(readFileSync(IMPL, 'utf8')));
   });
 });

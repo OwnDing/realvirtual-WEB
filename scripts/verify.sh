@@ -67,19 +67,13 @@ run_node_tests() {
 
 run_browser_tests() {
   require_command npm
+  require_command node
   require_file "$verify_repo_root/node_modules/.bin/vitest"
-  say "Browser test suite"
+  require_file "$verify_repo_root/scripts/run-browser-gate.mjs"
+  say "Browser test suite in bounded Chromium processes"
   (
     cd "$verify_repo_root"
-    # Keep the wall-clock performance budget out of the heavily parallel main
-    # suite. It still runs, with the same 20 ms assertion, in a fresh browser
-    # immediately afterward; only unrelated CPU scheduling noise is removed.
-    npm test -- --exclude tests/drop-target-overlay.test.ts
-  )
-  say "Isolated browser performance suite"
-  (
-    cd "$verify_repo_root"
-    npm test -- tests/drop-target-overlay.test.ts
+    node scripts/run-browser-gate.mjs
   )
 }
 
