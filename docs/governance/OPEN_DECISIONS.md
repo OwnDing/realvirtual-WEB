@@ -17,7 +17,7 @@ authority: normative-registry
 | OD-002 | 首批 `zh-CN`/`en-US`、默认与最终回退中文、AI 直接翻译、locale 格式化范围 | product、ux | 已落入 `PS-I18N-001`；运行时架构仍需 ADR 和 Active ExecPlan | closed |
 | OD-003 | 部署、项目、文档、模型、用户和会话配置的可覆盖字段及优先级 | product、architecture | 统一配置 Schema、编辑 UI 和迁移 | open |
 | OD-004 | Snap 名称约定向稳定端口 ID/约束元数据演进的兼容方案 | product、architecture | 已落入 `PS-PLANNER-001`、`ADR-0003` 与端口契约 | closed |
-| OD-005 | 新 Quality Gates 在远程 CI 的必需检查名称和分支保护策略 | maintainers | 把 CI configured 状态升级为 enforced | open |
+| OD-005 | 新 Quality Gates 在远程 CI 的必需检查名称和分支保护策略 | maintainers | 把 CI configured 状态升级为 enforced | closed |
 | OD-006 | 根目录 22 份 `doc-*.md` 的逐份审计、迁移和 Approved 清单 | architecture、engineering | 将旧文档从 reference 提升为正式依据 | open |
 
 ## 执行规则
@@ -34,6 +34,10 @@ authority: normative-registry
 - OD-002 于 2026-08-19 关闭。批准来源为用户当前明确指令，落地文档为 Approved [`PS-I18N-001`](../product-specs/MULTILINGUAL_LOCALIZATION.md)；运行时框架、目录、偏好存储和测试由 Proposed `ADR-0001` 与 `EP-I18N-001` 继续约束，不把产品决策关闭解释为代码已经实现。
 - 2026-08-19：[`ADR-0001`](../adr/ADR-0001-i18n-runtime.md) 接受，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 当时激活，批准来源为用户当前明确指令。上一条中的「Proposed `ADR-0001`」记录的是当时状态；该计划的后续完成状态见下一条，OD-002 始终保持 closed。
 - 2026-08-21：用户当前明确指令批准完成最后两批、运行并修复 CI、关闭 `EP-I18N-001`。八类受门禁库存归零、入口预算保持且远程 Quality Gates 留证后，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 转为 completed，KD-001 关闭；OD-002 继续保持 closed。
+- OD-005 于 2026-08-23 关闭。批准来源为用户当前明确指令（保护 `main`、五项检查全选、管理员不可绕过）。已对 `main` 配置：required checks = `Governance Gate`/`Static Gate`/`Node Gate`/`Browser Gate`/`Build Gate`，`strict`（合入前分支须为最新）、`enforce_admins`、禁止强推与删除；**未要求 PR review**——单人仓库无法自审，要求 review 会使 `main` 完全不可合入。落地记录见 [`EP-GOV-004`](../exec-plans/active/EP-GOV-004-gate-that-gates.md) M2。
+  同日维护者追加决定同样保护 `develop`，配置与 `main` 完全一致（API 复核：两个分支均为 checks=5、strict、enforce_admins、禁止强推与删除、不要求 review）。该追加正是针对本项的触发证据——`f012911` 与 `2c42c21` 的 Browser Gate 连续两次红、两个提交仍被推入 `develop`；只保护 `main` 无法阻止该情形重演。
+  **工作方式变更（本决定的直接后果）**：两个分支都不再接受直接 push。任何改动必须走特性分支 + PR，并等五项 Gate 全绿方可合入（Browser Gate 约 9 分钟）。管理员亦不可绕过。
+
 - 2026-08-23，用户当前明确指令确定 OD-001 的产品方向：**平台边界包含账户、组织、权限与云端资产**，不是纯浏览器/本地优先。该决定改变 OD-003（分层配置的作用域是组织而非单机）与资产库版本/团队发布的设计前提，因此先行记录，使后续规格不按错误假设开工。
   OD-001 状态改为 `decided-pending-spec` 而非 `closed`：按本文件执行规则 2，产品决策必须先落到 ADR/规格/契约才可关闭。落地文档（租户/组织模型、权限模型、云端项目后端契约）尚未创建，创建并批准后再改为 `closed`。此处沿用 OD-002 的先例——2026-08-19 曾同样先记录部分产品输入，规格落地后才关闭。
 

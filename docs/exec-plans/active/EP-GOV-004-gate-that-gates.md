@@ -90,6 +90,23 @@ authority: normative
 
 **本里程碑需要仓库管理员操作，属用户决策，Agent 不得自行配置。**
 
+2026-08-23 已按用户指令完成，实际生效配置（API 复核）：
+
+```
+required_checks : Governance Gate, Static Gate, Node Gate, Browser Gate, Build Gate
+strict          : true    合入前分支须为最新
+enforce_admins  : true    管理员不可绕过
+force_push      : false
+deletion        : false
+reviews_required: false   单人仓库无法自审，要求 review 会使 main 不可合入
+```
+
+同日按维护者追加指令，`develop` 配置了完全相同的策略（API 复核：两分支均 checks=5 / strict / enforce_admins / 禁强推 / 不要求 review）。
+
+`quality-gates.yml` 的触发器是 `pull_request` 与 `push: [main, develop]`，因此 PR 上五项检查都会上报，不存在"要求了但永不上报"的死锁。
+
+**工作方式变更**：两个分支都不再接受直接 push。这正是本计划要达到的状态——CI 红色无法再被绕过。
+
 ### M3 — "断言从未执行"的守卫
 
 对重型/端到端用例补充反退化断言（如参考负载的 `totalEventsProcessed > MU 数`），并排查现有套件中同类失效。
@@ -101,7 +118,7 @@ authority: normative
 ## Progress
 
 - [x] M1 本机门禁 = CI
-- [ ] M2 OD-005 分支保护（待用户决策与管理员操作）
+- [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（e2e 可收集性已守卫；新暴露的 e2e 基线待处理）
 
 ## Surprises & Discoveries
@@ -132,6 +149,9 @@ authority: normative
 | 2026-08-23 | 优先做 P0（门禁可信）而非新功能 | 用户当前明确指令"从 P0 开始" | 四个功能带着从未执行的测试交付，且 CI 红着仍被推入——先修验证系统 |
 | 2026-08-23 | 浏览器切换无条件生效，不做按平台分支 | 本计划目标即"本机 = CI" | 两端跑不同浏览器就等于没解决问题；`playwright install chromium` 已同时安装两个二进制 |
 | 2026-08-23 | 不新增 gzip 传输预算断言 | 用户当前明确指令"3 不动" | 属产品决策，不在本计划范围 |
+| 2026-08-23 | 保护 `main`，五项检查全选，管理员不可绕过 | 用户当前明确指令 | 已配置并复核 |
+| 2026-08-23 | 追加保护 `develop`，配置与 `main` 一致 | 用户当前明确指令，在被告知"仅保护 main 不阻止触发证据重演"之后 | 两个分支自此都不接受直接 push；所有改动走特性分支 + PR，等五项 Gate 全绿。这是本计划目标的实际达成点 |
+| 2026-08-23 | 分支保护不要求 PR review | 单人仓库无法自审 | 要求 review 会使 `main` 完全不可合入；required checks 与 review 是两件事，前者已全选 |
 
 ## Validation
 
