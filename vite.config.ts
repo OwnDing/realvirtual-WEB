@@ -938,6 +938,23 @@ export default defineConfig(({ command }) => ({
     // in tests/mechanism-tier.node.test.ts search `.js` and `.map`, and the JS
     // alone keeps them non-vacuous.
     sourcemap: process.env.RV_SOURCEMAP === '1' ? 'hidden' : false,
+    /**
+     * Never base64 a GLB into a chunk; keep Vite's default 4 kB rule for
+     * everything else.
+     *
+     * `main.ts` discovers the demo models with an EAGER
+     * `import.meta.glob('/public/models/*.glb', { query: '?url' })`, so any model
+     * that happens to be under the default inline limit is embedded in the entry
+     * instead of being fetched. Two were: `mechanism-scissor.glb` (3,068 B) and
+     * `physics-zone-test.glb` (3,224 B) — together 8,392 B of base64 that every
+     * visitor downloaded before the first frame. Which demo models land in the
+     * startup bundle was an accident of their byte size, not a decision.
+     *
+     * Returning `undefined` for everything else keeps the small icons inlined
+     * (3.7 kB of SVG/PNG/GIF across the build), where saving a request is the
+     * right trade.
+     */
+    assetsInlineLimit: (filePath) => (filePath.endsWith('.glb') ? false : undefined),
     rollupOptions: {
       output: {
         // `/*!` + `@license` marks this as a LEGAL comment. Without those two

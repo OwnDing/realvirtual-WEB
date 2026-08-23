@@ -196,6 +196,39 @@ const distFiles = import.meta.glob('../dist/**/*.{html,js}', {
  *
  *    Re-pinned just above the measurement (+0.39 %), same convention as every
  *    entry above.
+ *  - 23.08.2026 (EP-DES-002): measured 3_508_771 — UNDER the budget, and the
+ *    number is therefore NOT moving. Recorded anyway, because this is the first
+ *    entry in this history where the entry chunk SHRANK, and because the reason
+ *    it shrank is worth keeping.
+ *
+ *      before  3_517_097   (2_903 B of headroom, +0.08 %)
+ *      after   3_508_771   (11_229 B of headroom, +0.32 %)
+ *
+ *    EP-DES-002 added +317 B of its own; the rest of the gap to the 12.08 pin is
+ *    trunk drift that never re-pinned. The 8_326 B came back from ONE config
+ *    line: `build.assetsInlineLimit` now refuses to inline `.glb`. `main.ts`
+ *    discovers demo models through an EAGER `import.meta.glob(..., '?url')`, so
+ *    every model under Vite's default 4 kB limit was base64'd into the startup
+ *    bundle — `mechanism-scissor.glb` (3_068 B) and `physics-zone-test.glb`
+ *    (3_224 B). The plan-411 entry above already called this out ("a demo model
+ *    in the startup bundle is an accident of one file's size, not a decision")
+ *    and listed it as the cheaper of its two follow-ups; this is that follow-up.
+ *    Entry base64 is now zero. Small icons still inline (3.7 kB of SVG/PNG/GIF
+ *    build-wide) — the limit is a predicate, not a lower global threshold.
+ *
+ *    Both standing split candidates from the entries above are already SPENT:
+ *    the MCP bridge cluster (~168 kB) now lives in its own 320 kB chunk and no
+ *    longer appears in the entry at all — `DEFAULT_BRIDGE_PORT` moved to
+ *    `rv-mcp-bridge-defaults`, which is what plan-411 predicted would free it —
+ *    and the five `?raw` help guides went with it. A fresh source-map
+ *    attribution of the 3_508_771 B entry (1_394 modules) finds no comparable
+ *    lever left: the largest own-code modules are ConnectPanel.tsx (223 kB of
+ *    source), layout-planner/index.ts (180 kB), scene-store.ts (159 kB),
+ *    rv-scene-loader.ts (126 kB), project-store.ts (104 kB) and the zh-CN
+ *    catalog (93 kB) — the first two are NON_TARGETS that T6 defends, and the
+ *    rest are boot-order or i18n decisions documented elsewhere. The next time
+ *    this number has to come down it costs a product decision, not a config
+ *    line. Say so in the entry that has to make it.
  */
 const ENTRY_BUDGET_BYTES = 3_520_000;
 

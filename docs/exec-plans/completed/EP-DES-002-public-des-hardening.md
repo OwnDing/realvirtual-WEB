@@ -222,5 +222,5 @@ M7 收尾时具名的债务已关闭，过程中又暴露并修复了 3 个既�
 遗留债务（仍未做，已具名）：
 
 - `dispatch()` 的 `onTimeAdvance` 仍每事件触发（见 Surprises，权衡后主动保留：回调默认为 null，按时间戳去重会改变 `samplesLiveGeometry` 组件在同一时刻多事件下的观测语义）；
-- 入口预算余量 2,903 B，下一个特性前应安排一次入口瘦身；
+- ~~入口预算余量 2,903 B~~ 已处理（2026-08-23，用户决策）：`build.assetsInlineLimit` 改为拒绝内联 `.glb`，拿回 8,326 B（入口 3,517,097 → 3,508,771 B，入口内 base64 归零）。**预算数字未动**——拿回之后 `3_520_000` 恰好落在本仓惯例带内（高于测量值 +0.32%，惯例 +0.3~0.4%），余量 11,229 B。归因与后续判断记入 `tests/bundle-splitting.test.ts` 的预算历史。重要结论：历史具名的两个拆分候选（MCP bridge ~168 kB、五份 `?raw` help 指南）**都已被取走**，source-map 逐模块归因确认入口里不再有同量级的免费杠杆——下次要压这个数字就得付一个产品决策，不是一行配置；
 - 全量 Browser 仍有 22 个文件 / 82 例失败，全部落在 headless SwiftShader 的 WebGL/WebGPU 上下文创建失败（14 个文件）与 `embed-*` 组（8 个文件）。**注意**：`EP-DES-001` 把 `embed-*` 归因为“130 B Git LFS 指针 + 缺 git-lfs”，本机复核不成立——`public/models/tests.glb` 是真实的 36 MB 文件且 `git-lfs` 已安装；这些用例单独重跑仍报 WebGL 上下文创建失败，属同一 SwiftShader 偏差。该归因更正登记在此，未进一步排查。
