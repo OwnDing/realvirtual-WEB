@@ -104,41 +104,64 @@ export function MessagePanel() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            gap: 0.5,
             pointerEvents: 'none',
+            overflow: 'hidden',
           }}
         >
-          <Box sx={{ alignSelf: 'flex-end', pointerEvents: 'auto', mb: 0.5 }}>
-            <Tooltip title={t('messages.expand')} placement="left">
-              <IconButton
-                size="small"
-                onClick={toggleMessagePanelMinimized}
-                sx={{ bgcolor: 'rgba(0,0,0,0.4)', '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' } }}
-              >
-                <ChevronLeft fontSize="small" />
-              </IconButton>
-            </Tooltip>
+          <Box
+            sx={{
+              width: 300,
+              maxHeight: '100%',
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
+            }}
+          >
+            <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, pointerEvents: 'auto' }}>
+              <Tooltip title={t('messages.expand')} placement="left">
+                <IconButton
+                  size="small"
+                  onClick={toggleMessagePanelMinimized}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.4)', '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' } }}
+                >
+                  <ChevronLeft fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Box
+              sx={{
+                minHeight: 0,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+                pointerEvents: 'auto',
+              }}
+            >
+              {entries.map((entry, i) => {
+                const Comp = entry.component;
+                const isHovered = hoveredIdx === i;
+                return (
+                  <Box
+                    key={`msg-${i}`}
+                    data-ui-panel
+                    onMouseEnter={() => setHoveredIdx(i)}
+                    onMouseLeave={() => setHoveredIdx(-1)}
+                    sx={{
+                      flexShrink: 0,
+                      width: 300,
+                      transform: isHovered ? 'translateX(0)' : 'translateX(calc(100% - 36px))',
+                      transition: 'transform 0.25s ease',
+                    }}
+                  >
+                    <Comp viewer={viewer} />
+                  </Box>
+                );
+              })}
+            </Box>
           </Box>
-          {entries.map((entry, i) => {
-            const Comp = entry.component;
-            const isHovered = hoveredIdx === i;
-            return (
-              <Box
-                key={`msg-${i}`}
-                data-ui-panel
-                onMouseEnter={() => setHoveredIdx(i)}
-                onMouseLeave={() => setHoveredIdx(-1)}
-                sx={{
-                  pointerEvents: 'auto',
-                  width: 300,
-                  transform: isHovered ? 'translateX(0)' : 'translateX(calc(100% - 36px))',
-                  transition: 'transform 0.25s ease',
-                }}
-              >
-                <Comp viewer={viewer} />
-              </Box>
-            );
-          })}
         </Box>
       );
     }
@@ -158,25 +181,43 @@ export function MessagePanel() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          gap: 1,
-          overflow: 'auto',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ alignSelf: 'flex-end', pointerEvents: 'auto' }}>
-          <Tooltip title={t('messages.minimize')} placement="left">
-            <IconButton
-              size="small"
-              onClick={toggleMessagePanelMinimized}
-              sx={{ bgcolor: 'rgba(0,0,0,0.4)', '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' } }}
-            >
-              <ChevronRight fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        <Box sx={{ width: '100%', maxHeight: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, pointerEvents: 'auto' }}>
+            <Tooltip title={t('messages.minimize')} placement="left">
+              <IconButton
+                size="small"
+                onClick={toggleMessagePanelMinimized}
+                sx={{ bgcolor: 'rgba(0,0,0,0.4)', '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' } }}
+              >
+                <ChevronRight fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <Box
+            data-testid="message-panel-scroll-region"
+            sx={{
+              minHeight: 0,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              pointerEvents: 'auto',
+            }}
+          >
+            {entries.map((entry, i) => {
+              const Comp = entry.component;
+              return (
+                <Box key={`msg-${i}`} data-ui-panel sx={{ flexShrink: 0 }}>
+                  <Comp viewer={viewer} />
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
-        {entries.map((entry, i) => {
-          const Comp = entry.component;
-          return <Box key={`msg-${i}`} data-ui-panel><Comp viewer={viewer} /></Box>;
-        })}
       </Box>
     );
   }
