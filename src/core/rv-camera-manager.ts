@@ -475,12 +475,11 @@ export class CameraManager {
   // ─── Viewport Offset ──────────────────────────────────────────────
 
   /**
-   * Panel offset for camera framing. The WebGL canvas is now confined to the
-   * central viewport region (see ViewportFrame) — docked windows and the
-   * activity bar no longer overlap it — so focus/fit should center within the
-   * real visible canvas with NO extra compensation. Returns undefined (which
-   * makes `_panelFitScale` a no-op, scale 1). Kept as a method so callers and
-   * the public viewer API stay intact.
+   * Optional panel offset for camera framing. The WebGL canvas is full-bleed
+   * beneath the HMI overlays; callers that own an obscuring panel may still
+   * pass an explicit offset to focus/fit. Automatic compensation remains off
+   * here so merely showing overlay chrome does not change the camera pose.
+   * Kept as a method so callers and the public viewer API stay intact.
    */
   getCurrentViewportOffset(): ViewportOffset | undefined {
     return undefined;

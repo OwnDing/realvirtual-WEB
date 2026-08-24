@@ -398,6 +398,8 @@ export class SceneStore {
 
   // Debounced draft autosave timer
   private _draftAutosaveTimer: number | null = null;
+  /** Autosaves whose timer fired and whose async body write has not settled. */
+  private readonly _draftAutosaveWrites = new Set<Promise<void>>();
 
   /**
    * A projection of THIS document is active somewhere else (plan-711 R2-Q1).
@@ -2187,7 +2189,7 @@ export class SceneStore {
       clearDraft(this._workspace.base);
       clearSceneDraft(target.entryId);
     } else {
-      void this._autosaveBody();
+      void this._startAutosaveBody();
     }
 
     this._viewer.currentScene = saved;
@@ -2473,7 +2475,7 @@ export class SceneStore {
       clearDraft(base);
       clearSceneDraft(created.documentId);
     } else {
-      void this._autosaveBody();
+      void this._startAutosaveBody();
     }
     this._viewer.currentScene = saved;
     updateUrlDocumentParam(created.documentId);
@@ -2484,6 +2486,12 @@ export class SceneStore {
 
   /** Revert to the last-saved state (or to bare base for fresh drafts). */
   async discard(): Promise<void> {
+    // Cancelling the debounce is insufficient once its async bake/write has
+    // started. Let every already-started write settle before deleting the
+    // draft slot; otherwise that stale write can recreate the pointer after
+    // discard() has returned and resurrect work the user explicitly rejected.
+    this._cancelAutosave();
+    await this._waitForAutosaveBodies();
     if (this._saved) {
       // Clear the per-saved-scene draft slot BEFORE re-opening — without
       // this, openScene would just restore the same draft we're trying to
@@ -3000,7 +3008,7 @@ export class SceneStore {
         // OPFS / the project folder, not an op log in localStorage: the write
         // is fire-and-forget on the timer, and its failures are reported by
         // `_autosaveBody` rather than thrown into a timeout callback.
-        void this._autosaveBody();
+        void this._startAutosaveBody();
       } else {
         // Workspace is in pristine saved state — drop the draft body. (No
         // matching clear for the base slot here: a saved workspace's base slot
@@ -3016,6 +3024,24 @@ export class SceneStore {
     if (this._draftAutosaveTimer !== null) {
       clearTimeout(this._draftAutosaveTimer);
       this._draftAutosaveTimer = null;
+    }
+  }
+
+  /** Start one body autosave and keep it visible to destructive lifecycle verbs. */
+  private _startAutosaveBody(): Promise<void> {
+    const write = this._autosaveBody();
+    this._draftAutosaveWrites.add(write);
+    void write.then(
+      () => this._draftAutosaveWrites.delete(write),
+      () => this._draftAutosaveWrites.delete(write),
+    );
+    return write;
+  }
+
+  /** Wait for the finite set of writes that had already started. */
+  private async _waitForAutosaveBodies(): Promise<void> {
+    while (this._draftAutosaveWrites.size > 0) {
+      await Promise.allSettled([...this._draftAutosaveWrites]);
     }
   }
 

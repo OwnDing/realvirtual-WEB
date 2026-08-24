@@ -9,5 +9,6 @@ export interface BrowserGateCommand {
 
 export const BROWSER_SHARDS: readonly string[];
 export const PERFORMANCE_TEST: string;
+export const BROWSER_PROCESS_ENV: Readonly<Record<string, string>>;
 export function buildBrowserGateCommands(): BrowserGateCommand[];
 export function runBrowserGate(): Promise<void>;

@@ -23,6 +23,7 @@ import {
   type RuntimeScriptConsent,
   type RuntimeScriptSource,
 } from './rv-script-runtime-loader';
+import { projectAssetRelPath } from './project/rv-project-asset-source';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -69,8 +70,14 @@ export function asModelPluginModule(value: unknown): ModelPluginModule | null {
  */
 export function resolveModelName(url: string): string {
   const withoutQuery = url.split('?')[0];
-  const lastSlash = withoutQuery.lastIndexOf('/');
-  const fileName = lastSlash >= 0 ? withoutQuery.substring(lastSlash + 1) : withoutQuery;
+  // A project document is addressed as `rvproject:<relative path>`. Keep the
+  // sentinel for storage resolution, but remove it before deriving the model
+  // plugin identity. Foldered documents happened to work because their final
+  // slash hid the prefix; root-level documents did not and therefore lost the
+  // entire model plugin pack (KPIs, operator controls and model messages).
+  const modelPath = projectAssetRelPath(withoutQuery) ?? withoutQuery;
+  const lastSlash = modelPath.lastIndexOf('/');
+  const fileName = lastSlash >= 0 ? modelPath.substring(lastSlash + 1) : modelPath;
   return fileName.replace(/\.glb$/i, '');
 }
 

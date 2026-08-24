@@ -3,7 +3,7 @@ doc_id: EXEC-ACTIVE-INDEX
 title: 活动 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-23
+last_reviewed: 2026-08-25
 authority: normative-registry
 ---
 

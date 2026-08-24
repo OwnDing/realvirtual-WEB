@@ -11,8 +11,8 @@ import { FLOATING_TOP_MARGIN } from './layout-constants';
 export function KpiBar() {
   const viewer = useViewer();
   const entries = useSlot('kpi-bar');
-  // Center over the actual 3D view (between the docked windows), not the whole
-  // window, so the cards stay centered on the viewport as panels open/resize.
+  // Center over the unobscured part of the full-bleed 3D view, so docked
+  // windows do not cover the KPI cards as panels open/resize.
   const insets = useViewportInsets();
   if (entries.length === 0) return null;
 

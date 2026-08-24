@@ -186,11 +186,10 @@ describe('No hardcoded panel widths', () => {
     expect(leftWindowWidthSrc).toContain('activePanelWidth');
   });
 
-  it('camera no longer compensates for panels — the WebGL canvas is confined to the viewport', () => {
-    // The canvas is now sized to the central viewport region (ViewportFrame),
-    // so docked windows don't overlap it and focus/fit frame within the real
-    // visible canvas. getCurrentViewportOffset() therefore returns undefined
-    // (no panel-offset math, no INSPECTOR_PANEL_WIDTH compensation).
+  it('camera keeps the explicit viewport-offset seam without hardcoded inspector compensation', () => {
+    // The canvas is full-bleed beneath overlays again. Focus/fit still accepts
+    // an explicit viewport offset from a panel owner, while the camera manager
+    // carries no stale fixed-width Inspector compensation of its own.
     expect(viewerSrc).toContain('getCurrentViewportOffset');
     expect(cameraManagerSrc).toContain('getCurrentViewportOffset');
     expect(cameraManagerSrc).not.toContain('INSPECTOR_PANEL_WIDTH');

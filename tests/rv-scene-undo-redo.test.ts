@@ -493,6 +493,7 @@ describe('discard', () => {
     await new Promise(r => setTimeout(r, 2100));
     await store.discard();
     expect(store.getSnapshot().dirty).toBe(false);
+    expect(readSceneGlbPointer(`draft/${baseKeyOf(builtin)}`)).toBeNull();
   });
 });
 
@@ -716,4 +717,3 @@ describe('snapshot identity', () => {
     expect(b).not.toBe(a);
   });
 });
-

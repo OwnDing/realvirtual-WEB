@@ -311,8 +311,7 @@ function FullHmiShell({
   return (
     <>
       <HMIShell>
-        {/* Confines the WebGL canvas to the central region (must run even when
-            the HMI is hidden, to restore full-bleed). */}
+        {/* Keeps the WebGL canvas full-browser beneath the HMI overlays. */}
         <ViewportFrame />
         <TooltipLayer />
         <AnchoredPopover />

@@ -4,11 +4,16 @@
 /**
  * Run the required browser gate in bounded Chromium lifetimes.
  *
- * Vitest 4.0.x + Playwright/Chromium can retain deleted temporary files during
- * very large Browser Mode runs. Once the runner runs short of disk, an
- * otherwise healthy test file can fail to import. Keeping every test while
- * splitting the suite across fresh Chromium processes releases those files at
- * the process boundary. See https://github.com/vitest-dev/vitest/issues/9437.
+ * Chromium can retain shared-memory blocks for every tester iframe/module-graph
+ * revalidation in a long Vitest Browser Mode run. Vitest 4.1.11 backports the
+ * upstream per-file Chromium garbage collection escape hatch; the gate forces
+ * it by enabling the escape hatch and setting its disk threshold above the
+ * workspace's supported runners, because this repository reproduced runner
+ * loss while /tmp still had more than 80 GiB free (well above the default
+ * 4 GiB trigger). Eight fresh Chromium processes remain as a second lifecycle
+ * boundary. No test is dropped or retried. See
+ * https://github.com/vitest-dev/vitest/issues/9437 and the v4 backport
+ * https://github.com/vitest-dev/vitest/releases/tag/v4.1.11.
  */
 import { spawn } from 'node:child_process';
 import { statfsSync } from 'node:fs';
@@ -20,8 +25,21 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
 const GIB = 1024 ** 3;
 
-export const BROWSER_SHARDS = Object.freeze(['1/4', '2/4', '3/4', '4/4']);
+export const BROWSER_SHARDS = Object.freeze([
+  '1/8',
+  '2/8',
+  '3/8',
+  '4/8',
+  '5/8',
+  '6/8',
+  '7/8',
+  '8/8',
+]);
 export const PERFORMANCE_TEST = 'tests/drop-target-overlay.test.ts';
+export const BROWSER_PROCESS_ENV = Object.freeze({
+  VITEST_CHROMIUM_GC_FORCE: '1',
+  VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1024',
+});
 
 export function buildBrowserGateCommands() {
   return [
@@ -84,7 +102,7 @@ async function runCommand(step) {
 
   const child = spawn(step.command, step.args, {
     cwd: REPO_ROOT,
-    env: process.env,
+    env: { ...process.env, ...BROWSER_PROCESS_ENV },
     stdio: 'inherit',
   });
 

@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  BROWSER_PROCESS_ENV,
   BROWSER_SHARDS,
   PERFORMANCE_TEST,
   buildBrowserGateCommands,
@@ -11,23 +12,56 @@ import {
 
 describe('required browser gate process boundaries', () => {
   it('covers every shard exactly once before the isolated performance test', () => {
-    expect(BROWSER_SHARDS).toEqual(['1/4', '2/4', '3/4', '4/4']);
+    expect(BROWSER_SHARDS).toEqual([
+      '1/8',
+      '2/8',
+      '3/8',
+      '4/8',
+      '5/8',
+      '6/8',
+      '7/8',
+      '8/8',
+    ]);
 
     const commands = buildBrowserGateCommands();
-    expect(commands).toHaveLength(5);
-    expect(commands.slice(0, 4).map(({ args }) => args)).toEqual([
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=1/4'],
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=2/4'],
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=3/4'],
-      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=4/4'],
+    expect(commands).toHaveLength(9);
+    expect(commands.slice(0, 8).map(({ args }) => args)).toEqual([
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=1/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=2/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=3/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=4/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=5/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=6/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=7/8'],
+      ['test', '--', '--exclude', PERFORMANCE_TEST, '--shard=8/8'],
     ]);
-    expect(commands[4].args).toEqual(['test', '--', PERFORMANCE_TEST]);
+    expect(commands[8].args).toEqual(['test', '--', PERFORMANCE_TEST]);
   });
 
   it('does not turn an infrastructure failure into a retry or false green', () => {
     const serialized = JSON.stringify(buildBrowserGateCommands());
     expect(serialized).not.toMatch(/retry|passWithNoTests|changed|related/i);
     expect(buildBrowserGateCommands().every(({ command }) => command === 'npm')).toBe(true);
+  });
+
+  it('forces the official Vitest Chromium per-file GC backport in every browser process', () => {
+    const packageJson = JSON.parse(readFileSync(
+      new URL('../package.json', import.meta.url),
+      'utf8',
+    )) as { devDependencies: Record<string, string> };
+    const implementation = readFileSync(
+      new URL('../scripts/run-browser-gate.mjs', import.meta.url),
+      'utf8',
+    );
+
+    expect(BROWSER_PROCESS_ENV).toEqual({
+      VITEST_CHROMIUM_GC_FORCE: '1',
+      VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1024',
+    });
+    expect(implementation).toContain('env: { ...process.env, ...BROWSER_PROCESS_ENV }');
+    expect(packageJson.devDependencies.vitest).toBe('^4.1.11');
+    expect(packageJson.devDependencies['@vitest/browser']).toBe('^4.1.11');
+    expect(packageJson.devDependencies['@vitest/browser-playwright']).toBe('^4.1.11');
   });
 
   it('keeps the Browser Gate required entrypoint fail-closed', () => {

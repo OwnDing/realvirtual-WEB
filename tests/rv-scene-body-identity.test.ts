@@ -139,6 +139,17 @@ describe('resumed scene body — identity vs. bytes', () => {
     expect(resolveModelName(bytesUrl)).not.toBe(MODEL_LABEL);
   });
 
+  it('a root-level project document keeps the model plugin identity', () => {
+    // Project documents use a stable byte-source sentinel. A document at the
+    // project root has no slash after that prefix, so treating the whole
+    // `rvproject:...` string as a filename silently drops DemoRealvirtualWeb's
+    // KPI/message/operator plugin pack after the document is opened by id.
+    expect(resolveModelName('rvproject:DemoRealvirtualWeb.glb'))
+      .toBe(MODEL_LABEL);
+    expect(resolveModelName('rvproject:DemoRealvirtualWeb.glb?revision=2'))
+      .toBe(MODEL_LABEL);
+  });
+
   /**
    * The same rule, one level up — the DOCUMENT identity (plan-716 §9.0, §2.6).
    *
