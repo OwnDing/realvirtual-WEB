@@ -95,6 +95,8 @@ authority: normative
 - 告警收回按钮的问题不是按钮自身 z-index，而是按钮与长列表共享同一个滚动/收缩上下文。
 - KPI 消失不能通过新增静态卡片修复；顶部数据来自模型 plugin 的 `kpi-bar` slot。项目根目录文档以 `rvproject:DemoRealvirtualWeb.glb` 作为稳定字节源时，模型名错误地解析为 `rvproject:DemoRealvirtualWeb`，导致整个模型 plugin pack（KPI、告警、操作按钮）未注册；子目录文档因为最后一个 `/` 恰好遮蔽前缀而未暴露此问题。
 - 首次完整 Browser Gate 与仍在运行的开发服务器和 in-app Chromium 竞争内存，`glb-composition` 性能比值在最低可用内存约 0.06 GiB 时失败；释放本任务自有浏览器/服务器后，该测试独立运行得到 1.25x，第二次无并发干扰的完整 Browser Gate 四个分片和独立性能套件全部通过。
+- PR #4 首次远程 run `32732754539` 的 Governance、Static、Node、Build 通过；Browser shard 3 在 257 个文件、2681 个测试通过后以 `Vitest failed to find the runner` 失败，零断言失败且资源充足。该证据重新打开 `EP-GOV-004` 的 M4，并把进程边界从四分片收紧为八分片；不靠 rerun 碰绿。
+- 八分片本地验证进一步暴露了既有 `discard()` 与已启动 autosave 的竞态：discard 删除草稿后，旧异步写入仍可重新安装指针。`SceneStore` 现跟踪已启动 autosave，discard 等其收敛后再删除；原用例新增 slot 为空的直接断言。该修复不改变字节格式或 slot 命名，只收紧既有“丢弃后不可恢复”的生命周期契约。
 
 ## Decision Log
 
@@ -108,13 +110,14 @@ authority: normative
 ## Validation
 
 - `npx vitest run tests/rv-scene-body-identity.test.ts tests/rv-left-panel.test.ts`：2 files、27 tests 通过；根目录 `rvproject:` plugin 身份回归已固定。
+- `npx vitest run tests/rv-scene-undo-redo.test.ts`：35 tests 通过；新增 discard 后 base draft pointer 必须为空的断言通过。
 - `npx playwright test e2e/hmi-layout-regressions.spec.ts`：2 tests 通过；覆盖 1280×300 下 full-browser Canvas 与溢出告警的收回按钮边界。
 - `./scripts/verify.sh static`：通过，包含治理、文档发布性、ESLint 与 TypeScript。
 - `./scripts/verify.sh node`：通过；61 files 通过、2 skipped，633 tests 通过、7 skipped。
-- `./scripts/verify.sh browser`：第二次完整无并发运行通过；四个 Chromium 分片分别为 2777、2688、2697、2699 tests 通过，独立性能套件 11 tests 通过。首次受资源竞争影响的 `glb-composition` 失败已独立复核为 13 tests 通过、性能比 1.25x，未通过重试隐藏产品失败。
+- `./scripts/verify.sh browser`：UI 实现后的四分片本地门禁通过；远程 runner 复现后改为八分片，最终本地完整门禁的八个 128–129 file 主 shard 与独立性能套件全部通过，性能套件 11/11。首次本地受资源竞争影响的 `glb-composition` 失败已独立复核为 13 tests 通过、性能比 1.25x；八分片首次运行捕获的 autosave/discard 产品竞态已修复后从头复跑通过，均未用重试隐藏失败。
 - `./scripts/verify.sh build`：通过；14918 modules transformed，保留既有 dynamic-import 与大 chunk 警告。
 - 真实 in-app Chromium：1280×300 时 `#rv-viewport` 与 Canvas 均为 `(0,0,1280,300)`，告警滚动区 `overflow-y:auto` 且收回按钮完整在视口内；1280×720 时真实模型与 OEE、Parts/h、Cycle、Power 四张 KPI 卡可见，收回/展开交互通过。
-- 待执行：GitHub PR 最终 SHA 的 Governance、Static、Node、Browser、Build 五项 required checks 全绿。
+- 远程 PR 首轮：run `32732754539` 的 Governance、Static、Node、Build 通过；Browser 因已归因的 runner 生命周期故障失败。八分片修复后的最终 SHA 五项 required checks 待重新验收。
 
 ## Rollback
 
@@ -122,4 +125,4 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-已完成三个回归的兼容修复与本地验收：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化、DES、智能资产或工业接口。PR #4 已建立，远程 required checks 与合并结果将在计划关闭前补充。
+已完成三个回归的兼容修复与本地验收：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化格式、DES、智能资产或工业接口；门禁暴露的 autosave/discard 修复只调整异步生命周期顺序。PR #4 已建立，远程 required checks 与合并结果将在计划关闭前补充。

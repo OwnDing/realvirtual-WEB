@@ -8,7 +8,10 @@
  * very large Browser Mode runs. Once the runner runs short of disk, an
  * otherwise healthy test file can fail to import. Keeping every test while
  * splitting the suite across fresh Chromium processes releases those files at
- * the process boundary. See https://github.com/vitest-dev/vitest/issues/9437.
+ * the process boundary. Four shards still reproduced the runner loss after
+ * roughly 258 files in one process, so eight shards bound a lifetime to about
+ * 129 files without dropping or retrying any test. See
+ * https://github.com/vitest-dev/vitest/issues/9437.
  */
 import { spawn } from 'node:child_process';
 import { statfsSync } from 'node:fs';
@@ -20,7 +23,16 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
 const GIB = 1024 ** 3;
 
-export const BROWSER_SHARDS = Object.freeze(['1/4', '2/4', '3/4', '4/4']);
+export const BROWSER_SHARDS = Object.freeze([
+  '1/8',
+  '2/8',
+  '3/8',
+  '4/8',
+  '5/8',
+  '6/8',
+  '7/8',
+  '8/8',
+]);
 export const PERFORMANCE_TEST = 'tests/drop-target-overlay.test.ts';
 
 export function buildBrowserGateCommands() {

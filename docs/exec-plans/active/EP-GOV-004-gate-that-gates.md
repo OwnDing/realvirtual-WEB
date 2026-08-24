@@ -4,7 +4,7 @@ title: 让质量门禁真正拦得住东西
 status: approved
 plan_status: active
 owner: engineering
-last_reviewed: 2026-08-23
+last_reviewed: 2026-08-24
 authority: normative
 ---
 
@@ -122,7 +122,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 ### M4 — 大型 Browser Gate 稳定性
 
-保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/4` 至 `4/4` 四个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第五个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。
+保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/8` 至 `8/8` 八个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第九个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。四分片曾连续通过，但 2026-08-24 在单进程约 258 个文件处再次复现相同 runner 丢失；八分片把单进程生命周期进一步限制到约 129 个文件。
 
 失败语义不变：任一 shard 或性能套件非零即整项 Browser Gate 非零；不使用 retry、`continue-on-error`、`passWithNoTests`、changed/related 子集，也不从分支保护 required checks 中移除 Browser Gate。
 
@@ -133,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
-- [x] M4 Browser Gate 稳定性（四分片本地全量通过；同一实现提交远程 3/3 fresh-run 五项全绿）
+- [~] M4 Browser Gate 稳定性（四分片在 PR #4 复现 runner 丢失；八分片本地完整门禁通过，等待重复远程验收）
 
 ## Surprises & Discoveries
 
@@ -141,6 +141,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - `@vitest/browser-playwright` 的启动选项属于 `playwright()` **provider**，不是 `instances[]` 的条目。把 `launch` 或 `launchOptions` 写在 instance 上**类型检查通过、静默无效**——本计划前两次尝试正是因此失败。这本身就是本计划要防的失效类别（配置看起来对，实际什么都没做）。
 - PR #1 的两次失败虽然落在同一测试文件，但错误文本不同、都发生在 import/runner 层；PR #2 对同一提交内容的同一文件 33/33 通过。按文件名追业务断言无法解释这组证据。
 - Vitest 4 的同形态上游问题与当前失败都发生在大套件接近结束时。通过测试级 retry 只会继续使用受污染的 Chromium 生命周期；进程边界才能释放被 Chromium 持有的资源。
+- 四分片并非永久安全边界：PR #4 run `32732754539` 的 shard 3 在 257 个文件、2681 个测试已通过后，最后一个 `overhead-conveyor-accumulation.test.ts` 导入报 `Vitest failed to find the runner`；可用内存最低 10.99 GiB、临时盘最低 79.21 GiB。故障文件与先前不同且零断言失败，再次证明失败随长生命周期漂移而非绑定业务测试。
 
 ## M3 中间结果（2026-08-23）
 
@@ -190,6 +191,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 | 2026-08-23 | 分支保护不要求 PR review | 单人仓库无法自审 | 要求 review 会使 `main` 完全不可合入；required checks 与 review 是两件事，前者已全选 |
 | 2026-08-23 | 选择方案 A，专项修复 Browser Gate，不临时移除 required，也不靠重跑碰绿 | 用户当前明确指令“按照A来，帮我全部完成” | required 语义保持不变；修复、结构自检、资源证据和重复验证属于本计划 M4 |
 | 2026-08-23 | Vitest 4 主套件采用四个顺序、独立进程的确定性 shard | 上游根因证据 + 当前 PR 对照证据 + PR #3 attempt 2 | 初版两个 shard 本地两轮和远程 attempt 1 通过，但 attempt 2 在第一个 shard 已通过 512 文件 / 5,428 例后复现同一 import flake；四分片把单进程上限降至约 258 文件。无重试、无跳过，四个 shard 并集仍覆盖完整主套件 |
+| 2026-08-24 | 从四分片收紧为八个顺序独立进程 | PR #4 run `32732754539` 的同形态 runner/import 失败 | 单进程上限从约 258 降至约 129 文件；仍无 retry、skip、子集或 false-green，八个 shard 并集覆盖完整主套件 |
 
 ## Validation
 
@@ -210,6 +212,7 @@ M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - 四分片调整后，`CI=1 ./scripts/verify.sh browser` 本地全量退出 0；四个主 shard 和隔离性能进程全部通过，单 shard 最大约 258 文件，性能套件 11/11。
 - `./scripts/verify.sh governance`、`static`、`node`、`build` 均通过；Node 为 **61 文件 / 633 例通过**（另 2 文件 / 7 例按既有条件 skip）。
 - **远程验收完成**：PR #3、实现提交 `bffbaf9` 的 run [`32629737449`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32629737449) attempts 1/2/3 五项 Gate 全绿；Browser 分别 **10:02 / 12:06 / 9:07**。每轮四个主 shard 都是 258 / 258 / 258 / 257 文件，性能套件独立 1 文件；三轮资源最低值为临时盘 78.57 GiB、内存 9.00 GiB，每个 shard 结束后临时盘恢复到约 83.75 GiB。
+- **后续复现与修复**：PR #4 run `32732754539` 的四分片 shard 3 在 257 files / 2681 tests 通过后导入最后一个文件时报 `Vitest failed to find the runner`；最低临时盘 79.21 GiB、内存 10.99 GiB，无产品断言失败。八分片结构守卫 4/4；本地 `CI=1 ./scripts/verify.sh browser` 的八个主 shard 和独立性能套件全部通过，每个主进程为 128–129 files，性能套件 11/11；远程结果待补充。
 
 ## Rollback
 
@@ -217,4 +220,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2、M4 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的初版两分片被远程重复验证否决，四分片在同一实现提交上完成远程 3/3 fresh-run；Browser required、全量与失败关闭语义均保持不变。
+M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的初版两分片被远程重复验证否决；四分片虽曾完成远程 3/3 fresh-run及合并后验证，之后仍复现同形态基础设施失败，现以本地完整通过的八分片继续收紧进程生命周期并等待重复远程证据。Browser required、全量与失败关闭语义始终保持不变。
