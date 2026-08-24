@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  BROWSER_PROCESS_ENV,
   BROWSER_SHARDS,
   PERFORMANCE_TEST,
   buildBrowserGateCommands,
@@ -41,6 +42,26 @@ describe('required browser gate process boundaries', () => {
     const serialized = JSON.stringify(buildBrowserGateCommands());
     expect(serialized).not.toMatch(/retry|passWithNoTests|changed|related/i);
     expect(buildBrowserGateCommands().every(({ command }) => command === 'npm')).toBe(true);
+  });
+
+  it('forces the official Vitest Chromium per-file GC backport in every browser process', () => {
+    const packageJson = JSON.parse(readFileSync(
+      new URL('../package.json', import.meta.url),
+      'utf8',
+    )) as { devDependencies: Record<string, string> };
+    const implementation = readFileSync(
+      new URL('../scripts/run-browser-gate.mjs', import.meta.url),
+      'utf8',
+    );
+
+    expect(BROWSER_PROCESS_ENV).toEqual({
+      VITEST_CHROMIUM_GC_FORCE: '1',
+      VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1024',
+    });
+    expect(implementation).toContain('env: { ...process.env, ...BROWSER_PROCESS_ENV }');
+    expect(packageJson.devDependencies.vitest).toBe('^4.1.11');
+    expect(packageJson.devDependencies['@vitest/browser']).toBe('^4.1.11');
+    expect(packageJson.devDependencies['@vitest/browser-playwright']).toBe('^4.1.11');
   });
 
   it('keeps the Browser Gate required entrypoint fail-closed', () => {

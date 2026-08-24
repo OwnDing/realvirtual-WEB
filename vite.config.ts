@@ -844,6 +844,10 @@ export default defineConfig(({ command }) => ({
     // instances, and the second instance re-runs its component registration
     // against a core that already has them → uncaught "axisPointer
     // CartesianAxisPointer exists". Pinning keeps a single echarts instance.
+    // The remaining entries are literal lazy imports or vi.mock() targets that
+    // Vite can first discover halfway through a cold Browser suite. Vitest 4.1
+    // then re-optimizes and reloads the active test, invalidating the old chunk
+    // URL. Pinning the known set makes a clean checkout deterministic.
     include: [
       'read-excel-file',
       'monaco-editor/esm/vs/editor/editor.api',
@@ -855,6 +859,20 @@ export default defineConfig(({ command }) => ({
       'echarts/charts',
       'echarts/components',
       'echarts/renderers',
+      '@microsoft/teams-js',
+      '@jitl/quickjs-singlefile-browser-release-sync',
+      '@mkkellogg/gaussian-splats-3d',
+      '@noble/ed25519',
+      'jszip',
+      'mqtt',
+      'n8ao',
+      'quickjs-emscripten-core',
+      'react-pdf',
+      'three/webgpu',
+      'three/addons/controls/PointerLockControls.js',
+      'three/addons/loaders/PCDLoader.js',
+      'three/addons/loaders/PLYLoader.js',
+      'three/examples/jsm/exporters/GLTFExporter.js',
     ],
     // three-mesh-bvh/worker (lazily imported by rv-bvh-build-port.ts) MUST be
     // excluded, not included: pre-bundling relocates the module to

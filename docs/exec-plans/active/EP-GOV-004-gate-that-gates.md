@@ -55,7 +55,7 @@ authority: normative
 - CI 历史：`f012911` 与 `2c42c21` 的 Browser Gate 因 `tests/des-workspace-coupling.test.ts` 连续两次红，两个提交仍被推入 `develop`——`main`/`develop` 无 branch protection、无 required checks（OD-005）。
 - 最近四个功能提交中有四处"测试从未执行"：参考负载只处理 1 个事件、编辑器 E2E 缺 GL 参数卡在等 canvas、耦合测试的假 viewer 抛错、事件队列 overlay 从未注册。四处均已由 [`EP-DES-002`](../completed/EP-DES-002-public-des-hardening.md) 修复，但失效**类别**没有守卫。
 - 文档 PR #1（commit `d24936d`）只改 3 个治理文档，Browser Gate run `32625669475` 的两次 attempt 都在 `tests/commissioning-trust-activation.test.ts` 导入阶段失败：一次是 dynamic module fetch，一次是 Vitest runner 无法找到；两次均已有 **1,025 文件 / 10,822 例通过**，没有断言失败。包含同一文档提交的 PR #2（commit `53642db`）随后在 run `32625805452` 中五项 Gate 全绿，同一文件 33/33、全量 1,031 文件 / 10,869 例通过。证据指向 Browser runner/Chromium 生命周期，而不是文档或该测试的确定性回归。
-- 当前锁定 Vitest / `@vitest/browser-playwright` `4.0.18`。上游 [`vitest-dev/vitest#9437`](https://github.com/vitest-dev/vitest/issues/9437) 记录了 Ubuntu 24.04 + Chromium 在大型 Browser Mode 套件中保留已删除临时文件、最终以动态导入/iframe 错误失败的同形态问题；修复 [`#10912`](https://github.com/vitest-dev/vitest/pull/10912) 只进入 Vitest 5 RC。当前计划不把 required gate 押在 RC 升级或本地复刻上游补丁上。
+- 原锁定 Vitest / `@vitest/browser-playwright` `4.0.18`。上游 [`vitest-dev/vitest#9437`](https://github.com/vitest-dev/vitest/issues/9437) 已把根因定位为 Chromium tester iframe 的模块重验证遗留共享内存/临时文件，并由 [`#10912`](https://github.com/vitest-dev/vitest/pull/10912) 加入每文件 GC；该修复已于 2026-08-18 正式回移到同一 v4 系列的 [`4.1.11`](https://github.com/vitest-dev/vitest/releases/tag/v4.1.11)，不再需要押注 RC 或本地复刻补丁。
 
 ## State Ownership and Compatibility
 
@@ -122,7 +122,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 ### M4 — 大型 Browser Gate 稳定性
 
-保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/8` 至 `8/8` 八个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第九个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。四分片曾连续通过，但 2026-08-24 在单进程约 258 个文件处再次复现相同 runner 丢失；八分片把单进程生命周期进一步限制到约 129 个文件。
+保持全部 Browser 测试与现有 20 分钟 test timeout，把主套件确定性拆为 `1/8` 至 `8/8` 八个互补 shard，顺序运行且每个 shard 使用新的 npm / Vitest / Chromium 进程；原有 wall-clock 性能套件继续在第九个独立进程运行。每个阶段采样临时盘和主机可用内存并输出最低值，以便远程失败能够区分断言回归与 runner 资源耗尽。四分片曾连续通过后在约 258 文件处复现，八分片也在三轮绿色后于约 129 文件处复现。最终方案升级 Vitest 三件套至 `4.1.11`，并对门禁子进程设置官方 `VITEST_CHROMIUM_GC_FORCE=1` 与高于受支持 runner 的 1024 GiB 磁盘阈值，确保每个测试文件后实际回收 Chromium 遗留（单独设置 `FORCE` 不越过默认 4 GiB 阈值）；八分片继续限制其他进程级累积。
 
 失败语义不变：任一 shard 或性能套件非零即整项 Browser Gate 非零；不使用 retry、`continue-on-error`、`passWithNoTests`、changed/related 子集，也不从分支保护 required checks 中移除 Browser Gate。
 
@@ -133,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
-- [x] M4 Browser Gate 稳定性（八分片本地完整门禁通过；PR #4 实现提交远程连续 3/3 全绿）
+- [~] M4 Browser Gate 稳定性（Vitest 4.1.11 + 官方强制每文件 GC 已连续两轮本地全量通过；远程重复验收待执行）
 
 ## Surprises & Discoveries
 
@@ -192,6 +192,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 | 2026-08-23 | 选择方案 A，专项修复 Browser Gate，不临时移除 required，也不靠重跑碰绿 | 用户当前明确指令“按照A来，帮我全部完成” | required 语义保持不变；修复、结构自检、资源证据和重复验证属于本计划 M4 |
 | 2026-08-23 | Vitest 4 主套件采用四个顺序、独立进程的确定性 shard | 上游根因证据 + 当前 PR 对照证据 + PR #3 attempt 2 | 初版两个 shard 本地两轮和远程 attempt 1 通过，但 attempt 2 在第一个 shard 已通过 512 文件 / 5,428 例后复现同一 import flake；四分片把单进程上限降至约 258 文件。无重试、无跳过，四个 shard 并集仍覆盖完整主套件 |
 | 2026-08-24 | 从四分片收紧为八个顺序独立进程 | PR #4 run `32732754539` 的同形态 runner/import 失败 | 单进程上限从约 258 降至约 129 文件；仍无 retry、skip、子集或 false-green，八个 shard 并集覆盖完整主套件 |
+| 2026-08-24 | 升级 Vitest 三件套至 4.1.11，并在 Browser Gate 强制官方每文件 Chromium GC | 关闭提交 run `32740819707` 在八分片远程 3/3 后仍复现；上游 v4.1.11 已正式回移根因修复 | 不再继续以无限增加 shard 猜测安全边界；使用官方同主版本修复，八分片保留为第二层失败关闭边界 |
 
 ## Validation
 
@@ -214,6 +215,9 @@ M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - **远程验收完成**：PR #3、实现提交 `bffbaf9` 的 run [`32629737449`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32629737449) attempts 1/2/3 五项 Gate 全绿；Browser 分别 **10:02 / 12:06 / 9:07**。每轮四个主 shard 都是 258 / 258 / 258 / 257 文件，性能套件独立 1 文件；三轮资源最低值为临时盘 78.57 GiB、内存 9.00 GiB，每个 shard 结束后临时盘恢复到约 83.75 GiB。
 - **后续复现与修复**：PR #4 run `32732754539` 的四分片 shard 3 在 257 files / 2681 tests 通过后导入最后一个文件时报 `Vitest failed to find the runner`；最低临时盘 79.21 GiB、内存 10.99 GiB，无产品断言失败。八分片结构守卫 4/4；最终方案两轮本地 `CI=1 ./scripts/verify.sh browser` 均由八个主 shard 和独立性能套件完整通过，每个主进程为 128–129 files，性能套件 11/11；第二轮在最低可用内存约 0.06 GiB 的压力下仍退出 0，进程结束后恢复至约 3.28 GiB。
 - **八分片远程验收完成**：PR #4、实现提交 `ac769d4` 的 run [`32735488742`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32735488742) attempts 1/2/3 五项 Gate 连续全绿；Browser 分别 **12:57 / 9:53 / 16:36**（第三轮约 4 分钟用于 checkout）。三轮均完整执行八个主 shard 与独立性能进程，且 Browser required、全量、失败关闭语义未改变。
+- **八分片随后仍复现**：关闭提交 `62c052f` 的 run `32740819707` 在 shard 1 已通过 128 files / 1309 tests 后，最后导入 `sdk-supervisory.test.ts` 时报 `Vitest failed to find the runner`；最低临时盘 80.15 GiB、内存 10.21 GiB，零产品断言失败。故 M4 再次打开，最终验证对象改为 Vitest 4.1.11 + 官方强制每文件 GC + 八分片。
+- **最终方案本地验收**：三件套升级到 Vitest 4.1.11；runner 结构守卫现为 5/5，确认官方 GC 两个环境变量进入每个子进程，且八分片、独立性能进程、失败关闭与无 retry/skip 语义不变。聚焦 `sdk-supervisory` 记录到 `triggered:true` 的官方 CDP GC（约 15.8 ms）。显式预优化 Browser 套件实际懒加载的外部依赖后，连续两轮完整 `CI=1 ./scripts/verify.sh browser` 均由八个主 shard 和性能 11/11 全部通过，临时盘保持约 50.66–50.67 GiB；第二轮最低可用内存约 0.06 GiB 仍退出 0。首次升级运行中 Vite 冷依赖重优化造成的确定性 reload 均在依赖清单补全后从 shard 1 重跑，不计为绿色结果。
+- 最终方案的 `./scripts/verify.sh static`、`node`、`build` 通过；Node 为 **61 文件 / 634 例通过**（另 2 文件 / 7 例按既有条件 skip），Build 为 14,918 modules transformed。远程三轮 fresh-run 尚未执行，因此 M4 保持进行中。
 
 ## Rollback
 
@@ -221,4 +225,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2、M4 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因，因此本计划继续留在 active。M4 的初版两分片被远程重复验证否决；四分片虽曾完成远程 3/3 fresh-run 及合并后验证，之后仍复现同形态基础设施失败；八分片现已完成本地完整门禁和同一实现提交远程 3/3 fresh-run。Browser required、全量与失败关闭语义始终保持不变。
+M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的两、四、八分片都在绿色证据后再次出现同形态基础设施失败，证明单靠猜测进程长度不能形成稳定契约；现采用已正式回移到 Vitest 4.1.11 的上游根因修复并强制每文件 GC，八分片作为第二层边界。本地连续两轮全量已通过，等待同一实现提交的远程重复验证。Browser required、全量与失败关闭语义始终保持不变。
