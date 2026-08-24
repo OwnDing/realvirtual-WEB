@@ -83,7 +83,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 
 上述 EP-GOV-003 首次远程验证时，`main`、`develop` 尚无 branch protection。OD-005 已于 2026-08-23 关闭：两个分支现在都要求 Governance、Static、Node、Browser、Build 五项检查，`strict` 且管理员不可绕过，禁止强推和删除。
 
-2026-08-23 的文档 PR Browser run `32625669475` 两次在 1,025 文件 / 10,822 例已通过、零断言失败后发生 import/runner 基础设施错误；包含同一提交的 run `32625805452` 随后全绿。EP-GOV-004 M4 因此在不移除 required check、不重试和不缩小套件的前提下引入上述进程分片。初版两分片在远程重复时仍复现 import flake；四分片实现提交 `bffbaf9` 随后由 PR #3 run `32629737449` attempts 1/2/3 验证，五项 Gate 三轮全绿，Browser 分别 10:02 / 12:06 / 9:07。CI 不能替代 E2E、真实设备和人工 UX 验收。
+2026-08-23 的文档 PR Browser run `32625669475` 两次在 1,025 文件 / 10,822 例已通过、零断言失败后发生 import/runner 基础设施错误；包含同一提交的 run `32625805452` 随后全绿。EP-GOV-004 M4 因此在不移除 required check、不重试和不缩小套件的前提下引入上述进程分片。初版两分片在远程重复时仍复现 import flake；四分片实现提交 `bffbaf9` 随后由 PR #3 run `32629737449` attempts 1/2/3 验证，五项 Gate 三轮全绿，Browser 分别 10:02 / 12:06 / 9:07。四分片后来在 PR #4 再次出现 runner 丢失，收紧为八分片后，实现提交 `ac769d4` 由 run `32735488742` attempts 1/2/3 连续验证五项 Gate 全绿，Browser 分别 12:57 / 9:53 / 16:36。CI 不能替代 E2E、真实设备和人工 UX 验收。
 
 ## 8. 新增或修改门禁
 

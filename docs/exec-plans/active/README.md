@@ -3,13 +3,12 @@ doc_id: EXEC-ACTIVE-INDEX
 title: 活动 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-23
+last_reviewed: 2026-08-24
 authority: normative-registry
 ---
 
 # 活动 ExecPlan 索引
 
-- [`EP-UI-001-hmi-layout-regressions.md`](EP-UI-001-hmi-layout-regressions.md)：修复告警收回操作区、全屏 3D 画布与 HMI 顶部 KPI 看板回归；2026-08-24 依用户指令激活。
 - [`EP-GOV-004-gate-that-gates.md`](EP-GOV-004-gate-that-gates.md)：让质量门禁真正拦得住东西——本机门禁与 CI 一致、OD-005 分支保护、反退化守卫；2026-08-23 依用户指令激活。
 
 已完成计划见 [`../completed/`](../completed/README.md)。

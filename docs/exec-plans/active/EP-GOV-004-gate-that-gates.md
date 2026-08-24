@@ -133,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
-- [~] M4 Browser Gate 稳定性（四分片在 PR #4 复现 runner 丢失；八分片本地完整门禁通过，等待重复远程验收）
+- [x] M4 Browser Gate 稳定性（八分片本地完整门禁通过；PR #4 实现提交远程连续 3/3 全绿）
 
 ## Surprises & Discoveries
 
@@ -212,7 +212,8 @@ M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - 四分片调整后，`CI=1 ./scripts/verify.sh browser` 本地全量退出 0；四个主 shard 和隔离性能进程全部通过，单 shard 最大约 258 文件，性能套件 11/11。
 - `./scripts/verify.sh governance`、`static`、`node`、`build` 均通过；Node 为 **61 文件 / 633 例通过**（另 2 文件 / 7 例按既有条件 skip）。
 - **远程验收完成**：PR #3、实现提交 `bffbaf9` 的 run [`32629737449`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32629737449) attempts 1/2/3 五项 Gate 全绿；Browser 分别 **10:02 / 12:06 / 9:07**。每轮四个主 shard 都是 258 / 258 / 258 / 257 文件，性能套件独立 1 文件；三轮资源最低值为临时盘 78.57 GiB、内存 9.00 GiB，每个 shard 结束后临时盘恢复到约 83.75 GiB。
-- **后续复现与修复**：PR #4 run `32732754539` 的四分片 shard 3 在 257 files / 2681 tests 通过后导入最后一个文件时报 `Vitest failed to find the runner`；最低临时盘 79.21 GiB、内存 10.99 GiB，无产品断言失败。八分片结构守卫 4/4；本地 `CI=1 ./scripts/verify.sh browser` 的八个主 shard 和独立性能套件全部通过，每个主进程为 128–129 files，性能套件 11/11；远程结果待补充。
+- **后续复现与修复**：PR #4 run `32732754539` 的四分片 shard 3 在 257 files / 2681 tests 通过后导入最后一个文件时报 `Vitest failed to find the runner`；最低临时盘 79.21 GiB、内存 10.99 GiB，无产品断言失败。八分片结构守卫 4/4；最终方案两轮本地 `CI=1 ./scripts/verify.sh browser` 均由八个主 shard 和独立性能套件完整通过，每个主进程为 128–129 files，性能套件 11/11；第二轮在最低可用内存约 0.06 GiB 的压力下仍退出 0，进程结束后恢复至约 3.28 GiB。
+- **八分片远程验收完成**：PR #4、实现提交 `ac769d4` 的 run [`32735488742`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32735488742) attempts 1/2/3 五项 Gate 连续全绿；Browser 分别 **12:57 / 9:53 / 16:36**（第三轮约 4 分钟用于 checkout）。三轮均完整执行八个主 shard 与独立性能进程，且 Browser required、全量、失败关闭语义未改变。
 
 ## Rollback
 
@@ -220,4 +221,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的初版两分片被远程重复验证否决；四分片虽曾完成远程 3/3 fresh-run及合并后验证，之后仍复现同形态基础设施失败，现以本地完整通过的八分片继续收紧进程生命周期并等待重复远程证据。Browser required、全量与失败关闭语义始终保持不变。
+M1、M2、M4 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因，因此本计划继续留在 active。M4 的初版两分片被远程重复验证否决；四分片虽曾完成远程 3/3 fresh-run 及合并后验证，之后仍复现同形态基础设施失败；八分片现已完成本地完整门禁和同一实现提交远程 3/3 fresh-run。Browser required、全量与失败关闭语义始终保持不变。

@@ -2,7 +2,7 @@
 doc_id: EP-UI-001
 title: HMI 告警、全屏 3D 与 KPI 看板回归修复
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-24
 authority: normative
@@ -87,7 +87,7 @@ authority: normative
 - [x] 建立自动化失败基线和真实页面复现证据
 - [x] 实施告警操作区、全屏画布与 KPI 修复
 - [x] 完成本地门禁和真实 Chromium 验收
-- [ ] 完成远程 PR 门禁并合并 `develop`
+- [x] 完成远程 PR 门禁；本计划关闭提交通过 required checks 后与修复一起合并 `develop`
 
 ## Surprises & Discoveries
 
@@ -114,10 +114,11 @@ authority: normative
 - `npx playwright test e2e/hmi-layout-regressions.spec.ts`：2 tests 通过；覆盖 1280×300 下 full-browser Canvas 与溢出告警的收回按钮边界。
 - `./scripts/verify.sh static`：通过，包含治理、文档发布性、ESLint 与 TypeScript。
 - `./scripts/verify.sh node`：通过；61 files 通过、2 skipped，633 tests 通过、7 skipped。
-- `./scripts/verify.sh browser`：UI 实现后的四分片本地门禁通过；远程 runner 复现后改为八分片，最终本地完整门禁的八个 128–129 file 主 shard 与独立性能套件全部通过，性能套件 11/11。首次本地受资源竞争影响的 `glb-composition` 失败已独立复核为 13 tests 通过、性能比 1.25x；八分片首次运行捕获的 autosave/discard 产品竞态已修复后从头复跑通过，均未用重试隐藏失败。
+- `./scripts/verify.sh browser`：UI 实现后的四分片本地门禁通过；远程 runner 复现后改为八分片，最终方案两轮本地完整门禁的八个 128–129 file 主 shard 与独立性能套件全部通过，性能套件均为 11/11。第二轮在最低可用内存约 0.06 GiB 的压力下仍完整通过，进程结束后恢复至约 3.28 GiB。首次本地受资源竞争影响的 `glb-composition` 失败已独立复核为 13 tests 通过、性能比 1.25x；八分片首次运行捕获的 autosave/discard 产品竞态已修复后从头复跑通过，均未用重试隐藏失败。
 - `./scripts/verify.sh build`：通过；14918 modules transformed，保留既有 dynamic-import 与大 chunk 警告。
 - 真实 in-app Chromium：1280×300 时 `#rv-viewport` 与 Canvas 均为 `(0,0,1280,300)`，告警滚动区 `overflow-y:auto` 且收回按钮完整在视口内；1280×720 时真实模型与 OEE、Parts/h、Cycle、Power 四张 KPI 卡可见，收回/展开交互通过。
-- 远程 PR 首轮：run `32732754539` 的 Governance、Static、Node、Build 通过；Browser 因已归因的 runner 生命周期故障失败。八分片修复后的最终 SHA 五项 required checks 待重新验收。
+- 远程 PR 首轮：run `32732754539` 的 Governance、Static、Node、Build 通过；Browser 因已归因的 runner 生命周期故障失败。没有重跑未修改的失败提交来碰绿。
+- 八分片修复提交 `ac769d4` 的 run [`32735488742`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32735488742) attempts 1/2/3 连续三轮五项 required checks 全绿；Browser Gate 分别 **12:57 / 9:53 / 16:36**，第三轮包含约 4 分钟 checkout。三轮均完整运行八个主 shard 与独立性能进程，未使用 retry、skip、子集或 `continue-on-error`。
 
 ## Rollback
 
@@ -125,4 +126,4 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-已完成三个回归的兼容修复与本地验收：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化格式、DES、智能资产或工业接口；门禁暴露的 autosave/discard 修复只调整异步生命周期顺序。PR #4 已建立，远程 required checks 与合并结果将在计划关闭前补充。
+已完成三个回归的兼容修复与本地、真实 Chromium、远程 3/3 门禁验收：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化格式、DES、智能资产或工业接口；门禁暴露的 autosave/discard 修复只调整异步生命周期顺序。PR #4 的关闭提交需再次通过五项 required checks，随后与本计划一起合并；因此该文件进入 `develop` 时即代表计划真实完成。
