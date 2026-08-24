@@ -3,7 +3,7 @@ doc_id: GOV-HARNESS
 title: XYvirtual WEB AI Coding Harness
 status: approved
 owner: engineering
-last_reviewed: 2026-08-23
+last_reviewed: 2026-08-25
 authority: normative-process
 ---
 
@@ -83,7 +83,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 
 上述 EP-GOV-003 首次远程验证时，`main`、`develop` 尚无 branch protection。OD-005 已于 2026-08-23 关闭：两个分支现在都要求 Governance、Static、Node、Browser、Build 五项检查，`strict` 且管理员不可绕过，禁止强推和删除。
 
-2026-08-23 的文档 PR Browser run `32625669475` 两次在 1,025 文件 / 10,822 例已通过、零断言失败后发生 import/runner 基础设施错误；包含同一提交的 run `32625805452` 随后全绿。EP-GOV-004 M4 因此在不移除 required check、不重试和不缩小套件的前提下引入上述进程分片。初版两分片在远程重复时仍复现 import flake；四分片实现提交 `bffbaf9` 随后由 PR #3 run `32629737449` attempts 1/2/3 验证，五项 Gate 三轮全绿，Browser 分别 10:02 / 12:06 / 9:07。四分片后来再次失败；八分片实现提交 `ac769d4` 虽由 run `32735488742` attempts 1/2/3 连续全绿，关闭提交 run `32740819707` 仍在 128 文件 / 1309 例通过后复现。最终方案使用正式回移上游根因修复的 Vitest 4.1.11，在门禁中强制每文件 Chromium GC，并保留八分片作为第二层生命周期边界；本地完整 Browser 已连续两轮通过，远程重复验收仍为合入条件。CI 不能替代 E2E、真实设备和人工 UX 验收。
+2026-08-23 的文档 PR Browser run `32625669475` 两次在 1,025 文件 / 10,822 例已通过、零断言失败后发生 import/runner 基础设施错误；包含同一提交的 run `32625805452` 随后全绿。EP-GOV-004 M4 因此在不移除 required check、不重试和不缩小套件的前提下引入上述进程分片。初版两分片在远程重复时仍复现 import flake；四分片实现提交 `bffbaf9` 随后由 PR #3 run `32629737449` attempts 1/2/3 验证，五项 Gate 三轮全绿，Browser 分别 10:02 / 12:06 / 9:07。四分片后来再次失败；八分片实现提交 `ac769d4` 虽由 run `32735488742` attempts 1/2/3 连续全绿，关闭提交 run `32740819707` 仍在 128 文件 / 1309 例通过后复现。最终方案使用正式回移上游根因修复的 Vitest 4.1.11，在门禁中强制每文件 Chromium GC，并保留八分片作为第二层生命周期边界；本地完整 Browser 连续两轮通过，实现提交 `400dc46` 的 run `32744712653` attempts 1/2/3 五项 Gate 连续全绿，Browser 分别 14:19 / 17:43 / 13:49。CI 不能替代 E2E、真实设备和人工 UX 验收。
 
 ## 8. 新增或修改门禁
 

@@ -4,7 +4,7 @@ title: 让质量门禁真正拦得住东西
 status: approved
 plan_status: active
 owner: engineering
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-25
 authority: normative
 ---
 
@@ -133,7 +133,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
 - [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
-- [~] M4 Browser Gate 稳定性（Vitest 4.1.11 + 官方强制每文件 GC 已连续两轮本地全量通过；远程重复验收待执行）
+- [x] M4 Browser Gate 稳定性（Vitest 4.1.11 + 官方强制每文件 GC 已连续两轮本地全量通过；同一实现提交远程 3/3 全绿）
 
 ## Surprises & Discoveries
 
@@ -217,7 +217,8 @@ M4（2026-08-23，本机 Darwin 25.6 / Apple M5）：
 - **八分片远程验收完成**：PR #4、实现提交 `ac769d4` 的 run [`32735488742`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32735488742) attempts 1/2/3 五项 Gate 连续全绿；Browser 分别 **12:57 / 9:53 / 16:36**（第三轮约 4 分钟用于 checkout）。三轮均完整执行八个主 shard 与独立性能进程，且 Browser required、全量、失败关闭语义未改变。
 - **八分片随后仍复现**：关闭提交 `62c052f` 的 run `32740819707` 在 shard 1 已通过 128 files / 1309 tests 后，最后导入 `sdk-supervisory.test.ts` 时报 `Vitest failed to find the runner`；最低临时盘 80.15 GiB、内存 10.21 GiB，零产品断言失败。故 M4 再次打开，最终验证对象改为 Vitest 4.1.11 + 官方强制每文件 GC + 八分片。
 - **最终方案本地验收**：三件套升级到 Vitest 4.1.11；runner 结构守卫现为 5/5，确认官方 GC 两个环境变量进入每个子进程，且八分片、独立性能进程、失败关闭与无 retry/skip 语义不变。聚焦 `sdk-supervisory` 记录到 `triggered:true` 的官方 CDP GC（约 15.8 ms）。显式预优化 Browser 套件实际懒加载的外部依赖后，连续两轮完整 `CI=1 ./scripts/verify.sh browser` 均由八个主 shard 和性能 11/11 全部通过，临时盘保持约 50.66–50.67 GiB；第二轮最低可用内存约 0.06 GiB 仍退出 0。首次升级运行中 Vite 冷依赖重优化造成的确定性 reload 均在依赖清单补全后从 shard 1 重跑，不计为绿色结果。
-- 最终方案的 `./scripts/verify.sh static`、`node`、`build` 通过；Node 为 **61 文件 / 634 例通过**（另 2 文件 / 7 例按既有条件 skip），Build 为 14,918 modules transformed。远程三轮 fresh-run 尚未执行，因此 M4 保持进行中。
+- 最终方案的 `./scripts/verify.sh static`、`node`、`build` 通过；Node 为 **61 文件 / 634 例通过**（另 2 文件 / 7 例按既有条件 skip），Build 为 14,918 modules transformed。
+- **最终方案远程验收完成**：PR #4、实现提交 `400dc46` 的 run [`32744712653`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32744712653) attempts 1/2/3 五项 required checks 连续全绿；Browser Gate 分别 **14:19 / 17:43 / 13:49**，第二轮包含约 4 分钟 LFS checkout。每轮都完整执行 129 / 129 / 129 / 129 / 129 / 129 / 129 / 128 个文件的八个互补主 shard 与独立性能进程；三轮临时盘最低 83.64 GiB、内存最低 11.02 GiB，性能套件均为 1 file / 11 tests 通过。未使用 retry、skip、changed/related 子集或 `continue-on-error`，M4 完成。
 
 ## Rollback
 
@@ -225,4 +226,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因。M4 的两、四、八分片都在绿色证据后再次出现同形态基础设施失败，证明单靠猜测进程长度不能形成稳定契约；现采用已正式回移到 Vitest 4.1.11 的上游根因修复并强制每文件 GC，八分片作为第二层边界。本地连续两轮全量已通过，等待同一实现提交的远程重复验证。Browser required、全量与失败关闭语义始终保持不变。
+M1、M2、M4 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因，因此本计划继续留在 active。M4 的两、四、八分片都曾在绿色证据后再次出现同形态基础设施失败，证明单靠猜测进程长度不能形成稳定契约；最终采用正式回移到 Vitest 4.1.11 的上游根因修复并强制每文件 GC，八分片作为第二层边界，完成本地连续两轮与同一实现提交远程三轮全量验证。Browser required、全量与失败关闭语义始终保持不变。

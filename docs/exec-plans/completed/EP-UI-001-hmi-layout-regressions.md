@@ -2,9 +2,9 @@
 doc_id: EP-UI-001
 title: HMI 告警、全屏 3D 与 KPI 看板回归修复
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-25
 authority: normative
 ---
 
@@ -87,7 +87,7 @@ authority: normative
 - [x] 建立自动化失败基线和真实页面复现证据
 - [x] 实施告警操作区、全屏画布与 KPI 修复
 - [x] 完成本地门禁和真实 Chromium 验收
-- [ ] 完成最终根因修复、远程 PR 门禁并合并 `develop`
+- [x] 完成最终根因修复与实现提交远程 3/3 门禁；收尾提交通过 required checks 后按用户授权合并 `develop`
 
 ## Surprises & Discoveries
 
@@ -120,7 +120,8 @@ authority: normative
 - 真实 in-app Chromium：1280×300 时 `#rv-viewport` 与 Canvas 均为 `(0,0,1280,300)`，告警滚动区 `overflow-y:auto` 且收回按钮完整在视口内；1280×720 时真实模型与 OEE、Parts/h、Cycle、Power 四张 KPI 卡可见，收回/展开交互通过。
 - 远程 PR 首轮：run `32732754539` 的 Governance、Static、Node、Build 通过；Browser 因已归因的 runner 生命周期故障失败。没有重跑未修改的失败提交来碰绿。
 - 八分片修复提交 `ac769d4` 的 run [`32735488742`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32735488742) attempts 1/2/3 连续三轮五项 required checks 全绿；Browser Gate 分别 **12:57 / 9:53 / 16:36**，第三轮包含约 4 分钟 checkout。三轮均完整运行八个主 shard 与独立性能进程，未使用 retry、skip、子集或 `continue-on-error`。
-- 关闭提交 `62c052f` 的 run `32740819707`：Governance、Static、Node、Build 通过；Browser shard 1 在 **128 文件 / 1309 例通过**后以 runner/import 基础设施错误失败，零产品断言失败，最低临时盘 80.15 GiB、内存 10.21 GiB。该证据否决“仅八分片即可完成”的结论，计划重新置为 active；Vitest 4.1.11 + 强制每文件 Chromium GC 已完成本地两轮验收，远程重复验收待当前实现提交执行。
+- 关闭提交 `62c052f` 的 run `32740819707`：Governance、Static、Node、Build 通过；Browser shard 1 在 **128 文件 / 1309 例通过**后以 runner/import 基础设施错误失败，零产品断言失败，最低临时盘 80.15 GiB、内存 10.21 GiB。该证据否决“仅八分片即可完成”的结论，计划重新置为 active。
+- 最终实现提交 `400dc46` 的 run [`32744712653`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32744712653) attempts 1/2/3 连续三轮五项 required checks 全绿；Browser Gate 分别 **14:19 / 17:43 / 13:49**，每轮八个互补主 shard 与独立性能进程全部通过，三轮临时盘最低 83.64 GiB、内存最低 11.02 GiB。没有 retry、skip、子集或 `continue-on-error`；最终方案完成远程重复验收。
 
 ## Rollback
 
@@ -128,4 +129,4 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-三个 UI 回归的兼容修复、本地门禁和真实 Chromium 验收均已完成：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化格式、DES、智能资产或工业接口；门禁暴露的 autosave/discard 修复只调整异步生命周期顺序。八分片在三次绿色后仍复现上游 Chromium/Vitest 累积故障，因此计划重新激活，等待官方 v4.1.11 根因修复的完整验收后才合并。
+三个 UI 回归的兼容修复、本地门禁和真实 Chromium 验收均已完成：告警控制区和卡片滚动区分离，WebGL 恢复全浏览器铺底，项目根目录文档恢复正确模型 plugin 身份及 KPI slot。用户截图中的特定 IndexedDB 工作区文档未存在于本次浏览器 profile，故没有声称按原 `doc` id 打开；其稳定 hash、`rvproject:` 身份边界测试以及默认 Demo 的真实 plugin/KPI 页面共同覆盖根因。没有更改 Schema、持久化格式、DES、智能资产或工业接口；门禁暴露的 autosave/discard 修复只调整异步生命周期顺序。仅靠八分片的方案在三次绿色后仍复现上游 Chromium/Vitest 累积故障；升级 Vitest 4.1.11、强制官方每文件 GC 并保留八分片第二边界后，本地连续两轮与远程同一实现提交三轮均完整通过。收尾文档提交仍必须通过五项 required checks，本文件进入 `develop` 的唯一允许路径是用户已授权的 PR merge，不允许直接 push 或绕过保护。
