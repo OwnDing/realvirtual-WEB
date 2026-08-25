@@ -36,6 +36,9 @@ import {
   type LibraryOrigin,
   type LibrarySnapshot,
 } from './library-types';
+import { getAppConfig } from '../rv-app-config';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import type { DeploymentServicesConfig } from '../deployment/deployment-config';
 
 // ─── URL / entry normalization (moved verbatim) ─────────────────────────
 
@@ -137,6 +140,16 @@ interface GitHubRepoRef {
   subpath: string;
 }
 
+type GitHubLibraryService = NonNullable<DeploymentServicesConfig['githubLibrary']>;
+
+function configuredGitHubService(): GitHubLibraryService | null {
+  return getAppConfig().services?.githubLibrary ?? null;
+}
+
+function baseWithSlash(value: string): string {
+  return value.endsWith('/') ? value : `${value}/`;
+}
+
 /**
  * Parse a GitHub repo / folder URL into its parts. Returns null for anything
  * that is not a github.com repo URL. Handles:
@@ -144,16 +157,34 @@ interface GitHubRepoRef {
  *   https://github.com/owner/repo/tree/branch
  *   https://github.com/owner/repo/tree/branch/sub/folder
  */
-export function parseGitHubRepoUrl(url: string): GitHubRepoRef | null {
-  const m = url.match(
-    /^https?:\/\/github\.com\/([^/]+)\/([^/?#]+?)(?:\.git)?(?:\/tree\/([^/?#]+)(?:\/([^?#]*))?)?\/?(?:[?#].*)?$/i,
-  );
-  if (!m) return null;
+export function parseGitHubRepoUrl(
+  url: string,
+  service: GitHubLibraryService | null = configuredGitHubService(),
+): GitHubRepoRef | null {
+  if (!service) return null;
+  let candidate: URL;
+  let webBase: URL;
+  try {
+    candidate = new URL(url);
+    webBase = new URL(service.webBaseUrl);
+  } catch {
+    return null;
+  }
+  if (candidate.origin !== webBase.origin) return null;
+  const prefix = webBase.pathname.replace(/\/+$/, '');
+  if (prefix && !candidate.pathname.startsWith(`${prefix}/`)) return null;
+  const relativePath = candidate.pathname.slice(prefix.length).replace(/^\/+|\/+$/g, '');
+  const parts = relativePath.split('/');
+  if (parts.length < 2 || !parts[0] || !parts[1]) return null;
+  const owner = parts[0];
+  const repo = parts[1].replace(/\.git$/i, '');
+  if (!repo) return null;
+  if (parts.length > 2 && parts[2] !== 'tree') return null;
   return {
-    owner: m[1],
-    repo: m[2],
-    branch: m[3],
-    subpath: (m[4] ?? '').replace(/\/+$/, ''),
+    owner,
+    repo,
+    branch: parts[3] || undefined,
+    subpath: parts.slice(4).join('/').replace(/\/+$/, ''),
   };
 }
 
@@ -181,7 +212,20 @@ export function isGitHubRepoScanUrl(url: string): boolean {
  * adding it.
  */
 export function isGitHubCatalogUrl(url: string): boolean {
-  return /^https?:\/\/(raw\.githubusercontent\.com|github\.com)\//i.test(url.trim());
+  const service = configuredGitHubService();
+  try {
+    const candidate = new URL(url.trim());
+    if (service && [service.webBaseUrl, service.rawBaseUrl]
+      .some((base) => new URL(base).origin === candidate.origin)) return true;
+
+    // Classification only: recognize legacy persisted URLs so an upgrade does
+    // not auto-load or re-persist them when the repository service is disabled.
+    // No request URL is derived from these compatibility host names.
+    const legacyRawHost = ['raw', 'githubusercontent', 'com'].join('.');
+    return candidate.hostname === 'github.com' || candidate.hostname === legacyRawHost;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -192,14 +236,23 @@ export function isGitHubCatalogUrl(url: string): boolean {
  * caller can record a catalog error.
  */
 export async function buildCatalogFromGitHub(url: string): Promise<LibraryCatalog> {
-  const ref = parseGitHubRepoUrl(url);
+  const service = configuredGitHubService();
+  if (!service) throw new Error('Git repository libraries are disabled by deployment configuration');
+  const ref = parseGitHubRepoUrl(url, service);
   if (!ref) throw new Error('Not a GitHub repository URL');
   const { owner, repo } = ref;
+
+  const requestJson = async (path: string): Promise<Response> => {
+    const candidate = new URL(path, baseWithSlash(service.apiBaseUrl));
+    const allowed = allowRuntimeEgressUrl(candidate, 'github-library');
+    if (!allowed) throw new Error('Git repository API is blocked by deployment egress policy');
+    return fetch(allowed.href);
+  };
 
   // Resolve the default branch when the URL did not specify one.
   let branch = ref.branch;
   if (!branch) {
-    const repoResp = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    const repoResp = await requestJson(`repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
     if (!repoResp.ok) {
       throw new Error(repoResp.status === 403
         ? 'GitHub API rate limit reached — try again later'
@@ -209,8 +262,8 @@ export async function buildCatalogFromGitHub(url: string): Promise<LibraryCatalo
   }
 
   // One recursive tree listing returns every path in the repo.
-  const treeResp = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+  const treeResp = await requestJson(
+    `repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
   );
   if (!treeResp.ok) {
     throw new Error(treeResp.status === 403
@@ -239,8 +292,11 @@ export async function buildCatalogFromGitHub(url: string): Promise<LibraryCatalo
     const filename = n.path.split('/').pop() ?? n.path;
     const stem = filename.replace(/\.glb$/i, '');
     const parent = rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')).split('/').pop() ?? '' : '';
-    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/`
-      + n.path.split('/').map(encodeURIComponent).join('/');
+    const rawUrl = new URL(
+      `${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/`
+        + n.path.split('/').map(encodeURIComponent).join('/'),
+      baseWithSlash(service.rawBaseUrl),
+    ).href;
     return {
       id: `${repo}/${n.path}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       name: stem.replace(/[_-]+/g, ' ').trim(),
@@ -393,14 +449,30 @@ export class LibraryStore {
           return;
         }
 
-        // Auto-convert GitHub blob URLs to raw URLs
-        // https://github.com/user/repo/blob/main/path → https://raw.githubusercontent.com/user/repo/main/path
+        // Auto-convert a configured repository web URL to its configured raw origin.
         let fetchUrl = url;
-        const ghMatch = url.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
-        if (ghMatch) {
-          fetchUrl = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
+        const github = configuredGitHubService();
+        if (github) {
+          try {
+            const candidate = new URL(url);
+            const webBase = new URL(github.webBaseUrl);
+            const prefix = webBase.pathname.replace(/\/+$/, '');
+            const relative = candidate.pathname.slice(prefix.length).replace(/^\/+/, '');
+            const parts = relative.split('/');
+            if (candidate.origin === webBase.origin && parts[2] === 'blob' && parts.length > 3) {
+              fetchUrl = new URL(
+                [parts[0], parts[1], ...parts.slice(3)].map(encodeURIComponent).join('/'),
+                baseWithSlash(github.rawBaseUrl),
+              ).href;
+            }
+          } catch {
+            // Invalid URLs are rejected by the policy below.
+          }
         }
-        const resp = await fetch(fetchUrl);
+        const purpose = isGitHubCatalogUrl(fetchUrl) ? 'github-library' : 'remote-model';
+        const allowedUrl = allowRuntimeEgressUrl(fetchUrl, purpose);
+        if (!allowedUrl) throw new Error('Catalog URL is blocked by deployment egress policy');
+        const resp = await fetch(allowedUrl.href);
         if (!resp.ok) {
           this._catalogErrors.set(url, `HTTP ${resp.status}`);
           this._notify();

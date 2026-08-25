@@ -17,6 +17,20 @@ import {
   type TcHmiResponse,
 } from '../src/interfaces/twincat-hmi-interface';
 import type { InterfaceSettings } from '../src/interfaces/interface-settings-store';
+import { setAppConfig } from '../src/core/rv-app-config';
+
+beforeEach(() => {
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'ws://192.168.1.100:1010', purposes: ['industrial-interface'] }],
+    },
+  });
+});
+
+afterEach(() => {
+  setAppConfig({});
+});
 
 // ── Mock WebSocket ──────────────────────────────────────────────────────
 

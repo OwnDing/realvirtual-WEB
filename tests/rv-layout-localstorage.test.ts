@@ -4,11 +4,25 @@
 /**
  * Tests for Layout localStorage Persistence — verify library URLs and layout auto-save.
  */
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, test, expect, vi, beforeEach } from 'vitest';
 import { LayoutStore } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 describe('Layout localStorage Persistence', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://example.com', purposes: ['remote-model'] }],
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    setAppConfig({});
+  });
 
   test('addCatalog persists URL to localStorage', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(

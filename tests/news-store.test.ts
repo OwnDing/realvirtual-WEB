@@ -22,10 +22,16 @@ import {
   stubNewsRaw,
   stubNewsResponse,
 } from './helpers/news-test-utils';
+import type { RVAppConfig } from '../src/core/rv-app-config';
 
-const ENABLED = {
-  news: { enabled: true, apiUrl: 'https://portal.test/news/api/v1' },
-} as const;
+const ENABLED: RVAppConfig = {
+  schemaVersion: 1,
+  services: { news: { apiUrl: 'https://portal.test/news/api/v1' } },
+  egress: {
+    mode: 'allow-listed',
+    allow: [{ origin: 'https://portal.test', purposes: ['news'] }],
+  },
+};
 
 describe('news-store', () => {
   beforeEach(() => {

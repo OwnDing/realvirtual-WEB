@@ -120,7 +120,7 @@ async function main() {
   // Stable order: by category, then name.
   entries.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 
-  const catalog = { version: '1.0', name: 'realvirtual Library', entries };
+  const catalog = { version: '1.0', name: 'Bundled Library', entries };
   await writeFile(OUTPUT, JSON.stringify(catalog, null, 2) + '\n', 'utf8');
 
   const byCat = entries.reduce((m, e) => ((m[e.category] = (m[e.category] || 0) + 1), m), {});

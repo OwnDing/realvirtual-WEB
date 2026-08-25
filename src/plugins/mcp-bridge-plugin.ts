@@ -75,6 +75,7 @@ import { getViewerMode } from '../core/hmi/connect-store';
 import { getPlcControl } from '../core/plc-control';
 import { physicsDiagnostics } from '../core/engine/rv-physics-registry';
 import { loadInterfaceSettings } from '../interfaces/interface-settings-store';
+import { allowRuntimeEgressUrl } from '../core/deployment/runtime-egress';
 
 // Vite raw import — embeds the .md content as a string at build time
 import MCP_INSTRUCTIONS from '../../webviewer.mcp.md?raw';
@@ -511,13 +512,15 @@ export class McpBridgePlugin extends RVBehavior {
   private _connect(): void {
     if (this._destroyed) return;
     const target = this._resolveTarget();
+    const allowedTarget = allowRuntimeEgressUrl(target, 'industrial-interface');
+    if (!allowedTarget) return;
     // A configured token that is not in the URL means this attempt relies on
     // CONNECT's session cookie — see the fallback in onclose below.
     const usedCookieAuth = !target.includes('apikey=')
       && !!loadInterfaceSettings().wsAuthToken;
     let opened = false;
     try {
-      this._ws = new WebSocket(target);
+      this._ws = new WebSocket(allowedTarget.href);
     } catch {
       this._scheduleReconnect();
       return;

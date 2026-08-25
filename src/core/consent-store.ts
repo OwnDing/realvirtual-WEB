@@ -19,7 +19,8 @@
  */
 
 import { useSyncExternalStore } from 'react';
-import { getAppConfig } from './rv-app-config';
+import { getAnalyticsService } from './rv-app-config';
+import { isRuntimeEgressAllowed } from './deployment/runtime-egress';
 
 const STORAGE_KEY = 'rv-analytics-consent';
 
@@ -40,7 +41,8 @@ function emit(): void {
 
 /** True when a tracker is configured in settings.json (analytics.googleAnalyticsId). */
 export function isAnalyticsConfigured(): boolean {
-  return !!getAppConfig().analytics?.googleAnalyticsId;
+  const analytics = getAnalyticsService();
+  return Boolean(analytics && isRuntimeEgressAllowed(analytics.scriptUrl, 'analytics'));
 }
 
 /** True once the user has explicitly opted in to analytics. */

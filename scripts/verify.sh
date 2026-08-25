@@ -46,6 +46,7 @@ run_static() {
   say "ESLint architecture boundary gate"
   (
     cd "$verify_repo_root"
+    node scripts/assert-runtime-external-origins.mjs
     npm run lint
   )
   say "Community TypeScript gate"

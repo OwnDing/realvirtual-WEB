@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 realvirtual GmbH <https://realvirtual.io>
 
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Scene } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { loadGLB } from '../src/core/engine/rv-scene-loader';
@@ -11,6 +11,7 @@ import {
   verifyRvSigBuffer,
   verifyRvSigDirect,
 } from '../src/core/persistence/rv-sig-verify';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 const JSON_CHUNK = 0x4e4f534a;
 const BIN_CHUNK = 0x004e4942;
@@ -27,6 +28,16 @@ beforeAll(async () => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  setAppConfig({});
+});
+
+beforeEach(() => {
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'https://example.invalid', purposes: ['remote-model'] }],
+    },
+  });
 });
 
 function bytesToBase64(bytes: Uint8Array): string {

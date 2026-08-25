@@ -72,8 +72,8 @@ import {
  * of that.
  */
 export const DEMO_PROJECT_ID = 'prj_sample';
-/** Display name of that project — the home of the realvirtual demos. */
-export const DEMO_PROJECT_NAME = 'DemoRealvirtual';
+/** Neutral display name; stable ids/slugs below retain legacy compatibility. */
+export const DEMO_PROJECT_NAME = 'Demo Project';
 /** Canonical (slug) name, used by `?project=` deep links. */
 export const DEMO_PROJECT_SLUG = 'demorealvirtual';
 /**

@@ -19,6 +19,7 @@ import type { OrphanedOverride } from './rv-asset-reference';
 import { ROOT_SOURCE_KEY } from './rv-node-id';
 import type { EventEmitter } from '../rv-events';
 import type { ViewerEvents } from '../rv-viewer-events';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 // Side-effect imports: trigger registerComponent() at module load
 import './rv-transport-surface';
 import './rv-sensor';
@@ -446,6 +447,8 @@ export async function loadAndPrepareGLTF(url: string, scene: Scene, data?: Array
   debug('loader', `Loading ${url}...`);
   resetParityValidator(); // Clear any previous load's parity data
   const fetchBytes = async (): Promise<ArrayBuffer> => {
+    const allowedUrl = allowRuntimeEgressUrl(url, 'remote-model');
+    if (!allowedUrl) throw new Error('GLB URL is blocked by the deployment egress policy');
     const response = await fetch(url);
     if (!response.ok) throw new Error(`GLB fetch failed (${response.status} ${response.statusText}): ${url}`);
     return response.arrayBuffer();
@@ -1999,6 +2002,8 @@ export async function tryFetchSidecarSpec(glbUrl: string): Promise<import('../be
   const [base, query] = glbUrl.split('?', 2);
   if (!/\.glb$/i.test(base)) return null;
   const sidecarUrl = base.replace(/\.glb$/i, '.kin.json') + (query ? `?${query}` : '');
+  const allowedUrl = allowRuntimeEgressUrl(sidecarUrl, 'remote-model');
+  if (!allowedUrl) return null;
   let resp: Response;
   try {
     resp = await fetch(sidecarUrl);
@@ -2832,4 +2837,3 @@ export function processExtras(
     deferredLogic: gated ? { pending, context } : null,
   };
 }
-

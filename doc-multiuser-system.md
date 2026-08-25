@@ -315,10 +315,10 @@ Enforcement is on the Unity server side. The relay forwards all messages regardl
 
 A relay server is a Node.js WebSocket multiplexer that enables multiuser sessions when clients cannot reach Unity directly (firewalls, NAT, Teams meetings, public web sessions).
 
-> **The relay server source code lives in a separate repository.** It is no longer bundled with XYvirtual WEB. The settings store ships with a default hosted relay URL (`wss://download.realvirtual.io/relay`) and the XYvirtual WEB plugin handles both `local` and `relay` connection modes (see `connectionMode` in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts)).
+> **The relay server source code lives in a separate repository.** It is no longer bundled with XYvirtual WEB. The settings store leaves the relay URL empty by default; a deployment must configure and allow-list one explicitly. The XYvirtual WEB plugin handles both `local` and `relay` connection modes (see `connectionMode` in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts)).
 
 > **Two relay URLs appear in the sources and they do not agree.** The browser
-> default is `wss://download.realvirtual.io/relay` (`relayUrl` in
+> default is empty (`relayUrl` in
 > `src/core/hmi/multiuser-settings-store.ts`); the Unity `RelayServerUrl`
 > inspector tooltip gives `wss://portal.realvirtual.io/relay` as its example.
 > Only one of them can be the relay a given deployment actually runs — set
@@ -519,7 +519,7 @@ Key: `rv-multiuser-settings`
   "enabled": true,
   "connectionMode": "local",
   "serverUrl": "",
-  "relayUrl": "wss://download.realvirtual.io/relay",
+  "relayUrl": "",
   "displayName": "Browser",
   "role": "observer",
   "joinCode": ""
@@ -660,7 +660,7 @@ Unity (Host)        Relay Server        Browser A        Browser B
 | `src/core/types/plugin-types.ts` | MultiuserPluginAPI interface |
 
 ### Relay Server
-The relay server lives in its own repository (not in this XYvirtual WEB repo). The hosted endpoint defaults to `wss://download.realvirtual.io/relay`.
+The relay server lives in its own repository (not in this XYvirtual WEB repo). No hosted endpoint is configured by default; deployments must opt in with an allow-listed origin.
 
 ### Teams Integration
 | File | Purpose |

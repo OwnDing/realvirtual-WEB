@@ -22,6 +22,8 @@ import { useRequestedSettingsTab, clearRequestedSettingsTab } from './settings-t
 import { AiBridgeGate } from './AiBridgeGate';
 import { formatVersionFull } from '../rv-version';
 import { useRvTranslation } from '../i18n';
+import { useCustomBranding } from './branding-store';
+import { DEFAULT_PRODUCT_NAME } from '../deployment/deployment-config';
 
 // ── Code-split settings tabs (plan-344 Phase 4) ─────────────────────────────
 // Settings are a configuration surface, not a runtime one: a session may never
@@ -50,6 +52,8 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
+  const branding = useCustomBranding();
+  const productName = branding?.productName ?? DEFAULT_PRODUCT_NAME;
   const { t } = useRvTranslation('settings');
   const viewer = useViewer();
   const isMobile = useMobileLayout();
@@ -180,7 +184,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           title={t('version.title')}
           sx={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: 10 }}
         >
-          XYvirtual WEB {formatVersionFull()}
+          {productName} {formatVersionFull()}
         </Typography>
       </Box>
     </LeftPanel>

@@ -31,6 +31,9 @@ import { ISA_AMBER } from '../src/core/hmi/isa-colors';
 import { rvDarkTheme } from '../src/core/hmi/theme';
 import { setLocale } from '../src/core/i18n';
 
+const TEST_STABLE_DOWNLOAD_URL = 'https://downloads.test/connect.exe';
+const TEST_BETA_DOWNLOAD_URL = 'https://downloads.test/connect-beta.exe';
+
 /**
  * English is pinned rather than inherited (ADR-0001 Validation).
  *
@@ -155,10 +158,10 @@ describe('CONNECT license gate UI integration', () => {
     expect(screen.queryByText(/Cell\.Start/)).toBeNull();
   });
 
-  it('provides downloads and explains both disconnected setup paths without a red alarm', () => {
+  it('does not expose a built-in download endpoint', () => {
     render(themed(<ConnectDownloadLinks />));
-    expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT' }).getAttribute('href'))
-      .toBe(CONNECT_STABLE_DOWNLOAD_URL);
+    expect(screen.queryByRole('link', { name: 'Download XYvirtual CONNECT' })).toBeNull();
+    expect(CONNECT_STABLE_DOWNLOAD_URL).toBe('');
     expect(CONNECT_BETA_DOWNLOAD_URL).toBeNull();
     expect(screen.queryByRole('link', { name: 'beta' })).toBeNull();
     expect(connectStoreSource).toContain(
@@ -169,34 +172,39 @@ describe('CONNECT license gate UI integration', () => {
 
   it('shows the stable version in the download button and no beta link when no beta build exists', () => {
     __setConnectDownloadsForTest({
-      stable: { url: CONNECT_STABLE_DOWNLOAD_URL, version: '0.2.0', build: 24, buildDate: '2026-07-22' },
+      stable: { url: TEST_STABLE_DOWNLOAD_URL, version: '0.2.0', build: 24, buildDate: '2026-07-22' },
       beta: null,
       loaded: true,
     });
     render(themed(<ConnectDownloadLinks />));
     expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT 0.2.0' }).getAttribute('href'))
-      .toBe(CONNECT_STABLE_DOWNLOAD_URL);
+      .toBe(TEST_STABLE_DOWNLOAD_URL);
     expect(screen.queryByRole('link', { name: /beta/ })).toBeNull();
   });
 
   it('reveals a versioned beta download only when a beta manifest resolves', () => {
     __setConnectDownloadsForTest({
-      stable: { url: CONNECT_STABLE_DOWNLOAD_URL, version: '0.2.0', build: 24, buildDate: '2026-07-22' },
-      beta: { url: 'https://web.realvirtual.io/download/realvirtual-Connect-beta.exe', version: '0.3.0', build: 31, buildDate: '2026-07-23' },
+      stable: { url: TEST_STABLE_DOWNLOAD_URL, version: '0.2.0', build: 24, buildDate: '2026-07-22' },
+      beta: { url: TEST_BETA_DOWNLOAD_URL, version: '0.3.0', build: 31, buildDate: '2026-07-23' },
       loaded: true,
     });
     render(themed(<ConnectOpener failedUrl={null} />));
     expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT 0.2.0' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'beta 0.3.0' }).getAttribute('href'))
-      .toBe('https://web.realvirtual.io/download/realvirtual-Connect-beta.exe');
+      .toBe(TEST_BETA_DOWNLOAD_URL);
   });
 
   it('renders the acquisition opener as an offer, not a fault', () => {
+    __setConnectDownloadsForTest({
+      stable: { url: TEST_STABLE_DOWNLOAD_URL, version: null, build: null, buildDate: null },
+      beta: null,
+      loaded: true,
+    });
     render(themed(<ConnectOpener failedUrl="http://localhost:5100" />));
     // Value proposition + the one primary CTA (Download), Connect stays secondary.
     expect(screen.getByText('Live PLC data in this viewer')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Download XYvirtual CONNECT' }).getAttribute('href'))
-      .toBe(CONNECT_STABLE_DOWNLOAD_URL);
+      .toBe(TEST_STABLE_DOWNLOAD_URL);
     expect(screen.getByText('Already installed? Start CONNECT on that machine, then press Connect.')).toBeTruthy();
     // Capability rows fill the formerly empty space (Thomas: signals, VIBN, real PLCs).
     expect(screen.getByText('Live signals')).toBeTruthy();

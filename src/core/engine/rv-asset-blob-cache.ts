@@ -18,6 +18,8 @@
  * the bytes already live in the browser.
  */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+
 interface AssetBlobCacheOptions {
   /** Cache API bucket name (e.g. `rv-planner-glbs`). One bucket per asset type. */
   bucket: string;
@@ -45,12 +47,16 @@ export class RVAssetBlobCache {
       return resp.blob();
     }
 
-    const pending = this._pending.get(url);
+    const allowedUrl = allowRuntimeEgressUrl(url, 'remote-model');
+    if (!allowedUrl) throw new Error('Asset URL is blocked by the deployment egress policy');
+    const fetchUrl = allowedUrl.href;
+
+    const pending = this._pending.get(fetchUrl);
     if (pending) return pending;
 
-    const promise = this._fetchWithBucket(url);
-    this._pending.set(url, promise);
-    promise.catch(() => { this._pending.delete(url); });
+    const promise = this._fetchWithBucket(fetchUrl);
+    this._pending.set(fetchUrl, promise);
+    promise.catch(() => { this._pending.delete(fetchUrl); });
     return promise;
   }
 

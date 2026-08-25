@@ -21,13 +21,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Best-effort read of GA_MEASUREMENT_ID from a gitignored .env file (no dotenv dep). */
-function gaIdFromEnvFile() {
+/** Best-effort read of one key from a gitignored .env file (no dotenv dep). */
+function valueFromEnvFile(key) {
   for (const name of ['.env.production', '.env']) {
     const p = join(root, name);
     if (!existsSync(p)) continue;
     for (const line of readFileSync(p, 'utf-8').split(/\r?\n/)) {
-      const m = line.match(/^\s*GA_MEASUREMENT_ID\s*=\s*(.+?)\s*$/);
+      const m = line.match(new RegExp(`^\\s*${key}\\s*=\\s*(.+?)\\s*$`));
       if (m) {
         const v = m[1].replace(/^["']|["']$/g, '').trim();
         if (v) return v;
@@ -37,11 +37,12 @@ function gaIdFromEnvFile() {
   return '';
 }
 
-const gaId = (process.env.GA_MEASUREMENT_ID || gaIdFromEnvFile()).trim();
+const gaId = (process.env.GA_MEASUREMENT_ID || valueFromEnvFile('GA_MEASUREMENT_ID')).trim();
+const scriptUrl = (process.env.GA_SCRIPT_URL || valueFromEnvFile('GA_SCRIPT_URL')).trim();
 const distSettings = join(root, 'dist', 'settings.json');
 
-if (!gaId) {
-  console.log('[inject-ga] No GA_MEASUREMENT_ID (env or .env.production) — skipping (settings.json stays clean).');
+if (!gaId || !scriptUrl) {
+  console.log('[inject-ga] GA_MEASUREMENT_ID and GA_SCRIPT_URL are both required — skipping.');
   process.exit(0);
 }
 if (!existsSync(distSettings)) {
@@ -51,7 +52,16 @@ if (!existsSync(distSettings)) {
 
 try {
   const cfg = JSON.parse(readFileSync(distSettings, 'utf-8'));
-  cfg.analytics = { ...(cfg.analytics ?? {}), googleAnalyticsId: gaId };
+  const origin = new URL(scriptUrl).origin;
+  cfg.schemaVersion = 1;
+  cfg.services = {
+    ...(cfg.services ?? {}),
+    analytics: { provider: 'google-analytics', measurementId: gaId, scriptUrl },
+  };
+  cfg.egress = { mode: 'allow-listed', allow: Array.isArray(cfg.egress?.allow) ? cfg.egress.allow : [] };
+  const existing = cfg.egress.allow.find((rule) => rule.origin === origin);
+  if (existing) existing.purposes = [...new Set([...(existing.purposes ?? []), 'analytics'])];
+  else cfg.egress.allow.push({ origin, purposes: ['analytics'] });
   writeFileSync(distSettings, JSON.stringify(cfg, null, 2) + '\n');
   console.log(`[inject-ga] Injected GA id into dist/settings.json: ${gaId}`);
 } catch (e) {

@@ -13,6 +13,7 @@ import { useViewportInsets } from '../../hooks/use-viewport-insets';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
 import { WelcomeModal } from './WelcomeModal';
 import { useCustomBranding } from './branding-store';
+import { DEFAULT_PRODUCT_SHORT_NAME } from '../deployment/deployment-config';
 import { useKioskHasTour, startKioskFromWelcome } from '../../plugins/kiosk-plugin';
 import { useActiveContexts, evaluateVisibilityRule, useUIVisible } from './ui-context-store';
 import { WELCOME_AUTO_OPEN_UI_ELEMENT_ID, WELCOME_AUTO_OPEN_VISIBILITY_RULE } from './welcome-modal-store';
@@ -33,7 +34,7 @@ function BrandingContent() {
   // keep the default XYvirtual logo. A project sets `logoUrl` only when it
   // wants its own mark here; Mauser leaves it so the platform logo stays.
   if (!custom?.logoUrl) {
-    return <img src={logoUrl} alt="XYvirtual" style={{ height: 24, width: 24 }} />;
+    return <img src={logoUrl} alt={custom?.shortName ?? DEFAULT_PRODUCT_SHORT_NAME} style={{ height: 24, width: 24 }} />;
   }
   return (
     <img

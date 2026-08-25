@@ -1,5 +1,41 @@
 {
   "_comment": "Copy this file to settings.json to configure the WebViewer deployment.",
+  "schemaVersion": 1,
+
+  "identity": {
+    "productName": "Customer Digital Twin",
+    "shortName": "Customer",
+    "companyName": "Customer GmbH",
+    "description": "Browser-based industrial digital twin.",
+    "logoUrl": "/branding/logo.png",
+    "faviconUrl": "/branding/favicon.png",
+    "primaryColor": "#2596DE",
+    "secondaryColor": "#2DD4BF"
+  },
+
+  "legal": {
+    "sourceUrl": "https://customer.example/source",
+    "licenseUrl": "https://customer.example/license",
+    "privacyUrl": "https://customer.example/privacy",
+    "termsUrl": "https://customer.example/terms",
+    "copyrightNotice": "Copyright (C) Customer GmbH and contributors"
+  },
+
+  "egress": {
+    "mode": "deny-external",
+    "allow": []
+  },
+
+  "services": {
+    "analytics": null,
+    "news": null,
+    "documentation": null,
+    "connectUpdates": null,
+    "firebaseDemo": null,
+    "githubLibrary": null,
+    "cadLinks": null,
+    "qr": { "mode": "local" }
+  },
 
   "lockSettings": false,
   "lockedTabs": [],
@@ -29,10 +65,6 @@
   "groups": {
     "excludedFromOverlay": [],
     "defaultHiddenGroups": []
-  },
-
-  "analytics": {
-    "googleAnalyticsId": ""
   },
 
   "diagnostics": {

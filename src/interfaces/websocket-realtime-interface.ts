@@ -46,6 +46,7 @@ import {
   type TransportConnectSettings,
   type WebSocketLike,
 } from './signal-transport-core';
+import { allowRuntimeEgressUrl } from '../core/deployment/runtime-egress';
 
 /**
  * Minimal port surface shared by a real `Worker` and the in-thread fallback.
@@ -152,7 +153,10 @@ export class WebSocketRealtimeInterface extends BaseIndustrialInterface {
   protected async doConnect(settings: InterfaceSettings): Promise<void> {
     const scheme = settings.wsUseSSL ? 'wss' : 'ws';
     const path = settings.wsPath.startsWith('/') ? settings.wsPath : '/' + settings.wsPath;
-    const url = this.buildUrl(scheme, settings.wsAddress, settings.wsPort, path, settings);
+    const requestedUrl = this.buildUrl(scheme, settings.wsAddress, settings.wsPort, path, settings);
+    const allowedUrl = allowRuntimeEgressUrl(requestedUrl, 'industrial-interface');
+    if (!allowedUrl) throw new Error('WebSocket target is blocked by deployment policy');
+    const url = allowedUrl.href;
     const target = parseWsTarget(url, scheme, settings.wsAddress, settings.wsPort);
     this._wsScheme = target.scheme;
     this._wsHost = target.host;

@@ -38,6 +38,7 @@ import {
 } from './_layout-planner-async-harness';
 import type { LayoutPlannerPlugin } from '../src/plugins/layout-planner';
 import type { PlacedComponent } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 /** The restore paths reject `blob:` URLs as stale by design, so those cases
  *  need a stable URL — and therefore a `fetch` for `RVAssetBlobCache`. */
@@ -73,8 +74,19 @@ describe('plan-371 T13 — legacy placement paths stay in full mode', () => {
   // restores them on the NEXT planner's boot — without clearing, every test
   // re-places what the previous one built and the count assertions drift.
   const AUTOSAVE_KEY = 'rv-layout-autosave';
-  beforeEach(() => { localStorage.removeItem(AUTOSAVE_KEY); });
-  afterEach(() => { localStorage.removeItem(AUTOSAVE_KEY); });
+  beforeEach(() => {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://rv-test.invalid', purposes: ['remote-model'] }],
+      },
+    });
+  });
+  afterEach(() => {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    setAppConfig({});
+  });
 
   it('placeComponent (also the MCP web_layout_place path)', async () => {
     const { plugin, viewer } = setupPlanner();

@@ -8,15 +8,37 @@
  * filtering, raw-URL construction, and error cases.
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import {
   parseGitHubRepoUrl,
   isGitHubRepoScanUrl,
   isGitHubCatalogUrl,
   buildCatalogFromGitHub,
 } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
+
+beforeEach(() => {
+  setAppConfig({
+    services: {
+      githubLibrary: {
+        webBaseUrl: 'https://github.com/',
+        apiBaseUrl: 'https://api.github.com/',
+        rawBaseUrl: 'https://raw.githubusercontent.com/',
+      },
+    },
+    egress: {
+      mode: 'allow-listed',
+      allow: [
+        { origin: 'https://github.com', purposes: ['github-library'] },
+        { origin: 'https://api.github.com', purposes: ['github-library'] },
+        { origin: 'https://raw.githubusercontent.com', purposes: ['github-library'] },
+      ],
+    },
+  });
+});
 
 afterEach(() => {
+  setAppConfig({});
   vi.restoreAllMocks();
 });
 

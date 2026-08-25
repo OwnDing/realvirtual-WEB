@@ -12,6 +12,9 @@ import { useCustomBranding } from './branding-store';
 import { useRvTranslation, type RVTranslationKey } from '../i18n';
 import { Trans } from 'react-i18next';
 import { formatVersionFull } from '../rv-version';
+import { DEFAULT_PRODUCT_NAME } from '../deployment/deployment-config';
+import { getAppConfig } from '../rv-app-config';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 
 /** Primary use cases, shown as a compact list. */
 /** Catalog key pairs, not resolved text: this table is module-level, so a
@@ -82,6 +85,14 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
   // Demo links only make sense on the public XYvirtual demo. A customer deploy
   // sets custom branding, so we hide the demo shortcuts there.
   const custom = useCustomBranding();
+  const productName = custom?.productName ?? DEFAULT_PRODUCT_NAME;
+  const config = getAppConfig();
+  const legalUrl = (candidate: string | undefined) => candidate
+    ? allowRuntimeEgressUrl(candidate, 'legal-link')?.href
+    : undefined;
+  const termsUrl = legalUrl(config.legal?.termsUrl);
+  const sourceUrl = legalUrl(config.legal?.sourceUrl ?? config.sourceUrl);
+  const copyrightNotice = config.legal?.copyrightNotice ?? 'Copyright (C) 2025 realvirtual GmbH';
 
   // First visit in this browser: the dialog is an acceptance gate. Reading
   // storage at render is fine — the component renders only while visible.
@@ -125,7 +136,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, color: '#4fc3f7' }}>
-            XYvirtual WEB
+            {productName}
           </Typography>
           <Box
             component="span"
@@ -218,24 +229,26 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
             i18nKey="welcome.betaText"
             components={[
               <strong key="license" style={{ color: '#fff' }} />,
-              <a key="terms" href="https://xyvirtual.io/en/terms/" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
-              <a key="site" href="https://xyvirtual.io" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="terms" href={termsUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="site" href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
             ]}
           />
         </Typography>
 
-        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-          <a href="https://github.com/xyvirtual/XYvirtual-WEB" target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
-            github.com/xyvirtual/XYvirtual-WEB
-          </a>
-        </Typography>
+        {sourceUrl && (
+          <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
+              {sourceUrl}
+            </a>
+          </Typography>
+        )}
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: 10 }}>
-            XYvirtual WEB {formatVersionFull()}
+            {productName} {formatVersionFull()}
           </Typography>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
-            &copy; 2025 realvirtual GmbH
+            {copyrightNotice}
           </Typography>
         </Box>
 

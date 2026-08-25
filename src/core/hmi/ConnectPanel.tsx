@@ -366,6 +366,7 @@ function channelBuildTitle(build: number | null, buildDate: string | null): stri
 export function ConnectDownloadLinks() {
   const downloads = useConnectDownloads();
   const { stable, beta } = downloads;
+  if (!stable.url) return null;
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
       <Button
@@ -431,18 +432,20 @@ export function ConnectOpener({ failedUrl }: { failedUrl: string | null }) {
         {t('opener.intro')}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mt: 1 }}>
-        <Button
-          component="a"
-          href={stable.url}
-          target="_blank"
-          rel="noreferrer"
-          size="small"
-          variant="contained"
-          title={channelBuildTitle(stable.build, stable.buildDate)}
-          sx={{ fontSize: 11, textTransform: 'none', flexShrink: 0 }}
-        >
-          {stableDownloadLabel(stable.version)}
-        </Button>
+        {stable.url && (
+          <Button
+            component="a"
+            href={stable.url}
+            target="_blank"
+            rel="noreferrer"
+            size="small"
+            variant="contained"
+            title={channelBuildTitle(stable.build, stable.buildDate)}
+            sx={{ fontSize: 11, textTransform: 'none', flexShrink: 0 }}
+          >
+            {stableDownloadLabel(stable.version)}
+          </Button>
+        )}
         {beta && (
           <Button
             component="a"

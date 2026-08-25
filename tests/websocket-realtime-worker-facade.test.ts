@@ -19,7 +19,7 @@
  *   - Public connection-state / disconnect behavior is preserved.
  */
 
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
   WebSocketRealtimeInterface,
   isSameOriginWsTarget,
@@ -30,6 +30,20 @@ import type {
   TransportOutboundMessage,
 } from '../src/interfaces/signal-transport-core';
 import { INTERFACE_DEFAULTS, type InterfaceSettings } from '../src/interfaces/interface-settings-store';
+import { setAppConfig } from '../src/core/rv-app-config';
+
+beforeEach(() => {
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'ws://localhost:7000', purposes: ['industrial-interface'] }],
+    },
+  });
+});
+
+afterEach(() => {
+  setAppConfig({});
+});
 
 // ── Mock TransportPort ──────────────────────────────────────────────────────
 

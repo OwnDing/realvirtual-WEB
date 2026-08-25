@@ -26,6 +26,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useViewer } from '../../hooks/use-viewer';
 import { getAppConfig } from '../rv-app-config';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import type { LeftPanelSnapshot, PanelId } from './left-panel-manager';
 import { buildHelpUrl, openExternal } from './help-url';
 import { getHelpTopicsSnapshot, readPluginTopic, subscribeHelpTopics } from './help-topic-registry';
@@ -137,8 +138,19 @@ export function readHelpContextInput(viewer: HelpContextHost | null | undefined)
  * them. Strictly synchronous — see help-url.ts.
  */
 export function openCurrentHelp(viewer: HelpContextHost | null | undefined): void {
+  const configuredBase = getAppConfig().services?.documentation?.baseUrl
+    ?? getAppConfig().docs?.baseUrl;
+  if (!configuredBase) return;
   const topic = deriveHelpTopic(readHelpContextInput(viewer));
-  openExternal(buildHelpUrl(topic, getAppConfig().docs?.baseUrl));
+  const allowed = allowRuntimeEgressUrl(buildHelpUrl(topic, configuredBase), 'documentation');
+  if (allowed) openExternal(allowed.href);
+}
+
+/** Whether help has a deployment-owned destination permitted by egress policy. */
+export function isDocumentationAvailable(): boolean {
+  const configuredBase = getAppConfig().services?.documentation?.baseUrl
+    ?? getAppConfig().docs?.baseUrl;
+  return Boolean(configuredBase && allowRuntimeEgressUrl(configuredBase, 'documentation'));
 }
 
 // ─── React bindings ─────────────────────────────────────────────────────
@@ -208,7 +220,7 @@ export function useHelpShortcut(): void {
   const helpVisible = useUIVisible(HELP_UI_ELEMENT_ID, HELP_VISIBILITY_RULE);
 
   useEffect(() => {
-    if (!helpVisible) return undefined;
+    if (!helpVisible || !isDocumentationAvailable()) return undefined;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'F1') return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;

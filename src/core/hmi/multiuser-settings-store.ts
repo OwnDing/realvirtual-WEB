@@ -34,7 +34,7 @@ const DEFAULTS: MultiuserSettings = {
   enabled: true,
   connectionMode: 'local',
   serverUrl: '',
-  relayUrl: 'wss://download.realvirtual.io/relay',
+  relayUrl: '',
   displayName: 'Browser',
   role: 'observer',
   joinCode: '',

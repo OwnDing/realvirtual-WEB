@@ -10,6 +10,7 @@ authority: normative-registry
 # 活动 ExecPlan 索引
 
 - [`EP-GOV-004-gate-that-gates.md`](EP-GOV-004-gate-that-gates.md)：让质量门禁真正拦得住东西——本机门禁与 CI 一致、OD-005 分支保护、反退化守卫；2026-08-23 依用户指令激活。
+- [`EP-CONFIG-001-deployment-identity-egress.md`](EP-CONFIG-001-deployment-identity-egress.md)：部署身份与默认零外呼黄金切片；2026-08-25 依用户指令激活。
 
 已完成计划见 [`../completed/`](../completed/README.md)。
 

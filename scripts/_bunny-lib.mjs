@@ -153,6 +153,7 @@ export function loadConfig(env = process.env) {
     region: normalizeRegion(env.BUNNY_REGION),
     remotePath: (env.BUNNY_REMOTE_PATH || '').trim().replace(/^\/+|\/+$/g, ''),
     googleAnalyticsId: (env.GA_MEASUREMENT_ID || '').trim(),
+    googleAnalyticsScriptUrl: (env.GA_SCRIPT_URL || '').trim(),
     newsApiUrl: (env.NEWS_DISABLE || '').trim() === '1'
       ? ''
       : newsOverride || DEFAULT_NEWS_API_URL,
@@ -164,9 +165,22 @@ export function loadConfig(env = process.env) {
 export function injectNewsIntoSettings(settingsPath, newsApiUrl, dryRun = false) {
   if (!newsApiUrl || !existsSync(settingsPath) || dryRun) return false;
   const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
-  settings.news = { enabled: true, apiUrl: newsApiUrl };
+  settings.schemaVersion = 1;
+  settings.services = { ...(settings.services ?? {}), news: { apiUrl: newsApiUrl } };
+  addEgressRule(settings, new URL(newsApiUrl).origin, 'news');
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   return true;
+}
+
+//! Adds one deployment-owned origin/purpose grant without broadening other purposes.
+export function addEgressRule(settings, origin, purpose) {
+  settings.egress = {
+    mode: 'allow-listed',
+    allow: Array.isArray(settings.egress?.allow) ? settings.egress.allow : [],
+  };
+  const existing = settings.egress.allow.find((rule) => rule.origin === origin);
+  if (existing) existing.purposes = [...new Set([...(existing.purposes ?? []), purpose])];
+  else settings.egress.allow.push({ origin, purposes: [purpose] });
 }
 
 // ─── Build env ───────────────────────────────────────────────────────────

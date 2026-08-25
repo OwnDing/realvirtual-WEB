@@ -91,7 +91,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
   });
   const [relayUrl, setRelayUrl] = useState(() => {
     const s = loadMultiuserSettings();
-    return s.relayUrl || 'wss://download.realvirtual.io/relay';
+    return s.relayUrl || '';
   });
   const [directUrl, setDirectUrl] = useState(() => {
     const s = loadMultiuserSettings();

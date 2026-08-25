@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'" />
   <title>XYvirtual WEB — Tab Configuration</title>
-  <script src="https://res.cdn.office.net/teams-js/2.31.1/js/MicrosoftTeams.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -46,7 +46,7 @@
 
   <div class="section">
     <label for="relay-url">Relay Server URL (Multiuser)</label>
-    <input type="text" id="relay-url" placeholder="wss://download.realvirtual.io/relay" value="wss://download.realvirtual.io/relay" />
+    <input type="text" id="relay-url" placeholder="wss://relay.example.invalid" />
     <div class="hint">WebSocket relay server for multiuser collaboration. Leave empty to disable auto-join.</div>
   </div>
 
@@ -56,9 +56,11 @@
     <div class="hint">Shared room code — all users with this tab auto-join the same session.</div>
   </div>
 
-  <script>
+  <script type="module">
+    import { app, pages } from '@microsoft/teams-js';
+
     (async function () {
-      await microsoftTeams.app.initialize();
+      await app.initialize();
 
       const modelInput = document.getElementById('model-url');
       const nameInput = document.getElementById('tab-name');
@@ -72,9 +74,9 @@
         const code = joinCodeInput.value.trim();
         // Invalid if: no tab name, or join code without relay URL
         if (!name || (code && !relay)) {
-          microsoftTeams.pages.config.setValidityState(false);
+          pages.config.setValidityState(false);
         } else {
-          microsoftTeams.pages.config.setValidityState(true);
+          pages.config.setValidityState(true);
         }
       }
 
@@ -85,7 +87,7 @@
       validate();
 
       // Handle save
-      microsoftTeams.pages.config.registerOnSaveHandler(function (saveEvent) {
+      pages.config.registerOnSaveHandler(function (saveEvent) {
         const modelUrl = modelInput.value.trim();
         const baseUrl = window.location.origin;
 
@@ -107,9 +109,9 @@
           contentUrl += '&joinCode=' + encodeURIComponent(joinCodeVal);
         }
 
-        microsoftTeams.pages.config.setConfig({
+        pages.config.setConfig({
           suggestedDisplayName: nameInput.value.trim(),
-          entityId: 'realvirtual-viewer-' + Date.now(),
+          entityId: 'xyvirtual-viewer-' + Date.now(),
           contentUrl: contentUrl,
           websiteUrl: baseUrl,
         });

@@ -28,6 +28,7 @@ import type {
   LibraryCatalogEntry,
   PlacedComponent,
 } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 const STABLE_URL = 'https://rv-test.invalid/plan376-dedup.glb';
 const AUTOSAVE_KEY = 'rv-layout-autosave';
@@ -83,6 +84,12 @@ describe('plan-376 F3 — boot restore places each id exactly once', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://rv-test.invalid', purposes: ['remote-model'] }],
+      },
+    });
     localStorage.removeItem(AUTOSAVE_KEY);
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
       new Response(new Blob([new Uint8Array([0])]), {
@@ -96,6 +103,7 @@ describe('plan-376 F3 — boot restore places each id exactly once', () => {
   afterEach(() => {
     fetchSpy.mockRestore();
     warnSpy.mockRestore();
+    setAppConfig({});
     localStorage.removeItem(AUTOSAVE_KEY);
   });
 

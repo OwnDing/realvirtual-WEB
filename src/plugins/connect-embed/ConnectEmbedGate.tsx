@@ -29,8 +29,7 @@ import {
 } from './connect-embed-store';
 import { useRvTranslation } from '../../core/i18n';
 import { Trans } from 'react-i18next';
-
-const DEFAULT_SOURCE_URL = 'https://github.com/xyvirtual/XYvirtual-WEB';
+import { allowRuntimeEgressUrl } from '../../core/deployment/runtime-egress';
 
 /** Minimal-shell empty/loading/error surface for the CONNECT embedded demo. */
 export function ConnectEmbedGate() {
@@ -53,7 +52,10 @@ export function ConnectEmbedGate() {
 
   const returnToEmpty = useCallback(() => resetConnectEmbedDemo(), []);
   const left = isMobile ? 0 : panelSnap.left.activePanelWidth;
-  const sourceUrl = getAppConfig().sourceUrl || DEFAULT_SOURCE_URL;
+  const sourceCandidate = getAppConfig().legal?.sourceUrl ?? getAppConfig().sourceUrl;
+  const sourceUrl = sourceCandidate
+    ? allowRuntimeEgressUrl(sourceCandidate, 'legal-link')?.href ?? null
+    : null;
 
   return (
     <Box
@@ -94,7 +96,7 @@ export function ConnectEmbedGate() {
   );
 }
 
-function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: string }) {
+function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: string | null }) {
   const { t } = useRvTranslation('connect');
   return (
     <>
@@ -113,7 +115,7 @@ function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: st
       >
         {t('embed.start')}
       </Button>
-      <Box sx={{ mt: 2 }}>
+      {sourceUrl && <Box sx={{ mt: 2 }}>
         <Link
           href={sourceUrl}
           target="_blank"
@@ -123,7 +125,7 @@ function EmptyState({ onStart, sourceUrl }: { onStart: () => void; sourceUrl: st
         >
           {t('embed.sourceCode')} <OpenInNew sx={{ ml: 0.25, fontSize: 11, verticalAlign: '-1px' }} />
         </Link>
-      </Box>
+      </Box>}
     </>
   );
 }

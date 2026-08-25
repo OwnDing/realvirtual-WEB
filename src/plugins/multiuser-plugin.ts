@@ -41,6 +41,7 @@ import { RVMovingUnit, computeTemplateAABBInfo } from '../core/engine/rv-mu';
 import type { InstancedMovingUnit } from '../core/engine/rv-mu';
 import type { WebXRPlugin } from './webxr-plugin';
 import type { AnnotationPluginAPI } from '../core/types/plugin-types';
+import { allowRuntimeEgressUrl } from '../core/deployment/runtime-egress';
 
 // ── Public snapshot emitted on every state transition ───────────────────────
 
@@ -178,7 +179,11 @@ export class MultiuserPlugin extends RVBehavior {
    * WebSocket; tests assign a mock factory BEFORE joinSession()/onStart().
    */
   transportFactory: MultiuserTransportFactory =
-    (url) => new WebSocket(url) as unknown as MultiuserTransport;
+    (url) => {
+      const allowedUrl = allowRuntimeEgressUrl(url, 'multiuser');
+      if (!allowedUrl) throw new Error('Multiuser server is blocked by deployment policy');
+      return new WebSocket(allowedUrl.href) as unknown as MultiuserTransport;
+    };
 
   // ── WebSocket state ──
   private _ws: MultiuserTransport | null = null;
@@ -521,6 +526,13 @@ export class MultiuserPlugin extends RVBehavior {
   private _connect(): void {
     if (this._destroyed) return;
     if (!this._serverUrl) return;
+
+    if (!allowRuntimeEgressUrl(this._serverUrl, 'multiuser')) {
+      this._status = 'error';
+      this._statusMessage = 'Server blocked by deployment policy';
+      this._emitChanged();
+      return;
+    }
 
     this._status = 'connecting';
     this._statusMessage = `Connecting to ${this._serverUrl}…`;

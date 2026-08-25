@@ -45,7 +45,7 @@ import {
 import { useActiveContexts, evaluateVisibilityRule, useUIVisible } from './ui-context-store';
 import {
   HELP_UI_ELEMENT_ID, HELP_VISIBILITY_RULE, helpAriaLabel, helpTooltip,
-  openCurrentHelp, useHelpTopic,
+  isDocumentationAvailable, openCurrentHelp, useHelpTopic,
 } from './help-context';
 import { LogoBadge } from './ButtonPanel';
 import { MultiuserButton } from './MultiuserPanel';
@@ -231,7 +231,7 @@ export function ActivityBar({ entryAllowlist }: ActivityBarProps = {}) {
   // Help is offered by default; kiosk deployments (and any `ui.visibilityOverrides`
   // that redefines the rule) can take it away. The F1 route reads the SAME rule.
   const helpVisible = useUIVisible(HELP_UI_ELEMENT_ID, HELP_VISIBILITY_RULE);
-  const showHelp = isEntryAllowed('help') && helpVisible;
+  const showHelp = isEntryAllowed('help') && helpVisible && isDocumentationAvailable();
 
   // plan-387: the bar itself stays in the Viewer workspace — it carries the
   // logo/About, Settings and Help, which the viewer keeps. Everything that opens

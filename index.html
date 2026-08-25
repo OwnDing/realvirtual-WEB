@@ -5,20 +5,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" data-rv-csp content="default-src 'self'; base-uri 'self'; object-src 'none'; connect-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; form-action 'self'" />
   <meta name="theme-color" content="#2596DE" />
-  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" data-rv-favicon />
+  <link rel="icon" type="image/png" href="/favicon.png" data-rv-favicon />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" data-rv-favicon />
   <link rel="manifest" href="/manifest.json" />
   <title>XYvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer</title>
-  <meta name="description" content="XYvirtual WEB is the open, browser-based 3D HMI and digital twin viewer for industrial automation. Explore live demos of conveyor simulation, robotics and PLC-connected 3D visualization — no installation, right in the browser." />
+  <meta name="description" data-rv-description content="XYvirtual WEB is the open, browser-based 3D HMI and digital twin viewer for industrial automation. Explore live demos of conveyor simulation, robotics and PLC-connected 3D visualization — no installation, right in the browser." />
   <!-- URL-bound SEO tags (canonical, og:url, og:image, twitter:card) are injected
        per deploy by scripts/bunny-deploy.mjs — the committed file stays deployment-neutral. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="XYvirtual WEB" />
-  <meta property="og:title" content="XYvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer" />
-  <meta property="og:description" content="Open, browser-based 3D HMI and digital twin viewer for industrial automation. Live demos: conveyor simulation, robotics, PLC-connected 3D visualization." />
-  <script type="application/ld+json">
+  <meta property="og:site_name" data-rv-site-name content="XYvirtual WEB" />
+  <meta property="og:title" data-rv-title content="XYvirtual WEB — Browser-based 3D HMI & Digital Twin Viewer" />
+  <meta property="og:description" data-rv-description content="Open, browser-based 3D HMI and digital twin viewer for industrial automation. Live demos: conveyor simulation, robotics, PLC-connected 3D visualization." />
+  <script type="application/ld+json" data-rv-json-ld>
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -300,14 +301,12 @@
 
   <noscript>
     <div style="max-width: 640px; margin: 10vh auto 0; padding: 0 24px; color: #222; font-family: 'Segoe UI', sans-serif; line-height: 1.6;">
-      <h2>XYvirtual WEB — Browser-based 3D HMI &amp; Digital Twin Viewer</h2>
-      <p>XYvirtual WEB loads industrial 3D models (GLB) and runs interactive simulation of
+      <h2><span data-rv-product-name>XYvirtual WEB</span> — Browser-based 3D HMI &amp; Digital Twin Viewer</h2>
+      <p><span data-rv-product-name>XYvirtual WEB</span> loads industrial 3D models (GLB) and runs interactive simulation of
          conveyors, drives, sensors and robots directly in the browser — as a 3D HMI connected
          to live PLC signals or as a standalone digital twin demo. JavaScript and WebGL are
          required to run the viewer.</p>
-      <p><a href="https://xyvirtual.io">xyvirtual.io</a> ·
-         <a href="https://github.com/xyvirtual/XYvirtual-WEB">Source on GitHub (AGPL-3.0)</a> ·
-         <a href="https://doc.xyvirtual.io">Documentation</a></p>
+      <p>JavaScript is disabled. Ask the deployment administrator for documentation and corresponding-source links.</p>
     </div>
   </noscript>
 
@@ -318,9 +317,9 @@
       <div class="orbit-dot"></div>
       <!-- Decorative: the <h1> right below already announces the brand, so a
            named logo would make a screen reader say "XYvirtual" twice. -->
-      <img class="loader-logo" src="/logo.png" alt="" />
+      <img class="loader-logo" src="/logo.png" alt="" data-rv-logo />
     </div>
-    <h1 class="loader-brand">XYvirtual WEB</h1>
+    <h1 class="loader-brand" data-rv-product-name>XYvirtual WEB</h1>
     <div class="loader-slogan">开放、轻量、工业级、随处可用。</div>
     <div class="loader-status" id="loading-status"><span id="loading-label">正在加载 </span><span class="model-name" id="loading-model-name"></span></div>
     <div class="loader-progress-wrap">
@@ -382,16 +381,6 @@
   </script>
 
   <div id="react-root"></div>
-
-  <!-- On-screen DevTools console (opt-in via ?debug=1 URL param) -->
-  <script>
-    if (new URLSearchParams(location.search).has('debug')) {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/eruda';
-      s.onload = () => { (window).eruda?.init(); };
-      document.head.appendChild(s);
-    }
-  </script>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

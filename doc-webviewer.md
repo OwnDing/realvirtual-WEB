@@ -2847,7 +2847,7 @@ XYvirtual WEB supports real-time multiuser sessions where multiple users see eac
 
 ### Web-only Mode (No Unity)
 
-For sessions without a running Unity instance, point XYvirtual WEB at a standalone relay server. The relay source lives in a separate repository; XYvirtual WEB ships with a default hosted relay (`wss://download.realvirtual.io/relay`) configured in [multiuser-settings-store.ts](src/core/hmi/multiuser-settings-store.ts). Switch a session into relay mode via the Multiuser settings tab or by passing `?server=wss://...&joinCode=...` on the URL.
+For sessions without a running Unity instance, point XYvirtual WEB at a standalone relay server. The relay source lives in a separate repository; XYvirtual WEB does not configure a hosted relay by default. A deployment must configure and allow-list its relay before a session can use it. Switch a session into relay mode via the Multiuser settings tab or by passing `?server=wss://...&joinCode=...` on the URL.
 
 ### Microsoft Teams Integration
 

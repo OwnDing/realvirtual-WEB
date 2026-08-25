@@ -23,6 +23,7 @@
 import { describe, it, expect, afterEach, vi, beforeAll } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { FileDropZone, PartSourceLinks, matchesAccept } from '../src/plugins/unified-import/import-ui';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 import { initI18n, setLocale } from '../src/core/i18n';
 
@@ -141,6 +142,16 @@ describe('FileDropZone', () => {
 
 describe('PartSourceLinks', () => {
   it('links out to the catalogs and never fetches from them', () => {
+    setAppConfig({
+      services: { cadLinks: [
+        { id: '3dfindit', label: '3Dfindit', url: 'https://www.3dfindit.com/' },
+        { id: 'traceparts', label: 'TraceParts', url: 'https://www.traceparts.com/' },
+      ] },
+      egress: { mode: 'allow-listed', allow: [
+        { origin: 'https://www.3dfindit.com', purposes: ['cad-link'] },
+        { origin: 'https://www.traceparts.com', purposes: ['cad-link'] },
+      ] },
+    });
     render(<PartSourceLinks />);
     for (const [name, host] of [['3Dfindit', '3dfindit.com'], ['TraceParts', 'traceparts.com']]) {
       const link = screen.getByText(name).closest('a') as HTMLAnchorElement;
@@ -150,5 +161,6 @@ describe('PartSourceLinks', () => {
       expect(link.getAttribute('target')).toBe('_blank');
       expect(link.getAttribute('rel')).toContain('noopener');
     }
+    setAppConfig({});
   });
 });

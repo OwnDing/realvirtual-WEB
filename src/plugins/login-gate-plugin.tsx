@@ -32,6 +32,8 @@ import type { RVViewer } from '../core/rv-viewer';
 import type { UISlotEntry, UISlotProps } from '../core/rv-ui-plugin';
 import { subscribeModelCatalog, getModelCatalogVersion } from '../core/rv-model-catalog';
 import { useRvTranslation } from '../core/i18n';
+import { getAppConfig } from '../core/rv-app-config';
+import { deploymentProductName } from '../core/deployment/deployment-config';
 
 export interface LoginGateConfig {
   /** Display title on the login dialog. */
@@ -283,7 +285,7 @@ function LoginGateOverlay({ viewer }: UISlotProps) {
         )}
 
         <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', mt: 1 }}>
-          {cfg.footer ?? t('login.poweredBy')}
+          {cfg.footer ?? `powered by ${deploymentProductName(getAppConfig())}`}
         </Typography>
       </Paper>
     </Box>

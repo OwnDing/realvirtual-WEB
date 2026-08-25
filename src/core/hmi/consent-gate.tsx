@@ -24,6 +24,7 @@ import { rvDarkTheme } from './theme';
 import { getAppConfig } from '../rv-app-config';
 import { isAnalyticsConfigured, hasAnalyticsConsent, grantAnalyticsConsent } from '../consent-store';
 import { useRvTranslation } from '../i18n';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 
 /**
  * Resolve immediately when analytics is not configured or already consented.
@@ -60,7 +61,12 @@ export function requireAnalyticsConsent(): Promise<void> {
 function ConsentGate({ onAccept }: { onAccept: () => void }) {
   const { t } = useRvTranslation('shell');
   const [declined, setDeclined] = useState(false);
-  const privacyUrl = getAppConfig().analytics?.privacyPolicyUrl;
+  const privacyCandidate = getAppConfig().services?.analytics?.privacyPolicyUrl
+    ?? getAppConfig().legal?.privacyUrl
+    ?? getAppConfig().analytics?.privacyPolicyUrl;
+  const privacyUrl = privacyCandidate
+    ? allowRuntimeEgressUrl(privacyCandidate, 'legal-link')?.href
+    : undefined;
 
   return (
     <Box sx={{
