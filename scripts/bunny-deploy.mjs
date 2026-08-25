@@ -74,6 +74,7 @@ import {
 import { assertValidProject } from './validate-project.mjs';
 import { isDeniedProjectArtifactPath, isProjectAssetSkipDir } from './_rv-guards.mjs';
 import { recordPublishProvenance } from './_rv-provenance.mjs';
+import { applyDeploymentProfile } from './apply-deployment-profile.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -345,9 +346,15 @@ async function deployPublic(cfg, opts) {
   }
 
   // GA injection (R2): inject only into the deployed settings.json, never commit it.
-  injectGaIntoSettings(join(distDir, 'settings.json'), cfg.googleAnalyticsId, opts.dryRun);
+  injectGaIntoSettings(
+    join(distDir, 'settings.json'),
+    cfg.googleAnalyticsId,
+    cfg.googleAnalyticsScriptUrl,
+    opts.dryRun,
+  );
   // News injection: public-hosted artifact only; private/customer paths stay fail-closed.
   injectNewsIntoSettings(join(distDir, 'settings.json'), cfg.newsApiUrl, opts.dryRun);
+  applyDeploymentProfile(distDir, { dryRun: opts.dryRun });
 
   // SEO artifacts: only the canonical public path (default "demo") is indexable —
   // it gets canonical/OG URL tags + sitemap.xml + robots.txt. Every other
@@ -633,16 +640,24 @@ function listPrivateProjects(projectsDir) {
 
 //! Injects the GA4 id into a settings.json on disk (deployed artifact only).
 //! Empty id → no-op (committed settings.json stays clean). R2 / O5.
-function injectGaIntoSettings(settingsPath, gaId, dryRun) {
-  if (!gaId) return;
+function injectGaIntoSettings(settingsPath, gaId, scriptUrl, dryRun) {
+  if (!gaId || !scriptUrl) return;
   if (!existsSync(settingsPath)) return;
   if (dryRun) {
     log(`${DIM}[dry-run] would inject GA id into ${settingsPath}${RESET}`);
     return;
   }
   const s = JSON.parse(readFileSync(settingsPath, 'utf8'));
-  s.analytics = s.analytics || {};
-  s.analytics.googleAnalyticsId = gaId;
+  s.schemaVersion = 1;
+  s.services = {
+    ...(s.services ?? {}),
+    analytics: { provider: 'google-analytics', measurementId: gaId, scriptUrl },
+  };
+  s.egress = { mode: 'allow-listed', allow: Array.isArray(s.egress?.allow) ? s.egress.allow : [] };
+  const origin = new URL(scriptUrl).origin;
+  const existing = s.egress.allow.find((rule) => rule.origin === origin);
+  if (existing) existing.purposes = [...new Set([...(existing.purposes ?? []), 'analytics'])];
+  else s.egress.allow.push({ origin, purposes: ['analytics'] });
   writeFileSync(settingsPath, JSON.stringify(s, null, 2));
   log(`${DIM}GA4 id injected into ${settingsPath}${RESET}`);
 }

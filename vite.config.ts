@@ -974,6 +974,10 @@ export default defineConfig(({ command }) => ({
      */
     assetsInlineLimit: (filePath) => (filePath.endsWith('.glb') ? false : undefined),
     rollupOptions: {
+      input: {
+        app: resolve(__dirname, 'index.html'),
+        teamsConfig: resolve(__dirname, 'teams-config.html'),
+      },
       output: {
         // `/*!` + `@license` marks this as a LEGAL comment. Without those two
         // markers esbuild's minifier drops it during renderChunk — for a long

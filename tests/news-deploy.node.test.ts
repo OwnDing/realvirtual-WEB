@@ -58,7 +58,12 @@ describe('public-hosted news deployment configuration', () => {
     expect(injectNewsIntoSettings(settingsPath, DEFAULT_NEWS_API_URL)).toBe(true);
     expect(JSON.parse(readFileSync(settingsPath, 'utf8'))).toEqual({
       defaultModel: 'demo.glb',
-      news: { enabled: true, apiUrl: DEFAULT_NEWS_API_URL },
+      schemaVersion: 1,
+      services: { news: { apiUrl: DEFAULT_NEWS_API_URL } },
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://download.realvirtual.io', purposes: ['news'] }],
+      },
     });
   });
 

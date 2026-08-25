@@ -56,7 +56,7 @@ function _getLoader(): GLTFLoader {
   if (_loader) return _loader;
   _loader = new GLTFLoader();
   _dracoLoader = new DRACOLoader();
-  _dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+  _dracoLoader.setDecoderPath(`${import.meta.env.BASE_URL}draco/`);
   _loader.setDRACOLoader(_dracoLoader);
   return _loader;
 }

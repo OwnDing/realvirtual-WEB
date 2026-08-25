@@ -153,7 +153,9 @@ describe('NewsDialog rendering', () => {
 
   it('arbitrates WEB before CONNECT and then advances to CONNECT', async () => {
     setAppConfigForTest({
-      news: { enabled: true, apiUrl: 'https://portal.test/news/api/v1' },
+      schemaVersion: 1,
+      services: { news: { apiUrl: 'https://portal.test/news/api/v1' } },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }] },
     });
     stubNewsResponse([{ id: 'web-1', title: 'WEB item', body: '' }]);
     await fetchUnseenNews('web');
@@ -171,7 +173,9 @@ describe('NewsDialog rendering', () => {
 
   it('feeds only the CONNECT queue in the minimal shell host', async () => {
     setAppConfigForTest({
-      news: { enabled: true, apiUrl: 'https://portal.test/news/api/v1' },
+      schemaVersion: 1,
+      services: { news: { apiUrl: 'https://portal.test/news/api/v1' } },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }] },
     });
     stubNewsResponse([{ id: 'web-1', title: 'WEB item', body: '' }]);
     await fetchUnseenNews('web');

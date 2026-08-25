@@ -29,5 +29,6 @@ authority: normative-registry
 - [`EP-DES-002-public-des-hardening.md`](EP-DES-002-public-des-hardening.md)：修复公开 DES 的快照恢复原子性与动作预注册、显式 `routeIndex` 被下游满载改道、运行时生命周期泄漏、稳定端口在缩放父链下的方向取值，并收敛每帧/取消/自动连接等热点；同时把只处理 1 个事件的机器人上下料参考负载改为真实事件流并更正 `EP-DES-001` 的浏览器证据行；2026-08-23 完成。
 
 - [`EP-UI-001-hmi-layout-regressions.md`](EP-UI-001-hmi-layout-regressions.md)：修复告警收回操作区、全屏 3D 画布与 HMI 顶部 KPI 看板回归，并完成真实 Chromium、两轮本地全量与最终实现提交远程三轮门禁验收；2026-08-25 完成。
+- [`EP-CONFIG-001-deployment-identity-egress.md`](EP-CONFIG-001-deployment-identity-egress.md)：交付版本化部署身份、默认拒绝外呼、origin/purpose allowlist、本地 QR/Draco/Teams SDK、构建 CSP 与静态/浏览器反退化门禁；2026-08-25 完成。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

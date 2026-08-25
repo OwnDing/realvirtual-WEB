@@ -92,7 +92,7 @@ function pressF1(target: EventTarget = document): KeyboardEvent {
 let openSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
-  setAppConfig({});
+  setAppConfig({ services: { documentation: { baseUrl: 'http://localhost:5177/docs/' } } });
   openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 });
 
@@ -109,7 +109,7 @@ describe('F1 shortcut', () => {
     renderApp();
     const ev = pressF1();
     expect(openSpy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'http://localhost:5177/docs/', '_blank', 'noopener,noreferrer',
     );
     expect(ev.defaultPrevented).toBe(true);
   });
@@ -160,7 +160,10 @@ describe('F1 shortcut', () => {
 
   // F6 on the keyboard path.
   it('honours a configured base URL', () => {
-    setAppConfig({ docs: { baseUrl: 'https://kunde.example/hilfe/' } });
+    setAppConfig({
+      services: { documentation: { baseUrl: 'https://kunde.example/hilfe/' } },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://kunde.example', purposes: ['documentation'] }] },
+    });
     renderApp();
     pressF1();
     expect(openSpy).toHaveBeenCalledWith(

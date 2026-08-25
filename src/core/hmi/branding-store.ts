@@ -14,10 +14,19 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import type { DeploymentIdentityConfig } from '../deployment/deployment-config';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
 export interface CustomBranding {
+  /** Deployment product name used in product chrome and version labels. */
+  productName?: string;
+  /** Short product name used as the activity-bar logo accessible name. */
+  shortName?: string;
+  /** Deploying company name; legal copyright remains separate. */
+  companyName?: string;
+  /** Deployment description used by static/runtime metadata. */
+  description?: string;
   /** URL to the custom activity-bar logo (the top-left mark). Optional: when
    *  omitted the activity bar keeps the default XYvirtual logo, so a project
    *  can apply title-bar/colour branding while leaving the platform mark in
@@ -49,17 +58,37 @@ export interface CustomBranding {
 // ─── Store ──────────────────────────────────────────────────────────────
 
 let _branding: CustomBranding | null = null;
+let _deploymentBranding: CustomBranding | null = null;
+let _projectBranding: CustomBranding | null = null;
 const _listeners = new Set<() => void>();
 let _snapshot: CustomBranding | null = null;
 
 function notify(): void {
+  _branding = _deploymentBranding || _projectBranding
+    ? { ...(_deploymentBranding ?? {}), ...(_projectBranding ?? {}) }
+    : null;
   _snapshot = _branding ? { ..._branding } : null;
   for (const l of _listeners) l();
 }
 
 /** Set custom branding. Pass null to reset to default XYvirtual branding. */
 export function setCustomBranding(branding: CustomBranding | null): void {
-  _branding = branding;
+  _projectBranding = branding;
+  notify();
+}
+
+/** Install the deployment-owned base identity before React mounts. */
+export function setDeploymentBranding(identity: DeploymentIdentityConfig | null | undefined): void {
+  _deploymentBranding = identity ? {
+    productName: identity.productName,
+    shortName: identity.shortName,
+    companyName: identity.companyName,
+    description: identity.description,
+    logoUrl: identity.logoUrl,
+    name: identity.shortName ?? identity.productName,
+    primaryColor: identity.primaryColor,
+    secondaryColor: identity.secondaryColor,
+  } : null;
   notify();
 }
 

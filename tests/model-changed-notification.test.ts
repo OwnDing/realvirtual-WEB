@@ -20,7 +20,7 @@
  *   plus dedup, out-of-order suppression, and all three transport paths.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   RVModelUpdateCoordinator,
   installModelUpdateCoordinator,
@@ -58,6 +58,7 @@ import type {
   TransportOutboundMessage,
 } from '../src/interfaces/signal-transport-core';
 import { INTERFACE_DEFAULTS, type InterfaceSettings } from '../src/interfaces/interface-settings-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 // ── Host double ────────────────────────────────────────────────────────────
 
@@ -100,6 +101,19 @@ const PUBLISH: ModelChangedEvent = {
 beforeEach(() => {
   clearModelRevisions();
   installModelUpdateCoordinator(null);
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [
+        { origin: `ws://${window.location.hostname}:8080`, purposes: ['industrial-interface'] },
+        { origin: 'ws://other-host.example:5100', purposes: ['industrial-interface'] },
+      ],
+    },
+  });
+});
+
+afterEach(() => {
+  setAppConfig({});
 });
 
 // ── Identity: canonical URL vs. fetch URL (F4) ─────────────────────────────

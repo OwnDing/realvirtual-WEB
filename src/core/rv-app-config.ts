@@ -14,6 +14,12 @@ import type { InterfaceSettings } from '../interfaces/interface-settings-store';
 import type { SearchSettings } from './hmi/search-settings-store';
 import type { UIVisibilityRule } from './hmi/ui-context-store';
 import { debug } from './engine/rv-debug';
+import {
+  validateDeploymentConfig,
+  type DeploymentConfigFields,
+  type DeploymentServicesConfig,
+} from './deployment/deployment-config';
+import { allowEgressUrl } from './deployment/egress-policy';
 
 /** Configuration for context-aware UI visibility (loaded from settings.json `ui` key). */
 export interface UIContextConfig {
@@ -27,7 +33,7 @@ export interface UIContextConfig {
 export type SettingsTabId = 'model' | 'mouse' | 'visual' | 'simulation' | 'environment' | 'interfaces' | 'devtools' | 'tests' | 'mcp' | 'multiuser' | 'groups';
 
 /** Top-level app configuration loaded from `public/settings.json`. */
-export interface RVAppConfig {
+export interface RVAppConfig extends DeploymentConfigFields {
   /** Lock all settings — hides the settings gear button entirely. */
   lockSettings?: boolean;
   /** Selectively lock individual tabs (settings gear still visible). */
@@ -197,9 +203,15 @@ export interface RVAppConfig {
 
 let _config: RVAppConfig = {};
 
+function validatedConfig(config: RVAppConfig): RVAppConfig {
+  const validated = validateDeploymentConfig(config as unknown as Record<string, unknown>);
+  for (const issue of validated.issues) console.warn(`[config] ${issue}`);
+  return validated.config as unknown as RVAppConfig;
+}
+
 /** Replace the current app config (call once in main.ts before React mount). */
 export function setAppConfig(config: RVAppConfig): void {
-  _config = config;
+  _config = validatedConfig(config);
 }
 
 /** Read the current app config. */
@@ -240,7 +252,7 @@ export async function fetchAppConfig(): Promise<RVAppConfig> {
     }
     const keys = Object.keys(json);
     debug('config', `Loaded settings.json (${keys.length} key${keys.length !== 1 ? 's' : ''})`);
-    return json as RVAppConfig;
+    return validatedConfig(json as RVAppConfig);
   } catch {
     debug('config', 'No settings.json found, using defaults');
     return {};
@@ -261,14 +273,17 @@ let _analyticsInjected = false;
  */
 export function initAnalytics(): void {
   if (_analyticsInjected) return;
-  const gaId = _config.analytics?.googleAnalyticsId;
-  if (!gaId) return;
+  const analytics = getAnalyticsService();
+  if (!analytics) return;
+  const scriptUrl = allowEgressUrl(analytics.scriptUrl, 'analytics', _config.egress);
+  if (!scriptUrl) return;
   _analyticsInjected = true;
 
   // Inject gtag.js script
   const script = document.createElement('script');
   script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
+  scriptUrl.searchParams.set('id', analytics.measurementId);
+  script.src = scriptUrl.href;
   document.head.appendChild(script);
 
   // Initialize dataLayer and config
@@ -284,9 +299,14 @@ export function initAnalytics(): void {
   // Expose gtag globally so trackAnalyticsEvent() can fire GA4 custom events.
   w.gtag = gtag;
   gtag('js', new Date());
-  gtag('config', gaId);
+  gtag('config', analytics.measurementId);
 
-  debug('config', `Google Analytics initialized: ${gaId}`);
+  debug('config', 'Configured analytics provider initialized');
+}
+
+/** Canonical analytics service. Legacy IDs do not imply permission to load a third-party script. */
+export function getAnalyticsService(): NonNullable<DeploymentServicesConfig['analytics']> | null {
+  return _config.services?.analytics ?? null;
 }
 
 /**

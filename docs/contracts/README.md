@@ -16,5 +16,6 @@ authority: normative-registry
 - [`../../schema/v1/conformance/README.md`](../../schema/v1/conformance/README.md)
 - [`ASSEMBLY_PORTS.md`](ASSEMBLY_PORTS.md)：稳定装配端口身份、方向、兼容与旧 Snap 迁移契约。
 - [`DES_RUNTIME.md`](DES_RUNTIME.md)：公开 DES 的状态所有权、时间/排序、MU/预约、故障、快照 v3、实验与行业边界。
+- [`DEPLOYMENT_CONFIG.md`](DEPLOYMENT_CONFIG.md)：Deployment Config v1；部署身份、法律链接、服务和默认拒绝的 origin/purpose 外呼策略。
 
 后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。

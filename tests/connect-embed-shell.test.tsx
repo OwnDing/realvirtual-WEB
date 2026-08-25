@@ -230,7 +230,15 @@ describe('CONNECT embedded minimal shell', () => {
   beforeEach(() => {
     localStorage.setItem('rv-welcome-dismissed', '1');
     localStorage.removeItem(CONNECT_EMBED_SIGNAL_HINT_SEEN_KEY);
-    const config = { ui: { initialContexts: ['connect-embed'] }, sourceUrl: 'https://example.invalid/source' };
+    const config = {
+      ui: { initialContexts: ['connect-embed'] },
+      sourceUrl: 'https://example.invalid/source',
+      services: { documentation: { baseUrl: 'https://docs.customer.example/web/' } },
+      egress: {
+        mode: 'allow-listed' as const,
+        allow: [{ origin: 'https://docs.customer.example', purposes: ['documentation' as const] }],
+      },
+    };
     setAppConfig(config);
     initializeConnectEmbedStore(config);
   });
@@ -338,7 +346,7 @@ describe('CONNECT embedded minimal shell', () => {
     const opened = vi.spyOn(window, 'open').mockImplementation(() => null);
     fireEvent.click(help);
     expect(opened).toHaveBeenCalledWith(
-      expect.stringContaining('https://xyvirtual.io/doc/web/'), '_blank', 'noopener,noreferrer',
+      expect.stringContaining('https://docs.customer.example/web/'), '_blank', 'noopener,noreferrer',
     );
   });
 

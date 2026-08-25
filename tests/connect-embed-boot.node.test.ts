@@ -17,7 +17,7 @@ describe('CONNECT embedded boot gate', () => {
     'keeps the %s boot path behind the central gate branch',
     (pathMarker) => {
       const gatedBranch = mainSource.indexOf('if (connectEmbedEnabled) {', mainSource.indexOf('const firebaseDemoName'));
-      const normalBranch = mainSource.indexOf('} else if (firebaseDemoName)', gatedBranch);
+      const normalBranch = mainSource.indexOf('} else if (firebaseDemoName && firebaseDemoUrl)', gatedBranch);
       expect(gatedBranch).toBeGreaterThan(0);
       expect(normalBranch).toBeGreaterThan(gatedBranch);
       expect(mainSource.indexOf(pathMarker, normalBranch)).toBeGreaterThan(normalBranch);

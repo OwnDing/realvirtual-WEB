@@ -42,3 +42,5 @@ authority: normative-registry
   OD-001 状态改为 `decided-pending-spec` 而非 `closed`：按本文件执行规则 2，产品决策必须先落到 ADR/规格/契约才可关闭。落地文档（租户/组织模型、权限模型、云端项目后端契约）尚未创建，创建并批准后再改为 `closed`。此处沿用 OD-002 的先例——2026-08-19 曾同样先记录部分产品输入，规格落地后才关闭。
 
 - OD-004 于 2026-08-22 关闭。批准来源为用户当前明确同意五项改进并要求按 ExecPlan 完成；落地文档为 Approved [`PS-PLANNER-001`](../product-specs/PAINTLINE_ASSEMBLY_MVP.md)、Accepted [`ADR-0003`](../adr/ADR-0003-stable-assembly-ports.md) 与 [`CONTRACT-ASSEMBLY-PORTS-001`](../contracts/ASSEMBLY_PORTS.md)。Schema、代码、资产和测试已由 Completed [`EP-PLANNER-001`](../exec-plans/completed/EP-PLANNER-001-paintline-assembly-mvp.md) 同步交付并留证。
+
+- 2026-08-25，用户当前明确指令批准 OD-003 的**部署层子决策**：品牌、法律链接、外部服务和外呼策略由版本化部署配置拥有；默认拒绝外部访问，显式使用 `origin + purpose` allowlist；项目、模型、用户、会话与 URL 参数不得放宽这些安全字段。落地文档为 Approved [`PS-CONFIG-001`](../product-specs/DEPLOYMENT_IDENTITY_EGRESS.md)、Accepted [`ADR-0006`](../adr/ADR-0006-deployment-identity-egress.md) 与 [`CONTRACT-DEPLOYMENT-CONFIG-001`](../contracts/DEPLOYMENT_CONFIG.md)，实施由 Completed [`EP-CONFIG-001`](../exec-plans/completed/EP-CONFIG-001-deployment-identity-egress.md) 交付。OD-003 保持 `open`：非安全配置在部署、项目、文档、模型、用户和会话之间的完整覆盖矩阵、组织策略编辑 UI 与迁移仍未决定。

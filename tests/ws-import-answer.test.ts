@@ -15,7 +15,7 @@
  * outbound messages are exactly what the worker posts after parsing the wire.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { WebSocketRealtimeInterface } from '../src/interfaces/websocket-realtime-interface';
 import type { InterfaceSettings } from '../src/interfaces/interface-settings-store';
 import type { LoadResult } from '../src/core/engine/rv-scene-loader';
@@ -25,6 +25,20 @@ import type {
   TransportInboundMessage,
   TransportOutboundMessage,
 } from '../src/interfaces/signal-transport-core';
+import { setAppConfig } from '../src/core/rv-app-config';
+
+beforeEach(() => {
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'ws://127.0.0.1:8080', purposes: ['industrial-interface'] }],
+    },
+  });
+});
+
+afterEach(() => {
+  setAppConfig({});
+});
 
 // ── Mock TransportPort (worker ⇄ main protocol) ──────────────────────────────
 

@@ -92,7 +92,7 @@ const helpButton = () => screen.getByRole('button', { name: /help/i });
 beforeEach(() => {
   layout.mobile = false;
   _resetHelpTopicRegistryForTests();
-  setAppConfig({});
+  setAppConfig({ services: { documentation: { baseUrl: 'http://localhost:5177/docs/' } } });
   localStorage.removeItem('rv-left-panel-active');
 });
 
@@ -110,7 +110,7 @@ describe('help entry in the activity bar', () => {
     renderWithViewer(<ActivityBar />, createViewer((lpm) => lpm.open('layout-planner', 300, 'left')));
     fireEvent.click(helpButton());
     expect(spy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/planner/overview/', '_blank', 'noopener,noreferrer',
+      'http://localhost:5177/docs/planner/overview/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -119,7 +119,7 @@ describe('help entry in the activity bar', () => {
     renderWithViewer(<ActivityBar />, createViewer());
     fireEvent.click(helpButton());
     expect(spy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'http://localhost:5177/docs/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -150,7 +150,7 @@ describe('help entry in the activity bar', () => {
     const item = screen.getByRole('menuitem', { name: 'Help' });
     fireEvent.click(item);
     expect(spy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
+      'http://localhost:5177/docs/', '_blank', 'noopener,noreferrer',
     );
   });
 
@@ -164,7 +164,10 @@ describe('help entry in the activity bar', () => {
 
   // F6 on the click path — the shared helper alone is not proof.
   it('honours a configured base URL', () => {
-    setAppConfig({ docs: { baseUrl: 'https://kunde.example/hilfe/' } });
+    setAppConfig({
+      services: { documentation: { baseUrl: 'https://kunde.example/hilfe/' } },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://kunde.example', purposes: ['documentation'] }] },
+    });
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     renderWithViewer(<ActivityBar />, createViewer((lpm) => lpm.open('connect', 280, 'right')));
     fireEvent.click(helpButton());

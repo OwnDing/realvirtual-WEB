@@ -7,7 +7,7 @@
  * Tests:
  *   - connectionMode defaults to 'local'
  *   - connectionMode 'relay' persists in localStorage
- *   - relayUrl persists and defaults to portal.realvirtual.io
+ *   - relayUrl persists and defaults to empty (deployment-owned)
  *   - backward compat: loading old settings without connectionMode returns 'local'
  */
 
@@ -30,9 +30,9 @@ describe('MultiuserSettings relay mode', () => {
     expect(loaded.connectionMode).toBe('local');
   });
 
-  it('should default relayUrl to portal.realvirtual.io', () => {
+  it('should default relayUrl to empty', () => {
     const loaded = loadMultiuserSettings();
-    expect(loaded.relayUrl).toBe('wss://download.realvirtual.io/relay');
+    expect(loaded.relayUrl).toBe('');
   });
 
   it('should persist connectionMode relay in localStorage', () => {
@@ -81,7 +81,7 @@ describe('MultiuserSettings relay mode', () => {
 
     const loaded = loadMultiuserSettings();
     expect(loaded.connectionMode).toBe('local');
-    expect(loaded.relayUrl).toBe('wss://download.realvirtual.io/relay');
+    expect(loaded.relayUrl).toBe('');
     expect(loaded.serverUrl).toBe('ws://old-server:7000');
     expect(loaded.displayName).toBe('OldUser');
   });

@@ -6,8 +6,9 @@
  *
  * Verifies: add, remove, select, update transform, multi-tab catalogs, fetch error handling.
  */
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, test, expect, vi, beforeEach } from 'vitest';
 import { LayoutStore, resolveUrl, normalizeCatalogEntry } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 describe('LayoutStore', () => {
   beforeEach(() => {
@@ -15,6 +16,23 @@ describe('LayoutStore', () => {
     // grid settings). Without a per-test reset, earlier tests leak active-tab
     // values into later tests' fresh stores.
     localStorage.clear();
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [
+          'https://lib1.example.com',
+          'https://lib2.example.com',
+          'https://missing.example.com',
+          'https://broken.example.com',
+          'https://cdn.example.com',
+        ].map((origin) => ({ origin, purposes: ['remote-model' as const] })),
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    setAppConfig({});
   });
 
   test('addComponent adds to placed array', () => {

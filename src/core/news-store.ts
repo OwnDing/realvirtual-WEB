@@ -10,6 +10,7 @@ import {
   initializeConnectEmbedStore,
 } from '../plugins/connect-embed/connect-embed-store';
 import { isSafeHttpUrl } from './hmi/safe-markdown';
+import { allowRuntimeEgressUrl } from './deployment/runtime-egress';
 
 export const NEWS_CONTRACT_VERSION = 1;
 export const NEWS_SEEN_STORAGE_KEY = 'rv-news-seen';
@@ -166,12 +167,17 @@ export function resetNewsStoreForTest(): void {
 }
 
 function resolveConfiguredNewsUrl(): URL | null {
-  const config = getAppConfig().news;
-  if (config?.enabled !== true || typeof config.apiUrl !== 'string' || !config.apiUrl.trim()) {
+  const appConfig = getAppConfig();
+  const serviceUrl = appConfig.services?.news?.apiUrl;
+  const legacy = appConfig.news;
+  const candidate = serviceUrl
+    ?? (legacy?.enabled === true && typeof legacy.apiUrl === 'string' ? legacy.apiUrl : '');
+  if (!candidate.trim() || !isSafeHttpUrl(candidate)) {
     return null;
   }
   try {
-    const url = new URL(config.apiUrl);
+    const url = allowRuntimeEgressUrl(candidate, 'news');
+    if (!url) return null;
     if (!isSafeHttpUrl(url.href) || url.search || url.hash) return null;
     return url;
   } catch {

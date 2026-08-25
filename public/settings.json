@@ -1,6 +1,18 @@
 {
+  "schemaVersion": 1,
   "defaultModel": "DemoRealvirtualWeb.glb",
-  "analytics": {
-    "googleAnalyticsId": ""
+  "egress": {
+    "mode": "deny-external",
+    "allow": []
+  },
+  "services": {
+    "analytics": null,
+    "news": null,
+    "documentation": null,
+    "connectUpdates": null,
+    "firebaseDemo": null,
+    "githubLibrary": null,
+    "cadLinks": null,
+    "qr": { "mode": "local" }
   }
 }

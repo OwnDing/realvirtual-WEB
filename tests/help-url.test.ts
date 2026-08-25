@@ -21,17 +21,17 @@ afterEach(() => {
 describe('buildHelpUrl', () => {
   it('builds a page URL with a trailing slash', () => {
     expect(buildHelpUrl({ slug: 'des/overview' }))
-      .toBe('https://xyvirtual.io/doc/web/des/overview/');
+      .toBe('/docs/des/overview/');
   });
 
   it('appends an anchor when present', () => {
     expect(buildHelpUrl({ slug: 'planner/overview', anchor: 'snapping' }))
-      .toBe('https://xyvirtual.io/doc/web/planner/overview/#snapping');
+      .toBe('/docs/planner/overview/#snapping');
   });
 
   it('returns the documentation root for the fallback topic', () => {
     expect(buildHelpUrl(HELP_FALLBACK)).toBe(DEFAULT_DOC_BASE_URL);
-    expect(DEFAULT_DOC_BASE_URL).toBe('https://xyvirtual.io/doc/web/');
+    expect(DEFAULT_DOC_BASE_URL).toBe('/docs/');
   });
 
   it('honours a configured base URL without doubling slashes', () => {
@@ -47,12 +47,12 @@ describe('buildHelpUrl', () => {
   it.each([[''], ['   '], ['javascript:alert(1)'], ['ftp://x/y'], ['not a url']])(
     'ignores the invalid base URL %p and uses the default', (bad) => {
       expect(buildHelpUrl({ slug: 'odt' }, bad))
-        .toBe('https://xyvirtual.io/doc/web/odt/');
+        .toBe('/docs/odt/');
     });
 
   it.each([[null], [undefined]])('ignores %p and uses the default', (bad) => {
     expect(buildHelpUrl({ slug: 'odt' }, bad as unknown as string))
-      .toBe('https://xyvirtual.io/doc/web/odt/');
+      .toBe('/docs/odt/');
   });
 });
 
@@ -76,7 +76,10 @@ describe('openCurrentHelp', () => {
   }
 
   it('uses the configured base URL', () => {
-    setAppConfig({ docs: { baseUrl: 'https://kunde.example/hilfe/' } });
+    setAppConfig({
+      services: { documentation: { baseUrl: 'https://kunde.example/hilfe/' } },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://kunde.example', purposes: ['documentation'] }] },
+    });
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     openCurrentHelp(viewerWith('connect'));
     expect(spy).toHaveBeenCalledWith(
@@ -84,19 +87,15 @@ describe('openCurrentHelp', () => {
     );
   });
 
-  it('falls back to the documentation root without any context', () => {
+  it('does not open an unconfigured documentation service', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     openCurrentHelp(viewerWith(null));
-    expect(spy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
-    );
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it('survives a viewer without the managers instead of throwing', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
     openCurrentHelp({});
-    expect(spy).toHaveBeenCalledWith(
-      'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',
-    );
+    expect(spy).not.toHaveBeenCalled();
   });
 });

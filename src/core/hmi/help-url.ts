@@ -18,8 +18,8 @@
 
 import type { HelpTopic } from './help-topics';
 
-/** Product documentation root — used unless a deployment overrides it. */
-export const DEFAULT_DOC_BASE_URL = 'https://xyvirtual.io/doc/web/';
+/** Same-origin utility default. Runtime help stays hidden until a deployment configures docs. */
+export const DEFAULT_DOC_BASE_URL = '/docs/';
 
 /**
  * True when `candidate` is usable as a documentation base: a non-empty string
@@ -32,6 +32,9 @@ function normalizeBaseUrl(candidate: string | null | undefined): string {
   if (typeof candidate !== 'string') return DEFAULT_DOC_BASE_URL;
   const trimmed = candidate.trim();
   if (!trimmed) return DEFAULT_DOC_BASE_URL;
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return trimmed.endsWith('/') ? trimmed : `${trimmed}/`;
+  }
   let parsed: URL;
   try {
     parsed = new URL(trimmed);

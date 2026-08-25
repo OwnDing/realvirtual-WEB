@@ -40,6 +40,7 @@ import { scopeSignalName } from '../src/core/engine/rv-instance-scope';
 import type { RVViewer } from '../src/core/rv-viewer';
 import type { RVDrive } from '../src/core/engine/rv-drive';
 import type { LoadResult } from '../src/core/engine/rv-scene-loader';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 // ── Mock transport ──────────────────────────────────────────────────────────
 
@@ -83,6 +84,12 @@ function makeFakeDrive(name: string): FakeDrive {
 }
 
 function makeFixture() {
+  setAppConfig({
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'ws://mock:7000', purposes: ['multiuser'] }],
+    },
+  });
   const store = new SignalStore();
   store.register('A', 'Cell/A', false, 'PLCOutputBool');
   store.register('B', 'Cell/B', false, 'PLCOutputBool');
@@ -120,6 +127,7 @@ afterEach(() => {
   vi.useRealTimers();
   setAuthorityRanking('strict');
   resetSlotAuthority();
+  setAppConfig({});
 });
 
 // ── 9.6a — atomic snapshot ──────────────────────────────────────────────────

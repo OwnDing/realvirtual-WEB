@@ -13,6 +13,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Group, Mesh, Object3D, Vector3, BoxGeometry, MeshBasicMaterial } from 'three';
 import { ModelCache, pivotToFloorCenter } from '../src/plugins/layout-planner';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 // Create a mock loader that returns a pre-built Group
 function createMockLoader() {
@@ -49,10 +50,17 @@ describe('ModelCache', () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://example.com', purposes: ['remote-model'] }],
+      },
+    });
     fetchSpy = mockFetchOK();
   });
   afterEach(() => {
     fetchSpy.mockRestore();
+    setAppConfig({});
   });
 
   test('caches loaded model by URL', async () => {

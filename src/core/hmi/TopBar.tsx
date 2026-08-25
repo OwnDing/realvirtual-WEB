@@ -31,6 +31,7 @@ import {
 } from './left-panel-visibility';
 import { SlotRenderer } from './HMIShell';
 import { useSlot } from '../../hooks/use-slot';
+import { renderSVG } from 'uqr';
 
 /**
  * Detect a left-panel slot that is "open" in the leftPanelManager but whose
@@ -332,7 +333,12 @@ export function TopBar() {
 function VRModal({ onClose }: { onClose: () => void }) {
   const { t } = useRvTranslation('shell');
   const vrUrl = window.location.origin + window.location.pathname;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=121212&color=ffffff&data=${encodeURIComponent(vrUrl)}`;
+  const qrUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(renderSVG(vrUrl, {
+    border: 3,
+    pixelSize: 6,
+    whiteColor: '#121212',
+    blackColor: '#ffffff',
+  }))}`;
 
   return (
     <Box

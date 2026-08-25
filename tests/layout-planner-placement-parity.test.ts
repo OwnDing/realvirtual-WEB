@@ -50,6 +50,7 @@ import type {
   PlacedComponent,
   SignalMapping,
 } from '../src/plugins/layout-planner/rv-layout-store';
+import { setAppConfig } from '../src/core/rv-app-config';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────
 
@@ -225,6 +226,12 @@ describe('plan-376 — placement parity across the five paths', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    setAppConfig({
+      egress: {
+        mode: 'allow-listed',
+        allow: [{ origin: 'https://rv-test.invalid', purposes: ['remote-model'] }],
+      },
+    });
     localStorage.removeItem(AUTOSAVE_KEY);
     // `RVAssetBlobCache` fetches every non-blob url. The bytes never reach a
     // real GLTF parser (the harness loader is stubbed), so any body will do.
@@ -249,6 +256,7 @@ describe('plan-376 — placement parity across the five paths', () => {
   afterEach(() => {
     fetchSpy.mockRestore();
     warnSpy.mockRestore();
+    setAppConfig({});
     localStorage.removeItem(AUTOSAVE_KEY);
   });
 

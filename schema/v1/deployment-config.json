@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xyvirtual.local/schema/v1/deployment-config.json",
+  "title": "XYvirtual WEB Deployment Config v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "identity": { "$ref": "#/$defs/identity" },
+    "legal": { "$ref": "#/$defs/legal" },
+    "egress": { "$ref": "#/$defs/egress" },
+    "services": { "$ref": "#/$defs/services" }
+  },
+  "$defs": {
+    "nonEmptyText": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "relativeAssetUrl": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:|//)"
+    },
+    "absoluteUrl": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "pattern": "^https?://"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "productName": { "$ref": "#/$defs/nonEmptyText" },
+        "shortName": { "$ref": "#/$defs/nonEmptyText" },
+        "companyName": { "$ref": "#/$defs/nonEmptyText" },
+        "description": { "type": "string", "maxLength": 500 },
+        "logoUrl": { "$ref": "#/$defs/relativeAssetUrl" },
+        "faviconUrl": { "$ref": "#/$defs/relativeAssetUrl" },
+        "primaryColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "secondaryColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "legal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "licenseUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "privacyUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "termsUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "copyrightNotice": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "purpose": {
+      "enum": [
+        "analytics", "news", "documentation", "legal-link", "connect-updates",
+        "firebase-demo", "github-library", "cad-link", "remote-model",
+        "industrial-interface", "multiuser", "share", "debug-tool"
+      ]
+    },
+    "originRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "purposes"],
+      "properties": {
+        "origin": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "purposes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/purpose" }
+        }
+      }
+    },
+    "egress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["deny-external", "allow-listed"] },
+        "allow": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/originRule" }
+        }
+      }
+    },
+    "analyticsService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "measurementId", "scriptUrl"],
+      "properties": {
+        "provider": { "const": "google-analytics" },
+        "measurementId": { "$ref": "#/$defs/nonEmptyText" },
+        "scriptUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "privacyPolicyUrl": { "$ref": "#/$defs/absoluteUrl" }
+      }
+    },
+    "newsService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apiUrl"],
+      "properties": { "apiUrl": { "$ref": "#/$defs/absoluteUrl" } }
+    },
+    "docsService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseUrl"],
+      "properties": { "baseUrl": { "$ref": "#/$defs/absoluteUrl" } }
+    },
+    "connectUpdatesService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stableDownloadUrl"],
+      "properties": {
+        "stableDownloadUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "stableManifestUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "betaManifestUrl": { "$ref": "#/$defs/absoluteUrl" }
+      }
+    },
+    "firebaseDemoService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelBaseUrl"],
+      "properties": { "modelBaseUrl": { "$ref": "#/$defs/absoluteUrl" } }
+    },
+    "githubService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["webBaseUrl", "apiBaseUrl", "rawBaseUrl"],
+      "properties": {
+        "webBaseUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "apiBaseUrl": { "$ref": "#/$defs/absoluteUrl" },
+        "rawBaseUrl": { "$ref": "#/$defs/absoluteUrl" }
+      }
+    },
+    "cadLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "url"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+        "label": { "$ref": "#/$defs/nonEmptyText" },
+        "url": { "$ref": "#/$defs/absoluteUrl" }
+      }
+    },
+    "services": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analytics": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/analyticsService" }] },
+        "news": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/newsService" }] },
+        "documentation": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/docsService" }] },
+        "connectUpdates": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/connectUpdatesService" }] },
+        "firebaseDemo": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/firebaseDemoService" }] },
+        "githubLibrary": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/githubService" }] },
+        "cadLinks": { "oneOf": [{ "type": "null" }, { "type": "array", "maxItems": 20, "items": { "$ref": "#/$defs/cadLink" } }] },
+        "qr": { "oneOf": [{ "type": "null" }, { "type": "object", "additionalProperties": false, "properties": { "mode": { "const": "local" } }, "required": ["mode"] }] }
+      }
+    }
+  }
+}

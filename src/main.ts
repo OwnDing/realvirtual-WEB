@@ -18,6 +18,10 @@ import type { RVExtrasOverlay } from './core/engine/rv-extras-overlay-store';
 import { debug, logInfo } from './core/engine/rv-debug';
 import { initTestRunner } from './rv-test-runner';
 import { fetchAppConfig, setAppConfig, initAnalytics, trackAnalyticsEvent } from './core/rv-app-config';
+import { applyDeploymentIdentityToDocument } from './core/deployment/deployment-identity';
+import { setDeploymentBranding } from './core/hmi/branding-store';
+import { allowRuntimeEgressUrl } from './core/deployment/runtime-egress';
+import type { EgressPurpose } from './core/deployment/deployment-config';
 import { initFragmentSecret, decryptModelData } from './core/hmi/password-gate';
 import { isEncryptedEnvelope } from './core/persistence/rv-crypto-utils';
 import { requireAnalyticsConsent } from './core/hmi/consent-gate';
@@ -400,14 +404,21 @@ async function guardHeavyRestore(sceneId: string, displayName?: string): Promise
  */
 async function downloadGlb(
   url: string,
-  opts: { attempts: number; timeoutMs: number; onRetry: (attempt: number, total: number) => void },
+  opts: {
+    attempts: number;
+    timeoutMs: number;
+    onRetry: (attempt: number, total: number) => void;
+    egressPurpose?: EgressPurpose;
+  },
 ): Promise<ArrayBuffer> {
+  const allowedUrl = allowRuntimeEgressUrl(url, opts.egressPurpose ?? 'remote-model');
+  if (!allowedUrl) throw new Error('Model URL is blocked by the deployment egress policy');
   let lastErr: unknown;
   for (let attempt = 1; attempt <= opts.attempts; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
     try {
-      const resp = await fetch(url, { signal: controller.signal });
+      const resp = await fetch(allowedUrl.href, { signal: controller.signal });
       if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
       const len = parseInt(resp.headers.get('content-length') || '0', 10);
 
@@ -545,6 +556,8 @@ async function init() {
 
   // Set singleton — from here all stores have access via getAppConfig()
   setAppConfig(appConfig);
+  applyDeploymentIdentityToDocument(appConfig);
+  setDeploymentBranding(appConfig.identity);
   const connectEmbedEnabled = initializeConnectEmbedStore(appConfig);
 
   // MU-accumulation kill-switch (plan-255 §2.8): settings.json
@@ -1146,11 +1159,16 @@ async function init() {
   // reloaded with the original GLB values instead of the edited ones.
   // Remember the last requested model so the error overlay's Retry button can
   // re-run it after a failure.
-  let lastLoadRequest: { url: string; options?: { overlay?: RVExtrasOverlay } } | null = null;
+  let lastLoadRequest: {
+    url: string;
+    options?: { overlay?: RVExtrasOverlay; identityUrl?: string; data?: ArrayBuffer };
+    egressPurpose: EgressPurpose;
+  } | null = null;
 
   async function loadModel(
     url: string,
     options?: { overlay?: RVExtrasOverlay; identityUrl?: string; data?: ArrayBuffer },
+    egressPurpose: EgressPurpose = 'remote-model',
   ) {
     // `url` is where the bytes come from; `identityUrl` (set by loadScene when a
     // workspace resumed from a stored body) is which model they ARE. They differ
@@ -1163,7 +1181,7 @@ async function init() {
     const modelIdentity = matchedEntry?.filename ?? identityUrl;
     const modelName = matchedEntry?.filename.replace(/\.glb$/i, '')
       ?? (identityUrl.split('/').pop() ?? identityUrl).split('?')[0].replace(/\.glb$/i, '');
-    lastLoadRequest = { url, options };
+    lastLoadRequest = { url, options, egressPurpose };
     if (!connectEmbedEnabled) {
       showLoadingOverlay(modelName);
       localStorage.setItem(LS_KEY_MODEL, identityUrl);
@@ -1189,6 +1207,7 @@ async function init() {
         attempts: 3,
         timeoutMs: 90_000,
         onRetry: setLoadingRetrying,
+        egressPurpose,
       });
 
       // plan-267: an encrypted deploy ships the GLB as an RVE1 envelope under its
@@ -1344,7 +1363,9 @@ async function init() {
   // Retry re-runs the last requested load; Reload is the hard fallback (also the
   // recovery path for a lost WebGL context, which cannot be re-initialised in place).
   loadingRetryBtn.onclick = () => {
-    if (lastLoadRequest) loadModel(lastLoadRequest.url, lastLoadRequest.options);
+    if (lastLoadRequest) {
+      loadModel(lastLoadRequest.url, lastLoadRequest.options, lastLoadRequest.egressPurpose);
+    }
   };
   loadingReloadBtn.onclick = () => window.location.reload();
 
@@ -1394,6 +1415,13 @@ async function init() {
   const pathParts = window.location.pathname.split('/').filter(p => p);
   const webviewerIdx = pathParts.indexOf('webviewer');
   const firebaseDemoName = webviewerIdx >= 0 && pathParts[webviewerIdx + 1] ? pathParts[webviewerIdx + 1] : null;
+  const firebaseDemoUrl = (() => {
+    const baseUrl = appConfig.services?.firebaseDemo?.modelBaseUrl;
+    if (!firebaseDemoName || !baseUrl) return null;
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+    const candidate = new URL(`${encodeURIComponent(firebaseDemoName)}/demo.glb`, normalizedBase);
+    return allowRuntimeEgressUrl(candidate, 'firebase-demo')?.href ?? null;
+  })();
 
   if (connectEmbedEnabled) {
     // CONNECT public-demo is intentionally model-empty on every boot. This
@@ -1401,13 +1429,10 @@ async function init() {
     // model, configured-default and entries[0] restore path below.
     hideLoadingOverlay();
     viewer.leftPanelManager.open('connect', getStoredConnectPanelWidth());
-  } else if (firebaseDemoName) {
-    const bucketName = 'realvirtual-files.firebasestorage.app';
-    const storagePath = `demo/webviewer/${firebaseDemoName}/demo.glb`;
-    const firebaseGlbUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(storagePath)}?alt=media`;
-    debug('config', `Firebase demo: "${firebaseDemoName}" → ${firebaseGlbUrl}`);
+  } else if (firebaseDemoName && firebaseDemoUrl) {
+    debug('config', `Configured demo model: "${firebaseDemoName}"`);
     document.title = rvT('tools', 'finalSweep.workspace.modelDocumentTitle', { name: firebaseDemoName });
-    loadModel(firebaseGlbUrl);
+    loadModel(firebaseDemoUrl, undefined, 'firebase-demo');
   } else {
     // ── Project restore (plan-370 §4b boot mount point) ───────────────
     // Awaited BEFORE any scene/model routing. `openProjectFolder()` is

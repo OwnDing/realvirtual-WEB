@@ -25,6 +25,8 @@ import { Box, Checkbox, Link, MenuItem, Select, Tooltip, Typography, type SxProp
 import { OpenInNew } from '@mui/icons-material';
 import type { ImportProviderContext } from '../../core/import/rv-import-provider';
 import { useRvTranslation } from '../../core/i18n';
+import { getAppConfig } from '../../core/rv-app-config';
+import { allowRuntimeEgressUrl } from '../../core/deployment/runtime-egress';
 
 /** Standard column layout of one provider tab: consistent rhythm across tabs. */
 export const TAB_PANE_SX: SxProps<Theme> = {
@@ -320,17 +322,23 @@ export function FileDropZone({ accept, multiple = true, onFiles, children }: {
  */
 export function PartSourceLinks() {
   const { t } = useRvTranslation('assets');
+  const links = (getAppConfig().services?.cadLinks ?? []).flatMap((entry) => {
+    const allowed = allowRuntimeEgressUrl(entry.url, 'cad-link');
+    return allowed ? [{ ...entry, url: allowed.href }] : [];
+  });
+  if (links.length === 0) return null;
   const sx = { fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 0.25 } as const;
   return (
     <Typography sx={{ fontSize: 11, lineHeight: 1.7, color: 'text.secondary' }}>
       {t('import.needStandardPart')}{' '}
-      <Link href="https://www.3dfindit.com/" target="_blank" rel="noopener noreferrer" sx={sx}>
-        3Dfindit<OpenInNew sx={{ fontSize: 11 }} />
-      </Link>
-      {' · '}
-      <Link href="https://www.traceparts.com/" target="_blank" rel="noopener noreferrer" sx={sx}>
-        TraceParts<OpenInNew sx={{ fontSize: 11 }} />
-      </Link>
+      {links.map((entry, index) => (
+        <span key={entry.id}>
+          {index > 0 ? ' · ' : ''}
+          <Link href={entry.url} target="_blank" rel="noopener noreferrer" sx={sx}>
+            {entry.label}<OpenInNew sx={{ fontSize: 11 }} />
+          </Link>
+        </span>
+      ))}
     </Typography>
   );
 }

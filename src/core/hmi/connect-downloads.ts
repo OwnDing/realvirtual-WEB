@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-/** Canonical stable CONNECT installer published by the deploy-connect workflow. */
-export const CONNECT_STABLE_DOWNLOAD_URL =
-  'https://web.realvirtual.io/download/realvirtual-Connect.exe';
+import { getAppConfig } from '../rv-app-config';
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+
+/** Legacy exports retained for API compatibility; deployments now own all release URLs. */
+export const CONNECT_STABLE_DOWNLOAD_URL = '';
 
 /** Canonical stable Linux x64 CONNECT bundle published by the deploy-connect workflow. */
-export const CONNECT_STABLE_LINUX_DOWNLOAD_URL =
-  'https://web.realvirtual.io/download/realvirtual-Connect-linux-x64.tar.gz';
+export const CONNECT_STABLE_LINUX_DOWNLOAD_URL = '';
 
 /** Backward-compatible v2 manifest containing immutable hashes for all published platforms. */
-export const CONNECT_STABLE_MANIFEST_URL =
-  'https://web.realvirtual.io/download/connect-latest.json';
+export const CONNECT_STABLE_MANIFEST_URL = '';
 
 /**
  * Beta-channel manifest. Optional — the deploy-connect workflow only writes it when a beta
  * build is published. The panel probes this URL and shows the beta download **only if it
  * resolves** (see {@link ConnectDownloadInfo.beta}). Same manifest shape as the stable one.
  */
-export const CONNECT_BETA_MANIFEST_URL =
-  'https://web.realvirtual.io/download/connect-beta.json';
+export const CONNECT_BETA_MANIFEST_URL = '';
 
 /**
  * Static beta installer URL. Kept `null` because no fixed beta path is published yet; the beta
@@ -65,6 +64,20 @@ function initialInfo(): ConnectDownloadInfo {
   };
 }
 
+function configuredUrls(): { stable: string; stableManifest: string | null; betaManifest: string | null } {
+  const service = getAppConfig().services?.connectUpdates;
+  const stable = service
+    ? allowRuntimeEgressUrl(service.stableDownloadUrl, 'connect-updates')?.href ?? ''
+    : '';
+  const stableManifest = service?.stableManifestUrl
+    ? allowRuntimeEgressUrl(service.stableManifestUrl, 'connect-updates')?.href ?? null
+    : null;
+  const betaManifest = service?.betaManifestUrl
+    ? allowRuntimeEgressUrl(service.betaManifestUrl, 'connect-updates')?.href ?? null
+    : null;
+  return { stable, stableManifest, betaManifest };
+}
+
 let _info: ConnectDownloadInfo = initialInfo();
 let _loadStarted = false;
 const _listeners = new Set<() => void>();
@@ -74,8 +87,11 @@ function _emit(): void {
 }
 
 function _channelFromManifest(m: ConnectReleaseManifest, fallbackUrl: string): ConnectChannelInfo {
+  const manifestUrl = typeof m.url === 'string'
+    ? allowRuntimeEgressUrl(m.url, 'connect-updates')?.href
+    : undefined;
   return {
-    url: typeof m.url === 'string' && m.url ? m.url : fallbackUrl,
+    url: manifestUrl || fallbackUrl,
     version: typeof m.version === 'string' && m.version ? m.version : null,
     build: typeof m.build === 'number' ? m.build : null,
     buildDate: typeof m.buildDate === 'string' && m.buildDate ? m.buildDate : null,
@@ -103,6 +119,15 @@ async function _probe(url: string): Promise<ConnectReleaseManifest | null> {
 export function ensureConnectDownloadsLoaded(): void {
   if (_loadStarted) return;
   _loadStarted = true;
+  const configured = configuredUrls();
+  _info = {
+    stable: { url: configured.stable, version: null, build: null, buildDate: null },
+    beta: null,
+    loaded: !configured.stableManifest && !configured.betaManifest,
+  };
+  _emit();
+
+  if (!configured.stableManifest && !configured.betaManifest) return;
 
   // Under vitest, skip the real network probe: versions stay null so the static button text is
   // deterministic (a background fetch could otherwise resolve mid-suite and mutate shared state).
@@ -110,15 +135,18 @@ export function ensureConnectDownloadsLoaded(): void {
 
   void (async () => {
     const [stableManifest, betaManifest] = await Promise.all([
-      _probe(CONNECT_STABLE_MANIFEST_URL),
-      _probe(CONNECT_BETA_MANIFEST_URL),
+      configured.stableManifest ? _probe(configured.stableManifest) : Promise.resolve(null),
+      configured.betaManifest ? _probe(configured.betaManifest) : Promise.resolve(null),
     ]);
     _info = {
       stable: stableManifest
-        ? _channelFromManifest(stableManifest, CONNECT_STABLE_DOWNLOAD_URL)
-        : { url: CONNECT_STABLE_DOWNLOAD_URL, version: null, build: null, buildDate: null },
+        ? _channelFromManifest(stableManifest, configured.stable)
+        : { url: configured.stable, version: null, build: null, buildDate: null },
       beta: betaManifest && typeof betaManifest.url === 'string' && betaManifest.url
-        ? _channelFromManifest(betaManifest, betaManifest.url)
+        ? (() => {
+          const channel = _channelFromManifest(betaManifest, '');
+          return channel.url ? channel : null;
+        })()
         : null,
       loaded: true,
     };

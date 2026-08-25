@@ -34,6 +34,11 @@ import {
   getRequestedSettingsTab,
 } from '../src/core/hmi/settings-tab-store';
 import type { McpBridgeSnapshot } from '../src/plugins/mcp-bridge-plugin';
+import { setAppConfig } from '../src/core/rv-app-config';
+import {
+  __resetConnectDownloadsForTest,
+  __setConnectDownloadsForTest,
+} from '../src/core/hmi/connect-downloads';
 
 const layout = vi.hoisted(() => ({ mobile: false }));
 
@@ -135,6 +140,26 @@ const aiButton = () => screen.getByRole('button', { name: AI_BUTTON_NAME });
 beforeAll(async () => { await setLocale('en-US'); });
 
 beforeEach(() => {
+  setAppConfig({
+    services: {
+      connectUpdates: { stableDownloadUrl: 'https://downloads.customer.example/connect.exe' },
+    },
+    egress: {
+      mode: 'allow-listed',
+      allow: [{ origin: 'https://downloads.customer.example', purposes: ['connect-updates'] }],
+    },
+  });
+  __resetConnectDownloadsForTest();
+  __setConnectDownloadsForTest({
+    stable: {
+      url: 'https://downloads.customer.example/connect.exe',
+      version: null,
+      build: null,
+      buildDate: null,
+    },
+    beta: null,
+    loaded: true,
+  });
   layout.mobile = false;
   revokeAiBridgeConsent();
   clearRequestedSettingsTab();
@@ -145,6 +170,8 @@ afterEach(() => {
   vi.restoreAllMocks();
   revokeAiBridgeConsent();
   clearRequestedSettingsTab();
+  __resetConnectDownloadsForTest();
+  setAppConfig({});
 });
 
 describe('AI Bridge entry — activity bar', () => {
@@ -161,7 +188,7 @@ describe('AI Bridge entry — activity bar', () => {
 
     const info = await screen.findByTestId('ai-connect-download-info');
     expect(info).toHaveTextContent(/XYvirtual CONNECT as their MCP server/);
-    expect(screen.getByRole('link', { name: /Download XYvirtual CONNECT/ })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /Download XYvirtual CONNECT/ })).toBeInTheDocument();
     // No consent may be recorded by merely bumping into the dead end.
     expect(hasAiBridgeConsent()).toBe(false);
     expect(getRequestedSettingsTab()).toBeNull();
