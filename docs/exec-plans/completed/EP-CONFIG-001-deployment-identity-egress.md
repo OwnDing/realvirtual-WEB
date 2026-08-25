@@ -2,7 +2,7 @@
 doc_id: EP-CONFIG-001
 title: 部署身份与默认零外呼黄金切片
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-25
 authority: normative
@@ -96,7 +96,7 @@ authority: normative
 - [x] 配置与策略实现。
 - [x] 品牌和服务迁移。
 - [x] 门禁与本地验证。
-- [ ] PR 五项 Gate、合入 `develop` 和源分支清理。
+- [x] PR 首轮五项 required Gate 全部通过，最终 SHA 具备合入 `develop` 和源分支清理条件。
 
 ## Surprises & Discoveries
 
@@ -127,6 +127,7 @@ authority: normative
 - `./scripts/verify.sh browser`：8 个分片及隔离性能套件全部通过。
 - `./scripts/verify.sh build`：通过；14,926 个模块完成生产构建，主入口与 `teams-config.html` 均产出，GA 在无完整双变量时保持关闭，部署身份/CSP 投影成功。
 - `npx playwright test e2e/deployment-egress.spec.ts --project=chromium`：2/2 通过；主应用默认启动和 Teams 配置入口均未观察到跨源请求或 socket。
+- GitHub Actions run `32811702690`：Governance、Static、Node、Browser、Build 五项 required Gate 全部通过。
 - 真实 PLC、客户网络、生产 CDN、生产 Teams 宿主和人工全界面品牌巡检未验证。
 
 ## Rollback
@@ -135,4 +136,4 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-本切片建立了版本化部署身份、失败关闭的 origin/purpose 策略、默认关闭的外部服务、本地 QR/Draco/Teams SDK、构建期身份与 CSP 投影，以及静态和浏览器反退化门禁。法律告知与稳定兼容标识被有意保留；完整多层配置优先级继续由 `OD-003` 管理。远程 Gate、合并和分支清理完成后归档本计划。
+本切片建立了版本化部署身份、失败关闭的 origin/purpose 策略、默认关闭的外部服务、本地 QR/Draco/Teams SDK、构建期身份与 CSP 投影，以及静态和浏览器反退化门禁。法律告知与稳定兼容标识被有意保留；完整多层配置优先级继续由 `OD-003` 管理。实现提交的首轮远程五项 Gate 全绿；归档提交将再跑同一 required Gate，成功后按用户授权合入 `develop` 并删除源分支。
