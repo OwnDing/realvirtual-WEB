@@ -3,13 +3,15 @@ doc_id: EXEC-PROPOSED-INDEX
 title: 待批准 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-26
 authority: normative-registry
 ---
 
 # 待批准 ExecPlan 索引
 
-当前没有待批准的 ExecPlan。
+待批准：
+
+- [`EP-LICENSE-001-offline-license.md`](EP-LICENSE-001-offline-license.md)：自有离线许可证黄金切片——签名许可证文件、宽限期与降级、合同到期行为说明。被 [`OD-007`](../../governance/OPEN_DECISIONS.md) 与 Proposed [`ADR-0007`](../../adr/ADR-0007-offline-license-evidence.md) 阻塞，未获批准前不得执行。
 
 - `EP-DES-001` 已于 2026-08-22 接受 `ADR-0005` 后激活并完成，移至 [`../completed/EP-DES-001-public-domain-neutral-des.md`](../completed/EP-DES-001-public-domain-neutral-des.md)。
 
