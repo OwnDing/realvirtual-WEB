@@ -222,7 +222,9 @@ authority: normative
 - [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
 - [x] M4 降级与呈现（`decideSaveVerb` 阻断分支、横幅与水印、中英文案、信号读数；18 条用例）
 - [x] M5 移除上游 CONNECT 授权查询（4 个端点、2 个文件、39 + 6 条文案；`ConnectPanel.tsx` 减 155 行）
-- [ ] M6 合同、文档与全门禁
+- [x] M6 文档与门禁：验收矩阵授权行、`settings.example.json` 示例、blur 用量流水账、`REPOSITORY_FACTS` remote 更正；合同条款 §6 与实际行为逐条核对一致（30 日宽限期 ↔ `RV_LIC_DEFAULT_GRACE_DAYS = 30`）
+- [ ] **待 Owner**：在签发环境生成密钥对，公钥填入 `rv-lic-public-key.ts`。在此之前信任根为空，一切许可证判 `unverifiable`（不锁定），系统未上线
+- [ ] **待补**：对抗性评审的密码学与安全红线两个视角（首轮因额度中断未运行）
 
 ## Surprises & Discoveries
 
@@ -278,6 +280,12 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+**全量门禁（2026-08-28，本机，提交 `bad47d9`）**：
+- `./scripts/verify.sh browser` — **exit 0**，8 分片 + 性能run，约 10,900 例零失败
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 693 通过 / 7 跳过 / 1 失败（范围外的 `bundle-chunk.node.test.ts`，见 Discoveries）
+- **教训**：早前用 `./scripts/verify.sh browser | tail -40` 取结果，管道把退出码换成了 `tail` 的 0，一次真实失败被吞掉。此后一律不带管道并显式回显 `$?`。
+
 **M5 已运行（2026-08-27，本机）**：
 - `./scripts/verify.sh static` — 通过（社区 `tsc` 是这次的主力，逐个指出悬空引用）
 - `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
