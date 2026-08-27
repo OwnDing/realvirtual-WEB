@@ -219,13 +219,16 @@ authority: normative
 - [ ] M0 尾项：由 Owner 在签发环境生成自有 Ed25519 密钥对（私钥进 `RV_LIC_SIGN_PRIVATE_KEY`，不进仓库）
 - [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
 - [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
-- [ ] M3 加载与状态机
+- [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
 - [ ] M4 降级与呈现
 - [ ] M5 移除上游 CONNECT 授权查询
 - [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
 
+- **2026-08-27（M3）**：状态机写成无 I/O 的纯函数，时钟与加载分别在两侧。因此到期边界可以逐毫秒表驱动测试（`notAfter − 30 天` 整点、+1ms、`notAfter` 整点、+1ms、宽限末点、+1ms），不需要操纵真实时间。
+- **2026-08-27（M3）**：「红线」写成了可执行断言而不只是文档条款——对全部九个状态断言 `canSave` 仅在 `readonly` 为 false。将来任何人给某个状态加上禁用保存都会立刻变红。
+- **2026-08-27（M3）**：`validateDeploymentConfig<T extends Record<string, unknown>>` 无法在不加 cast 的情况下消费自己的输出类型，幂等性测试因此需要一次 cast。属既有 API 小瑕疵，未改动。
 - **2026-08-27（M2，范围外发现，未修）**：`tests/bundle-chunk.node.test.ts:38` 的入口正则找 `assets/index-*.js`，但 `vite.config.ts:977` 是多入口配置 `input: { app, teamsConfig }`，产物入口实为 `assets/app-*.js`。该断言写于社区版首发 `b06e09a`，入口改名后未跟进。
   它长期未被发现，是因为 `describe.skipIf(!hasDist)` 加上 CI 的 Node Gate **不构建 `dist/`**（`scripts/verify.sh` 的 `run_node_tests` 只跑 `npm run test:node`）——在 CI 里永远跳过，在本机则对着上一次遗留的 `dist/` 通过。本次执行 `./scripts/verify.sh build` 后它第一次真正运行并失败。
   **与本计划无关**（未修改 `vite.config.ts`，该测试不在 Allowed Paths），归属 Active `EP-GOV-004`「让质量门禁真正拦得住东西」，在此登记为证据，不在本 PR 修改。
@@ -261,6 +264,13 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+**M3 已运行（2026-08-27，本机）**：
+- `tests/licensing-state.node.test.ts` — 40 通过（到期边界逐毫秒、绑定双维度、通配符、配置解析与幂等）
+- `tests/licensing-clock.test.ts` — 11 通过（`issuedAt` 下界、高水位单调、回拨容差、存储不可用降级）
+- `tests/licensing-store.test.ts` — 12 通过（未声明 `required` 时**一次 fetch 都不发**、404/异常/超限一律失败关闭、同源路径断言）
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+
 **M2 已运行（2026-08-27，本机）**：
 - `npx vitest run --config vitest.node.config.ts tests/licensing-sign.node.test.ts` — 11 通过
 - `./scripts/verify.sh static` — 通过

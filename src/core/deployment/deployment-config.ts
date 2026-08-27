@@ -78,12 +78,29 @@ export interface DeploymentServicesConfig {
   qr?: null | { mode: 'local' };
 }
 
+export interface DeploymentLicenseConfig {
+  /**
+   * Whether this deployment expects a signed `.rvlic` file.
+   *
+   * Defaults to false, and that default is load-bearing: without it "the file
+   * is missing" and "this deployment never wanted a license" are the same
+   * state, so the public demo, the community build and every dev checkout
+   * would show unlicensed copy.
+   */
+  required: boolean;
+  /** Same-origin, relative. Validated like any other deployment asset path. */
+  path: string;
+  /** Self-asserted install identity, compared against the license binding. */
+  installId?: string;
+}
+
 export interface DeploymentConfigFields {
   schemaVersion?: 1;
   identity?: DeploymentIdentityConfig;
   legal?: DeploymentLegalConfig;
   egress?: DeploymentEgressConfig;
   services?: DeploymentServicesConfig;
+  license?: DeploymentLicenseConfig;
 }
 
 export interface DeploymentConfigValidation<T extends Record<string, unknown>> {
@@ -309,6 +326,36 @@ function parseServices(value: unknown, issues: string[]): DeploymentServicesConf
   return result;
 }
 
+export const DEFAULT_LICENSE_PATH = 'license.rvlic';
+const INSTALL_ID_RE = /^[A-Za-z0-9._-]{8,64}$/;
+
+/**
+ * Parse the license section.
+ *
+ * Pure field re-extraction, because the deployment config is validated twice
+ * per boot — once in `fetchAppConfig`, once in `setAppConfig` — so feeding this
+ * its own output has to be a no-op.
+ */
+function parseLicense(value: unknown, issues: string[]): DeploymentLicenseConfig {
+  const fallback: DeploymentLicenseConfig = { required: false, path: DEFAULT_LICENSE_PATH };
+  if (value === undefined) return fallback;
+  if (!isRecord(value)) {
+    issues.push('license is invalid and was ignored');
+    return fallback;
+  }
+  const result: DeploymentLicenseConfig = {
+    required: value.required === true,
+    path: relativeAssetUrl(value.path) ?? DEFAULT_LICENSE_PATH,
+  };
+  if (value.path !== undefined && result.path === DEFAULT_LICENSE_PATH && value.path !== DEFAULT_LICENSE_PATH) {
+    issues.push('license.path is not a same-origin relative path; the default was used');
+  }
+  const installId = text(value.installId, 64);
+  if (installId && INSTALL_ID_RE.test(installId)) result.installId = installId;
+  else if (value.installId !== undefined) issues.push('license.installId is invalid and was ignored');
+  return result;
+}
+
 /**
  * Preserve legacy settings while validating the deployment-owned fields.
  * Every invalid security field collapses to the deny-external default.
@@ -324,6 +371,7 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
     delete config.identity;
     delete config.legal;
     delete config.services;
+    delete config.license;
     config.egress = { mode: 'deny-external', allow: [] };
     return { config, issues };
   }
@@ -332,6 +380,7 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
   config.legal = parseLegal(raw.legal, issues);
   config.egress = parseEgress(raw.egress, issues);
   config.services = parseServices(raw.services, issues);
+  config.license = parseLicense(raw.license, issues);
   return { config, issues };
 }
 
