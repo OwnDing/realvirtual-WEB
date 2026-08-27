@@ -54,4 +54,4 @@ authority: normative-registry
   2. **绑定两个维度都要**：许可证同时携带 `installId` 与 `hosts[]`，两者都比对。二者仍是审计断言而非锁——`settings.json` 由客户托管且失败即开（`rv-app-config.ts:244-259`），浏览器内不存在硬件指纹（`rv-gpu-info.ts:12-19`）。
   3. **删除上游 CONNECT 授权查询**：`/license/status`、`/license/register`、`/license/activate`、`/license/deactivate` 及其 UI 与文案整体移除。网关自身的授权问题仍由网关 `/status` 独立上报（`connect-store.ts:832` 的 `LICENSE_REQUIRED`、`:862` 的 `SignalLimitExceeded`），因此运维不会失明；失去的只是绑定信号前的额度预览与 Add 按钮预检闸（该闸本就失败即开）。
   4. **确认强制力边界表述**：本系统是「合同凭证 + 防篡改审计记录」，不是技术 DRM；该表述进入销售合同文本。依据 `LICENSE:193`（交付、支持与保证可收费）、`LICENSE:451`（不得对 AGPL 已授予的权利额外设限）与 `LICENSE:376`（附加限制条款接收方有权删除）。
-  落地文档为 Proposed [`ADR-0007`](../adr/ADR-0007-offline-license-evidence.md) 与 Proposed [`EP-LICENSE-001`](../exec-plans/proposed/EP-LICENSE-001-offline-license.md)。按 OD-002 先例，产品决策关闭不等于 ADR 已接受或实现已开工——ADR 接受与计划激活仍是独立动作。
+  落地文档为 Accepted [`ADR-0007`](../adr/ADR-0007-offline-license-evidence.md) 与 Active [`EP-LICENSE-001`](../exec-plans/active/EP-LICENSE-001-offline-license.md)——两者均于 2026-08-27 依用户当前明确指令转为生效状态。

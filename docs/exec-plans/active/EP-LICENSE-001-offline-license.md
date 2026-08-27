@@ -1,11 +1,11 @@
 ---
 doc_id: EP-LICENSE-001
 title: 自有离线许可证黄金切片
-status: draft
-plan_status: proposed
+status: approved
+plan_status: active
 owner: engineering
-last_reviewed: 2026-08-26
-authority: proposed
+last_reviewed: 2026-08-27
+authority: normative
 ---
 
 # EP-LICENSE-001：自有离线许可证黄金切片
@@ -214,7 +214,7 @@ authority: proposed
 ## Progress
 
 - [x] OD-007 四项决定由用户 2026-08-27 当前明确指令作出并关闭
-- [ ] 用户批准本方案并接受 `ADR-0007`（PR #6 评审）
+- [x] 用户 2026-08-27 当前明确指令批准本方案；`ADR-0007` 转 Accepted，本计划转 Active
 - [ ] M0 契约冻结
 - [ ] M1 黄金切片：非安全上下文验签
 - [ ] M2 签发 CLI 与交叉验证
@@ -236,6 +236,7 @@ authority: proposed
 
 - 2026-08-26：用户当前明确指令确认本系统的定位是**「合同凭证 + 防篡改审计记录」，不是技术 DRM**。据此，一切反绕过手段（混淆、反调试、自校验）列为 Non-goal，绑定与上限被如实降级为审计断言与合同条款。
 - 2026-08-26：用户当前明确指令要求先开 PR 再给方案；PR #6 以 draft 建立，`OD-007` 登记为首个提交。
+- 2026-08-27：用户当前明确指令批准本方案并授权执行。`ADR-0007` 接受，本计划移入 `active/`。
 - 2026-08-27：用户当前明确指令作出 `OD-007` 的四项决定并据此关闭该条目——**宽限期 30 天**；**`installId` 与 `hosts[]` 两个绑定维度都要**；**删除上游 CONNECT 授权查询**；**确认「合同凭证 + 防篡改审计记录」的表述进入销售合同**。ADR-0007 与本计划已按此更新；ADR 接受与计划激活仍是独立动作，尚未发生。
 
 ## Validation

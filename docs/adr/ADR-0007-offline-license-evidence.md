@@ -1,11 +1,11 @@
 ---
 doc_id: ADR-0007
 title: 自有离线许可证作为部署层合同凭证
-status: draft
-adr_status: proposed
+status: approved
+adr_status: accepted
 owner: architecture
-last_reviewed: 2026-08-26
-authority: proposed
+last_reviewed: 2026-08-27
+authority: normative
 ---
 
 # ADR-0007：自有离线许可证作为部署层合同凭证
