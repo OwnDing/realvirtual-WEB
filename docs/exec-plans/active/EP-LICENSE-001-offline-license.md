@@ -218,7 +218,7 @@ authority: normative
 - [x] M0 契约冻结：Accepted `ADR-0007`、Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`
 - [ ] M0 尾项：由 Owner 在签发环境生成自有 Ed25519 密钥对（私钥进 `RV_LIC_SIGN_PRIVATE_KEY`，不进仓库）
 - [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
-- [ ] M2 签发 CLI 与交叉验证
+- [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
 - [ ] M3 加载与状态机
 - [ ] M4 降级与呈现
 - [ ] M5 移除上游 CONNECT 授权查询
@@ -226,6 +226,9 @@ authority: normative
 
 ## Surprises & Discoveries
 
+- **2026-08-27（M2，范围外发现，未修）**：`tests/bundle-chunk.node.test.ts:38` 的入口正则找 `assets/index-*.js`，但 `vite.config.ts:977` 是多入口配置 `input: { app, teamsConfig }`，产物入口实为 `assets/app-*.js`。该断言写于社区版首发 `b06e09a`，入口改名后未跟进。
+  它长期未被发现，是因为 `describe.skipIf(!hasDist)` 加上 CI 的 Node Gate **不构建 `dist/`**（`scripts/verify.sh` 的 `run_node_tests` 只跑 `npm run test:node`）——在 CI 里永远跳过，在本机则对着上一次遗留的 `dist/` 通过。本次执行 `./scripts/verify.sh build` 后它第一次真正运行并失败。
+  **与本计划无关**（未修改 `vite.config.ts`，该测试不在 Allowed Paths），归属 Active `EP-GOV-004`「让质量门禁真正拦得住东西」，在此登记为证据，不在本 PR 修改。
 - **2026-08-27（M1，已实测）**：非安全上下文的诊断在 Node 中逐条复现——`crypto.subtle` 缺席时，`verifyAsync` 抛 `crypto.subtle must be defined, consider polyfill`，同步 `verify` 抛 `hashes.sha512 not set`；装上 `hashes.sha512 = sha512`（`@noble/hashes/sha2.js`）后，对 `node:crypto` 独立生成的签名 `verify` 返回 `true`，篡改签名与篡改消息均返回 `false`。该探针同时证明 Node 签发 ↔ noble 验证互通，为 M2 的交叉验证铺路。
 - **2026-08-27（M1）**：关键用例做过"摘掉钩子"的反向验证——移除钩子后，恰好且仅有两条无-`crypto.subtle` 用例变红，返回值为 `unverifiable`，与诊断逐字吻合。测试确实有牙齿，不是恒真断言。
 - **2026-08-27（M1）**：`decodeStrictBase64` 需要已知长度，而许可证载荷长度可变，因此新增 `decodeStrictBase64Any`，保留同样的"重新编码后比对"反可塑性检查。
@@ -258,6 +261,11 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+**M2 已运行（2026-08-27，本机）**：
+- `npx vitest run --config vitest.node.config.ts tests/licensing-sign.node.test.ts` — 11 通过
+- `./scripts/verify.sh static` — 通过
+- `npm run test:node` — 650 通过 / 7 跳过 / 1 失败，唯一失败是范围外的 `bundle-chunk.node.test.ts`（见 Discoveries），本计划新增用例全部通过
+
 - **尚未运行**：完整 `./scripts/verify.sh browser`（8 分片）与远程五项 Gate。
 
 
