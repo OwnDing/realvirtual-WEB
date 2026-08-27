@@ -21,8 +21,8 @@ authority: proposed
 - 许可证文件格式、签名构造与严格解码（`rvlic` v1）；
 - 自有 Ed25519 信任根与两级委托证书；
 - 共享 Ed25519 原语上提，以及**非安全上下文可验证**的同步 sha512 钩子；
-- 同源、失败关闭的许可证加载路径；
-- 有效期 / 宽限期 / 只读 / 不可验证 / 缺失 五态状态机与时钟回拨检测；
+- 部署配置的 `license.required` 开关，以及同源、失败关闭、有大小上限的加载路径；
+- 状态机（`not-required`/`valid`/`expiring`/`grace`/`readonly`/`mismatch`/`unverifiable`/`invalid`/`absent`）与基于 `issuedAt` 下界的时钟推算；
 - 到期降级：`decideSaveVerb` 阻断分支、水印、横幅、审计读数；
 - Node 侧签发 CLI 与浏览器侧验证器的交叉验证；
 - 合同到期行为说明文档；
@@ -179,9 +179,9 @@ authority: proposed
 
 ### M3 — 加载与状态机
 
-交付：`src/core/licensing/rv-lic-store.ts`——同源加载 `${BASE_URL}license.rvlic`、**自带失败关闭**（不复用 `settings.json` 的失败即开）、五态状态机（`valid`/`expiring`/`grace`/`readonly`/`unverifiable`/`absent`）、时钟回拨高水位、`deployment.id` 与 `hosts[]` 的审计比对。
-验证：时间边界表驱动测试（`notAfter` 前后各 1 秒、`grace` 边界、时钟回拨、绑定不匹配）。
-可观察：拨动系统时钟即可在 UI 上看到状态迁移；绑定不匹配只出提示不改可用性。
+交付：`deployment-config.ts` 新增 `license` 段解析（`required` / `path` / `installId`，`path` 走既有 `relativeAssetUrl()` 校验锁死同源，解析必须幂等——配置每次启动被校验两次）；`src/core/licensing/rv-lic-store.ts`——同源加载 `${BASE_URL}license.rvlic`、**自带失败关闭**（不复用 `settings.json` 的失败即开）、16 KiB 响应体上限、状态机、时钟推算（`max(Date.now(), 高水位, issuedAt)`）、绑定审计比对。
+验证：时间边界表驱动测试——`notAfter` 前后各 1 秒、`grace` 边界、时钟回拨、**时钟拨到 1970 由 `issuedAt` 下界兜底**、`required: false` 时子系统完全静默、绑定不符落入 `mismatch` 而非 `invalid`、超限响应体被拒。
+可观察：拨动系统时钟即可在 UI 上看到状态迁移；绑定不匹配只出说明性提示不改可用性；公共演示构建上看不到任何授权文案。
 
 ### M4 — 降级与呈现
 
@@ -210,6 +210,8 @@ authority: proposed
 - **2026-08-26（起草期，已核实）**：在局域网 IP 的明文 HTTP 部署上，本仓库今天的 Ed25519 验证必然返回 `unverifiable`——WebCrypto 因非安全上下文缺席，noble 的异步回退同样依赖 `crypto.subtle` 做 sha512（`node_modules/@noble/ed25519/index.js:125`、`:51-54`、`:794`），而同步钩子未安装、`@noble/hashes` 未作为依赖存在。该形态正是私有化 on-prem 的典型形态。此缺陷**已经影响现有的模型签名验证**，不是本次新引入的。
 - **2026-08-26**：`RvDocument.applyOp` 对被 `canApply` 拒绝的 op 静默丢弃（`rv-document.ts:365-368`）。若按直觉把授权闸放在这里，会造成用户改动无声消失。降级点因此改为 `decideSaveVerb`。
 - **2026-08-26**：`gatewayAllowed` 在 `src/` 中从未被读取，是死字段；今天真正被授权状态阻断的能力只有 Browse 的 Add 按钮一处，且该闸刻意失败即开。"替换授权体系"的实际代码面比预期小得多。
+- **2026-08-26（设计评审）**：把 `payload.issuedAt` 用作时钟下界是零成本且不可清除的——许可证不可能在签发前运行，因此把系统时钟拨到 1970 只会读出签发日。它在不依赖任何浏览器存储的前提下，让最朴素的改时钟手法在整个合同期内失效，严格优于单靠 localStorage 高水位（后者随 profile、隐私模式和清缓存丢失）。
+- **2026-08-26（设计评审）**：必须有 `license.required` 开关。缺少它会让「文件缺失」与「这份部署本来就不需要许可证」塌缩成同一状态，导致公共 CDN 演示、社区构建和每个开发检出都显示「未授权」文案。
 - **2026-08-26**：本仓库无上游 remote，`license-store.ts` 全部历史仅 3 次提交——删除它不会造成反复合并冲突。该选项的成本低于预期，故列入 OD-007 由 Owner 决定。
 
 ## Decision Log
