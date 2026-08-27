@@ -103,6 +103,12 @@ describe('license expiry boundaries', () => {
       .toBe('readonly');
   });
 
+  it('never reports negative zero, which would render as "-0 days"', () => {
+    const justPast = evaluateLicense(context({ clock: clock(NOT_AFTER + 1) }));
+    expect(Object.is(justPast.daysToExpiry, -0)).toBe(false);
+    expect(justPast.daysToExpiry).toBe(0);
+  });
+
   it('counts remaining days for display', () => {
     expect(evaluateLicense(context({ clock: clock(NOT_AFTER - 10 * DAY) })).daysToExpiry).toBe(10);
     expect(evaluateLicense(context({ clock: clock(NOT_AFTER + 10 * DAY) })).daysToExpiry).toBe(-10);
@@ -200,6 +206,13 @@ describe('host pattern matching', () => {
     expect(matchesHost('*.plant.example.com', 'hmi.plant.example.com')).toBe(true);
     expect(matchesHost('*.plant.example.com', 'plant.example.com')).toBe(false);
     expect(matchesHost('*.plant.example.com', 'a.b.plant.example.com')).toBe(false);
+  });
+
+  it('matches an IPv6 literal despite location.hostname bracketing it', () => {
+    expect(matchesHost('::1', '[::1]')).toBe(true);
+    expect(matchesHost('[::1]', '::1')).toBe(true);
+    expect(matchesHost('fe80::1', '[fe80::1]')).toBe(true);
+    expect(matchesHost('::2', '[::1]')).toBe(false);
   });
 
   it('does not match loopback implicitly', () => {

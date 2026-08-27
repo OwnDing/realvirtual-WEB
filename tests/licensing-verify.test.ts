@@ -176,12 +176,56 @@ describe('rvlic signature verification', () => {
   });
 });
 
+describe('a bad figure never costs the customer the licence', () => {
+  it('clamps an out-of-range grace period instead of refusing', async () => {
+    for (const [given, expected] of [[-5, 0], [4000, 180], [12.9, 12]] as const) {
+      const envelope = await makeLicense({ ...BASE_PAYLOAD, graceDays: given });
+      const result = await verifyLicenseText(JSON.stringify(envelope), { rootPublicKeyBase64 });
+      expect(result.state, `graceDays ${given}`).toBe('valid');
+      expect(result.payload?.graceDays, `graceDays ${given}`).toBe(expected);
+    }
+  });
+
+  it('drops a malformed limit instead of refusing — §7 forbids limits as a basis for refusal', async () => {
+    const envelope = await makeLicense({
+      ...BASE_PAYLOAD,
+      limits: { seats: 'twenty-five', signals: -3 },
+    });
+    const result = await verifyLicenseText(JSON.stringify(envelope), { rootPublicKeyBase64 });
+    expect(result.state).toBe('valid');
+    expect(result.payload?.limits?.seats).toBeUndefined();
+    expect(result.payload?.limits?.signals).toBeUndefined();
+  });
+
+  it('refuses a term that ends before it began', async () => {
+    // issuedAt floors the clock, so such a licence would read as expired from
+    // its first boot and could never recover. Naming it malformed is honest.
+    const envelope = await makeLicense({
+      ...BASE_PAYLOAD, issuedAt: '2027-01-01T00:00:00Z', notAfter: '2026-01-01T00:00:00Z',
+    });
+    const result = await verifyLicenseText(JSON.stringify(envelope), { rootPublicKeyBase64 });
+    expect(result.state).toBe('invalid');
+    expect(result.reason).toBe('payload-invalid');
+  });
+});
+
 describe('rvlic delegated signing', () => {
   it('accepts a license signed by a certified reseller key', async () => {
     const envelope = await makeLicense(BASE_PAYLOAD, { cert: { keys: otherKeys, org: 'Reseller GmbH' } });
     const result = await verifyLicenseText(JSON.stringify(envelope), { rootPublicKeyBase64 });
     expect(result.state).toBe('valid');
     expect(result.signerOrganization).toBe('Reseller GmbH');
+  });
+
+  it('reports the organization in the form the certificate actually signed', async () => {
+    // The cert message NFC-normalizes before signing, so an envelope spelling
+    // the org in NFD still verifies. Reporting the envelope's spelling would
+    // show a string that was never signed.
+    const nfd = 'Cafe\u0301 GmbH';
+    const envelope = await makeLicense(BASE_PAYLOAD, { cert: { keys: otherKeys, org: nfd } });
+    const result = await verifyLicenseText(JSON.stringify(envelope), { rootPublicKeyBase64 });
+    expect(result.state).toBe('valid');
+    expect(result.signerOrganization).toBe(nfd.normalize('NFC'));
   });
 
   it('rejects a certificate that the trust root did not sign', async () => {

@@ -226,6 +226,11 @@ authority: normative
 
 ## Surprises & Discoveries
 
+- **2026-08-28（对抗性评审，两个真缺陷）**：评审工作流 6 个视角只跑完 3 个（密码学、安全红线、删除余波因额度中断未运行），产出 16 条候选，**19 个验证 agent 全部中断**——工作流因此把未验证项归入 "rejected"，该输出不可按字面采信。逐条自查后确认两条为真：
+  1. **同源保证被击穿**：`relativeAssetUrl` 拒绝以 `//` 开头的路径，但**前导单斜杠 + 以 `/` 结尾的 `BASE_URL` 会重新拼出 `//`**。实测 `BASE_URL=/` 加 `path=/evil.rvlic` 得到 `//evil.rvlic`，解析为 `https://evil.rvlic/`——在一个默认零外呼的构建里发出跨源请求。已改为经 `URL` 解析后比较 origin，并加 `redirect: 'error'` 关掉重定向出境这第二扇门。
+  2. **时钟锚点可被许可证污染**：`recordLicenseClock(clock.effectiveNow)` 持久化的是被 `issuedAt` 抬高后的值。一份 `issuedAt` 误写为 2030 的许可证会把高水位永久钉在 2030，此后每次启动都误报回拨，且合法许可证会被算成早已过期。已改为持久化 `clock.wallNow`。原时钟测试未能发现，因为其 `effectiveNow` 恰好等于 `wallNow`。
+- **2026-08-28（契约符合度）**：四处实现与契约不一致，已按契约修正——`graceDays` 越界应钳制而非拒绝（§4）、`limits` 格式错误不得作为拒绝依据（§7）、委托组织名应报签名覆盖的 NFC 形式、IPv6 主机名需去括号（`location.hostname` 带方括号）。另加：`notAfter` 早于 `issuedAt` 判为格式非法（否则该证从首次启动即过期且永不恢复），并让签发 CLI **在签发时就拒绝客户端会拒绝的载荷**。
+- **2026-08-28**：评审子 agent 在工作树留下两个探针脚本（`tests/zz-lic-*.test.ts`，用 `__LOG` hack 且 `afterAll` 故意断言失败以 dump 输出），破坏类型检查。已移出仓库到 scratchpad，未提交。
 - **2026-08-27（M5）**：`CONNECT_ERROR_MESSAGES.LICENSE_REQUIRED` 的文案原文是「open License in the CONNECT panel」——而那个区块正是本里程碑删掉的。若不改，网关拒绝服务时会把操作员指向一个不存在的地方。已改为指向网关自身。这类**文案指向被删 UI** 的引用类型检查抓不到，只能靠逐条读。
 - **2026-08-27（M5）**：`tests/connect-license-ui.test.tsx` 是混合文件——除授权外还覆盖 CONNECT 下载、获取入口与连接状态。整файл删除会静默丢掉这些覆盖，因此只移除授权相关用例并改名 describe。`interfaceStatusShort('SignalLimitExceeded')` 与 `interfaceDotColor` 的断言保留，因为它们来自网关 `/status`，与 `/license/status` 无关。
 - **2026-08-27（M5）**：`tests/i18n-shell.test.tsx` 中「文案在调用时解析而非导入时」的不变量测试，其主体（`deriveLicensePresentation`）被删。不变量本身仍然成立且值得覆盖，因此改指向新的 `licenseNoticeText`，而不是连测试一起删。

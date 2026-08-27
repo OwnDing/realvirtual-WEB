@@ -74,8 +74,12 @@ export const RV_LIC_EXPIRING_WINDOW_DAYS = 30;
  * binding vacuous exactly where it is most likely to be relied on.
  */
 export function matchesHost(pattern: string, hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  const rule = pattern.toLowerCase();
+  // `location.hostname` brackets an IPv6 literal (`[::1]`) while an issuer
+  // naturally writes it bare, so neither side is normalized against the other
+  // unless the brackets come off first.
+  const unbracket = (value: string): string => value.replace(/^\[|\]$/g, '');
+  const host = unbracket(hostname.toLowerCase());
+  const rule = unbracket(pattern.toLowerCase());
   if (!rule.startsWith('*.')) return rule === host;
   const suffix = rule.slice(1);
   if (!host.endsWith(suffix)) return false;
@@ -158,7 +162,8 @@ export function evaluateLicense(context: LicenseEvalContext): LicenseEvaluation 
 
   const notAfter = Date.parse(payload.notAfter);
   const now = context.clock.effectiveNow;
-  const daysToExpiry = Math.ceil((notAfter - now) / DAY_MS);
+  // `+ 0` collapses -0, which would render as "-0 days".
+  const daysToExpiry = Math.ceil((notAfter - now) / DAY_MS) + 0;
 
   if (now <= notAfter - RV_LIC_EXPIRING_WINDOW_DAYS * DAY_MS) {
     return shell('valid', { ...base, daysToExpiry });

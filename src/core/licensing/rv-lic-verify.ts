@@ -92,13 +92,20 @@ function readPayload(raw: unknown): LicensePayload | null {
   if (typeof raw.id !== 'string' || raw.id.length < 1 || raw.id.length > 128) return null;
   if (typeof raw.issuedAt !== 'string' || !INSTANT_RE.test(raw.issuedAt)) return null;
   if (typeof raw.notAfter !== 'string' || !INSTANT_RE.test(raw.notAfter)) return null;
-  if (!Number.isFinite(Date.parse(raw.issuedAt)) || !Number.isFinite(Date.parse(raw.notAfter))) return null;
+  const issuedAtMs = Date.parse(raw.issuedAt);
+  const notAfterMs = Date.parse(raw.notAfter);
+  if (!Number.isFinite(issuedAtMs) || !Number.isFinite(notAfterMs)) return null;
+  // A term that ends before it began cannot be honoured: `issuedAt` floors the
+  // clock, so such a license would evaluate as expired from its first boot and
+  // never recover. Better to name it malformed than to silently degrade.
+  if (notAfterMs < issuedAtMs) return null;
 
+  // Clamped, never rejected (contract §4). A grace period is the customer's
+  // safety margin; refusing the whole license over an out-of-range one would
+  // punish the plant for an issuing mistake.
   let graceDays = RV_LIC_DEFAULT_GRACE_DAYS;
-  if (raw.graceDays !== undefined) {
-    const parsed = nonNegativeInteger(raw.graceDays);
-    if (parsed === undefined) return null;
-    graceDays = Math.min(parsed, RV_LIC_MAX_GRACE_DAYS);
+  if (typeof raw.graceDays === 'number' && Number.isFinite(raw.graceDays)) {
+    graceDays = Math.min(Math.max(Math.trunc(raw.graceDays), 0), RV_LIC_MAX_GRACE_DAYS);
   }
 
   let binding: LicensePayload['binding'];
@@ -118,14 +125,14 @@ function readPayload(raw: unknown): LicensePayload | null {
     binding = { installId: installId as string | undefined, hosts };
   }
 
+  // Contract §7 is explicit that limits are never a basis for refusal, so a
+  // malformed figure is dropped rather than allowed to invalidate the license.
   let limits: LicensePayload['limits'];
-  if (raw.limits !== undefined) {
-    if (!isRecord(raw.limits)) return null;
-    const seats = raw.limits.seats === undefined ? undefined : nonNegativeInteger(raw.limits.seats);
-    const signals = raw.limits.signals === undefined ? undefined : nonNegativeInteger(raw.limits.signals);
-    if (raw.limits.seats !== undefined && seats === undefined) return null;
-    if (raw.limits.signals !== undefined && signals === undefined) return null;
-    limits = { seats, signals };
+  if (isRecord(raw.limits)) {
+    limits = {
+      seats: nonNegativeInteger(raw.limits.seats),
+      signals: nonNegativeInteger(raw.limits.signals),
+    };
   }
 
   // Unknown feature ids are ignored rather than rejected (contract §4).
@@ -218,7 +225,9 @@ export async function verifyLicenseText(
     if (certOk === null) return undecided('no-crypto', org);
     if (!certOk) return fail('cert-untrusted', org);
     signingKey = certPublicKey;
-    signerOrganization = org;
+    // The NFC form is what the certificate signature covers; reporting the
+    // envelope's spelling would show a string that was never signed.
+    signerOrganization = org.normalize('NFC');
   }
 
   const signatureOk = await verifyEd25519(signature, licenseMessage(payloadBytes), signingKey, options);

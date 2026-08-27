@@ -113,6 +113,50 @@ describe('loading fails closed', () => {
   });
 });
 
+describe('the same-origin claim', () => {
+  it('never resolves the configured path off this origin', async () => {
+    // relativeAssetUrl rejects a path that STARTS with `//`, but a leading
+    // single slash rebuilds it once BASE_URL ends in one: `/` + `/evil.rvlic`
+    // concatenates to `//evil.rvlic`, a protocol-relative URL pointing at the
+    // host `evil.rvlic`. Resolving through URL and comparing origins is what
+    // closes it.
+    const seen = stubFetch(() => new Response('', { status: 404 }));
+    setAppConfig({ license: { required: true, path: '/evil.rvlic' } });
+
+    const result = await refreshLicense({ rootPublicKeyBase64 }, { now: DURING_TERM });
+    expect(result.state).toBe('absent');
+    for (const url of seen) {
+      expect(new URL(url).origin, url).toBe(window.location.origin);
+    }
+  });
+
+  it('resolves a plain relative path onto this origin', async () => {
+    const text = await signedLicense(PAYLOAD);
+    const seen = stubFetch(() => new Response(text, { status: 200 }));
+    setAppConfig({ license: { required: true, path: 'licenses/plant-1.rvlic' } });
+
+    expect((await refreshLicense({ rootPublicKeyBase64 }, { now: DURING_TERM })).state).toBe('valid');
+    expect(new URL(seen[0]).origin).toBe(window.location.origin);
+    expect(new URL(seen[0]).pathname.endsWith('licenses/plant-1.rvlic')).toBe(true);
+  });
+});
+
+describe('the clock anchor cannot be poisoned by a license', () => {
+  it('records the wall clock, not the issuedAt-floored value', async () => {
+    // A license issued with a wrong far-future date floors effectiveNow. If
+    // that floored value were persisted, every later boot would read the future
+    // date, report a false rollback, and evaluate good licenses as long expired.
+    const text = await signedLicense({ ...PAYLOAD, issuedAt: '2030-01-01T00:00:00Z', notAfter: '2031-01-01T00:00:00Z' });
+    stubFetch(() => new Response(text, { status: 200 }));
+    setAppConfig({ license: { required: true, path: 'license.rvlic' } });
+
+    await refreshLicense({ rootPublicKeyBase64 }, { now: DURING_TERM });
+    expect(Number(localStorage.getItem(LICENSE_CLOCK_KEY))).toBe(DURING_TERM);
+    expect(Number(localStorage.getItem(LICENSE_CLOCK_KEY)))
+      .toBeLessThan(Date.parse('2030-01-01T00:00:00Z'));
+  });
+});
+
 describe('loading a real license', () => {
   it('accepts one and reports the term', async () => {
     const text = await signedLicense(PAYLOAD);
@@ -131,9 +175,12 @@ describe('loading a real license', () => {
 
     await refreshLicense({ rootPublicKeyBase64 }, { now: DURING_TERM });
     expect(seen).toHaveLength(1);
-    expect(seen[0].endsWith('licenses/plant-1.rvlic')).toBe(true);
-    // Relative to BASE_URL, so it cannot name another origin.
-    expect(/^[a-z]+:/i.test(seen[0])).toBe(false);
+    // Asserted on the resolved ORIGIN, not on the URL's spelling: the loader
+    // now resolves through `URL` and checks the origin, which is the property
+    // that matters. The earlier "must not look absolute" assertion pinned an
+    // implementation detail that the same-origin fix deliberately changed.
+    expect(new URL(seen[0]).origin).toBe(window.location.origin);
+    expect(new URL(seen[0]).pathname.endsWith('licenses/plant-1.rvlic')).toBe(true);
   });
 
   it('compares the install id the deployment asserts about itself', async () => {

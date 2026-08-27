@@ -46,6 +46,28 @@ export const subscribeLicense = store.subscribe;
 export const getLicenseSnapshot = store.getSnapshot;
 
 /**
+ * Resolve the configured path and prove it stayed on this origin.
+ *
+ * Concatenating onto BASE_URL is not enough, and the near-miss is instructive:
+ * `relativeAssetUrl` rejects a path that STARTS with `//`, but a leading single
+ * slash reconstructs it. With BASE_URL `/` (a deployment served at the domain
+ * root) the path `/evil.rvlic` concatenates to `//evil.rvlic`, which is a
+ * protocol-relative URL and resolves to a completely different host. Resolving
+ * through `URL` and then comparing origins removes the class rather than that
+ * one spelling.
+ */
+function resolveSameOriginLicenseUrl(path: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const base = new URL(import.meta.env.BASE_URL, window.location.href);
+    const url = new URL(path, base);
+    return url.origin === window.location.origin ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch the license file.
  *
  * Returns null for every "no usable file" outcome, including an oversized
@@ -53,8 +75,12 @@ export const getLicenseSnapshot = store.getSnapshot;
  * measured before it is decoded.
  */
 async function fetchLicenseText(path: string): Promise<string | null> {
+  const url = resolveSameOriginLicenseUrl(path);
+  if (!url) return null;
   try {
-    const response = await fetch(`${import.meta.env.BASE_URL}${path}`, { cache: 'no-store' });
+    // `redirect: 'error'` closes the other door: a same-origin URL that 302s
+    // elsewhere would otherwise be followed off-origin after the check above.
+    const response = await fetch(url, { cache: 'no-store', redirect: 'error' });
     if (!response.ok) return null;
     const text = await response.text();
     if (new TextEncoder().encode(text).length > RV_LIC_MAX_BYTES) return null;
@@ -95,7 +121,12 @@ export async function refreshLicense(
 
   const issuedAtMs = verification?.payload ? Date.parse(verification.payload.issuedAt) : null;
   const clock = readLicenseClock(Number.isFinite(issuedAtMs) ? issuedAtMs : null, overrides.now);
-  recordLicenseClock(clock.effectiveNow);
+  // The WALL clock, never `effectiveNow`. The mark records instants this
+  // install has actually observed; persisting a floored value would let one
+  // license with a wrong `issuedAt` pin the anchor to that date forever, and
+  // every later boot would then evaluate a good license against a future
+  // "now" and drop it straight into readonly.
+  recordLicenseClock(clock.wallNow);
 
   const evaluation = evaluateLicense({
     required: true,

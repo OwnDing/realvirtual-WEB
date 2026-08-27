@@ -172,6 +172,22 @@ describe('issuer guard rails', () => {
     expect(() => signLicensePayload({ v: 2, id: 'x' }, signing)).toThrow(/v: 1/);
   });
 
+  it('refuses at issuance what the browser verifier would refuse on arrival', () => {
+    // Without this the issuer signs happily and the mistake surfaces at the
+    // customer site — the most expensive place to find it.
+    const root = issuer();
+    const signing = { privateKey: root.privateKey, cert: null };
+    const cases: Array<[string, Record<string, unknown>, RegExp]> = [
+      ['term ends before it begins', { ...PAYLOAD, notAfter: '2025-01-01T00:00:00Z' }, /notAfter/],
+      ['local offset instead of Z', { ...PAYLOAD, issuedAt: '2026-01-01T00:00:00+02:00' }, /literal Z/],
+      ['install id too short', { ...PAYLOAD, binding: { installId: 'short' } }, /installId/],
+      ['host not lowercase', { ...PAYLOAD, binding: { hosts: ['HMI.Acme.Local'] } }, /hosts entry/],
+    ];
+    for (const [label, payload, pattern] of cases) {
+      expect(() => signLicensePayload(payload, signing), label).toThrow(pattern);
+    }
+  });
+
   it('refuses to emit a file over the loader limit', () => {
     const root = issuer();
     const bloated = { ...PAYLOAD, customer: { org: 'x'.repeat(20_000) } };

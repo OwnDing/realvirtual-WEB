@@ -31,6 +31,10 @@ import { pathToFileURL } from 'node:url';
 /** Response bodies above this are refused by the browser loader (contract §1). */
 export const RV_LIC_MAX_BYTES = 16 * 1024;
 const SPKI_ED25519_PREFIX = '302a300506032b6570032100';
+// Mirrors the browser verifier's rules so the two cannot drift apart silently.
+const INSTANT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
+const INSTALL_ID_RE = /^[A-Za-z0-9._-]{8,64}$/;
+const HOST_RE = /^(\*\.)?[a-z0-9]([a-z0-9.-]*[a-z0-9])?$|^\[?[0-9a-f:.]+\]?$/;
 const encoder = new TextEncoder();
 
 function strictBase64(value, bytes, label) {
@@ -153,6 +157,35 @@ export function signLicensePayload(payload, signing) {
       throw new Error(`license payload requires a non-empty ${field}`);
     }
   }
+  // Refuse here what the browser verifier would refuse there. Without this the
+  // issuer happily signs a payload the client rejects, and the mistake is only
+  // discovered at the customer site — the most expensive possible place.
+  const issuedAtMs = Date.parse(payload.issuedAt);
+  const notAfterMs = Date.parse(payload.notAfter);
+  if (!Number.isFinite(issuedAtMs) || !Number.isFinite(notAfterMs)) {
+    throw new Error('issuedAt and notAfter must be RFC 3339 instants');
+  }
+  if (!INSTANT_RE.test(payload.issuedAt) || !INSTANT_RE.test(payload.notAfter)) {
+    throw new Error('issuedAt and notAfter must be UTC with a literal Z, e.g. 2026-08-27T00:00:00Z');
+  }
+  if (notAfterMs < issuedAtMs) throw new Error('notAfter must not be earlier than issuedAt');
+  if (payload.id.length > 128) throw new Error('id must be at most 128 characters');
+  if (payload.binding !== undefined) {
+    const b = payload.binding;
+    if (!b || typeof b !== 'object' || Array.isArray(b)) throw new Error('binding must be an object');
+    if (b.installId !== undefined && !INSTALL_ID_RE.test(String(b.installId))) {
+      throw new Error('binding.installId must match ^[A-Za-z0-9._-]{8,64}$');
+    }
+    if (b.hosts !== undefined) {
+      if (!Array.isArray(b.hosts) || b.hosts.length > 32) throw new Error('binding.hosts must be an array of at most 32 hosts');
+      for (const host of b.hosts) {
+        if (typeof host !== 'string' || !HOST_RE.test(host)) {
+          throw new Error(`binding.hosts entry ${JSON.stringify(host)} is not a lowercase host or one leading *. wildcard`);
+        }
+      }
+    }
+  }
+
   const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8');
   const signature = sign(null, licenseMessage(payloadBytes), signing.privateKey);
   if (signature.length !== 64) throw new Error(`unexpected Ed25519 signature length ${signature.length}`);
