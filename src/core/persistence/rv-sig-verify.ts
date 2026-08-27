@@ -2,6 +2,14 @@
 // Copyright (C) 2026 realvirtual GmbH <https://realvirtual.io>
 
 import { RV_SIG_ROOT_PUBLIC_KEY_BASE64 } from './rv-sig-public-key';
+import {
+  type Ed25519VerifyOptions,
+  decodeStrictPublicKey,
+  decodeStrictSignature,
+  rvKeyV1CertMessage,
+  signatureToBase64,
+  verifyEd25519,
+} from '../crypto/rv-ed25519';
 
 export type SignatureState = 'none' | 'valid' | 'invalid' | 'unverifiable';
 
@@ -17,11 +25,7 @@ export interface SignatureBufferResult extends SignatureVerification {
   recoveredByRefetch: boolean;
 }
 
-export interface VerifyRvSigOptions {
-  /** Tests may force the JS fallback without mutating global WebCrypto. */
-  forceFallback?: boolean;
-  /** Tests may model an environment where neither implementation is usable. */
-  disableFallback?: boolean;
+export interface VerifyRvSigOptions extends Ed25519VerifyOptions {
   /** Test-only trust anchor override. Production callers use the compiled root key. */
   rootPublicKeyBase64?: string;
 }
@@ -60,42 +64,10 @@ interface ParsedGlbSignature {
 }
 
 /** Strict standard Base64 decoder for the fixed 64-byte Ed25519 signature. */
-export function base64ToSig(value: string): Uint8Array | null {
-  if (!/^[A-Za-z0-9+/]{86}==$/.test(value)) return null;
-  return decodeStrictBase64(value, 64);
-}
+export const base64ToSig = decodeStrictSignature;
 
 /** Strict standard Base64 encoder for a 64-byte Ed25519 signature. */
-export function sigToBase64(value: Uint8Array): string {
-  if (value.length !== 64) throw new Error(`Ed25519 signature must be 64 bytes, got ${value.length}`);
-  return bytesToBase64(value);
-}
-
-function decodeStrictPublicKey(value: unknown): Uint8Array | null {
-  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]{43}=$/.test(value)) return null;
-  return decodeStrictBase64(value, 32);
-}
-
-function decodeStrictBase64(value: string, expectedLength: number): Uint8Array | null {
-  try {
-    const binary = atob(value);
-    if (binary.length !== expectedLength) return null;
-    const out = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
-    return bytesToBase64(out) === value ? out : null;
-  } catch {
-    return null;
-  }
-}
-
-function bytesToBase64(value: Uint8Array): string {
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < value.length; i += chunk) {
-    binary += String.fromCharCode(...value.subarray(i, Math.min(i + chunk, value.length)));
-  }
-  return btoa(binary);
-}
+export const sigToBase64 = signatureToBase64;
 
 function skipWs(text: string, pos: number): number {
   while (pos < text.length && /\s/.test(text[pos])) pos++;
@@ -248,45 +220,6 @@ function parseGlbSignature(buffer: ArrayBuffer): ParsedGlbSignature {
   return { json, jsonOffset, jsonLength, sig, signaturePresent };
 }
 
-function customerKeyMessage(publicKey: Uint8Array, organization: string): Uint8Array<ArrayBuffer> {
-  const org = encoder.encode(organization.normalize('NFC'));
-  const prefix = encoder.encode('RV-KEY-V1');
-  const out = new Uint8Array(prefix.length + publicKey.length + 4 + org.length);
-  out.set(prefix, 0);
-  out.set(publicKey, prefix.length);
-  new DataView(out.buffer).setUint32(prefix.length + publicKey.length, org.length, true);
-  out.set(org, prefix.length + publicKey.length + 4);
-  return out;
-}
-
-async function verifyEd25519(
-  signature: Uint8Array,
-  message: Uint8Array<ArrayBuffer>,
-  publicKey: Uint8Array,
-  options: VerifyRvSigOptions,
-): Promise<boolean | null> {
-  const signatureBytes = Uint8Array.from(signature);
-  // NOT copied: both call sites pass a freshly allocated, offset-free Uint8Array, and for the
-  // file signature that is the whole GLB (up to RV_SIG_WORKER_THRESHOLD on the main thread).
-  // `Uint8Array.from` would walk it through the iterator protocol — a second full copy per load.
-  const messageBytes = message;
-  const publicKeyBytes = Uint8Array.from(publicKey);
-  if (!options.forceFallback) {
-    try {
-      const key = await crypto.subtle.importKey('raw', publicKeyBytes, 'Ed25519', false, ['verify']);
-      return await crypto.subtle.verify('Ed25519', key, signatureBytes, messageBytes);
-    } catch {
-      // Feature detection: use the lazily loaded fallback below.
-    }
-  }
-  if (options.disableFallback) return null;
-  try {
-    const noble = await import('@noble/ed25519');
-    return await noble.verifyAsync(signatureBytes, messageBytes, publicKeyBytes);
-  } catch {
-    return null;
-  }
-}
 
 /** Verify rv_sig on the current thread. The input buffer is never detached. */
 export async function verifyRvSigDirect(
@@ -335,7 +268,7 @@ export async function verifyRvSigDirect(
     }
     const certOk = await verifyEd25519(
       keySignature,
-      customerKeyMessage(customerPublicKey, key.org),
+      rvKeyV1CertMessage(customerPublicKey, key.org),
       rootPublicKey,
       options,
     );

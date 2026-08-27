@@ -217,7 +217,7 @@ authority: normative
 - [x] 用户 2026-08-27 当前明确指令批准本方案；`ADR-0007` 转 Accepted，本计划转 Active
 - [x] M0 契约冻结：Accepted `ADR-0007`、Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`
 - [ ] M0 尾项：由 Owner 在签发环境生成自有 Ed25519 密钥对（私钥进 `RV_LIC_SIGN_PRIVATE_KEY`，不进仓库）
-- [ ] M1 黄金切片：非安全上下文验签
+- [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
 - [ ] M2 签发 CLI 与交叉验证
 - [ ] M3 加载与状态机
 - [ ] M4 降级与呈现
@@ -225,6 +225,12 @@ authority: normative
 - [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
+
+- **2026-08-27（M1，已实测）**：非安全上下文的诊断在 Node 中逐条复现——`crypto.subtle` 缺席时，`verifyAsync` 抛 `crypto.subtle must be defined, consider polyfill`，同步 `verify` 抛 `hashes.sha512 not set`；装上 `hashes.sha512 = sha512`（`@noble/hashes/sha2.js`）后，对 `node:crypto` 独立生成的签名 `verify` 返回 `true`，篡改签名与篡改消息均返回 `false`。该探针同时证明 Node 签发 ↔ noble 验证互通，为 M2 的交叉验证铺路。
+- **2026-08-27（M1）**：关键用例做过"摘掉钩子"的反向验证——移除钩子后，恰好且仅有两条无-`crypto.subtle` 用例变红，返回值为 `unverifiable`，与诊断逐字吻合。测试确实有牙齿，不是恒真断言。
+- **2026-08-27（M1）**：`decodeStrictBase64` 需要已知长度，而许可证载荷长度可变，因此新增 `decodeStrictBase64Any`，保留同样的"重新编码后比对"反可塑性检查。
+- **2026-08-27（M1）**：RV-KEY-V1 证书构造上提为共享 `rvKeyV1CertMessage`，而不是在 licensing 里复制一份。契约 §3 要求两边字节一致，靠两份副本"不漂移"是靠不住的。
+- **2026-08-27（M1）**：浏览器测试不做类型检查，`crypto.subtle.sign` 的 `Uint8Array<ArrayBuffer>` 约束是由 Static Gate 抓出的——证明"浏览器测试绿"不等于"类型正确"。
 
 - **2026-08-27（M0）**：许可证载荷 v1 **不含** `notBefore`。预先签发未来生效的凭证不在 v1 范围，省掉它使判定顺序少一个状态，且按只加不减规则日后可追加。契约已写明该省略是刻意的。
 - **2026-08-27（M0）**：生产密钥对不由 Agent 生成——私钥必须只存在于 Owner 的签发环境。`rv-lic-public-key.ts` 在 M1 建立时先由测试注入信任根（沿用 `VerifyRvSigOptions.rootPublicKeyBase64` 的既有测试缝），真实公钥在 M2 的 CLI `--keygen` 可用后由 Owner 填入。**不得**使用占位公钥，那会造成一个验证不了任何东西的信任根。
@@ -244,6 +250,16 @@ authority: normative
 - 2026-08-27：用户当前明确指令作出 `OD-007` 的四项决定并据此关闭该条目——**宽限期 30 天**；**`installId` 与 `hosts[]` 两个绑定维度都要**；**删除上游 CONNECT 授权查询**；**确认「合同凭证 + 防篡改审计记录」的表述进入销售合同**。ADR-0007 与本计划已按此更新；ADR 接受与计划激活仍是独立动作，尚未发生。
 
 ## Validation
+
+**M1 已运行（2026-08-27，本机）**：
+- `./scripts/verify.sh static` — 通过（治理 + 外部 origin 门禁 + ESLint + 社区 `tsc`）
+- `npm run test:node` — 63 文件通过 / 2 跳过，640 用例通过 / 7 跳过，0 失败
+- `npx vitest run tests/licensing-verify.test.ts` — 19 通过
+- `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
+- `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
+- `./scripts/verify.sh build` — 通过
+- **尚未运行**：完整 `./scripts/verify.sh browser`（8 分片）与远程五项 Gate。
+
 
 - `./scripts/verify.sh governance`（文档与治理，M0 起每个里程碑）
 - `./scripts/verify.sh static`（含社区 `tsc -p tsconfig.json`、ESLint 边界、外部 origin 静态门禁）
