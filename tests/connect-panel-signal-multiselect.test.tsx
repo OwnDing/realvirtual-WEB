@@ -75,7 +75,7 @@ function renderList(iface: ConnectInterface) {
     <ThemeProvider theme={rvDarkTheme}>
       <RVViewerProvider value={viewerStub}>
         <div style={{ height: 400, display: 'flex', flexDirection: 'column' }}>
-          <SignalListView iface={iface} overLimitSignals={[]} />
+          <SignalListView iface={iface} />
         </div>
       </RVViewerProvider>
     </ThemeProvider>,

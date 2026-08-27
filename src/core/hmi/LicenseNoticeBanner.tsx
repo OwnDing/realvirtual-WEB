@@ -19,7 +19,7 @@ import { Close, WarningAmber } from '@mui/icons-material';
 import { ISA_AMBER } from './isa-colors';
 import { getLicenseSnapshot, subscribeLicense } from '../licensing/rv-lic-store';
 import type { LicenseEvaluation } from '../licensing/rv-lic-state';
-import { rvT, useRvTranslation } from '../i18n';
+import { getLocale, rvT, useRvTranslation } from '../i18n';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -170,5 +170,52 @@ export function LicenseWatermark(): React.ReactElement | null {
     >
       {rvT('shell', 'license.watermark')}
     </Box>
+  );
+}
+
+/**
+ * The audit line, under the build identity in Settings.
+ *
+ * This is where `limits` lands, and it is a READOUT rather than a control:
+ * seats cannot be counted from one browser and the signal figure is this
+ * deployment's own registration count, not an admission decision. An auditor
+ * comparing a contract against a running plant needs the numbers side by side;
+ * nothing here refuses anything (CONTRACT-LICENSE-FILE-001 §7).
+ */
+export function LicenseFooterLine({ registeredSignals }: { registeredSignals: number | null }):
+React.ReactElement | null {
+  useRvTranslation('shell');
+  const { evaluation, loaded } = useSyncExternalStore(subscribeLicense, getLicenseSnapshot);
+  if (!loaded || evaluation.state === 'not-required') return null;
+
+  const payload = evaluation.payload;
+  const lines: string[] = [];
+  if (payload?.customer?.org) lines.push(rvT('shell', 'license.issuedTo', { org: payload.customer.org }));
+  if (payload?.notAfter) {
+    const parsed = Date.parse(payload.notAfter);
+    if (Number.isFinite(parsed)) {
+      lines.push(rvT('shell', 'license.validUntil', {
+        date: new Date(parsed).toLocaleDateString(getLocale()),
+      }));
+    }
+  }
+  if (typeof payload?.limits?.signals === 'number' && registeredSignals !== null) {
+    lines.push(rvT('shell', 'license.contractSignals', {
+      used: registeredSignals, licensed: payload.limits.signals,
+    }));
+  }
+  if (typeof payload?.limits?.seats === 'number') {
+    lines.push(rvT('shell', 'license.contractSeats', { seats: payload.limits.seats }));
+  }
+  if (lines.length === 0) return null;
+
+  return (
+    <Typography
+      data-testid="license-footer-line"
+      variant="caption"
+      sx={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: 10 }}
+    >
+      {lines.join(' · ')}
+    </Typography>
   );
 }

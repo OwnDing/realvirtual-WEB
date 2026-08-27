@@ -221,11 +221,16 @@ authority: normative
 - [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
 - [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
 - [x] M4 降级与呈现（`decideSaveVerb` 阻断分支、横幅与水印、中英文案、信号读数；18 条用例）
-- [ ] M5 移除上游 CONNECT 授权查询
+- [x] M5 移除上游 CONNECT 授权查询（4 个端点、2 个文件、39 + 6 条文案；`ConnectPanel.tsx` 减 155 行）
 - [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
 
+- **2026-08-27（M5）**：`CONNECT_ERROR_MESSAGES.LICENSE_REQUIRED` 的文案原文是「open License in the CONNECT panel」——而那个区块正是本里程碑删掉的。若不改，网关拒绝服务时会把操作员指向一个不存在的地方。已改为指向网关自身。这类**文案指向被删 UI** 的引用类型检查抓不到，只能靠逐条读。
+- **2026-08-27（M5）**：`tests/connect-license-ui.test.tsx` 是混合文件——除授权外还覆盖 CONNECT 下载、获取入口与连接状态。整файл删除会静默丢掉这些覆盖，因此只移除授权相关用例并改名 describe。`interfaceStatusShort('SignalLimitExceeded')` 与 `interfaceDotColor` 的断言保留，因为它们来自网关 `/status`，与 `/license/status` 无关。
+- **2026-08-27（M5）**：`tests/i18n-shell.test.tsx` 中「文案在调用时解析而非导入时」的不变量测试，其主体（`deriveLicensePresentation`）被删。不变量本身仍然成立且值得覆盖，因此改指向新的 `licenseNoticeText`，而不是连测试一起删。
+- **2026-08-27（M5）**：删除目录孤儿键时，第一版脚本按叶子名全局匹配，把其它 namespace 中同名的 `close`、`activate`、`free`、`email`、`pending` 一并删掉（zh-CN 删了 56 条而非 39 条）。社区 `tsc` 立刻报出 `"ai.close"`、`"news.close"`、`"doc.close"` 等键不存在。已回滚并改为**限定在 `shell.license` 块内**匹配。
+- **2026-08-27（M5）**：M4 加的 4 条审计文案（`issuedTo`/`validUntil`/`contractSignals`/`contractSeats`）与 `registeredSignalCount` 当时没有接入 UI，属于死代码。本里程碑给了它们真实归宿：Settings 面板页脚、构建标识下方——同为部署级身份信息，且面向审计对账，正是契约 §7 的用途。
 - **2026-08-27（M4）**：新增英文文案触发了 i18n 逐字追溯门禁（`tests/i18n-preboot.node.test.ts`），因为它要求每条英文值都能在迁移基线提交中找到原文。正确出口是 `scripts/i18n-verbatim-check.mjs` 的 `NEW_STRING_EXEMPTIONS`——按既有先例（`PUBLIC_DES`、`SMART_ASSET_EDITOR`）声明 15 个新键并附理由，而不是放宽门禁。
 - **2026-08-27（M4）**：授权阻断放在 `decideSaveVerb` 的**后端拒绝之前**。若放在之后，「没有打开工程——新建或打开一个再保存」会变成假承诺：用户照做之后仍然保存不了。已用一条测试钉住该顺序。
 - **2026-08-27（M4）**：`rv-save-document.ts` 中既有的四条拒绝话术是硬编码英文，未被 i18n 库存门禁捕获——其触发属性名列表不含 `reason`。新增的授权话术走 `rvT`，未改动既有四条（属范围外，且其措辞被现有测试逐字钉住）。
@@ -268,6 +273,13 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+**M5 已运行（2026-08-27，本机）**：
+- `./scripts/verify.sh static` — 通过（社区 `tsc` 是这次的主力，逐个指出悬空引用）
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+- 受影响 Browser 测试 8 文件 / 73 例通过（CONNECT 面板信号树、折叠、多选、两个性能门禁、`connect-license-ui`、`i18n-shell`、`licensing-degrade`）
+- i18n 三道门禁（catalog 双语对齐 / inventory 硬零 / preboot 逐字追溯）通过
+- `./scripts/verify.sh build` — 通过
+
 **M4 已运行（2026-08-27，本机）**：
 - `tests/licensing-degrade.test.tsx` — 18 通过
 - `tests/save-document-routing.test.ts` + `tests/mixed-log-save.test.ts` — 28 通过（保存路径无回归）

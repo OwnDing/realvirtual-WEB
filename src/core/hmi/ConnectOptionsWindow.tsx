@@ -7,7 +7,6 @@
  * Everything that configures the gateway (as opposed to operating it) lives
  * here, so the ConnectPanel tab can stay a pure operations view:
  *   1. Connection — server URL, connect/disconnect, gateway version + self-update
- *   2. License — registration / activation / grace status (LicenseSection)
  *   3. Configuration profile — named snapshots of interfaces + bridges
  *   4. Historian (InfluxDB) — recording connection settings
  *
@@ -53,7 +52,6 @@ import {
 } from './connect-store';
 import { historianStore, fetchInfluxSettings, saveInfluxSettings, type InfluxDbSettings } from './historian-store';
 import { ISA_GREEN, ISA_RED, ISA_AMBER, connectionStateColor } from './isa-colors';
-import { LicenseSection } from './LicenseSection';
 import { ConnectUpdateSection } from './ConnectUpdateSection';
 import { ConfirmActionDialog, type ConfirmAction } from './ConfirmActionDialog';
 import { useRvTranslation } from '../i18n';
@@ -528,12 +526,6 @@ export function ConnectOptionsWindow({ open, onClose, onProfileSwitched }: Conne
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
         {isConnected ? (
           <>
-            <Box>
-              <SectionTitle>{t('options.license')}</SectionTitle>
-              {/* LicenseSection carries status, grace detail and the activation dialog. */}
-              <LicenseSection serverUrl={snap.serverUrl} />
-            </Box>
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
             <ProfileSection onSwitched={onProfileSwitched} />
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
             <HistorianSettingsSection />

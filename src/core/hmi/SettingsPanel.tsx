@@ -11,7 +11,6 @@
 
 import { useState, useEffect, lazy } from 'react';
 import { Box, Tabs, Tab, Typography } from '@mui/material';
-import { useViewer } from '../../hooks/use-viewer';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
 import { LeftPanel, clampWidth } from './LeftPanel';
 import { SETTINGS_PANEL_WIDTH } from './layout-constants';
@@ -21,6 +20,8 @@ import { usePluginSettingsTabs, PluginSettingsTabContent } from './PluginSetting
 import { useRequestedSettingsTab, clearRequestedSettingsTab } from './settings-tab-store';
 import { AiBridgeGate } from './AiBridgeGate';
 import { formatVersionFull } from '../rv-version';
+import { LicenseFooterLine } from './LicenseNoticeBanner';
+import { useViewer } from '../../hooks/use-viewer';
 import { useRvTranslation } from '../i18n';
 import { useCustomBranding } from './branding-store';
 import { DEFAULT_PRODUCT_NAME } from '../deployment/deployment-config';
@@ -186,6 +187,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         >
           {productName} {formatVersionFull()}
         </Typography>
+        <LicenseFooterLine registeredSignals={viewer.signalStore?.registeredSignalCount ?? null} />
       </Box>
     </LeftPanel>
   );

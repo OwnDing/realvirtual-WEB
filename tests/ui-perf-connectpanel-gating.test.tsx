@@ -164,7 +164,7 @@ function renderList(iface: ConnectInterface, viewer: RVViewer, extra?: React.Rea
       <RVViewerProvider value={viewer}>
         <div style={{ height: 400, display: 'flex', flexDirection: 'column' }}>
           {extra}
-          <SignalListView iface={iface} overLimitSignals={[]} />
+          <SignalListView iface={iface} />
         </div>
       </RVViewerProvider>
     </ThemeProvider>,
@@ -244,7 +244,7 @@ describe('ConnectPanel — memoised rows survive parent re-renders (Phase 3.3)',
       bump = () => setN((n) => n + 1);
       return (
         <div style={{ height: 400, display: 'flex', flexDirection: 'column' }}>
-          <SignalListView iface={iface} overLimitSignals={[]} />
+          <SignalListView iface={iface} />
         </div>
       );
     }

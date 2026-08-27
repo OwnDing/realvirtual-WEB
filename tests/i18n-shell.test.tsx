@@ -12,7 +12,7 @@
  *    that resolves against an uninitialised instance renders every label as its
  *    own key, and nothing else in the suite would notice.
  *  - **A class component and two module-level tables.** `LazyPanelBoundary` has
- *    no hooks, and `USE_CASES` / `license-store` build their text outside React.
+ *    no hooks, and `USE_CASES` / `licenseNoticeText` build their text outside React.
  *    Each needs the imperative `rvT`, and each is a place where a string can be
  *    frozen at import time — before a language exists.
  *  - **Accessible names.** 25 of this batch's strings are `aria-label`s. They
@@ -35,8 +35,8 @@ import {
 } from '../src/core/i18n';
 import { LazyPanelBoundary } from '../src/core/hmi/LazyPanelBoundary';
 import { SharedViewBanner } from '../src/core/hmi/SharedViewBanner';
-import { deriveLicensePresentation } from '../src/core/hmi/license-store';
-import type { LicenseStatus } from '../src/core/hmi/license-store';
+import { licenseNoticeText } from '../src/core/hmi/LicenseNoticeBanner';
+import type { LicenseEvaluation } from '../src/core/licensing/rv-lic-state';
 import { zhCN } from '../src/core/i18n/catalogs/zh-CN';
 import { LoginGatePlugin } from '../src/plugins/login-gate-plugin';
 import type { ComponentType } from 'react';
@@ -53,12 +53,11 @@ vi.mock('../src/plugins/multiuser-plugin', () => ({
   getSharedViewSnapshot: () => shared.snap,
 }));
 
-function licenseStatus(state: string, extra: Partial<LicenseStatus> = {}): LicenseStatus {
+function licenseState(state: LicenseEvaluation['state']): LicenseEvaluation {
   return {
-    state, maxSignals: 20, admittedSignals: 3, effectiveNow: '', licenseType: null,
-    licenseId: null, error: null, overLimitSignals: [], registration: null,
-    licenseKeyMasked: null, ...extra,
-  } as unknown as LicenseStatus;
+    state, payload: null, reason: null, daysToExpiry: -12,
+    canSave: state !== 'readonly', watermark: true, mismatch: null, clockRollback: false,
+  };
 }
 
 beforeEach(async () => {
@@ -104,16 +103,17 @@ describe('shell chrome', () => {
 
 describe('module-level tables', () => {
   it('resolve license labels at call time, not at import time', async () => {
-    // `deriveLicensePresentation` is a pure mapper that runs during render. If
-    // its labels were resolved when the module loaded, they would be stuck in
-    // whatever language the first import happened to see.
+    // `licenseNoticeText` is a pure mapper that runs during render. If its
+    // sentences were resolved when the module loaded, they would be stuck in
+    // whatever language the first import happened to see. The subject changed
+    // when the upstream gateway licence UI was removed (EP-LICENSE-001 M5);
+    // the invariant did not, so it keeps its coverage here.
     await act(async () => { await setLocale('zh-CN'); });
-    expect(deriveLicensePresentation(licenseStatus('Unlicensed')).label).toBe('需要许可');
+    expect(licenseNoticeText(licenseState('readonly'))).toContain('只读');
 
     await act(async () => { await setLocale('en-US'); });
-    expect(deriveLicensePresentation(licenseStatus('Unlicensed')).label).toBe('License required');
-    expect(deriveLicensePresentation(licenseStatus('LicensedCommunity')).label)
-      .toBe('Free - 3 / 20 signals');
+    expect(licenseNoticeText(licenseState('readonly'))).toContain('read-only');
+    expect(licenseNoticeText(licenseState('absent'))).toContain('No license file');
   });
 });
 

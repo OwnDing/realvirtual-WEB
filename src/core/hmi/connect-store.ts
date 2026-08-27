@@ -13,7 +13,6 @@
 import { createStore } from './create-store';
 import { deriveWireType, type S7Tag, type ParsedTopic } from '../import/s7-tag-table';
 import { connectRestFetch } from './connect-rest';
-import { clearLicenseStatus, fetchLicenseStatus } from './license-store';
 import { fetchConnectNews } from '../news-store';
 import type { RVTranslationKey } from '../i18n';
 
@@ -755,7 +754,6 @@ export function setServerUrl(url: string): void {
   try {
     localStorage.setItem(LS_KEY_URL, url);
   } catch { /* ignore */ }
-  if (_store.getSnapshot().serverUrl !== url) clearLicenseStatus();
   _store.set({ serverUrl: url });
 }
 
@@ -829,8 +827,11 @@ type ConnectErrorFormatter = (body: ConnectErrorBody) => string;
 
 /** Operator-facing copy for stable backend error codes. Keep the recovery action beside the code. */
 const CONNECT_ERROR_MESSAGES: Readonly<Record<string, ConnectErrorFormatter>> = {
+  // The recovery action is on the GATEWAY, not here: this application no longer
+  // administers the gateway's licence (EP-LICENSE-001 M5), so pointing at a
+  // panel section that no longer exists would send the operator nowhere.
   LICENSE_REQUIRED: () =>
-    'This gateway needs a license before it serves signals - open License in the CONNECT panel.',
+    'This gateway needs a license before it serves signals - license it on the CONNECT gateway itself.',
   SIGNAL_LIMIT_REACHED: (body) => {
     const limit = [body.limit, body.maxSignals].find((value) => Number.isFinite(value));
     const inUse = [body.admittedSignals, body.admitted, body.inUse]
@@ -1119,7 +1120,6 @@ export function getAvailableInterfaceTypes(): ConnectInterfaceTypeDef[] {
 export function disconnectFromServer(): void {
   _statusFailCount = 0;
   _setAutoConnectOptOut(true);
-  clearLicenseStatus();
   _store.set({
     state: 'disconnected',
     errorMessage: '',
@@ -1167,9 +1167,6 @@ let _statusFailCount = 0;
  */
 export async function fetchStatus(): Promise<void> {
   const serverUrl = _store.getSnapshot().serverUrl;
-  // License status shares this established 2 s poll. Starting both requests
-  // together avoids a second timer and keeps neither endpoint behind the other.
-  const licensePoll = fetchLicenseStatus(serverUrl);
   let resp: Response;
   try {
     resp = await fetch(`${serverUrl}/status`);
@@ -1178,14 +1175,12 @@ export async function fetchStatus(): Promise<void> {
     if (_statusFailCount >= STATUS_FAIL_THRESHOLD && !_store.getSnapshot().gatewayUnreachable) {
       _store.set({ gatewayUnreachable: true });
     }
-    await licensePoll;
     return;
   }
   _statusFailCount = 0;
   if (!resp.ok) {
     // Older gateways without /status — gateway alive, leave the map untouched.
     _store.set({ gatewayUnreachable: false, lastStatusUpdate: Date.now() });
-    await licensePoll;
     return;
   }
   try {
@@ -1216,7 +1211,6 @@ export async function fetchStatus(): Promise<void> {
     // Malformed body — still a live gateway.
     _store.set({ gatewayUnreachable: false, lastStatusUpdate: Date.now() });
   }
-  await licensePoll;
 }
 
 function _isProviders(v: unknown): v is { embedding: string; rerank: string; chat: string } {

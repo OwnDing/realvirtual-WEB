@@ -19,8 +19,8 @@ export const CONNECT_EMBED_SIGNAL_HINT_SEEN_KEY = 'rv-connect-embed-signal-hint-
 /**
  * Versioned acknowledgement of what the AI Bridge may reach (plan-366 Phase 6).
  * Stores the ACCEPTED version string, not a boolean: raising
- * `AI_BRIDGE_CONSENT_VERSION` (ai-consent-store.ts) must ask again, the same way
- * `LICENSE_TERMS_VERSION` re-asks when the terms change. Never written implicitly.
+ * `AI_BRIDGE_CONSENT_VERSION` (ai-consent-store.ts) must ask again when the
+ * scope of what the bridge may reach changes. Never written implicitly.
  */
 export const AI_BRIDGE_CONSENT_KEY = 'rv-ai-bridge-consent';
 

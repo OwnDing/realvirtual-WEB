@@ -82,7 +82,7 @@ function renderList(iface: ConnectInterface, viewer: RVViewer) {
       <RVViewerProvider value={viewer}>
         <div style={{ height: LIST_HEIGHT, display: 'flex', flexDirection: 'column' }}>
           <Probe />
-          <SignalListView iface={iface} overLimitSignals={[]} />
+          <SignalListView iface={iface} />
         </div>
       </RVViewerProvider>
     </ThemeProvider>,
