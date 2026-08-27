@@ -26,6 +26,12 @@
     "allow": []
   },
 
+  "license": {
+    "required": false,
+    "path": "license.rvlic",
+    "installId": "XYV-INST-9F2A4C81"
+  },
+
   "services": {
     "analytics": null,
     "news": null,
