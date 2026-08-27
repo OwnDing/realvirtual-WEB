@@ -87,6 +87,7 @@ import { revisionOfBytes, SceneRevisionConflictError } from '../project/rv-scene
 import type { ProjectBackend } from '../project/backends/project-backend';
 import { assertNoDocumentIdCollisions } from '../project/rv-asset-identity';
 import { rvT } from '../i18n';
+import { getLicenseSnapshot } from '../licensing/rv-lic-store';
 
 // ─── The verb, before the click (§2.2.1-6) ──────────────────────────────
 
@@ -277,9 +278,17 @@ export type SaveSubject =
 export function decideSaveVerb(
   subject: SaveSubject,
   backend: ProjectBackend | null = getProjectStore().getBackend(),
+  licenseAllowsSaving: boolean = getLicenseSnapshot().evaluation.canSave,
 ): SaveVerbDecision {
   const open = subject.lineage === 'asset' ? subject.base !== null : subject.open;
   if (!open) return { verb: 'blocked', reason: 'Nothing is open.' };
+  // Ahead of the backend refusals on purpose. Past the grace period no project
+  // can be saved to, so "open or create one to save" would be a false promise:
+  // the user would open a project and find the button still refuses. This is
+  // also the ONLY thing an expired license takes away — running, signals,
+  // device writes and reading existing work are untouched in every state
+  // (CONTRACT-LICENSE-FILE-001 §10).
+  if (!licenseAllowsSaving) return { verb: 'blocked', reason: rvT('shell', 'license.saveBlocked') };
   // The three refusals both lineages share, in one place and one wording.
   if (!backend) {
     return { verb: 'blocked', reason: 'No project is open — open or create one to save.' };

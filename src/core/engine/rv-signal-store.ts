@@ -721,6 +721,19 @@ export class SignalStore {
     return this.forced.size;
   }
 
+  /**
+   * How many signals are registered right now.
+   *
+   * A READOUT, not a limit. `limits.signals` in a license is a contract term
+   * and this is the number to hold it against during an audit; `register()`
+   * has no bound and must not grow one. A browser cannot see other browsers,
+   * so a cap enforced here would be a promise the platform cannot keep
+   * (CONTRACT-LICENSE-FILE-001 §7).
+   */
+  get registeredSignalCount(): number {
+    return this.byName.size;
+  }
+
   /** Snapshot of all forced signals (name → forced value). */
   getForced(): Map<string, boolean | number> {
     return new Map(this.forced);

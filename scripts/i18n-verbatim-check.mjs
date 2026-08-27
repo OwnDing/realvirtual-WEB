@@ -458,9 +458,35 @@ const SMART_ASSET_EDITOR_KEYS = [
   'assets.smartEditor.issues.transportDirectionInvalid',
 ];
 
+const OFFLINE_LICENSE = 'No English original exists to move: the offline .rvlic licensing '
+  + 'surface (EP-LICENSE-001, ADR-0007) was added after the migration base ref. These strings are '
+  + 'the expiry, grace, binding-mismatch and watermark copy, every one of which states what still '
+  + 'works because an operator reading a licensing banner mid-shift needs to know the line will not '
+  + 'stop. Declaring the keys explicitly preserves the proof that older product wording was moved '
+  + 'rather than rewritten.';
+
+const OFFLINE_LICENSE_KEYS = [
+  'shell.license.expiringSoon',
+  'shell.license.inGrace',
+  'shell.license.readOnly',
+  'shell.license.bindingMismatch',
+  'shell.license.cannotVerify',
+  'shell.license.fileInvalid',
+  'shell.license.fileMissing',
+  'shell.license.clockSuspect',
+  'shell.license.watermark',
+  'shell.license.saveBlocked',
+  'shell.license.contractSignals',
+  'shell.license.contractSeats',
+  'shell.license.validUntil',
+  'shell.license.issuedTo',
+  'shell.license.dismiss',
+];
+
 export const NEW_STRING_EXEMPTIONS = new Map([
   ...SMART_ASSET_EDITOR_KEYS.map((key) => [key, SMART_ASSET_EDITOR]),
   ...PUBLIC_DES_KEYS.map((key) => [key, PUBLIC_DES]),
+  ...OFFLINE_LICENSE_KEYS.map((key) => [key, OFFLINE_LICENSE]),
   ['demo.paintline.tourOverview', PAINTLINE_DEMO],
   ['demo.paintline.tourPretreat', PAINTLINE_DEMO],
   ['demo.paintline.tourOven', PAINTLINE_DEMO],

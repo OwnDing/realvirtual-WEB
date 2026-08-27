@@ -220,12 +220,16 @@ authority: normative
 - [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
 - [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
 - [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
-- [ ] M4 降级与呈现
+- [x] M4 降级与呈现（`decideSaveVerb` 阻断分支、横幅与水印、中英文案、信号读数；18 条用例）
 - [ ] M5 移除上游 CONNECT 授权查询
 - [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
 
+- **2026-08-27（M4）**：新增英文文案触发了 i18n 逐字追溯门禁（`tests/i18n-preboot.node.test.ts`），因为它要求每条英文值都能在迁移基线提交中找到原文。正确出口是 `scripts/i18n-verbatim-check.mjs` 的 `NEW_STRING_EXEMPTIONS`——按既有先例（`PUBLIC_DES`、`SMART_ASSET_EDITOR`）声明 15 个新键并附理由，而不是放宽门禁。
+- **2026-08-27（M4）**：授权阻断放在 `decideSaveVerb` 的**后端拒绝之前**。若放在之后，「没有打开工程——新建或打开一个再保存」会变成假承诺：用户照做之后仍然保存不了。已用一条测试钉住该顺序。
+- **2026-08-27（M4）**：`rv-save-document.ts` 中既有的四条拒绝话术是硬编码英文，未被 i18n 库存门禁捕获——其触发属性名列表不含 `reason`。新增的授权话术走 `rvT`，未改动既有四条（属范围外，且其措辞被现有测试逐字钉住）。
+- **2026-08-27（M4）**：横幅 z-index 取 9450，位于存储提示（9400）与调试信任横幅（9490）之间。该层带拥挤且无中央注册表，取值理由写在组件注释里。
 - **2026-08-27（M3）**：状态机写成无 I/O 的纯函数，时钟与加载分别在两侧。因此到期边界可以逐毫秒表驱动测试（`notAfter − 30 天` 整点、+1ms、`notAfter` 整点、+1ms、宽限末点、+1ms），不需要操纵真实时间。
 - **2026-08-27（M3）**：「红线」写成了可执行断言而不只是文档条款——对全部九个状态断言 `canSave` 仅在 `readonly` 为 false。将来任何人给某个状态加上禁用保存都会立刻变红。
 - **2026-08-27（M3）**：`validateDeploymentConfig<T extends Record<string, unknown>>` 无法在不加 cast 的情况下消费自己的输出类型，幂等性测试因此需要一次 cast。属既有 API 小瑕疵，未改动。
@@ -264,6 +268,13 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+**M4 已运行（2026-08-27，本机）**：
+- `tests/licensing-degrade.test.tsx` — 18 通过
+- `tests/save-document-routing.test.ts` + `tests/mixed-log-save.test.ts` — 28 通过（保存路径无回归）
+- `tests/i18n-catalog.node.test.ts`、`tests/i18n-inventory.node.test.ts`、`tests/i18n-preboot.node.test.ts` — 通过
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+
 **M3 已运行（2026-08-27，本机）**：
 - `tests/licensing-state.node.test.ts` — 40 通过（到期边界逐毫秒、绑定双维度、通配符、配置解析与幂等）
 - `tests/licensing-clock.test.ts` — 11 通过（`issuedAt` 下界、高水位单调、回拨容差、存储不可用降级）

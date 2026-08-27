@@ -200,6 +200,24 @@ export const enUS = {
       gotIt: 'Got it',
     },
     license: {
+      // Offline .rvlic states (ADR-0007 / CONTRACT-LICENSE-FILE-001).
+      // Every one of these says what still works, because the answer is
+      // always "everything except saving, and only past grace".
+      expiringSoon: 'This license expires in {{days}} days. Nothing stops when it does - contact your supplier to renew.',
+      inGrace: 'This license expired {{days}} days ago and is in its grace period. Operation is unaffected; saving new changes stops when the grace period ends.',
+      readOnly: 'This license has expired and the application is read-only. Operation, signals and device control are unaffected, but new changes cannot be saved.',
+      bindingMismatch: 'This license does not match this deployment: it was issued to {{expected}} and this is running as {{actual}}. Nothing is restricted - contact your supplier for a reissue.',
+      cannotVerify: 'The license file could not be verified. Nothing is restricted - contact your supplier.',
+      fileInvalid: 'The license file is invalid or damaged. Nothing is restricted - contact your supplier.',
+      fileMissing: 'No license file was found. Nothing is restricted - contact your supplier.',
+      clockSuspect: 'The system clock looks wrong; expiry is measured from the license issue date.',
+      watermark: 'License expired',
+      saveBlocked: 'This license has expired, so new changes cannot be saved. Operation, signals and device control are unaffected.',
+      contractSignals: '{{used}} of {{licensed}} signals under contract',
+      contractSeats: '{{seats}} seats under contract',
+      validUntil: 'Licensed until {{date}}',
+      issuedTo: 'Licensed to {{org}}',
+      dismiss: 'Got it',
       checking: 'Checking license',
       checkingLabel: 'License: Checking...',
       warningIcon: 'License warning',

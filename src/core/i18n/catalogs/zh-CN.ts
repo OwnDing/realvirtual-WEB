@@ -912,6 +912,24 @@ export const zhCN = {
       gotIt: '我知道了',
     },
     license: {
+      // Offline .rvlic states (ADR-0007 / CONTRACT-LICENSE-FILE-001).
+      // Every one of these says what still works, because the answer is
+      // always "everything except saving, and only past grace".
+      expiringSoon: '授权将在 {{days}} 天后到期。到期不会停机，请联系供应商续期。',
+      inGrace: '授权已于 {{days}} 天前到期，当前处于宽限期。运行不受影响；宽限期结束后将无法保存新的更改。',
+      readOnly: '授权已过期，当前为只读。运行、信号接入与设备控制不受影响，但无法保存新的更改。',
+      bindingMismatch: '授权绑定与当前部署不符：许可证签发给 {{expected}}，当前运行在 {{actual}}。功能不受影响，请联系供应商重新签发。',
+      cannotVerify: '无法验证授权文件。功能不受影响，请联系供应商。',
+      fileInvalid: '授权文件无效或已损坏。功能不受影响，请联系供应商。',
+      fileMissing: '未找到授权文件。功能不受影响，请联系供应商。',
+      clockSuspect: '系统时钟异常，到期时间按许可证签发日推算。',
+      watermark: '授权已到期',
+      saveBlocked: '授权已过期，无法保存新的更改。运行、信号接入与设备控制不受影响。',
+      contractSignals: '信号用量 {{used}} / 合同 {{licensed}}',
+      contractSeats: '合同席位 {{seats}}',
+      validUntil: '授权有效期至 {{date}}',
+      issuedTo: '授权给 {{org}}',
+      dismiss: '知道了',
       checking: '正在检查许可',
       checkingLabel: '许可：正在检查…',
       warningIcon: '许可警告',
