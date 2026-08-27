@@ -215,7 +215,8 @@ authority: normative
 
 - [x] OD-007 四项决定由用户 2026-08-27 当前明确指令作出并关闭
 - [x] 用户 2026-08-27 当前明确指令批准本方案；`ADR-0007` 转 Accepted，本计划转 Active
-- [ ] M0 契约冻结
+- [x] M0 契约冻结：Accepted `ADR-0007`、Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`
+- [ ] M0 尾项：由 Owner 在签发环境生成自有 Ed25519 密钥对（私钥进 `RV_LIC_SIGN_PRIVATE_KEY`，不进仓库）
 - [ ] M1 黄金切片：非安全上下文验签
 - [ ] M2 签发 CLI 与交叉验证
 - [ ] M3 加载与状态机
@@ -224,6 +225,9 @@ authority: normative
 - [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
+
+- **2026-08-27（M0）**：许可证载荷 v1 **不含** `notBefore`。预先签发未来生效的凭证不在 v1 范围，省掉它使判定顺序少一个状态，且按只加不减规则日后可追加。契约已写明该省略是刻意的。
+- **2026-08-27（M0）**：生产密钥对不由 Agent 生成——私钥必须只存在于 Owner 的签发环境。`rv-lic-public-key.ts` 在 M1 建立时先由测试注入信任根（沿用 `VerifyRvSigOptions.rootPublicKeyBase64` 的既有测试缝），真实公钥在 M2 的 CLI `--keygen` 可用后由 Owner 填入。**不得**使用占位公钥，那会造成一个验证不了任何东西的信任根。
 
 - **2026-08-26（起草期，已核实）**：在局域网 IP 的明文 HTTP 部署上，本仓库今天的 Ed25519 验证必然返回 `unverifiable`——WebCrypto 因非安全上下文缺席，noble 的异步回退同样依赖 `crypto.subtle` 做 sha512（`node_modules/@noble/ed25519/index.js:125`、`:51-54`、`:794`），而同步钩子未安装、`@noble/hashes` 未作为依赖存在。该形态正是私有化 on-prem 的典型形态。此缺陷**已经影响现有的模型签名验证**，不是本次新引入的。
 - **2026-08-26**：`RvDocument.applyOp` 对被 `canApply` 拒绝的 op 静默丢弃（`rv-document.ts:365-368`）。若按直觉把授权闸放在这里，会造成用户改动无声消失。降级点因此改为 `decideSaveVerb`。

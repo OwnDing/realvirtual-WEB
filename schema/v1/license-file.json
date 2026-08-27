@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xyvirtual.local/schema/v1/license-file.json",
+  "title": "XYvirtual WEB License File v1 (.rvlic)",
+  "description": "Offline-verifiable contract evidence. Signature covers the payload BYTES, so the envelope is verified before payload is parsed. See docs/contracts/LICENSE_FILE.md and ADR-0007.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rvlic", "payload", "sig"],
+  "properties": {
+    "rvlic": { "const": 1 },
+    "payload": {
+      "$ref": "#/$defs/base64Std",
+      "description": "Strict padded standard Base64 of the payload UTF-8 bytes. Decoded and signature-checked BEFORE JSON.parse."
+    },
+    "sig": {
+      "$ref": "#/$defs/sig64",
+      "description": "Ed25519 signature over \"RV-LIC-V1\" || u32LE(payloadBytes.length) || payloadBytes."
+    },
+    "cert": { "$ref": "#/$defs/cert" }
+  },
+  "$defs": {
+    "base64Std": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 16384,
+      "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+    },
+    "sig64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{86}==$",
+      "description": "64 bytes. Verifiers MUST also re-encode and compare to reject non-canonical Base64."
+    },
+    "pub32": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{43}=$",
+      "description": "32 bytes. Verifiers MUST also re-encode and compare to reject non-canonical Base64."
+    },
+    "cert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pub", "org", "sig"],
+      "description": "Optional RV-KEY-V1 delegation. Absent means `sig` is verified with the compiled root key.",
+      "properties": {
+        "pub": { "$ref": "#/$defs/pub32" },
+        "org": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "sig": {
+          "$ref": "#/$defs/sig64",
+          "description": "Root-key signature over \"RV-KEY-V1\" || pub || u32LE(orgUtf8.length) || orgUtf8, org NFC-normalized."
+        }
+      }
+    },
+    "payloadDocument": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["v", "id", "issuedAt", "notAfter"],
+      "description": "The decoded payload. additionalProperties is true on purpose: unknown fields are preserved, never rejected.",
+      "properties": {
+        "v": { "const": 1 },
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "issuedAt": { "$ref": "#/$defs/instant" },
+        "notAfter": { "$ref": "#/$defs/instant" },
+        "graceDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 180,
+          "description": "Days past notAfter that stay fully functional. Absent means 30. Values above 180 are clamped, not rejected."
+        },
+        "customer": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "org": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "contact": { "type": "string", "maxLength": 200 }
+          }
+        },
+        "binding": { "$ref": "#/$defs/binding" },
+        "features": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "description": "Stable feature ids. Unknown ids are ignored, never an error."
+        },
+        "limits": { "$ref": "#/$defs/limits" },
+        "terms": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "url": { "type": "string", "maxLength": 1000 },
+            "version": { "type": "string", "maxLength": 64 }
+          }
+        }
+      }
+    },
+    "instant": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 30,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,3})?Z$",
+      "description": "RFC 3339 UTC with a literal Z. Local offsets are rejected so two readers never disagree."
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Audit assertions, not locks. A mismatch degrades to the `mismatch` state and never removes capability.",
+      "properties": {
+        "installId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{8,64}$",
+          "description": "Compared against deployment config license.installId, which is self-asserted by the host."
+        },
+        "hosts": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "pattern": "^(\\*\\.)?[a-z0-9]([a-z0-9.-]*[a-z0-9])?$|^\\[?[0-9a-f:.]+\\]?$",
+            "description": "Lowercase host. One leading '*.' wildcard consumes exactly one label. Loopback names match only when listed explicitly."
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Contract terms recorded for audit. NOT enforced client-side: a browser cannot observe other browsers.",
+      "properties": {
+        "seats": { "type": "integer", "minimum": 0 },
+        "signals": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
