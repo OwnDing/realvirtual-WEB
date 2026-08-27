@@ -3,7 +3,7 @@ doc_id: GOV-OPEN-DECISIONS
 title: 当前未决事项与实施闸口
 status: approved
 owner: architecture
-last_reviewed: 2026-08-26
+last_reviewed: 2026-08-27
 authority: normative-registry
 ---
 
@@ -19,7 +19,7 @@ authority: normative-registry
 | OD-004 | Snap 名称约定向稳定端口 ID/约束元数据演进的兼容方案 | product、architecture | 已落入 `PS-PLANNER-001`、`ADR-0003` 与端口契约 | closed |
 | OD-005 | 新 Quality Gates 在远程 CI 的必需检查名称和分支保护策略 | maintainers | 把 CI configured 状态升级为 enforced | closed |
 | OD-006 | 根目录 22 份 `doc-*.md` 的逐份审计、迁移和 Approved 清单 | architecture、engineering | 将旧文档从 reference 提升为正式依据 | open |
-| OD-007 | 自有离线授权系统的强制力边界：在 AGPL-3.0-only 前提下，许可证校验是「合同凭证 + 防篡改审计记录」还是「技术强制」；绑定维度（部署域名 / 部署身份 / 机器指纹）、有效期与宽限期长度、到期降级形态（只读、水印或两者）、并发上限在浏览器端的可执行性，以及是否保留上游 CONNECT 授权查询 | product、security | 替换 `src/core/hmi/license-store.ts` 的 CONNECT 授权查询、许可证文件契约、功能位与并发上限强制点、到期行为、销售合同条款 | open |
+| OD-007 | 自有离线授权系统的强制力边界：在 AGPL-3.0-only 前提下，许可证校验是「合同凭证 + 防篡改审计记录」还是「技术强制」；绑定维度（部署域名 / 部署身份 / 机器指纹）、有效期与宽限期长度、到期降级形态（只读、水印或两者）、并发上限在浏览器端的可执行性，以及是否保留上游 CONNECT 授权查询 | product、security | 替换 `src/core/hmi/license-store.ts` 的 CONNECT 授权查询、许可证文件契约、功能位与并发上限强制点、到期行为、销售合同条款 | closed |
 
 ## 执行规则
 
@@ -48,3 +48,10 @@ authority: normative-registry
 
 - 2026-08-26，用户当前明确指令记录 OD-007 的产品输入：私有化部署客户内网无法访问本项目服务器，因此授权必须**离线可校验**；需要签名许可证文件（绑定域名或机器指纹、有效期、功能位、并发上限）、宽限期与降级策略（工业场景不接受「过期即黑屏」，应退化为只读或加水印），以及一份写进合同的到期行为说明。用户同时指出 `src/core/hmi/license-store.ts` 当前通过 `connectRestFetch` 查询的是**上游 CONNECT 的授权体系**，不属于本项目；`src/core/persistence/rv-sig-public-key.ts` 的信任根是上游公钥，其私钥在上游 `RV_SIGN_PRIVATE_KEY` 发布密钥中，本项目需要自有密钥对。
   OD-007 状态记为 `open` 而非 `decided-pending-spec`：上述是需求输入，不是强制边界决定。仍未决的是「AGPL 下强制到什么程度」、具体绑定维度、宽限期天数、降级形态与并发上限的可执行范围，以及上游 CONNECT 授权查询的去留。按本文件执行规则 2，这些必须先落到 ADR、产品规格与契约才可关闭。
+
+- OD-007 于 2026-08-27 关闭。批准来源为用户当前明确指令，逐项决定如下：
+  1. **宽限期 30 天**（超期后 30 天内全功能 + 不可关闭横幅 + 水印，之后才降为只读）。
+  2. **绑定两个维度都要**：许可证同时携带 `installId` 与 `hosts[]`，两者都比对。二者仍是审计断言而非锁——`settings.json` 由客户托管且失败即开（`rv-app-config.ts:244-259`），浏览器内不存在硬件指纹（`rv-gpu-info.ts:12-19`）。
+  3. **删除上游 CONNECT 授权查询**：`/license/status`、`/license/register`、`/license/activate`、`/license/deactivate` 及其 UI 与文案整体移除。网关自身的授权问题仍由网关 `/status` 独立上报（`connect-store.ts:832` 的 `LICENSE_REQUIRED`、`:862` 的 `SignalLimitExceeded`），因此运维不会失明；失去的只是绑定信号前的额度预览与 Add 按钮预检闸（该闸本就失败即开）。
+  4. **确认强制力边界表述**：本系统是「合同凭证 + 防篡改审计记录」，不是技术 DRM；该表述进入销售合同文本。依据 `LICENSE:193`（交付、支持与保证可收费）、`LICENSE:451`（不得对 AGPL 已授予的权利额外设限）与 `LICENSE:376`（附加限制条款接收方有权删除）。
+  落地文档为 Proposed [`ADR-0007`](../adr/ADR-0007-offline-license-evidence.md) 与 Proposed [`EP-LICENSE-001`](../exec-plans/proposed/EP-LICENSE-001-offline-license.md)。按 OD-002 先例，产品决策关闭不等于 ADR 已接受或实现已开工——ADR 接受与计划激活仍是独立动作。

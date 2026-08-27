@@ -99,11 +99,13 @@ authority: proposed
 
 ### D7 绑定是审计断言，不是锁
 
-许可证绑定字段为 `deployment.id`（交付时写入 `settings.json`）与 `hosts[]`（允许的主机名列表）。
+许可证**同时**携带两个绑定维度，两者都比对（Owner 2026-08-27 决定）：`installId`（交付时由签发工具同时写入许可证载荷与 `settings.json`）与 `hosts[]`（允许的主机名列表，支持单层 `*.` 前缀通配；回环名只有显式列出才匹配）。任一不符即进入 `mismatch`。
+
+两个维度互补而非冗余：`installId` 在主机名不可用或无意义的形态下仍然有效（CONNECT 自服务的 on-prem 页面 origin 通常是回环，`rv-embed` 形态下 origin 是第三方宿主页）；`hosts[]` 则在客户把交付物整份复制到另一台机器时仍能反映实际运行位置。
 
 必须如实承认其性质：`settings.json` 是客户自己托管的、未签名的明文 JSON，且**失败即开**——404、网络错误、JSON 非法一律静默返回 `{}`（`rv-app-config.ts:236-238` 自述，实现在 `:244-259`）。主机名绑定在目标拓扑中恰好退化：CONNECT 自服务的 on-prem 形态下页面 origin 就是网关 origin（通常是回环），`rv-embed` 形态下 origin 是第三方宿主页。浏览器内**不存在**硬件指纹——唯一硬件相邻信号是 WebGL adapter 字符串，本仓库已记录其不可靠（`src/core/engine/rv-gpu-info.ts:12-19`）。全仓也**不存在**任何 per-install 持久标识：约 50 个 storage key 全部是 UI 偏好或文档缓存；`crypto.randomUUID()` 的 16 处使用没有一处被持久化为安装身份。
 
-因此：绑定不匹配**只记录与展示**，进入 `binding-mismatch` 提示，不改变可用性。它的价值在于审计时能出示「这份签名许可证声明它签发给 X，而这台机器自称是 Y」。
+因此：绑定不匹配**只记录与展示**，进入 `mismatch` 状态，不改变可用性。它的价值在于审计时能出示「这份签名许可证声明它签发给 X，而这台机器自称是 Y」——签名保证了前半句不可伪造，这正是凭证系统能提供的全部，也是它需要提供的全部。
 
 ### D8 时钟不可信，到期按三重下界推算，回拨只作诊断
 
@@ -127,15 +129,15 @@ authority: proposed
 
 理由是安全而非商务：HMI 是操作界面，一个突然无法下发停机指令的 HMI 是安全事故，任何合同都不能要求它。
 
-**逐级降级**（`now` 相对 `notAfter`）：
+**逐级降级**（`now` 相对 `notAfter`）。宽限期默认 **30 天**（Owner 2026-08-27 决定），由载荷 `graceDays` 覆盖并钳制在 `[0, 180]`：
 
 | 状态 | 条件 | 行为 |
 | --- | --- | --- |
 | `not-required` | 部署未声明 `license.required` | 授权子系统完全不启用，**无任何授权文案** |
 | `valid` | 剩余 > 30 天 | 全功能 |
 | `expiring` | 剩余 0–30 天 | 全功能 + 可关闭的到期提醒，每日再现 |
-| `grace` | 超期 0 天至 `grace` 天 | 全功能 + 不可关闭横幅 + 角标水印 |
-| `readonly` | 超期超过 `grace` 天 | 运行与操作全保留；**保存新更改**停用 + 水印 |
+| `grace` | 超期 0 至 30 天 | 全功能 + 不可关闭横幅 + 角标水印 |
+| `readonly` | 超期超过 30 天 | 运行与操作全保留；**保存新更改**停用 + 水印 |
 | `mismatch` | 签名有效但绑定不符 | 全功能 + 说明性横幅（写明许可证声明的与实际运行的），不锁定 |
 | `unverifiable` | 签名无法验证 | 等同 `grace` 呈现，**永不锁定** |
 | `invalid` | 签名/格式非法 | 等同 `grace` 呈现 + 明确提示，**不锁定**（见下） |
@@ -153,17 +155,21 @@ authority: proposed
 
 `limits.seats` 与 `limits.signals` 写入许可证并展示，但**不作为拒绝依据**。
 
-浏览器无法观察其它浏览器；今天的 `maxSignals`/`admittedSignals`/`gatewayAllowed` 全部由 CONNECT 服务端算出后仅供渲染（`license-store.ts:99-105`）。本地信号注册 `SignalStore.register()`（`rv-signal-store.ts:1122`）没有计数器也没有拒绝路径。多用户 `playerCount`（`multiuser-plugin.ts:1179`）是展示值，且 `operator`/`observer` 角色由 URL 参数客户端自述（`multiuser-plugin.ts:417`）。
+浏览器无法观察其它浏览器。今天的 `maxSignals`/`admittedSignals` 由 CONNECT 服务端算出后仅供渲染（`license-store.ts:99-105`），且随 D11 一并移除，因此本项目侧不存在任何可继承的上限计数。本地信号注册 `SignalStore.register()`（`rv-signal-store.ts:1122`）没有计数器也没有拒绝路径。多用户 `playerCount`（`multiuser-plugin.ts:1179`）是展示值，且 `operator`/`observer` 角色由 URL 参数客户端自述（`multiuser-plugin.ts:417`）。
 
 决定：新增**本地信号计数读数**用于审计展示（「本部署当前 3,214 / 合同 5,000」），不新增拒绝路径。席位数只出现在许可证与合同文本中。把无法执行的上限写成"强制"是虚假承诺。
 
-### D11 保留上游 CONNECT 授权查询，但在 UI 中明确其归属
+### D11 删除上游 CONNECT 授权查询
 
-`license-store.ts` 保留原样，UI 文案改为明确标注它反映的是**所连接的 CONNECT 网关自身的授权**。两套授权正交：本项目的许可证治理本应用，网关的许可证治理网关。
+Owner 2026-08-27 决定：整体移除 `/license/status`、`/license/register`、`/license/activate`、`/license/deactivate` 四个调用及其 UI、类型与文案。那是上游产品的授权业务，本项目不再充当它的客户端。
 
-理由：对确实在用上游 CONNECT 的客户，网关授权状态是运维需要看到的真实信息；且它今天承载着唯一一处真实功能闸（Browse 窗口 Add 按钮，`ConnectPanel.tsx:3819`）。删除它会破坏该集成。
+删除面：`license-store.ts` 整个文件；`LicenseSection.tsx`（注册/激活/停用对话框）；`ConnectOptionsWindow.tsx:529-535` 的 License 区块；`connect-store.ts` 中搭载的授权轮询（`:1168-1172`）、断连清理（`:1119-1122`）与 `activateProfile` 的重取（`:2109-2113`）；`ConnectPanel.tsx` 中由 `/license/status` 驱动的额度预检与呈现（`signalBudgetGate` `:3709-3722`、Add 按钮闸 `:3819`、额度指示 `:315-345`/`:1028`、超额文案 `:3804-3811`、逐行着色 `:2632-2657`/`:3621`、设置齿轮徽标 `:832-841`）；`shell.license.*` 33 条文案与 `connect` 命名空间中的额度文案；四个相关测试文件中对应的用例。
 
-反面记录：本仓库无上游 remote（`git remote -v` 只有 `origin`），`license-store.ts` 全部历史仅 3 次提交，因此删除它**不会**造成反复合并冲突——删除方案在技术上可行，只是产品上不划算。该取舍属 OD-007 未决项，由 Owner 决定。
+**必须保留** `connect-rest.ts` 的 `connectRestFetch`：它被 `news-store.ts`、`connect-update-store.ts`、`connect-store.ts`、`ai-consent-store.ts` 共用，与授权无关。`ai-consent-store.ts:16` 与 `rv-storage-keys.ts:13` 中引用 `LICENSE_TERMS_VERSION` 的注释需同步改写。
+
+**运维不会失明**：网关自身的授权问题由网关 `/status` 独立上报，与 `/license/status` 无关——`CONNECT_ERROR_MESSAGES.LICENSE_REQUIRED`（`connect-store.ts:832`）与 `SignalLimitExceeded` 状态（`:862`、`ConnectPanel.tsx:285`/`:301`/`:1381`）在删除后原样存活。失去的只有绑定信号**之前**的额度预览与 Add 按钮预检闸，而该闸本就刻意失败即开（`ConnectPanel.tsx:3709-3722`），拦截能力接近于零。
+
+风险已核实为低：本仓库无上游 remote（`git remote -v` 只有 `origin`），`license-store.ts` 全部历史仅 3 次提交，删除不会造成反复合并冲突。
 
 ## Alternatives
 
@@ -174,13 +180,13 @@ authority: proposed
 - **联网激活（哪怕仅一次）**：拒绝。违反 Approved `PS-CONFIG-001`，且被 CSP、egress 默认值和构建门禁三重阻断。
 - **到期硬锁定 / 黑屏**：拒绝。安全上不可接受（D8），且在 AGPL 下三分钟即可被删除，属于对客户的骚扰而非保护。
 - **代码混淆、反调试、自校验**：拒绝。与 AGPL 的源码交付义务直接冲突，且对持有源码的一方无效。
-- **删除 `license-store.ts`**：见 D10，技术可行，列为 OD-007 未决项。
+- **保留上游 CONNECT 授权查询并在 UI 中标注其归属**：拒绝（Owner 2026-08-27）。它是上游产品的授权业务；网关自身的授权问题已由网关 `/status` 独立上报，保留它只是多维护一套与本项目无关的授权客户端。
 
 ## Consequences
 
-**正面**：私有化部署首次拥有可离线验证、可审计出示的授权凭证；默认零外呼不被破坏；共享 Ed25519 原语上提后模型签名与许可证共用一条经过测试的路径；D6 顺带修复既有的非安全上下文验证失效缺陷。
+**正面**：私有化部署首次拥有可离线验证、可审计出示的授权凭证；默认零外呼不被破坏；共享 Ed25519 原语上提后模型签名与许可证共用一条经过测试的路径；D6 顺带修复既有的非安全上下文验证失效缺陷；D11 移除一套与本项目无关的上游授权客户端，`gatewayAllowed` 这类死字段随之消失。
 
-**代价**：新增一个运行时依赖 `@noble/hashes`；新增签发 CLI 与私钥保管责任（密钥泄露即全量重签）；`rv-sig-verify.ts` 需要一次纯搬运重构，必须先冻结行为再迁移（`GOV-CONSTITUTION` §8）。
+**代价**：新增一个运行时依赖 `@noble/hashes`；新增签发 CLI 与私钥保管责任（密钥泄露即全量重签）；`rv-sig-verify.ts` 需要一次纯搬运重构，必须先冻结行为再迁移（`GOV-CONSTITUTION` §8）；D11 使仍在使用上游 CONNECT 的客户失去绑定信号前的额度预览——网关仍会在超限时拒绝并报 `SignalLimitExceeded`，但操作员要到尝试绑定之后才知道，这是本决定已知且接受的退化。
 
 **长期约束**：许可证载荷是版本化契约，只加不减；`rvlic` 版本号变更需新 ADR。绑定与上限的"不强制"性质必须在产品规格与合同中同步表述，不得在后续迭代中被静默改成强制——那会使已签合同的客户在升级后失去可用性。
 

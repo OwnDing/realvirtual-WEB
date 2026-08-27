@@ -25,6 +25,7 @@ authority: proposed
 - 状态机（`not-required`/`valid`/`expiring`/`grace`/`readonly`/`mismatch`/`unverifiable`/`invalid`/`absent`）与基于 `issuedAt` 下界的时钟推算；
 - 到期降级：`decideSaveVerb` 阻断分支、水印、横幅、审计读数；
 - Node 侧签发 CLI 与浏览器侧验证器的交叉验证；
+- 移除上游 CONNECT 授权查询及其 UI、类型与文案；
 - 合同到期行为说明文档；
 - 中英文文案、Schema、契约、验收矩阵与门禁同步。
 
@@ -36,13 +37,13 @@ authority: proposed
 - **不实现席位与信号上限的拒绝路径**：浏览器无法观察其它浏览器，写成"强制"是虚假承诺。只做本地读数展示。
 - **不做机器/硬件指纹**：浏览器内不可实现。
 - **不改动** GLB/`rv_extras`、rv-ODT、NodeId、项目文档 ID、存储 key、既有资产与模型签名的对外行为。
-- **不删除** `src/core/hmi/license-store.ts` 的 CONNECT 网关授权查询（属 OD-007 未决项）。
+- **不删除** `src/core/hmi/connect-rest.ts` 的 `connectRestFetch`——它被 News、CONNECT 更新、连接与 AI 同意四处共用，与授权无关。
 - 不建立组织/租户/云端账户体系（`OD-001` 阻塞范围）。
 
 ## Required Documents and Decisions
 
 - `GOV-CONSTITUTION`、`GOV-AI-SAFETY`、`GOV-DOC-PRIORITY`、`GOV-CHANGE`、`GOV-DOD`；
-- **`OD-007` 必须先关闭**（[`../../governance/OPEN_DECISIONS.md`](../../governance/OPEN_DECISIONS.md)）。本计划触及其全部阻塞范围，按该文件执行规则 1–3，计划不得自行关闭它；
+- **`OD-007` 已于 2026-08-27 关闭**（[`../../governance/OPEN_DECISIONS.md`](../../governance/OPEN_DECISIONS.md)）：宽限期 30 天、`installId` 与 `hosts[]` 双绑定、删除上游 CONNECT 授权查询、确认「合同凭证 + 防篡改审计记录」的表述进合同；
 - 本计划提议的 [`ADR-0007`](../../adr/ADR-0007-offline-license-evidence.md) 必须先 Accepted；
 - Approved [`PS-CONFIG-001`](../../product-specs/DEPLOYMENT_IDENTITY_EGRESS.md) 与 Accepted [`ADR-0006`](../../adr/ADR-0006-deployment-identity-egress.md)：默认零外呼与部署层状态所有权；
 - Accepted [`ADR-0001`](../../adr/ADR-0001-i18n-runtime.md)：新增文案的目录与回退规则；
@@ -122,7 +123,11 @@ authority: proposed
 - `src/core/hmi/ConnectOptionsWindow.tsx`
 - `src/core/hmi/App.tsx`
 - `src/core/hmi/*Banner.tsx`
-- `src/core/hmi/license-store.ts`
+- `src/core/hmi/license-store.ts`（删除）
+- `src/core/hmi/ConnectPanel.tsx`
+- `src/core/hmi/connect-store.ts`
+- `src/core/hmi/ai-consent-store.ts`
+- `src/core/hmi/rv-storage-keys.ts`
 - `src/core/deployment/deployment-config.ts`
 - `src/core/i18n/catalogs/**`
 - `src/main.ts`
@@ -138,6 +143,10 @@ authority: proposed
 - `tests/licensing-*.node.test.ts`
 - `tests/rv-sig-verify.test.ts`
 - `tests/rv-sig-deploy.node.test.ts`
+- `tests/license-store.test.ts`（删除）
+- `tests/LicenseSection.test.tsx`（删除）
+- `tests/connect-license-ui.test.tsx`
+- `tests/i18n-shell.test.tsx`
 - `docs/**`
 
 ## Forbidden Paths
@@ -153,9 +162,9 @@ authority: proposed
 
 ## Milestones
 
-### M0 — 决策与契约冻结（无代码）
+### M0 — 契约冻结（无代码）
 
-交付：`OD-007` 关闭记录；`ADR-0007` 转 Accepted；新建 Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`；本计划移入 `active/`。
+交付：`ADR-0007` 转 Accepted；新建 Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`；本计划移入 `active/`。
 在签发环境生成自有 Ed25519 密钥对，公钥进 `rv-lic-public-key.ts`，私钥只进 `RV_LIC_SIGN_PRIVATE_KEY`。
 验证：`./scripts/verify.sh governance`。
 可观察：治理门禁绿，且新文档被各自目录 README 以裸文件名索引。
@@ -189,7 +198,14 @@ authority: proposed
 验证：`npm run test:node`（含 `i18n-inventory` 与 `i18n-catalog` 保持零漂移）、浏览器组件测试、`./scripts/verify.sh browser`。
 可观察：`readonly` 下保存按钮仍可按且说明原因；**同一状态下 PLC 写、信号刷新、模型运行断言未被阻断**。
 
-### M5 — 合同、文档与全门禁
+### M5 — 移除上游 CONNECT 授权查询
+
+交付：删除 `license-store.ts` 整个文件、`LicenseSection.tsx`、`ConnectOptionsWindow.tsx:529-535` 的 License 区块、`connect-store.ts` 的授权轮询/断连清理/`activateProfile` 重取、`ConnectPanel.tsx` 中由 `/license/status` 驱动的额度预检与呈现、`shell.license.*` 33 条文案与 `connect` 命名空间的额度文案、以及 `tests/license-store.test.ts` 与 `tests/LicenseSection.test.tsx`。改写 `ai-consent-store.ts:16` 与 `rv-storage-keys.ts:13` 中引用 `LICENSE_TERMS_VERSION` 的注释。
+**保留** `connect-rest.ts` 的 `connectRestFetch`（News / CONNECT 更新 / 连接 / AI 同意共用）。
+验证：`./scripts/verify.sh static`（社区 `tsc` 会抓出所有悬空引用）、`npm run test:node`（`i18n-catalog` 双语键集必须仍然对齐、`i18n-inventory` 仍为零）、`./scripts/verify.sh browser`。
+可观察：连接到 CONNECT 网关后，网关自身的授权问题**仍然**通过 `/status` 的 `LICENSE_REQUIRED` 与 `SignalLimitExceeded` 呈现（`connect-store.ts:832`、`:862`、`ConnectPanel.tsx:1381`）；消失的只有绑定前的额度预览。
+
+### M6 — 合同、文档与全门禁
 
 交付：合同到期行为说明（Approved 文档，逐条对应 M3/M4 的实际行为，并载明 AGPL 下的定位）；`public/settings.example.json` 增补示例；验收矩阵与 `REPOSITORY_FACTS` 同步；本计划补齐 Outcomes 后转 completed。
 验证：`./scripts/verify.sh all`；PR 上五项必需 Gate 全绿。
@@ -197,13 +213,15 @@ authority: proposed
 
 ## Progress
 
-- [ ] 用户批准本方案（PR #6 评审）
-- [ ] M0 决策与契约冻结
+- [x] OD-007 四项决定由用户 2026-08-27 当前明确指令作出并关闭
+- [ ] 用户批准本方案并接受 `ADR-0007`（PR #6 评审）
+- [ ] M0 契约冻结
 - [ ] M1 黄金切片：非安全上下文验签
 - [ ] M2 签发 CLI 与交叉验证
 - [ ] M3 加载与状态机
 - [ ] M4 降级与呈现
-- [ ] M5 合同、文档与全门禁
+- [ ] M5 移除上游 CONNECT 授权查询
+- [ ] M6 合同、文档与全门禁
 
 ## Surprises & Discoveries
 
@@ -218,7 +236,7 @@ authority: proposed
 
 - 2026-08-26：用户当前明确指令确认本系统的定位是**「合同凭证 + 防篡改审计记录」，不是技术 DRM**。据此，一切反绕过手段（混淆、反调试、自校验）列为 Non-goal，绑定与上限被如实降级为审计断言与合同条款。
 - 2026-08-26：用户当前明确指令要求先开 PR 再给方案；PR #6 以 draft 建立，`OD-007` 登记为首个提交。
-- 待定（M0 闸口）：`OD-007` 的四项未决——AGPL 下的强制力边界表述、绑定维度取舍、宽限期天数、上游 CONNECT 授权查询的去留。**本计划不得自行关闭。**
+- 2026-08-27：用户当前明确指令作出 `OD-007` 的四项决定并据此关闭该条目——**宽限期 30 天**；**`installId` 与 `hosts[]` 两个绑定维度都要**；**删除上游 CONNECT 授权查询**；**确认「合同凭证 + 防篡改审计记录」的表述进入销售合同**。ADR-0007 与本计划已按此更新；ADR 接受与计划激活仍是独立动作，尚未发生。
 
 ## Validation
 
