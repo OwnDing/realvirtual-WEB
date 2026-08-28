@@ -97,6 +97,6 @@ authority: normative
 
 - Accepted [`ADR-0007`](../adr/ADR-0007-offline-license-evidence.md)：决策与理由
 - [`CONTRACT-LICENSE-FILE-001`](../contracts/LICENSE_FILE.md)：文件格式与判定顺序
-- Active [`EP-LICENSE-001`](../exec-plans/active/EP-LICENSE-001-offline-license.md)：实施计划
+- Completed [`EP-LICENSE-001`](../exec-plans/completed/EP-LICENSE-001-offline-license.md)：实施与验证记录
 - Approved [`PS-CONFIG-001`](DEPLOYMENT_IDENTITY_EGRESS.md)：默认零外呼
 - [`../acceptance/ACCEPTANCE_MATRIX.md`](../acceptance/ACCEPTANCE_MATRIX.md)

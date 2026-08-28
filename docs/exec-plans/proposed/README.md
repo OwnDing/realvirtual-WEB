@@ -11,7 +11,7 @@ authority: normative-registry
 
 当前没有待批准的 ExecPlan。
 
-- `EP-LICENSE-001` 已于 2026-08-27 关闭 `OD-007`、接受 `ADR-0007` 后获用户批准并激活，移至 [`../active/EP-LICENSE-001-offline-license.md`](../active/EP-LICENSE-001-offline-license.md)。
+- `EP-LICENSE-001` 已于 2026-08-27 关闭 `OD-007`、接受 `ADR-0007` 后获用户批准并激活，并于 2026-08-28 完成，移至 [`../completed/EP-LICENSE-001-offline-license.md`](../completed/EP-LICENSE-001-offline-license.md)。
 
 - `EP-DES-001` 已于 2026-08-22 接受 `ADR-0005` 后激活并完成，移至 [`../completed/EP-DES-001-public-domain-neutral-des.md`](../completed/EP-DES-001-public-domain-neutral-des.md)。
 

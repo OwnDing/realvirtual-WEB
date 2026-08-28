@@ -2,7 +2,7 @@
 doc_id: EP-LICENSE-001
 title: 自有离线许可证黄金切片
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-08-27
 authority: normative
@@ -225,6 +225,7 @@ authority: normative
 - [x] M6 文档与门禁：验收矩阵授权行、`settings.example.json` 示例、blur 用量流水账、`REPOSITORY_FACTS` remote 更正；合同条款 §6 与实际行为逐条核对一致（30 日宽限期 ↔ `RV_LIC_DEFAULT_GRACE_DAYS = 30`）
 - [x] 生产信任根上线：从钥匙串读回私钥并独立推导公钥，与编译进客户端的根公钥逐字节一致；真实 CLI 签发的临时 `.rvlic` 由该根验证为 `valid`
 - [x] 对抗性评审补跑三个视角（密码学、安全红线、删除余波），15 条候选人工复核后处理
+- [x] PR #6 生产信任根代码 head `121fb58` 的远程五项必需 Gate 全绿（Actions run `33170012618`，Browser 14m29s）
 
 ## Surprises & Discoveries
 
@@ -294,7 +295,7 @@ authority: normative
 - `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能 run）**10,918 例零失败**
 - `./scripts/verify.sh build` — 通过
 - `./scripts/verify.sh all` — 在 Node 阶段停止：693 通过 / 7 跳过 / 1 失败，唯一失败仍是范围外 `bundle-chunk.node.test.ts` 的陈旧入口正则（见 Discoveries）；没有通过删除 `dist` 让该断言跳过
-- PR #6 最终 head 的远程五项 Gate：待本次公钥提交推送后验证
+- PR #6 生产信任根代码 head `121fb58`：GitHub Actions run [`33170012618`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33170012618) 五项必需 Gate 全绿；Browser Gate 14m29s
 
 **全量门禁（2026-08-28，本机，提交 `49525c7`——评审两轮修复后）**：
 - `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能run）**10,918 例零失败**
@@ -334,7 +335,7 @@ authority: normative
 - `./scripts/verify.sh static` — 通过
 - `npm run test:node` — 650 通过 / 7 跳过 / 1 失败，唯一失败是范围外的 `bundle-chunk.node.test.ts`（见 Discoveries），本计划新增用例全部通过
 
-- **最终远程验收待执行**：PR #6 本次生产信任根提交的五项 Gate。
+- **最终远程验收**：生产信任根代码 head `121fb58` 的五项 Gate 全绿；计划归档提交仍由同一分支保护在合并前复验。
 
 
 - `./scripts/verify.sh governance`（文档与治理，M0 起每个里程碑）
@@ -357,4 +358,10 @@ authority: normative
 
 ## Outcomes & Retrospective
 
-待执行后补齐：实际交付范围、验证命令与输出、与本计划的偏差、未验证项、遗留债务与后续任务。
+本计划交付了完整的自有离线许可证黄金切片：Approved 产品规格与文件契约、Accepted ADR、严格 `.rvlic` 编解码与 Ed25519 两级委托、无 WebCrypto 环境的同步验签、签发 CLI、部署加载与九态状态机、只收回保存能力的到期降级、中英文呈现、CONNECT 上游授权客户端删除，以及对应 Schema、验收矩阵和 111 条新增用例。生产根密钥于 2026-08-28 由 Owner 生成；公钥编译进客户端，私钥只保存于本机登录钥匙串 `RV_LIC_SIGN_PRIVATE_KEY`。真实根密钥签发 smoke license 后验证为 `valid`，系统不再处于空信任根状态。
+
+最终自动化证据：Governance、Static、Build、本地完整 Browser（8 分片 + 性能 run，10,918 例）和许可证专项 54 例通过；生产信任根代码 head `121fb58` 的 GitHub Actions run [`33170012618`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33170012618) 五项必需 Gate 全绿。`./scripts/verify.sh all` 在本机 Node 阶段仍被范围外既有缺陷 `tests/bundle-chunk.node.test.ts` 阻断：它只认 `assets/index-*`，当前入口是 `assets/app-*`；693 例通过、7 跳过、仅该 1 例失败。没有删除 `dist` 让测试跳过，也没有在本计划越界修改；该债务继续归属 Active `EP-GOV-004`。远程 Node Gate 在干净 CI 环境通过。
+
+未验证项保持不夸大：真实客户内网、真实产线与 PLC、真实时钟偏移、真实气隙安装、真实经销商委托签发、移动端和 WebXR 呈现。根私钥目前只有本机登录钥匙串一处受保护副本；离线备份、双人保管和恢复演练属于上线后的密钥运营工作，不在仓库内完成。`PS-LICENSE-001` §6 已按实际代码行为核对，但进入合同模板前仍必须由法务审核措辞；工程完成不能替代律师意见。
+
+回滚没有数据迁移：回退生产信任根提交会让许可证重新变为 `unverifiable`（不锁定）；移除部署目录的 `license.rvlic` 会回到 `absent`。密钥泄露时优先用 `cert` 委托链轮换签发密钥；更换根密钥需要发新客户端。
