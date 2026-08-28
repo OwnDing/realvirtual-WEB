@@ -218,8 +218,6 @@ export const enUS = {
       validUntil: 'Licensed until {{date}}',
       issuedTo: 'Licensed to {{org}}',
       dismiss: 'Got it',
-      required: 'License required',
-      terms: 'By activating you agree to the <0>XYvirtual license terms</0>. See our <1>privacy policy</1> for how we handle your email.',
     },
     trust: {
       enabledTitle: 'Live connections are enabled for this shared model',

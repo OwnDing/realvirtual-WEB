@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   RV_LIC_CLOCK_TOLERANCE_MS,
   readLicenseClock,
+  healLicenseClock,
   recordLicenseClock,
 } from '../src/core/licensing/rv-lic-clock';
 import { LICENSE_CLOCK_KEY } from '../src/core/hmi/rv-storage-keys';
@@ -88,6 +89,36 @@ describe('rollback detection', () => {
 
   it('reports nothing on a first run', () => {
     expect(readLicenseClock(null, LATER).clockRollback).toBe(false);
+  });
+});
+
+describe('an implausible mark cannot pin the install for ever', () => {
+  it('discards a mark that could never describe an observation of this licence', () => {
+    // A dead CMOS battery reads 2099 once. The mark only ratchets upward, so
+    // believing it would outlive the licence, survive the clock being fixed,
+    // and hold the plant read-only for ever.
+    recordLicenseClock(Date.parse('2099-01-01T00:00:00Z'));
+    const clock = readLicenseClock(ISSUED_AT, LATER);
+    expect(clock.clockMarkDiscarded).toBe(true);
+    expect(clock.effectiveNow).toBe(LATER);
+  });
+
+  it('still believes a mark that a rolled-back clock would produce', () => {
+    // The case the mark exists for: the clock is wound back a year, leaving the
+    // mark a year ahead. Bounding against the WALL clock would throw this away
+    // too — which is why the bound is against the licence's issue date.
+    recordLicenseClock(LATER);
+    const rolledBack = readLicenseClock(ISSUED_AT, Date.parse('2025-09-01T00:00:00Z'));
+    expect(rolledBack.clockMarkDiscarded).toBe(false);
+    expect(rolledBack.effectiveNow).toBe(LATER);
+    expect(rolledBack.clockRollback).toBe(true);
+  });
+
+  it('heals the stored value so the next session starts clean', () => {
+    recordLicenseClock(Date.parse('2099-01-01T00:00:00Z'));
+    healLicenseClock(LATER);
+    expect(Number(localStorage.getItem(LICENSE_CLOCK_KEY))).toBe(LATER);
+    expect(readLicenseClock(ISSUED_AT, LATER).clockMarkDiscarded).toBe(false);
   });
 });
 

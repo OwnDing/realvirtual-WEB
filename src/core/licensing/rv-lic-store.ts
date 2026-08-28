@@ -18,7 +18,7 @@
 import { createStore } from '../hmi/create-store';
 import { getAppConfig } from '../rv-app-config';
 import { DEFAULT_LICENSE_PATH } from '../deployment/deployment-config';
-import { readLicenseClock, recordLicenseClock } from './rv-lic-clock';
+import { healLicenseClock, readLicenseClock, recordLicenseClock } from './rv-lic-clock';
 import { evaluateLicense, type LicenseEvaluation } from './rv-lic-state';
 import { RV_LIC_MAX_BYTES, type LicenseVerification } from './rv-lic-types';
 import { verifyLicenseText, type VerifyLicenseOptions } from './rv-lic-verify';
@@ -126,7 +126,10 @@ export async function refreshLicense(
   // license with a wrong `issuedAt` pin the anchor to that date forever, and
   // every later boot would then evaluate a good license against a future
   // "now" and drop it straight into readonly.
-  recordLicenseClock(clock.wallNow);
+  // A discarded mark has to be overwritten, not merely ignored: `recordLicenseClock`
+  // only ratchets upward, so the junk value would sit there for every later session.
+  if (clock.clockMarkDiscarded) healLicenseClock(clock.wallNow);
+  else recordLicenseClock(clock.wallNow);
 
   const evaluation = evaluateLicense({
     required: true,

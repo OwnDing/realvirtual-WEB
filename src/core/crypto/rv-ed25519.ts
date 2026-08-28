@@ -125,16 +125,25 @@ let nobleOnce: Promise<NobleModule | null> | null = null;
  */
 async function loadNoble(): Promise<NobleModule | null> {
   nobleOnce ??= (async () => {
+    let noble: NobleModule;
     try {
-      const noble = await import('@noble/ed25519');
-      if (!noble.hashes.sha512) {
-        const { sha512 } = await import('@noble/hashes/sha2.js');
-        noble.hashes.sha512 = sha512;
-      }
-      return noble;
+      noble = await import('@noble/ed25519');
     } catch {
       return null;
     }
+    // Separate on purpose: a failure to install the SYNC hook must not throw
+    // away a noble that already works. Where `crypto.subtle` exists the async
+    // path still verifies, and one memoized `null` here would have disabled the
+    // fallback for the whole session.
+    if (!noble.hashes.sha512) {
+      try {
+        const { sha512 } = await import('@noble/hashes/sha2.js');
+        noble.hashes.sha512 = sha512;
+      } catch {
+        // Leaves only the async path, which is exactly the pre-hook behaviour.
+      }
+    }
+    return noble;
   })();
   return nobleOnce;
 }

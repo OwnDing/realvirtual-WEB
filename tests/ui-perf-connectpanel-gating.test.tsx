@@ -16,7 +16,7 @@
  * collapsed groups — otherwise "reopen restores your view" would be true for two
  * of three things and quietly false for the third.
  *
- * Phase 3.3 is covered by the render-counter test at the end: `EMPTY_SIGNAL_NAMES`
+ * Phase 3.3 is covered by the render-counter test at the end: `the removed overLimitSignals prop`
  * and the `useCallback`'d bridge handler are only observable through their effect,
  * namely that a parent re-render with unchanged data no longer re-renders the
  * memoised rows.
@@ -225,7 +225,7 @@ describe('ConnectPanel — reopening restores the whole view (Phase 3.4)', () =>
 describe('ConnectPanel — memoised rows survive parent re-renders (Phase 3.3)', () => {
   /**
    * Covers BOTH Phase 3.3 fixes at once, and deliberately at the only level where
-   * they are observable from outside: the module-level `EMPTY_SIGNAL_NAMES`
+   * they are observable from outside: the module-level `the removed overLimitSignals prop`
    * constant (was `?? []`, a new array per render that invalidated the
    * `useMemo(new Set(...))`) and the `useCallback`'d bridge handler (was an inline
    * closure, a new identity per render that broke `React.memo` on every visible

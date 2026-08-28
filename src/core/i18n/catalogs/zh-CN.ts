@@ -339,8 +339,6 @@ export const zhCN = {
         keba: 'KEBA',
       },
       windowTitle: 'CONNECT 设置',
-    license: '许可',
-    notConnected: '连接到网关后才能管理它的许可、配置方案和历史库。',
     connection: '连接',
       address: '地址',
       port: '端口',
@@ -930,8 +928,6 @@ export const zhCN = {
       validUntil: '授权有效期至 {{date}}',
       issuedTo: '授权给 {{org}}',
       dismiss: '知道了',
-      required: '需要许可',
-      terms: '激活即表示你同意 <0>XYvirtual 许可条款</0>。关于我们如何处理你的邮箱，请参见<1>隐私政策</1>。',
     },
     trust: {
       enabledTitle: '已为该共享模型启用实时连接',
@@ -1370,7 +1366,8 @@ export const zhCN = {
       capCommissioningText: '在没有硬件、或硬件到位之前，用三维机器验证真实的 PLC 程序。',
       capControllers: '真实控制器',
       capControllersText: 'S7、TwinCAT ADS、OPC UA、Modbus TCP、EtherNet/IP、ctrlX 和 MQTT，以及机器人接口（FANUC、Denso、ABB）。',
-    },    issues: {
+    },
+    issues: {
       summary_one: '{{count}} 个信号已配置但从未收到数值',
       summary_other: '{{count}} 个信号已配置但从未收到数值',
       tooltip: '{{summary}} — 点击查看详情',
@@ -1484,7 +1481,7 @@ export const zhCN = {
     },
     options: {
       windowTitle: 'CONNECT 设置',
-      notConnected: '连接到网关后才能管理它的许可、配置方案和历史库。',
+      notConnected: '连接到网关后才能管理它的配置方案和历史库。',
       connection: '连接',
       server: '服务器',
       connected: '已连接',

@@ -224,10 +224,15 @@ authority: normative
 - [x] M5 移除上游 CONNECT 授权查询（4 个端点、2 个文件、39 + 6 条文案；`ConnectPanel.tsx` 减 155 行）
 - [x] M6 文档与门禁：验收矩阵授权行、`settings.example.json` 示例、blur 用量流水账、`REPOSITORY_FACTS` remote 更正；合同条款 §6 与实际行为逐条核对一致（30 日宽限期 ↔ `RV_LIC_DEFAULT_GRACE_DAYS = 30`）
 - [ ] **待 Owner**：在签发环境生成密钥对，公钥填入 `rv-lic-public-key.ts`。在此之前信任根为空，一切许可证判 `unverifiable`（不锁定），系统未上线
-- [ ] **待补**：对抗性评审的密码学与安全红线两个视角（首轮因额度中断未运行）
+- [x] 对抗性评审补跑三个视角（密码学、安全红线、删除余波），15 条候选人工复核后处理
 
 ## Surprises & Discoveries
 
+- **2026-08-28（补跑评审，第二轮）**：三个此前未运行的视角全部完成。工作流报「15 条候选、15 条确认、0 条驳回」——**100% 确认率本身就是警号**，批量验证者在盖章而非证伪。人工复核后：
+  - **`shell.license.required` / `.terms` 的判定我一开始也错了**：`grep "license.required"` 命中的是 `rv-lic-state.ts` 里描述**部署配置字段**的注释和 `WelcomeModal.tsx` 的散文，不是 i18n 调用。改用带引号的精确形式（`'license.required'`）后引用数为 0，确认是孤儿。评审者和我犯了同一个错误。
+  - **最重的一条（major）**：一次向前的时钟跳变（CMOS 失效读成 2099）会永久钉死高水位——**即使时钟随后修正，该安装永远停在 `readonly`**，直接违背 ADR D8「时钟错误的最坏后果是一条错误的横幅，而不是一条停掉的产线」。难点在于不能简单加上限：把标记按**墙上时钟**设界会连回拨防御一起废掉（回拨一年恰好让标记领先一年，那正是标记存在的理由）。正解是按**许可证自己的 `issuedAt`** 设界——真实观测必然发生在签发之后的合理服务期内，而 2099 不是。并新增 `healLicenseClock` 把坏值写回，否则只跳过不覆盖会让它每次会话重现。
+  - 另修：横幅与调试信任横幅坐标完全重合导致**两者同时出现时授权提示被完全遮住**；Settings 页脚两个 caption 都是 inline span 会挤成一行；`connect.options.notConnected` 仍在渲染「连接后可管理其**许可**」而该功能已被 M5 删除（中英各一处，按逐字门禁流程声明例外）；`settings.interfaces` 下一份 4 空格缩进的重复文案躲过了 M5 的 6 空格作用域清理；M5 遗留的两个死导入；`LicenseFooterLine` 零覆盖（M5 用它替换被删的 `LicenseSection` 测试却没补测）；`@noble/hashes` 导入失败会连带丢弃可用的 noble 模块；CLI `--verify` 自称遵循 §9 却从不校验载荷。
+  - **未采纳**：委托证书无有效期/吊销机制、RV-KEY-V1 无信任域标签。前者是契约的已知边界（`cert` 只有三个成员），后者的分离依赖两个根密钥不同、当前不可利用。两条都记为已知限制，改动需新 ADR。
 - **2026-08-28（对抗性评审，两个真缺陷）**：评审工作流 6 个视角只跑完 3 个（密码学、安全红线、删除余波因额度中断未运行），产出 16 条候选，**19 个验证 agent 全部中断**——工作流因此把未验证项归入 "rejected"，该输出不可按字面采信。逐条自查后确认两条为真：
   1. **同源保证被击穿**：`relativeAssetUrl` 拒绝以 `//` 开头的路径，但**前导单斜杠 + 以 `/` 结尾的 `BASE_URL` 会重新拼出 `//`**。实测 `BASE_URL=/` 加 `path=/evil.rvlic` 得到 `//evil.rvlic`，解析为 `https://evil.rvlic/`——在一个默认零外呼的构建里发出跨源请求。已改为经 `URL` 解析后比较 origin，并加 `redirect: 'error'` 关掉重定向出境这第二扇门。
   2. **时钟锚点可被许可证污染**：`recordLicenseClock(clock.effectiveNow)` 持久化的是被 `issuedAt` 抬高后的值。一份 `issuedAt` 误写为 2030 的许可证会把高水位永久钉在 2030，此后每次启动都误报回拨，且合法许可证会被算成早已过期。已改为持久化 `clock.wallNow`。原时钟测试未能发现，因为其 `effectiveNow` 恰好等于 `wallNow`。

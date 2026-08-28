@@ -314,8 +314,6 @@ export const enUSDeferred = {
         keba: 'KEBA',
       },
       windowTitle: 'CONNECT Settings',
-    license: 'License',
-    notConnected: 'Connect to a gateway to manage its license, configuration profiles and historian.',
     connection: 'Connection',
       address: 'Address',
       port: 'Port',
@@ -1058,7 +1056,8 @@ export const enUSDeferred = {
       capCommissioningText: 'validate the real PLC program against the 3D machine, before or without the hardware.',
       capControllers: 'Real controllers',
       capControllersText: 'S7, TwinCAT ADS, OPC UA, Modbus TCP, EtherNet/IP, ctrlX and MQTT, plus robot interfaces (FANUC, Denso, ABB).',
-    },    issues: {
+    },
+    issues: {
       summary_one: '{{count}} signal is configured but never receives values',
       summary_other: '{{count}} signals are configured but never receive values',
       tooltip: '{{summary}} — click for details',
@@ -1172,7 +1171,7 @@ export const enUSDeferred = {
     },
     options: {
       windowTitle: 'CONNECT Settings',
-      notConnected: 'Connect to a gateway to manage its license, configuration profiles and historian.',
+      notConnected: 'Connect to a gateway to manage its configuration profiles and historian.',
       connection: 'Connection',
       server: 'Server',
       connected: 'Connected',

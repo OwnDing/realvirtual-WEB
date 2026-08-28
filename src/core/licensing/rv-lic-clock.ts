@@ -20,6 +20,19 @@ import { LICENSE_CLOCK_KEY } from '../hmi/rv-storage-keys';
 /** How far behind the high-water mark the wall clock may drift before it is reported. */
 export const RV_LIC_CLOCK_TOLERANCE_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * How far past a licence's issue date a stored mark can still be believed.
+ *
+ * The mark can only sit AHEAD of the wall clock for two reasons: the clock went
+ * backwards, or the mark itself is junk. Bounding it against the WALL CLOCK
+ * cannot tell those apart and would destroy the rollback defence — a clock wound
+ * back a year leaves the mark a year ahead, which is exactly the case the mark
+ * exists to catch. Bounding it against the licence's own `issuedAt` can: a real
+ * observation happened after issuance and within a plausible service life, while
+ * a dead CMOS battery reading 2099 does not.
+ */
+export const RV_LIC_CLOCK_MAX_AHEAD_OF_ISSUE_MS = 10 * 365 * 24 * 60 * 60 * 1000;
+
 export interface LicenseClock {
   /** The instant the state machine uses. */
   effectiveNow: number;
@@ -29,6 +42,8 @@ export interface LicenseClock {
   clockRollback: boolean;
   /** Storage is unusable, so there is no high-water anchor this session. */
   clockUnanchored: boolean;
+  /** A stored mark was implausible and was discarded rather than believed. */
+  clockMarkDiscarded: boolean;
 }
 
 function readHighWater(): { value: number | null; unanchored: boolean } {
@@ -71,14 +86,37 @@ export function readLicenseClock(
   issuedAtMs: number | null,
   wallNow: number = Date.now(),
 ): LicenseClock {
-  const { value: highWater, unanchored } = readHighWater();
+  const { value: stored, unanchored } = readHighWater();
+  const issuedAt = issuedAtMs !== null && Number.isFinite(issuedAtMs) ? issuedAtMs : null;
+
+  // A mark that could not describe any real observation of THIS licence is
+  // junk, and believing it is how one bad clock reading turns into a
+  // permanently read-only install: the mark only ratchets upward, so a single
+  // excursion to 2099 would outlive the licence, survive the clock being
+  // corrected, and hold the plant in `readonly` for ever. Discard it instead,
+  // and heal the stored value on the next write.
+  const ceiling = (issuedAt ?? wallNow) + RV_LIC_CLOCK_MAX_AHEAD_OF_ISSUE_MS;
+  const discarded = stored !== null && stored > ceiling;
+  const highWater = discarded ? null : stored;
+
   let effectiveNow = wallNow;
   if (highWater !== null && highWater > effectiveNow) effectiveNow = highWater;
-  if (issuedAtMs !== null && Number.isFinite(issuedAtMs) && issuedAtMs > effectiveNow) effectiveNow = issuedAtMs;
+  if (issuedAt !== null && issuedAt > effectiveNow) effectiveNow = issuedAt;
+
   return {
     effectiveNow,
     wallNow,
     clockRollback: highWater !== null && wallNow < highWater - RV_LIC_CLOCK_TOLERANCE_MS,
     clockUnanchored: unanchored,
+    clockMarkDiscarded: discarded,
   };
+}
+
+/** Overwrite a mark that {@link readLicenseClock} refused to believe. */
+export function healLicenseClock(now: number = Date.now()): void {
+  try {
+    localStorage.setItem(LICENSE_CLOCK_KEY, String(now));
+  } catch {
+    // Best-effort by construction.
+  }
 }

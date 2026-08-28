@@ -90,7 +90,12 @@ export function LicenseNoticeBanner(): React.ReactElement | null {
       data-testid="license-notice-banner"
       sx={{
         position: 'fixed',
-        top: 58,
+        // CommissioningTrustBanner owns top:58 with the same width and centring
+        // and sits above this one, so sharing that coordinate hid this banner
+        // completely whenever both were up. Offset by its height instead: a
+        // licence notice that is invisible exactly when something else is also
+        // wrong is worse than useless.
+        top: 108,
         left: '50%',
         transform: 'translateX(-50%)',
         // Between the storage notice (9400) and the commissioning banner
@@ -213,6 +218,10 @@ React.ReactElement | null {
     <Typography
       data-testid="license-footer-line"
       variant="caption"
+      // `component="div"` on purpose: the sibling version line is also a
+      // caption, and two inline spans in a plain block run together into one
+      // unreadable line.
+      component="div"
       sx={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: 10 }}
     >
       {lines.join(' · ')}

@@ -91,7 +91,6 @@ import {
   toggleSignalSelection,
   selectAllSignals,
   bindSelectedSignals,
-  discoveredSignalName,
   removeInterface,
   addInterface,
   importTagTable,
@@ -202,7 +201,7 @@ import {
 import { useSignalActivityIndicator, setSignalActivityIndicator } from './signal-activity-indicator-store';
 import { useThrottledSignalValue } from '../../hooks/use-throttled-signal';
 import { useSignalActivityValue } from '../../hooks/use-signal-activity';
-import { WarningAmber, RemoveCircleOutline, Sensors, Link as LinkIcon, Hub, InfoOutlined, PrecisionManufacturing } from '@mui/icons-material';
+import { WarningAmber, RemoveCircleOutline, Sensors, Link as LinkIcon, Hub, PrecisionManufacturing } from '@mui/icons-material';
 import { memo } from 'react';
 import {
   supportsFsAccess,

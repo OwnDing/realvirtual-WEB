@@ -12,7 +12,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { decideSaveVerb } from '../src/core/editor/rv-save-document';
-import { LicenseNoticeBanner, LicenseWatermark } from '../src/core/hmi/LicenseNoticeBanner';
+import { LicenseFooterLine, LicenseNoticeBanner, LicenseWatermark } from '../src/core/hmi/LicenseNoticeBanner';
 import { _setLicenseEvaluationForTests } from '../src/core/licensing/rv-lic-store';
 import type { LicenseEvaluation, LicenseState } from '../src/core/licensing/rv-lic-state';
 import { setLocale } from '../src/core/i18n';
@@ -174,5 +174,49 @@ describe('the watermark', () => {
     render(<LicenseWatermark />);
     const mark = screen.getByTestId('license-watermark');
     expect(getComputedStyle(mark).pointerEvents).toBe('none');
+  });
+});
+
+describe('the settings audit line', () => {
+  const licensed = (): LicenseEvaluation => evaluation({
+    state: 'valid',
+    payload: {
+      v: 1,
+      id: 'XYV-LIC-2026-0042',
+      issuedAt: '2026-01-01T00:00:00Z',
+      notAfter: '2027-01-01T00:00:00Z',
+      graceDays: 30,
+      customer: { org: 'Acme Werke GmbH' },
+      features: [],
+      limits: { seats: 25, signals: 5000 },
+    },
+  });
+
+  it('says nothing when the deployment did not ask for a licence', () => {
+    act(() => _setLicenseEvaluationForTests(evaluation({ state: 'not-required' })));
+    render(<LicenseFooterLine registeredSignals={3214} />);
+    expect(screen.queryByTestId('license-footer-line')).toBeNull();
+  });
+
+  it('puts the contract numbers next to the live count for an auditor', () => {
+    act(() => _setLicenseEvaluationForTests(licensed()));
+    render(<LicenseFooterLine registeredSignals={3214} />);
+    const text = screen.getByTestId('license-footer-line').textContent ?? '';
+    expect(text).toContain('Acme Werke GmbH');
+    expect(text).toContain('3214');
+    expect(text).toContain('5000');
+    expect(text).toContain('25');
+  });
+
+  it('omits the signal figure when the count is unavailable', () => {
+    act(() => _setLicenseEvaluationForTests(licensed()));
+    render(<LicenseFooterLine registeredSignals={null} />);
+    expect(screen.getByTestId('license-footer-line').textContent).not.toContain('signals');
+  });
+
+  it('renders as a block so it cannot run into the version line beside it', () => {
+    act(() => _setLicenseEvaluationForTests(licensed()));
+    render(<LicenseFooterLine registeredSignals={1} />);
+    expect(getComputedStyle(screen.getByTestId('license-footer-line')).display).toBe('block');
   });
 });

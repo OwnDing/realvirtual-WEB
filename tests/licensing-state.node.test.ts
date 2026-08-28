@@ -33,6 +33,7 @@ function clock(effectiveNow: number, extra: Partial<LicenseClock> = {}): License
     wallNow: effectiveNow,
     clockRollback: false,
     clockUnanchored: false,
+    clockMarkDiscarded: false,
     ...extra,
   };
 }

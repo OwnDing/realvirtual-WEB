@@ -241,12 +241,30 @@ export function verifyLicenseEnvelope(envelope, rootPublicKeyRaw) {
       signingKey = pub;
     }
 
-    return verify(
+    const signatureOk = verify(
       null,
       licenseMessage(payloadBytes),
       { key: spki(signingKey), format: 'der', type: 'spki' },
       signature,
-    ) ? 'valid' : 'invalid';
+    );
+    if (!signatureOk) return 'invalid';
+
+    // §9 step 6. Without this `--verify` reported `valid` for a file the browser
+    // would refuse, which is the opposite of what an issuer checks it for.
+    let payload;
+    try {
+      payload = JSON.parse(payloadBytes.toString('utf8'));
+    } catch {
+      return 'invalid';
+    }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return 'invalid';
+    if (payload.v !== 1) return 'invalid';
+    if (typeof payload.id !== 'string' || !payload.id || payload.id.length > 128) return 'invalid';
+    for (const field of ['issuedAt', 'notAfter']) {
+      if (typeof payload[field] !== 'string' || !INSTANT_RE.test(payload[field])) return 'invalid';
+    }
+    if (Date.parse(payload.notAfter) < Date.parse(payload.issuedAt)) return 'invalid';
+    return 'valid';
   } catch {
     return 'invalid';
   }

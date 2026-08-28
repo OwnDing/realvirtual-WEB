@@ -465,6 +465,11 @@ const OFFLINE_LICENSE = 'No English original exists to move: the offline .rvlic 
   + 'stop. Declaring the keys explicitly preserves the proof that older product wording was moved '
   + 'rather than rewritten.';
 
+const OFFLINE_LICENSE_REMOVAL = 'Deliberately no longer verbatim: this project stopped administering '
+  + 'the upstream CONNECT gateway\'s licence (EP-LICENSE-001 M5), so the CONNECT Settings empty state no '
+  + 'longer offers to manage one. The sentence had to change because the feature it names was removed; '
+  + 'leaving the original wording would send the operator looking for a panel that is gone.';
+
 const OFFLINE_LICENSE_KEYS = [
   'shell.license.expiringSoon',
   'shell.license.inGrace',
@@ -487,6 +492,7 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ...SMART_ASSET_EDITOR_KEYS.map((key) => [key, SMART_ASSET_EDITOR]),
   ...PUBLIC_DES_KEYS.map((key) => [key, PUBLIC_DES]),
   ...OFFLINE_LICENSE_KEYS.map((key) => [key, OFFLINE_LICENSE]),
+  ['connect.options.notConnected', OFFLINE_LICENSE_REMOVAL],
   ['demo.paintline.tourOverview', PAINTLINE_DEMO],
   ['demo.paintline.tourPretreat', PAINTLINE_DEMO],
   ['demo.paintline.tourOven', PAINTLINE_DEMO],
@@ -507,7 +513,6 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['shell.license.dialogLicensed', BRAND_RENAME],
   ['shell.license.dialogActivate', BRAND_RENAME],
   ['shell.license.betaNotice', BRAND_RENAME],
-  ['shell.license.terms', BRAND_RENAME],
   ['shell.login.poweredBy', BRAND_RENAME],
   ['projects.demoCaption', BRAND_RENAME],
   ['settings.version.title', BRAND_RENAME],
