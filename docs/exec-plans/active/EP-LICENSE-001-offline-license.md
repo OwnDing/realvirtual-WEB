@@ -285,7 +285,13 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
-**全量门禁（2026-08-28，本机，提交 `bad47d9`）**：
+**全量门禁（2026-08-28，本机，提交 `49525c7`——评审两轮修复后）**：
+- `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能run）**10,918 例零失败**
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 693 通过 / 7 跳过 / 1 失败（范围外的 `bundle-chunk.node.test.ts`）
+- 授权与 CONNECT 相关 Browser 测试 92 例通过
+
+**首轮门禁（提交 `bad47d9`）**：
 - `./scripts/verify.sh browser` — **exit 0**，8 分片 + 性能run，约 10,900 例零失败
 - `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
 - `npm run test:node` — 693 通过 / 7 跳过 / 1 失败（范围外的 `bundle-chunk.node.test.ts`，见 Discoveries）
