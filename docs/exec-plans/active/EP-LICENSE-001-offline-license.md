@@ -216,14 +216,14 @@ authority: normative
 - [x] OD-007 四项决定由用户 2026-08-27 当前明确指令作出并关闭
 - [x] 用户 2026-08-27 当前明确指令批准本方案；`ADR-0007` 转 Accepted，本计划转 Active
 - [x] M0 契约冻结：Accepted `ADR-0007`、Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`
-- [ ] M0 尾项：由 Owner 在签发环境生成自有 Ed25519 密钥对（私钥进 `RV_LIC_SIGN_PRIVATE_KEY`，不进仓库）
+- [x] M0 尾项：Owner 于 2026-08-28 在签发环境生成自有 Ed25519 密钥对；公钥进入 `rv-lic-public-key.ts`，私钥以 `RV_LIC_SIGN_PRIVATE_KEY` 条目进入本机登录钥匙串，不进仓库
 - [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
 - [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
 - [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
 - [x] M4 降级与呈现（`decideSaveVerb` 阻断分支、横幅与水印、中英文案、信号读数；18 条用例）
 - [x] M5 移除上游 CONNECT 授权查询（4 个端点、2 个文件、39 + 6 条文案；`ConnectPanel.tsx` 减 155 行）
 - [x] M6 文档与门禁：验收矩阵授权行、`settings.example.json` 示例、blur 用量流水账、`REPOSITORY_FACTS` remote 更正；合同条款 §6 与实际行为逐条核对一致（30 日宽限期 ↔ `RV_LIC_DEFAULT_GRACE_DAYS = 30`）
-- [ ] **待 Owner**：在签发环境生成密钥对，公钥填入 `rv-lic-public-key.ts`。在此之前信任根为空，一切许可证判 `unverifiable`（不锁定），系统未上线
+- [x] 生产信任根上线：从钥匙串读回私钥并独立推导公钥，与编译进客户端的根公钥逐字节一致；真实 CLI 签发的临时 `.rvlic` 由该根验证为 `valid`
 - [x] 对抗性评审补跑三个视角（密码学、安全红线、删除余波），15 条候选人工复核后处理
 
 ## Surprises & Discoveries
@@ -285,6 +285,17 @@ authority: normative
 - `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
 - `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
 - `./scripts/verify.sh build` — 通过
+
+**生产信任根接入后的最终本机门禁（2026-08-28）**：
+- `node scripts/rv-sign-license.mjs --keygen` 的输出在进程内拆分：公钥进入源码，私钥以 Base64 PKCS#8 进入 macOS 登录钥匙串 `RV_LIC_SIGN_PRIVATE_KEY`，未回显、未写入仓库或临时文件
+- 从钥匙串读回私钥并推导 Ed25519 公钥，与 `RV_LIC_ROOT_PUBLIC_KEY_BASE64` 一致；真实 CLI 签发 smoke license 后 `--verify` 返回 `valid`
+- `./scripts/verify.sh governance`、`./scripts/verify.sh static` — 通过
+- `npx vitest run --config vitest.node.config.ts tests/licensing-sign.node.test.ts tests/licensing-state.node.test.ts` — 54 通过
+- `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能 run）**10,918 例零失败**
+- `./scripts/verify.sh build` — 通过
+- `./scripts/verify.sh all` — 在 Node 阶段停止：693 通过 / 7 跳过 / 1 失败，唯一失败仍是范围外 `bundle-chunk.node.test.ts` 的陈旧入口正则（见 Discoveries）；没有通过删除 `dist` 让该断言跳过
+- PR #6 最终 head 的远程五项 Gate：待本次公钥提交推送后验证
+
 **全量门禁（2026-08-28，本机，提交 `49525c7`——评审两轮修复后）**：
 - `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能run）**10,918 例零失败**
 - `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
@@ -323,7 +334,7 @@ authority: normative
 - `./scripts/verify.sh static` — 通过
 - `npm run test:node` — 650 通过 / 7 跳过 / 1 失败，唯一失败是范围外的 `bundle-chunk.node.test.ts`（见 Discoveries），本计划新增用例全部通过
 
-- **尚未运行**：完整 `./scripts/verify.sh browser`（8 分片）与远程五项 Gate。
+- **最终远程验收待执行**：PR #6 本次生产信任根提交的五项 Gate。
 
 
 - `./scripts/verify.sh governance`（文档与治理，M0 起每个里程碑）

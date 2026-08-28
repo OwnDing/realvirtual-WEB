@@ -13,10 +13,8 @@
  * publish pipeline, so signing this project's entitlements with it would put
  * our contract evidence under someone else's key.
  *
- * EMPTY UNTIL ISSUED. An undecodable root yields `unverifiable`, exactly as a
- * missing rv_sig root does — never `valid`, and never a lockout. A placeholder
- * key is worse than none: it would look like a trust anchor while verifying
- * nothing. Replace this with the real public key once `rv-sign-license.mjs
- * --keygen` has produced the pair.
+ * Issued by the repository owner on 2026-08-28. Root-key rotation requires a
+ * new client build; routine issuer rotation should use the delegated `cert`
+ * path so this trust anchor remains stable.
  */
-export const RV_LIC_ROOT_PUBLIC_KEY_BASE64 = '';
+export const RV_LIC_ROOT_PUBLIC_KEY_BASE64 = 'X2YkhXiagu6+S1dT6P8/UX4PTUhG1j2ATEcuhEi/HCA=';
