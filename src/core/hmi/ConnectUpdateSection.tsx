@@ -17,7 +17,7 @@
  *     `no-write-permission`, where one explanatory sentence is shown because the operator can
  *     actually fix those.
  *
- * Extracted into its own file for the same reason `LicenseSection.tsx` is: a self-contained
+ * Extracted into its own file as a self-contained
  * section with its own confirmation dialog, mounted by `ConnectOptionsWindow`.
  */
 

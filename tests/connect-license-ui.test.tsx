@@ -10,12 +10,8 @@ import connectionsSectionSource from '../src/core/hmi/rv-connections-section.tsx
 import {
   ConnectDownloadLinks,
   ConnectOpener,
-  SignalBudgetIndicator,
-  SignalLimitNotice,
   interfaceDotColor,
   interfaceStatusShort,
-  signalBudgetGate,
-  signalBudgetPresentation,
 } from '../src/core/hmi/ConnectPanel';
 import { isConnectDataStale, statusAge } from '../src/core/hmi/connect-staleness';
 import connectPluginSource from '../src/plugins/connect-plugin.tsx?raw';
@@ -26,7 +22,6 @@ import {
   __setConnectDownloadsForTest,
 } from '../src/core/hmi/connect-downloads';
 import { humanizeConnectError, humanizeConnectWorkerStatus } from '../src/core/hmi/connect-store';
-import type { LicenseStatus } from '../src/core/hmi/license-store';
 import { ISA_AMBER } from '../src/core/hmi/isa-colors';
 import { rvDarkTheme } from '../src/core/hmi/theme';
 import { setLocale } from '../src/core/i18n';
@@ -53,46 +48,10 @@ function themed(node: React.ReactNode) {
   return <ThemeProvider theme={rvDarkTheme}>{node}</ThemeProvider>;
 }
 
-function licenseStatus(patch: Partial<LicenseStatus> = {}): LicenseStatus {
-  return {
-    state: 'LicensedCommunity',
-    gatewayAllowed: true,
-    maxSignals: 20,
-    admittedSignals: 17,
-    effectiveNow: '2026-07-19T12:00:00Z',
-    licenseType: 'community',
-    licenseId: null,
-    error: null,
-    overLimitSignals: [],
-    registration: null,
-    ...patch,
-  };
-}
-
-describe('CONNECT license gate UI integration', () => {
-  it('shows a finite signal budget and marks 80 percent or more as warning', () => {
-    const status = licenseStatus();
-    expect(signalBudgetPresentation(status)).toMatchObject({
-      label: 'Signals 17 / 20',
-      warning: true,
-    });
-    render(themed(<SignalBudgetIndicator status={status} />));
-    expect(screen.getByText('Signals 17 / 20')).toBeTruthy();
-  });
-
-  it('hides the unlimited sentinel without rendering a grace chip', () => {
-    const status = licenseStatus({
-      maxSignals: 2_147_483_647,
-    });
-    expect(signalBudgetPresentation(status)).toBeNull();
-    render(themed(<SignalBudgetIndicator status={status} />));
-    expect(screen.queryByText(/Signals/)).toBeNull();
-    expect(screen.queryByText(/Grace until/)).toBeNull();
-  });
-
+describe('CONNECT gateway status and download UI', () => {
   it('maps backend codes and worker statuses to actionable operator copy', () => {
     expect(humanizeConnectError('LICENSE_REQUIRED')).toBe(
-      'This gateway needs a license before it serves signals - open License in the CONNECT panel.',
+      'This gateway needs a license before it serves signals - license it on the CONNECT gateway itself.',
     );
     expect(humanizeConnectError('SIGNAL_LIMIT_REACHED', {
       limit: 20,
@@ -119,43 +78,11 @@ describe('CONNECT license gate UI integration', () => {
       + ' - upgrade the license or select fewer.');
   });
 
-  it('gates a discovery bind against the free budget before it is sent', () => {
-    const status = licenseStatus({ maxSignals: 20, admittedSignals: 0 });
-    const selected = Array.from({ length: 27 }, (_, i) => `Sig${i}`);
-    expect(signalBudgetGate(status, selected, new Set())).toEqual({
-      newSignals: 27, free: 20, overBudget: true, limit: 20,
-    });
-
-    // Already-configured names are already admitted — re-selecting them must not consume a slot,
-    // otherwise re-adding a bound signal would disable the button for no reason.
-    const configured = new Set(selected.slice(0, 10));
-    expect(signalBudgetGate(status, selected, configured)).toMatchObject({
-      newSignals: 17, overBudget: false,
-    });
-
-    // Exactly filling the budget still fits; one more does not.
-    expect(signalBudgetGate(status, selected.slice(0, 20), new Set()).overBudget).toBe(false);
-    expect(signalBudgetGate(status, selected.slice(0, 21), new Set()).overBudget).toBe(true);
-  });
-
-  it('gates nothing when the budget is unknown or unlimited', () => {
-    const selected = ['A', 'B', 'C'];
-    // No license status yet (gateway not reached) — never block on a guess.
-    expect(signalBudgetGate(null, selected, new Set()))
-      .toEqual({ newSignals: 3, free: null, overBudget: false, limit: null });
-    // The unlimited sentinel must not leak into the UI as a number.
-    expect(signalBudgetGate(licenseStatus({ maxSignals: 2_147_483_647, admittedSignals: 5 }),
-      selected, new Set())).toEqual({ newSignals: 3, free: null, overBudget: false, limit: null });
-  });
-
-  it('shows SignalLimitExceeded as a short informational notice without dumping signal names', () => {
+  // The gateway still reports SignalLimitExceeded through /status, so the badge
+  // and its colour survive the removal of the /license/status budget preview.
+  it('still shows SignalLimitExceeded as an interface status', () => {
     expect(interfaceStatusShort('SignalLimitExceeded', true)).toBe('Signal limit');
     expect(interfaceDotColor('SignalLimitExceeded', true)).toBe(ISA_AMBER);
-    render(themed(<SignalLimitNotice signals={['Cell.Start', 'Cell.Stop']} limit={20} />));
-    expect(screen.getByText(
-      'Only the first 20 signals are served - 2 more are configured. Activate a license to serve all signals.',
-    )).toBeTruthy();
-    expect(screen.queryByText(/Cell\.Start/)).toBeNull();
   });
 
   it('does not expose a built-in download endpoint', () => {

@@ -3,7 +3,7 @@ doc_id: GOV-REPO-FACTS
 title: 仓库事实与验证方法
 status: approved
 owner: maintainers
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-28
 authority: normative-process
 ---
 
@@ -14,7 +14,7 @@ authority: normative-process
 | 事实 | 基线观察值 | 每次任务的验证方法 |
 | --- | --- | --- |
 | Git 分支 | `develop` | `git status --short --branch`、`git branch -vv` |
-| Git remote | `origin` 指向 `OwnDing/XYvirtual-WEB` | `git remote -v`；不得从文档猜测推送目标 |
+| Git remote | `origin` 指向 `OwnDing/realvirtual-WEB`（2026-08-28 实测更正；基线曾记为 `OwnDing/XYvirtual-WEB`，与实际不符） | `git remote -v`；不得从文档猜测推送目标 |
 | 项目版本 | `6.3.27` | 读取 `package.json` |
 | Node 要求 | `>=18` | 读取 `package.json#engines` 并运行 `node --version` |
 | 私有 sibling | 基线时不存在 | 检查 `../realvirtual-WebViewer-Private~`；公共路径必须独立通过 |

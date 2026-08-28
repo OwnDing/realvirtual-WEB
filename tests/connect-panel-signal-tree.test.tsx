@@ -60,7 +60,7 @@ function signalListTree(current: ConnectInterface, key = current.id) {
     <ThemeProvider theme={rvDarkTheme}>
       <RVViewerProvider value={viewerStub}>
         <div style={{ height: 400, display: 'flex', flexDirection: 'column' }}>
-          <SignalListView key={key} iface={current} overLimitSignals={[]} />
+          <SignalListView key={key} iface={current} />
         </div>
       </RVViewerProvider>
     </ThemeProvider>

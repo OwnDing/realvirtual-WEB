@@ -12,8 +12,7 @@
  * the tab, so the consent is asked in front of the `McpTab` MOUNT (see
  * `AiBridgeGate`) and both entrances read the same state from here.
  *
- * The consent is versioned rather than boolean, after the model of
- * `LICENSE_TERMS_VERSION` in license-store.ts: if the bridge ever reaches
+ * The consent is versioned rather than boolean: if the bridge ever reaches
  * further than what the dialog describes today, raising the version asks again.
  * It is NEVER granted implicitly — only `grantAiBridgeConsent()`, called from a
  * button in the consent dialog, sets it.

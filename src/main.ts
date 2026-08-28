@@ -161,6 +161,7 @@ import { TwinCatHmiInterface } from './interfaces/twincat-hmi-interface';
 
 // Per-model plugin manager (loads/unloads plugins on model switch)
 import { ModelPluginManager } from './core/rv-model-plugin-manager';
+import { refreshLicense } from './core/licensing/rv-lic-store';
 
 // Microsoft Teams JS SDK — dynamically imported only when ?teams=1
 
@@ -558,6 +559,10 @@ async function init() {
   setAppConfig(appConfig);
   applyDeploymentIdentityToDocument(appConfig);
   setDeploymentBranding(appConfig.identity);
+  // Deliberately NOT awaited. A licence is contract evidence, not permission to
+  // boot: an operator must never wait on it, and a deployment that did not ask
+  // for one does not even fetch. It settles into the store and the UI follows.
+  void refreshLicense();
   const connectEmbedEnabled = initializeConnectEmbedStore(appConfig);
 
   // MU-accumulation kill-switch (plan-255 §2.8): settings.json

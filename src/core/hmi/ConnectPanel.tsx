@@ -91,7 +91,6 @@ import {
   toggleSignalSelection,
   selectAllSignals,
   bindSelectedSignals,
-  discoveredSignalName,
   removeInterface,
   addInterface,
   importTagTable,
@@ -202,7 +201,7 @@ import {
 import { useSignalActivityIndicator, setSignalActivityIndicator } from './signal-activity-indicator-store';
 import { useThrottledSignalValue } from '../../hooks/use-throttled-signal';
 import { useSignalActivityValue } from '../../hooks/use-signal-activity';
-import { WarningAmber, RemoveCircleOutline, Sensors, Link as LinkIcon, Hub, InfoOutlined, PrecisionManufacturing } from '@mui/icons-material';
+import { WarningAmber, RemoveCircleOutline, Sensors, Link as LinkIcon, Hub, PrecisionManufacturing } from '@mui/icons-material';
 import { memo } from 'react';
 import {
   supportsFsAccess,
@@ -215,7 +214,6 @@ import {
   loadInterfaceSettings,
   saveInterfaceSettings,
 } from '../../interfaces/interface-settings-store';
-import { getLicenseSnapshot, subscribeLicenseStore, deriveLicensePresentation, type LicenseStatus } from './license-store';
 import { ConfirmActionDialog, type ConfirmAction } from './ConfirmActionDialog';
 import { ConnectOptionsWindow } from './ConnectOptionsWindow';
 import { ConnectUpdateNotice } from './ConnectUpdateNotice';
@@ -302,48 +300,6 @@ export function interfaceStatusShort(status: string | undefined, enabled: boolea
     case 'Stopped': return 'Stopped';
     default: return null;
   }
-}
-
-const UNLIMITED_SIGNAL_LIMIT = 2_147_483_647;
-
-export interface SignalBudgetPresentation {
-  label: string | null;
-  warning: boolean;
-}
-
-/** Derive the quiet interface-header budget without exposing the unlimited sentinel. */
-export function signalBudgetPresentation(status: LicenseStatus | null): SignalBudgetPresentation | null {
-  if (!status) return null;
-  const showBudget = status.maxSignals > 0 && status.maxSignals < UNLIMITED_SIGNAL_LIMIT;
-  if (!showBudget) return null;
-
-  return {
-    label: rvT('connect', 'status.signalBudget', { used: status.admittedSignals, max: status.maxSignals }),
-    warning: status.admittedSignals / status.maxSignals >= 0.8,
-  };
-}
-
-/** Preventive signal-budget summary for the Interfaces header. */
-export function SignalBudgetIndicator({ status }: { status: LicenseStatus | null }) {
-  const presentation = signalBudgetPresentation(status);
-  if (!presentation) return null;
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
-      {presentation.label && (
-        <Typography
-          component="span"
-          sx={{
-            fontSize: 11,
-            fontFamily: 'monospace',
-            fontWeight: presentation.warning ? 600 : 400,
-            color: presentation.warning ? ISA_AMBER : 'text.secondary',
-          }}
-        >
-          {presentation.label}
-        </Typography>
-      )}
-    </Box>
-  );
 }
 
 /** Stable download label — brand text, enriched with the semantic version when the manifest
@@ -491,21 +447,6 @@ export function ConnectOpener({ failedUrl }: { failedUrl: string | null }) {
   );
 }
 
-export function SignalLimitNotice({ signals, limit }: { signals: readonly string[]; limit?: number | null }) {
-  const { t } = useRvTranslation('connect');
-  const served = typeof limit === 'number' && limit > 0 && limit < 2_147_483_647
-    ? t('limit.servedFirst', { limit })
-    : t('limit.servedWithin');
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, px: 1, pb: 0.75 }}>
-      <InfoOutlined aria-hidden sx={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', mt: 0.1, flexShrink: 0 }} />
-      <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
-        {t('limit.notice', { served, count: signals.length })}
-      </Typography>
-    </Box>
-  );
-}
-
 /**
  * Per-signal gateway diagnostics (LOP #51/#52 hardening): the worker KNOWS these configured
  * signals can never receive a value (bad address, tag outside the received payload). Surfaced
@@ -577,15 +518,6 @@ const LS_CONNECT_EXPANDED = 'rv-connect-expanded-iface';
 const LS_CONNECT_FILTER = 'rv-connect-filter';        // + ':' + iface.id
 const LS_CONNECT_COLLAPSED = 'rv-connect-collapsed';  // + ':' + iface.id
 const LS_CONNECT_SCROLL = 'rv-connect-scroll';        // + ':' + iface.id
-
-/**
- * Shared empty array for the `overLimitSignals` prop (plan-344 Phase 3.3).
- * A `?? []` literal produces a NEW array on every ConnectPanel render, which
- * invalidated `useMemo(() => new Set(overLimitSignals))` inside SignalListView
- * every single time — and through it every memoised row. One frozen module-level
- * constant makes the "no signals over the limit" case referentially stable.
- */
-const EMPTY_SIGNAL_NAMES: readonly string[] = Object.freeze([]);
 
 function loadExpandedIface(): string | null {
   try { return localStorage.getItem(LS_CONNECT_EXPANDED) || null; } catch { return null; }
@@ -667,7 +599,6 @@ export function ConnectPanel() {
   const lpm = viewer.leftPanelManager;
   const panelSnap = useSyncExternalStore(lpm.subscribe, lpm.getSnapshot);
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
-  const licenseSnap = useSyncExternalStore(subscribeLicenseStore, getLicenseSnapshot);
   // Historian status is polled by the trend-plugin toolbar button while
   // connected; the panel only reads it (recording-fault line + gear badge).
   const historianSnap = useSyncExternalStore(historianStore.subscribe, historianStore.getSnapshot, historianStore.getSnapshot);
@@ -826,17 +757,14 @@ export function ConnectPanel() {
   const showOpener = snap.state === 'disconnected' || gatewaySetupNeeded;
   const status = statusDisplay(snap.state, unreachable, gatewaySetupNeeded);
 
-  // Settings-gear problem badge: red on ANY problem behind the gear — license
-  // missing/degraded/pending, or historian enabled but not actually recording
-  // (that is silent data loss, a genuine operational fault, so red is earned).
-  const licPresentation = licenseSnap.status ? deriveLicensePresentation(licenseSnap.status) : null;
-  const licenseAttention = licPresentation?.kind === 'warning' || licPresentation?.kind === 'pending';
+  // Settings-gear problem badge: red when the historian is enabled but not
+  // actually recording — that is silent data loss, a genuine operational fault,
+  // so red is earned.
   const historianProblem = isConnected
     && historianSnap.status?.enabled === true
     && !historianSnap.status.connected;
-  const settingsProblem = licenseAttention || historianProblem;
+  const settingsProblem = historianProblem;
   const settingsProblemHint = [
-    licenseAttention ? 'license needs attention' : null,
     historianProblem ? 'historian not recording' : null,
   ].filter(Boolean).join(', ');
 
@@ -1025,7 +953,6 @@ export function ConnectPanel() {
               <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1 }}>
                 {t('list.header', { count: snap.interfaces.length })}
               </Typography>
-              <SignalBudgetIndicator status={licenseSnap.status} />
             </Box>
 
             {snap.interfaces.length === 0 && (
@@ -1068,8 +995,6 @@ export function ConnectPanel() {
                           ? 'Gateway unreachable — worker status unknown'
                           : snap.interfaceStatus[iface.id]?.error}
                         signalIssues={unreachable ? undefined : snap.interfaceStatus[iface.id]?.signalIssues}
-                        overLimitSignals={licenseSnap.status?.overLimitSignals ?? EMPTY_SIGNAL_NAMES}
-                        licenseLimit={licenseSnap.status?.maxSignals ?? null}
                         expanded={expanded}
                         onToggle={() => toggleExpand(iface.id)}
                         onSetEnabled={(en) => handleSetEnabled(iface.id, en)}
@@ -1087,7 +1012,6 @@ export function ConnectPanel() {
                     {showSignals && (
                       <SignalListView
                         iface={iface}
-                        overLimitSignals={licenseSnap.status?.overLimitSignals ?? EMPTY_SIGNAL_NAMES}
                         onBridgeSignal={bridges.supported ? handleBridgeSignalByName : undefined}
                       />
                     )}
@@ -1195,8 +1119,6 @@ function InterfaceCard({
   status,
   statusError,
   signalIssues,
-  overLimitSignals,
-  licenseLimit,
   expanded,
   onToggle,
   onSetEnabled,
@@ -1212,8 +1134,6 @@ function InterfaceCard({
   statusError?: string;
   /** Per-signal gateway diagnostics — signals that can never receive values (see SignalIssueBadge). */
   signalIssues?: readonly ConnectSignalIssue[];
-  overLimitSignals: readonly string[];
-  licenseLimit?: number | null;
   expanded: boolean;
   onToggle: () => void;
   onSetEnabled: (enabled: boolean) => void;
@@ -1378,10 +1298,6 @@ function InterfaceCard({
       </Box>
 
       {/* Actions menu — one place for everything that is not the enable switch. */}
-      {expanded && status === 'SignalLimitExceeded' && (
-        <SignalLimitNotice signals={overLimitSignals} limit={licenseLimit} />
-      )}
-
       <Menu
         anchorEl={menuAnchor}
         open={!!menuAnchor}
@@ -2513,8 +2429,6 @@ interface SignalRowItemProps {
   topic?: string;
   interfaceId: string;
   recordPending?: boolean;
-  /** This configured signal was rejected by the current license budget. */
-  limitExceeded?: boolean;
   /** Part of the current multi-selection (bulk delete). */
   selected?: boolean;
   /** Click selection. The row passes its own `topic` so the selection key stays unambiguous. */
@@ -2540,7 +2454,7 @@ interface SignalRowItemProps {
  */
 const SignalRowItem = memo(function SignalRowItem({
   sig, direction, plcType, inModel, hasTopics, depth, viewer, indicatorOn, linkedLabel, linkedPath,
-  onEdit, onDelete, onBridge, onRecordChange, topic, interfaceId, recordPending, limitExceeded,
+  onEdit, onDelete, onBridge, onRecordChange, topic, interfaceId, recordPending,
   selected, onSelect, onContextMenu,
 }: SignalRowItemProps) {
   const { t } = useRvTranslation('connect');
@@ -2627,12 +2541,8 @@ const SignalRowItem = memo(function SignalRowItem({
         display: 'flex', alignItems: 'center', width: '100%',
         opacity,
         cursor: onSelect ? 'default' : undefined,
-        // Selection wins over the license-limit tint: while picking rows for a bulk action, what is
-        // picked must stay unambiguous. The amber limit marker keeps its own left border below.
-        bgcolor: selected ? 'rgba(79,195,247,0.16)' : limitExceeded ? `${ISA_AMBER}14` : undefined,
-        borderLeft: selected
-          ? '2px solid #4fc3f7'
-          : limitExceeded ? `2px solid ${ISA_AMBER}` : '2px solid transparent',
+        bgcolor: selected ? 'rgba(79,195,247,0.16)' : undefined,
+        borderLeft: selected ? '2px solid #4fc3f7' : '2px solid transparent',
         '&:hover': { bgcolor: selected ? 'rgba(79,195,247,0.22)' : 'rgba(79,195,247,0.06)' },
         // Reveal the action icons on keyboard focus too — they are in the tab
         // order, so they must never be invisible while focused.
@@ -2644,17 +2554,12 @@ const SignalRowItem = memo(function SignalRowItem({
           <Hub sx={{ fontSize: 12, color: '#4fc3f7', flexShrink: 0 }} />
         </Tooltip>
       )}
-      {limitExceeded && (
-        <Tooltip title={t('signal.limitTooltip')} placement="left" disableInteractive>
-          <WarningAmber role="img" aria-label={t('signal.limitAria')} sx={{ fontSize: 12, color: ISA_AMBER, flexShrink: 0 }} />
-        </Tooltip>
-      )}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {/* plan-422 F4: both lines already ellipsise in CSS against the real
             column width. The character pre-cut that used to run first simply
             got there before CSS could and produced "PLC_ExitCon…" in a panel
             with room to spare. The full text stays reachable via `title`. */}
-        <Typography title={sig.name} sx={{ fontSize: 11, color: limitExceeded ? ISA_AMBER : 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <Typography title={sig.name} sx={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {sig.name}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
@@ -2909,9 +2814,8 @@ function SignalFilterPopover({
  * ProcessImage) or Interface > Signals (flat, other protocols). Each signal renders with the shared
  * SignalBadge chip; live values stream in from the viewer SignalStore.
  */
-export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
+export function SignalListView({ iface, onBridgeSignal }: {
   iface: ConnectInterface;
-  overLimitSignals: readonly string[];
   /** Bridge a signal 1:1 into another interface (plan-257) — undefined hides the hover action. */
   onBridgeSignal?: (signalName: string) => void;
 }) {
@@ -2946,7 +2850,6 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
   const indicatorOn = useSignalActivityIndicator();
 
   const allSignals = useMemo(() => interfaceSignals(iface), [iface]);
-  const overLimitSignalNames = useMemo(() => new Set(overLimitSignals), [overLimitSignals]);
   const hasTopics = (iface.topics?.length ?? 0) > 0;
 
   // Manual signal editing (gateway signal schema): add/edit/delete of interface-level (flat)
@@ -3618,7 +3521,6 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
                     topic={row.topic}
                     interfaceId={iface.id}
                     recordPending={recordPending.has(`${row.topic ?? '__flat__'}\u0000${sig.name}\u0000${sig.protocolAddress}`)}
-                    limitExceeded={overLimitSignalNames.has(sig.name)}
                   />
                 </Box>
               );
@@ -3687,62 +3589,13 @@ export function SignalListView({ iface, overLimitSignals, onBridgeSignal }: {
 
 // ── Browse Window (discovery results + add to interface signals) ──────────
 
-export interface SignalBudgetGate {
-  /** Selected signals whose name is not yet admitted — what the bind would actually consume. */
-  newSignals: number;
-  /** Remaining slots, or null when the budget is unknown or unlimited (then nothing is gated). */
-  free: number | null;
-  /** True when the bind would be rejected wholesale by the gateway. */
-  overBudget: boolean;
-  limit: number | null;
-}
-
-/**
- * Decide whether a bind fits the licensed signal budget, BEFORE it is sent.
- *
- * The gateway admits a discovery bind all-or-nothing (`SignalStore.TryAdmitSignals`): selecting
- * 27 signals against 20 free binds zero, not the first 20. Letting the operator press a button
- * that can only fail is the actual defect, so the count is derived here from the same inputs the
- * gateway uses — already-configured names (which are already admitted, hence free) and the
- * license budget. An unknown or unlimited budget gates nothing; the gateway stays the authority.
- */
-export function signalBudgetGate(
-  status: LicenseStatus | null,
-  selectedNames: readonly string[],
-  configuredNames: ReadonlySet<string>,
-): SignalBudgetGate {
-  const newSignals = selectedNames.filter(name => !configuredNames.has(name)).length;
-  const budgeted = status !== null
-    && status.maxSignals > 0
-    && status.maxSignals < UNLIMITED_SIGNAL_LIMIT;
-  if (!budgeted) return { newSignals, free: null, overBudget: false, limit: null };
-
-  const free = Math.max(0, status.maxSignals - status.admittedSignals);
-  return { newSignals, free, overBudget: newSignals > free, limit: status.maxSignals };
-}
-
 /** Floating window showing discovery results; selected signals can be added to the interface. */
 function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useRvTranslation('connect');
   const snap = useSyncExternalStore(subscribeConnectStore, getConnectSnapshot);
-  const licenseSnap = useSyncExternalStore(subscribeLicenseStore, getLicenseSnapshot);
   const iface = snap.interfaces.find(i => i.id === snap.activeInterfaceId) ?? null;
   const selectedCount = snap.discoveredSignals.filter(s => s.selected).length;
   const [addError, setAddError] = useState<string | null>(null);
-
-  // Names already configured anywhere are already admitted — re-selecting them costs no slot.
-  const configuredNames = useMemo(
-    () => new Set(snap.interfaces.flatMap(i => i.signals?.map(s => s.name) ?? [])),
-    [snap.interfaces],
-  );
-  const gate = useMemo(
-    () => signalBudgetGate(
-      licenseSnap.status,
-      snap.discoveredSignals.filter(s => s.selected).map(s => discoveredSignalName(s.displayName)),
-      configuredNames,
-    ),
-    [licenseSnap.status, snap.discoveredSignals, configuredNames],
-  );
 
   const handleAdd = useCallback(async () => {
     if (!snap.activeInterfaceId || selectedCount === 0) return;
@@ -3801,22 +3654,13 @@ function BrowseWindow({ open, onClose }: { open: boolean; onClose: () => void })
               ))}
             </Box>
 
-            {gate.overBudget && (
-              <Typography sx={{ mt: 1, flexShrink: 0, fontSize: 10, color: ISA_AMBER }}>
-                {t('browse.overBudget', {
-                  selected: gate.newSignals, free: gate.free, limit: gate.limit,
-                  excess: gate.newSignals - (gate.free ?? 0),
-                })}
-              </Typography>
-            )}
-
             {addError && (
               <Typography sx={{ mt: 1, flexShrink: 0, fontSize: 10, color: ISA_RED }}>
                 {addError}
               </Typography>
             )}
 
-            <Button variant="contained" size="small" startIcon={<Add sx={{ fontSize: 14 }} />} onClick={handleAdd} disabled={selectedCount === 0 || gate.overBudget} sx={{ mt: 1, flexShrink: 0, fontSize: 10, textTransform: 'none', width: '100%' }}>
+            <Button variant="contained" size="small" startIcon={<Add sx={{ fontSize: 14 }} />} onClick={handleAdd} disabled={selectedCount === 0} sx={{ mt: 1, flexShrink: 0, fontSize: 10, textTransform: 'none', width: '100%' }}>
               {t('browse.add', { count: selectedCount })}
             </Button>
           </>

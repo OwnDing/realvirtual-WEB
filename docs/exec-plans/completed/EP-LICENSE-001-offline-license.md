@@ -1,0 +1,367 @@
+---
+doc_id: EP-LICENSE-001
+title: 自有离线许可证黄金切片
+status: approved
+plan_status: completed
+owner: engineering
+last_reviewed: 2026-08-27
+authority: normative
+---
+
+# EP-LICENSE-001：自有离线许可证黄金切片
+
+## Purpose
+
+让私有化部署的客户在**内网完全不可出网**的条件下，拥有一份可离线验证、不可伪造、可在审计时出示的授权凭证；让许可证到期时产线**继续运行**，只有创作能力逐级降级；让销售合同里的到期行为说明与代码行为逐条对应。
+
+成功的观察方式：把 `license.rvlic` 放进部署目录，断网、把系统时钟拨到到期日之后，应用仍然渲染、仍然连信号、仍然能下发 PLC 写指令，只是出现水印且"保存"变为带原因的停用态；删除该文件，应用回到今天的行为。
+
+## Scope
+
+- 许可证文件格式、签名构造与严格解码（`rvlic` v1）；
+- 自有 Ed25519 信任根与两级委托证书；
+- 共享 Ed25519 原语上提，以及**非安全上下文可验证**的同步 sha512 钩子；
+- 部署配置的 `license.required` 开关，以及同源、失败关闭、有大小上限的加载路径；
+- 状态机（`not-required`/`valid`/`expiring`/`grace`/`readonly`/`mismatch`/`unverifiable`/`invalid`/`absent`）与基于 `issuedAt` 下界的时钟推算；
+- 到期降级：`decideSaveVerb` 阻断分支、水印、横幅、审计读数；
+- Node 侧签发 CLI 与浏览器侧验证器的交叉验证；
+- 移除上游 CONNECT 授权查询及其 UI、类型与文案；
+- 合同到期行为说明文档；
+- 中英文文案、Schema、契约、验收矩阵与门禁同步。
+
+## Non-goals
+
+- **不做任何技术强制或防绕过**：不混淆、不反调试、不自校验、不完整性自检。AGPL 下持有源码的一方有权删除校验（`LICENSE:376`），做这些是安全剧场。
+- **不阻断运行与操作**：3D 运行、信号接入、PLC 读写、报警、KPI、多用户观察在任何授权状态下都不被降级。
+- **不做联网激活、不做吊销列表拉取、不做遥测回传**：违反 Approved `PS-CONFIG-001` 的默认零外呼。
+- **不实现席位与信号上限的拒绝路径**：浏览器无法观察其它浏览器，写成"强制"是虚假承诺。只做本地读数展示。
+- **不做机器/硬件指纹**：浏览器内不可实现。
+- **不改动** GLB/`rv_extras`、rv-ODT、NodeId、项目文档 ID、存储 key、既有资产与模型签名的对外行为。
+- **不删除** `src/core/hmi/connect-rest.ts` 的 `connectRestFetch`——它被 News、CONNECT 更新、连接与 AI 同意四处共用，与授权无关。
+- 不建立组织/租户/云端账户体系（`OD-001` 阻塞范围）。
+
+## Required Documents and Decisions
+
+- `GOV-CONSTITUTION`、`GOV-AI-SAFETY`、`GOV-DOC-PRIORITY`、`GOV-CHANGE`、`GOV-DOD`；
+- **`OD-007` 已于 2026-08-27 关闭**（[`../../governance/OPEN_DECISIONS.md`](../../governance/OPEN_DECISIONS.md)）：宽限期 30 天、`installId` 与 `hosts[]` 双绑定、删除上游 CONNECT 授权查询、确认「合同凭证 + 防篡改审计记录」的表述进合同；
+- 本计划提议的 [`ADR-0007`](../../adr/ADR-0007-offline-license-evidence.md) 必须先 Accepted；
+- Approved [`PS-CONFIG-001`](../../product-specs/DEPLOYMENT_IDENTITY_EGRESS.md) 与 Accepted [`ADR-0006`](../../adr/ADR-0006-deployment-identity-egress.md)：默认零外呼与部署层状态所有权；
+- Accepted [`ADR-0001`](../../adr/ADR-0001-i18n-runtime.md)：新增文案的目录与回退规则；
+- M0 需新建：`PS-LICENSE-001` 产品规格、`CONTRACT-LICENSE-FILE-001` 契约、`schema/v1/license-file.json`。
+
+## Current Repository Facts
+
+以下为 2026-08-26 在分支 `license/l0-3-offline-license`（基线 `develop`，工作树干净，远程 `origin`，PR #6）实测：
+
+**授权现状**
+- `license-store.ts` 通过 `connectRestFetch` 查询上游 CONNECT 的 `/license/status`（`:184`）、`/license/activate`（`:252`）、`/license/deactivate`（`:272`）。
+- 轮询搭载在 CONNECT 面板的 2 秒轮询上（`connect-store.ts:1168-1172`），且仅在面板**同时**打开且已连接时运行（`ConnectPanel.tsx:801-806`）；面板关闭即不再刷新。
+- 今天被授权状态真正阻断的客户端能力**只有一处**：Browse 窗口的 Add 按钮（`ConnectPanel.tsx:3819`），其判定 `signalBudgetGate`（`:3709-3722`）刻意**失败即开**。其余全部是展示。
+- `gatewayAllowed` 解析入类型后在 `src/` 中**从未被读取**，是死字段。
+- 现有测试四个：`tests/license-store.test.ts`（纯 mapper）、`tests/LicenseSection.test.tsx`（走 `statusOverride` 测试缝）、`tests/connect-license-ui.test.tsx`（唯一覆盖真实闸的）、`tests/i18n-shell.test.tsx`。
+
+**密码学现状**
+- `@noble/ed25519` 固定 `3.1.0`，正式 `dependencies`，已在 `vite.config.ts:865` 的 `optimizeDeps.include`。
+- v3.1.0 导出 13 个名字；`utils.randomPrivateKey` **不存在**（已更名 `utils.randomSecretKey`），`etc.sha512Sync` **不存在**。按 v1/v2 API 写的代码会直接崩。
+- `verifyEd25519`（`rv-sig-verify.ts:262`）、`decodeStrictBase64`（`:79`）、`bytesToBase64`（`:91`）三个最该复用的函数**都未导出**。
+- 严格 Base64 用「重新编码后比对」拒绝非规范编码（`:85`），是可直接复用的反可塑性手法。
+- `RV-KEY-V1` 客户证书构造（`:251-260`）是与 GLB 无关的完整两级委托方案，可原样复用。
+- Worker 分流（`:399`、阈值 25 MB）**只**因 GLB 签名覆盖整个多兆字节文件而存在；许可证文件比阈值小若干数量级，该路径**不可复用**。
+- `scripts/rv-sign-glb.mjs` 全程用 `node:crypto`（`:12-17`、`:185`），含裸公钥转 SPKI 的 12 字节 OID 前缀技巧（`:210`）与 PKCS#8/base64 双形态私钥摄入（`:101-110`），签发 CLI 可整段照抄。
+- `sigToBase64` 全仓零消费方；`verifyRvSig*` 的生产消费方仅 `rv-scene-loader.ts:117,460` 与 `rv-glb-reference-resolver.ts:39,157`。
+
+**非安全上下文（决定成败）**
+- `crypto.subtle` 仅安全上下文可用；本仓库已在 `rv-script-runtime-loader.ts:125` 记录该事实，并在 `rv-project-manager.ts:60`、`rv-project-documents.ts:222-229` 做过降级处理。
+- `rv-sig-verify.ts` **没有**这层保护：WebCrypto 抛出后走 noble，而 noble 的 `verifyAsync` 经 `hashes.sha512Async` 同样调用 `subtle()`，实现为 `cr()?.subtle ?? err(...)`（`node_modules/@noble/ed25519/index.js:125`），`err` 无条件抛出（`:51-54`）；同步钩子 `hashes.sha512` 出厂 `undefined`（`:794`）。
+- `@noble/ed25519@3.1.0` 运行时依赖为空，`@noble/hashes` 仅为其 devDependency 且**当前未安装**（`node_modules/@noble/hashes` 不存在）。
+- **因此：在局域网 IP 的明文 HTTP 部署上，本仓库今天的 Ed25519 验证 100% 返回 `unverifiable`。** 这是私有化 on-prem 的典型形态（`connect-store.ts:688-692` 的回环判定不含局域网 IP）。既有模型签名验证同样受影响，属既有缺陷。
+
+**部署与外呼**
+- 同源请求在 `decideEgress` 中于 allowlist 之前提前返回（`egress-policy.ts:54-57`），相对路径先按 `runtimeBaseUrl()` 解析（`:42`）。**同源许可证文件不需要新增 `EgressPurpose`。**
+- 出厂 CSP `connect-src 'self'`（`index.html:8`）已允许同源 fetch；默认 `egress.mode: deny-external`（`public/settings.json`）。
+- 远程许可证检查则需在至少四处注册新 purpose（含 `apply-deployment-profile.mjs:12-15` 的 CSP 映射），本计划不做。
+- `settings.json` **失败即开**：404 / 网络错误 / 非法 JSON 一律静默返回 `{}`（`rv-app-config.ts:244-259`）。许可证不能搭这条通道，必须自带失败关闭的加载路径。
+- Vite `base` 默认相对 `'./'`（`vite.config.ts:755`），必须用 `import.meta.env.BASE_URL` 寻址，不能用前导 `/`。
+- deployment-config schema 根部 `additionalProperties: true`（`schema/v1/deployment-config.json:6`），新增顶层字段不破坏 Schema；各 section 内部均 `false`。
+
+**降级面**
+- 唯一保存路径 `saveDocument()`，生产调用点仅两处（`scene-document-view.ts:204`、`smart-asset-editor/save-flow.ts:30`）；判定函数 `decideSaveVerb`（`rv-save-document.ts:277`）是纯同步函数，**已有** `'blocked'` 动词与 `reason` 字段（`:102`、`:104-112`）和三条只读话术（`:283-303`）。
+- **不可用作强制点**：`RvDocument.canApply`（`rv-document.ts:119`）对被拒 op **静默丢弃**（`:365-368`），`applyOpDetached`（`:378`）丢弃 promise；`SceneStore._afterOpsChanged`（`scene-store.ts:2963`）的闸在 schedule 之前，会静默丢失内存改动。
+- **不存在**：任何水印（`vite-env.d.ts:16-18` 自述已移除）、任何应用级只读标志、`src/interfaces/` 中任何写闸、`SignalStore.register()`（`rv-signal-store.ts:1122`）上的任何计数或上限、多用户席位核算。
+- `mode:viewer` 看似只读，实为 28 条 `hiddenIn` UI 规则且可被 `settings.json` 的 `ui.visibilityOverrides` 覆盖（`App.tsx:182-183`），**不是**强制边界。
+- `__RV_COMMERCIAL__` 在 `vite.config.ts:811` 定义但 `src/` 中无人读取，不可当作现成的分级闸。
+- 横幅 z-index 已拥挤且无中央注册表：9400 / 9490 / 9500（三处并列）/ 20000 / 21000。
+- `StorageNoticeBanner`（`:42`、`:96-101`、`:226` 优先级表）是最接近的可复用模板。
+
+**门禁**
+- 五项必需检查名：`Governance Gate`、`Static Gate`、`Node Gate`、`Browser Gate`、`Build Gate`（`.github/workflows/quality-gates.yml`），`main` 与 `develop` 均 strict + enforce_admins + 不要求 review，**直接 push 已不被接受**。
+- i18n 基线在全部八个受门禁类别上**为零**，且 `tests/i18n-inventory.node.test.ts` 硬断言为零——**没有一条新硬编码文案的余量**。
+- `shell.license.*` 文案子树已存在（`en-US.ts:202-249`、`zh-CN.ts:914-956`），应扩展而非新建 namespace。类型绑定在 zh-CN 上（`i18next.d.ts:14-22`），**必须先写 zh-CN 才能编译**。
+- 测试归属由**文件扩展名**决定：`*.node.test.ts` 走 Node 配置，其余 `tests/**/*.test.{ts,tsx}` 走 Playwright Chromium。断言用户可见文案的浏览器测试必须在 `beforeAll` 里 `await setLocale('en-US')`。
+- 本检出是社区版（两个私有 sibling 均不存在），`npm run typecheck`（`tsconfig.full.json`）在此**无法通过**；社区门禁是 `./node_modules/.bin/tsc -p tsconfig.json --noEmit`。
+- 治理门禁对 `docs/**` 的硬要求：六个 front matter 键、`draft→proposed` 组合、`doc_id` 全局唯一、**新文档必须被同目录 README 以裸文件名链接**、链接必须在磁盘上存在（锚点不校验）。ExecPlan 文件名须匹配 `EP-<AREA>-<NNN>-<slug>.md`，且目录与 `plan_status` 必须一致。
+
+## State Ownership and Compatibility
+
+许可证是**部署层权威状态**，与 `ADR-0006` 的身份/服务/外呼同层：由部署交付方写入，项目、模型、用户偏好、会话与 URL 参数**均不得放宽**它。
+
+许可证文件本身是唯一权威；`settings.json` 中的 `deployment.id` 是**自述值**，只用于与许可证声明比对并产生审计提示，不构成授权来源。派生的授权状态是内存中的只读快照，不写入项目文档、不写入 GLB、不参与保存。
+
+时钟回拨检测的高水位标记写入浏览器偏好存储，属于**尽力而为的证据**，非权威——它随浏览器 profile、隐私模式和清缓存而丢失，不得据以拒绝服务。
+
+兼容性：无许可证文件时行为与今天完全一致。`rv-sig-verify.ts` 的导出面与模型签名验证行为不变（原语上提是纯搬运；同步 sha512 钩子使原本 `unverifiable` 的环境变为可验证，是严格改进）。
+
+## Allowed Paths
+
+- `src/core/crypto/**`
+- `src/core/licensing/**`
+- `src/core/persistence/rv-sig-verify.ts`
+- `src/core/persistence/rv-sig-public-key.ts`
+- `src/core/editor/rv-save-document.ts`
+- `src/core/engine/rv-signal-store.ts`
+- `src/core/hmi/LicenseSection.tsx`
+- `src/core/hmi/ConnectOptionsWindow.tsx`
+- `src/core/hmi/App.tsx`
+- `src/core/hmi/*Banner.tsx`
+- `src/core/hmi/license-store.ts`（删除）
+- `src/core/hmi/ConnectPanel.tsx`
+- `src/core/hmi/connect-store.ts`
+- `src/core/hmi/ai-consent-store.ts`
+- `src/core/hmi/rv-storage-keys.ts`
+- `src/core/deployment/deployment-config.ts`
+- `src/core/i18n/catalogs/**`
+- `src/main.ts`
+- `schema/v1/deployment-config.json`
+- `schema/v1/license-file.json`
+- `scripts/rv-sign-license.mjs`
+- `scripts/rv-sign-license.d.mts`
+- `package.json`
+- `package-lock.json`
+- `public/settings.example.json`
+- `tests/licensing-*.test.ts`
+- `tests/licensing-*.test.tsx`
+- `tests/licensing-*.node.test.ts`
+- `tests/rv-sig-verify.test.ts`
+- `tests/rv-sig-deploy.node.test.ts`
+- `tests/license-store.test.ts`（删除）
+- `tests/LicenseSection.test.tsx`（删除）
+- `tests/connect-license-ui.test.tsx`
+- `tests/i18n-shell.test.tsx`
+- `docs/**`
+
+## Forbidden Paths
+
+- 任何形式的私钥、密钥材料或签发凭据进入仓库、构建产物、测试快照或日志；
+- `schema/v1/rv-odt.json`、`schema/v1/specification.md`；
+- `public/**/*.glb` 及既有演示资产；
+- `src/interfaces/**`（本计划不新增工业写闸）；
+- `src/core/ops/rv-document.ts`（明确不以 `canApply` 作为强制点）；
+- `tests/i18n-inventory-baseline.json`（不得为放行新硬编码文案而改基线）；
+- `tests/private-dependent-tests.json`、`tsconfig.json` 的生成围栏（须经 `npm run gen:private-excludes` 重生成）；
+- 生成围栏与客户/私有 sibling 内容。
+
+## Milestones
+
+### M0 — 契约冻结（无代码）
+
+交付：`ADR-0007` 转 Accepted；新建 Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`；本计划移入 `active/`。
+在签发环境生成自有 Ed25519 密钥对，公钥进 `rv-lic-public-key.ts`，私钥只进 `RV_LIC_SIGN_PRIVATE_KEY`。
+验证：`./scripts/verify.sh governance`。
+可观察：治理门禁绿，且新文档被各自目录 README 以裸文件名索引。
+
+### M1 — 黄金切片：能在明文 HTTP 局域网上验签
+
+这是**决定整个方案成立与否**的里程碑，必须最先做完。
+
+交付：`src/core/crypto/rv-ed25519.ts`（上提 `decodeStrictBase64`/`bytesToBase64`/`verifyEd25519`，安装同步 `sha512` 钩子）；`@noble/hashes` 提升为正式依赖；`rv-sig-verify.ts` 改为引用共享模块；`src/core/licensing/rv-lic-public-key.ts`、`rv-lic-verify.ts`（`RV-LIC-V1` 域分隔、载荷字节直签、两级 `cert`）。
+正例：合法许可证验签通过并解析出载荷。
+反例：改一字节、改 Base64 填充、非规范编码、错误根密钥、缺 `cert` 的委托签名、**拿 GLB 签名当许可证签名重放**——全部拒绝。
+关键反例：`crypto.subtle` 被 stub 为 `undefined` 时验签**仍然成功**。
+验证：`npm run test:node`、`./scripts/verify.sh browser` 中的 licensing 与 rv-sig 分片、`./scripts/verify.sh static`。
+可观察：`tests/rv-sig-verify.test.ts` 全绿证明模型签名行为未回归；新增的无-WebCrypto 用例证明 on-prem 形态可用。
+
+### M2 — 签发 CLI 与交叉验证
+
+交付：`scripts/rv-sign-license.mjs`（`--keygen` / 签发 / `--verify`）与 `.d.mts` 声明，照抄 `rv-sign-glb.mjs` 的密钥摄入、SPKI 前缀与 CLI 自调用守卫。
+验证：`npm run test:node`；**Node 签发 → 浏览器验证**的交叉用例（现有 rv-sig 套件缺这一环）。
+可观察：一条命令产出的 `.rvlic` 能被浏览器验证器接受；篡改后被拒。
+
+### M3 — 加载与状态机
+
+交付：`deployment-config.ts` 新增 `license` 段解析（`required` / `path` / `installId`，`path` 走既有 `relativeAssetUrl()` 校验锁死同源，解析必须幂等——配置每次启动被校验两次）；`src/core/licensing/rv-lic-store.ts`——同源加载 `${BASE_URL}license.rvlic`、**自带失败关闭**（不复用 `settings.json` 的失败即开）、16 KiB 响应体上限、状态机、时钟推算（`max(Date.now(), 高水位, issuedAt)`）、绑定审计比对。
+验证：时间边界表驱动测试——`notAfter` 前后各 1 秒、`grace` 边界、时钟回拨、**时钟拨到 1970 由 `issuedAt` 下界兜底**、`required: false` 时子系统完全静默、绑定不符落入 `mismatch` 而非 `invalid`、超限响应体被拒。
+可观察：拨动系统时钟即可在 UI 上看到状态迁移；绑定不匹配只出说明性提示不改可用性；公共演示构建上看不到任何授权文案。
+
+### M4 — 降级与呈现
+
+交付：`decideSaveVerb` 的 `readonly` 阻断分支（含可执行的原因句）；水印组件与横幅（复用 `StorageNoticeBanner` 的严重度/优先级模式，并为新横幅在拥挤的 z-index 带中取得明确位置）；`SignalStore.register()` 的本地计数**读数**；扩展 `shell.license.*` 文案，**zh-CN 先行**再镜像 en-US。
+验证：`npm run test:node`（含 `i18n-inventory` 与 `i18n-catalog` 保持零漂移）、浏览器组件测试、`./scripts/verify.sh browser`。
+可观察：`readonly` 下保存按钮仍可按且说明原因；**同一状态下 PLC 写、信号刷新、模型运行断言未被阻断**。
+
+### M5 — 移除上游 CONNECT 授权查询
+
+交付：删除 `license-store.ts` 整个文件、`LicenseSection.tsx`、`ConnectOptionsWindow.tsx:529-535` 的 License 区块、`connect-store.ts` 的授权轮询/断连清理/`activateProfile` 重取、`ConnectPanel.tsx` 中由 `/license/status` 驱动的额度预检与呈现、`shell.license.*` 33 条文案与 `connect` 命名空间的额度文案、以及 `tests/license-store.test.ts` 与 `tests/LicenseSection.test.tsx`。改写 `ai-consent-store.ts:16` 与 `rv-storage-keys.ts:13` 中引用 `LICENSE_TERMS_VERSION` 的注释。
+**保留** `connect-rest.ts` 的 `connectRestFetch`（News / CONNECT 更新 / 连接 / AI 同意共用）。
+验证：`./scripts/verify.sh static`（社区 `tsc` 会抓出所有悬空引用）、`npm run test:node`（`i18n-catalog` 双语键集必须仍然对齐、`i18n-inventory` 仍为零）、`./scripts/verify.sh browser`。
+可观察：连接到 CONNECT 网关后，网关自身的授权问题**仍然**通过 `/status` 的 `LICENSE_REQUIRED` 与 `SignalLimitExceeded` 呈现（`connect-store.ts:832`、`:862`、`ConnectPanel.tsx:1381`）；消失的只有绑定前的额度预览。
+
+### M6 — 合同、文档与全门禁
+
+交付：合同到期行为说明（Approved 文档，逐条对应 M3/M4 的实际行为，并载明 AGPL 下的定位）；`public/settings.example.json` 增补示例；验收矩阵与 `REPOSITORY_FACTS` 同步；本计划补齐 Outcomes 后转 completed。
+验证：`./scripts/verify.sh all`；PR 上五项必需 Gate 全绿。
+可观察：断网 + 拨钟的端到端人工巡检记录留证。
+
+## Progress
+
+- [x] OD-007 四项决定由用户 2026-08-27 当前明确指令作出并关闭
+- [x] 用户 2026-08-27 当前明确指令批准本方案；`ADR-0007` 转 Accepted，本计划转 Active
+- [x] M0 契约冻结：Accepted `ADR-0007`、Approved `PS-LICENSE-001`、`CONTRACT-LICENSE-FILE-001`、`schema/v1/license-file.json`
+- [x] M0 尾项：Owner 于 2026-08-28 在签发环境生成自有 Ed25519 密钥对；公钥进入 `rv-lic-public-key.ts`，私钥以 `RV_LIC_SIGN_PRIVATE_KEY` 条目进入本机登录钥匙串，不进仓库
+- [x] M1 黄金切片：非安全上下文验签（`@noble/hashes` 同步钩子、共享 Ed25519 原语、`.rvlic` 验证器、19 条用例）
+- [x] M2 签发 CLI 与交叉验证（`rv-sign-license.mjs` + `.d.mts`，11 条 Node↔浏览器交叉用例）
+- [x] M3 加载与状态机（部署配置 `license` 段、时钟三重下界、九态判定、失败关闭加载；63 条用例）
+- [x] M4 降级与呈现（`decideSaveVerb` 阻断分支、横幅与水印、中英文案、信号读数；18 条用例）
+- [x] M5 移除上游 CONNECT 授权查询（4 个端点、2 个文件、39 + 6 条文案；`ConnectPanel.tsx` 减 155 行）
+- [x] M6 文档与门禁：验收矩阵授权行、`settings.example.json` 示例、blur 用量流水账、`REPOSITORY_FACTS` remote 更正；合同条款 §6 与实际行为逐条核对一致（30 日宽限期 ↔ `RV_LIC_DEFAULT_GRACE_DAYS = 30`）
+- [x] 生产信任根上线：从钥匙串读回私钥并独立推导公钥，与编译进客户端的根公钥逐字节一致；真实 CLI 签发的临时 `.rvlic` 由该根验证为 `valid`
+- [x] 对抗性评审补跑三个视角（密码学、安全红线、删除余波），15 条候选人工复核后处理
+- [x] PR #6 生产信任根代码 head `121fb58` 的远程五项必需 Gate 全绿（Actions run `33170012618`，Browser 14m29s）
+
+## Surprises & Discoveries
+
+- **2026-08-28（补跑评审，第二轮）**：三个此前未运行的视角全部完成。工作流报「15 条候选、15 条确认、0 条驳回」——**100% 确认率本身就是警号**，批量验证者在盖章而非证伪。人工复核后：
+  - **`shell.license.required` / `.terms` 的判定我一开始也错了**：`grep "license.required"` 命中的是 `rv-lic-state.ts` 里描述**部署配置字段**的注释和 `WelcomeModal.tsx` 的散文，不是 i18n 调用。改用带引号的精确形式（`'license.required'`）后引用数为 0，确认是孤儿。评审者和我犯了同一个错误。
+  - **最重的一条（major）**：一次向前的时钟跳变（CMOS 失效读成 2099）会永久钉死高水位——**即使时钟随后修正，该安装永远停在 `readonly`**，直接违背 ADR D8「时钟错误的最坏后果是一条错误的横幅，而不是一条停掉的产线」。难点在于不能简单加上限：把标记按**墙上时钟**设界会连回拨防御一起废掉（回拨一年恰好让标记领先一年，那正是标记存在的理由）。正解是按**许可证自己的 `issuedAt`** 设界——真实观测必然发生在签发之后的合理服务期内，而 2099 不是。并新增 `healLicenseClock` 把坏值写回，否则只跳过不覆盖会让它每次会话重现。
+  - 另修：横幅与调试信任横幅坐标完全重合导致**两者同时出现时授权提示被完全遮住**；Settings 页脚两个 caption 都是 inline span 会挤成一行；`connect.options.notConnected` 仍在渲染「连接后可管理其**许可**」而该功能已被 M5 删除（中英各一处，按逐字门禁流程声明例外）；`settings.interfaces` 下一份 4 空格缩进的重复文案躲过了 M5 的 6 空格作用域清理；M5 遗留的两个死导入；`LicenseFooterLine` 零覆盖（M5 用它替换被删的 `LicenseSection` 测试却没补测）；`@noble/hashes` 导入失败会连带丢弃可用的 noble 模块；CLI `--verify` 自称遵循 §9 却从不校验载荷。
+  - **未采纳**：委托证书无有效期/吊销机制、RV-KEY-V1 无信任域标签。前者是契约的已知边界（`cert` 只有三个成员），后者的分离依赖两个根密钥不同、当前不可利用。两条都记为已知限制，改动需新 ADR。
+- **2026-08-28（对抗性评审，两个真缺陷）**：评审工作流 6 个视角只跑完 3 个（密码学、安全红线、删除余波因额度中断未运行），产出 16 条候选，**19 个验证 agent 全部中断**——工作流因此把未验证项归入 "rejected"，该输出不可按字面采信。逐条自查后确认两条为真：
+  1. **同源保证被击穿**：`relativeAssetUrl` 拒绝以 `//` 开头的路径，但**前导单斜杠 + 以 `/` 结尾的 `BASE_URL` 会重新拼出 `//`**。实测 `BASE_URL=/` 加 `path=/evil.rvlic` 得到 `//evil.rvlic`，解析为 `https://evil.rvlic/`——在一个默认零外呼的构建里发出跨源请求。已改为经 `URL` 解析后比较 origin，并加 `redirect: 'error'` 关掉重定向出境这第二扇门。
+  2. **时钟锚点可被许可证污染**：`recordLicenseClock(clock.effectiveNow)` 持久化的是被 `issuedAt` 抬高后的值。一份 `issuedAt` 误写为 2030 的许可证会把高水位永久钉在 2030，此后每次启动都误报回拨，且合法许可证会被算成早已过期。已改为持久化 `clock.wallNow`。原时钟测试未能发现，因为其 `effectiveNow` 恰好等于 `wallNow`。
+- **2026-08-28（契约符合度）**：四处实现与契约不一致，已按契约修正——`graceDays` 越界应钳制而非拒绝（§4）、`limits` 格式错误不得作为拒绝依据（§7）、委托组织名应报签名覆盖的 NFC 形式、IPv6 主机名需去括号（`location.hostname` 带方括号）。另加：`notAfter` 早于 `issuedAt` 判为格式非法（否则该证从首次启动即过期且永不恢复），并让签发 CLI **在签发时就拒绝客户端会拒绝的载荷**。
+- **2026-08-28**：评审子 agent 在工作树留下两个探针脚本（`tests/zz-lic-*.test.ts`，用 `__LOG` hack 且 `afterAll` 故意断言失败以 dump 输出），破坏类型检查。已移出仓库到 scratchpad，未提交。
+- **2026-08-27（M5）**：`CONNECT_ERROR_MESSAGES.LICENSE_REQUIRED` 的文案原文是「open License in the CONNECT panel」——而那个区块正是本里程碑删掉的。若不改，网关拒绝服务时会把操作员指向一个不存在的地方。已改为指向网关自身。这类**文案指向被删 UI** 的引用类型检查抓不到，只能靠逐条读。
+- **2026-08-27（M5）**：`tests/connect-license-ui.test.tsx` 是混合文件——除授权外还覆盖 CONNECT 下载、获取入口与连接状态。整файл删除会静默丢掉这些覆盖，因此只移除授权相关用例并改名 describe。`interfaceStatusShort('SignalLimitExceeded')` 与 `interfaceDotColor` 的断言保留，因为它们来自网关 `/status`，与 `/license/status` 无关。
+- **2026-08-27（M5）**：`tests/i18n-shell.test.tsx` 中「文案在调用时解析而非导入时」的不变量测试，其主体（`deriveLicensePresentation`）被删。不变量本身仍然成立且值得覆盖，因此改指向新的 `licenseNoticeText`，而不是连测试一起删。
+- **2026-08-27（M5）**：删除目录孤儿键时，第一版脚本按叶子名全局匹配，把其它 namespace 中同名的 `close`、`activate`、`free`、`email`、`pending` 一并删掉（zh-CN 删了 56 条而非 39 条）。社区 `tsc` 立刻报出 `"ai.close"`、`"news.close"`、`"doc.close"` 等键不存在。已回滚并改为**限定在 `shell.license` 块内**匹配。
+- **2026-08-27（M5）**：M4 加的 4 条审计文案（`issuedTo`/`validUntil`/`contractSignals`/`contractSeats`）与 `registeredSignalCount` 当时没有接入 UI，属于死代码。本里程碑给了它们真实归宿：Settings 面板页脚、构建标识下方——同为部署级身份信息，且面向审计对账，正是契约 §7 的用途。
+- **2026-08-27（M4）**：新增英文文案触发了 i18n 逐字追溯门禁（`tests/i18n-preboot.node.test.ts`），因为它要求每条英文值都能在迁移基线提交中找到原文。正确出口是 `scripts/i18n-verbatim-check.mjs` 的 `NEW_STRING_EXEMPTIONS`——按既有先例（`PUBLIC_DES`、`SMART_ASSET_EDITOR`）声明 15 个新键并附理由，而不是放宽门禁。
+- **2026-08-27（M4）**：授权阻断放在 `decideSaveVerb` 的**后端拒绝之前**。若放在之后，「没有打开工程——新建或打开一个再保存」会变成假承诺：用户照做之后仍然保存不了。已用一条测试钉住该顺序。
+- **2026-08-27（M4）**：`rv-save-document.ts` 中既有的四条拒绝话术是硬编码英文，未被 i18n 库存门禁捕获——其触发属性名列表不含 `reason`。新增的授权话术走 `rvT`，未改动既有四条（属范围外，且其措辞被现有测试逐字钉住）。
+- **2026-08-27（M4）**：横幅 z-index 取 9450，位于存储提示（9400）与调试信任横幅（9490）之间。该层带拥挤且无中央注册表，取值理由写在组件注释里。
+- **2026-08-27（M3）**：状态机写成无 I/O 的纯函数，时钟与加载分别在两侧。因此到期边界可以逐毫秒表驱动测试（`notAfter − 30 天` 整点、+1ms、`notAfter` 整点、+1ms、宽限末点、+1ms），不需要操纵真实时间。
+- **2026-08-27（M3）**：「红线」写成了可执行断言而不只是文档条款——对全部九个状态断言 `canSave` 仅在 `readonly` 为 false。将来任何人给某个状态加上禁用保存都会立刻变红。
+- **2026-08-27（M3）**：`validateDeploymentConfig<T extends Record<string, unknown>>` 无法在不加 cast 的情况下消费自己的输出类型，幂等性测试因此需要一次 cast。属既有 API 小瑕疵，未改动。
+- **2026-08-27（M2，范围外发现，未修）**：`tests/bundle-chunk.node.test.ts:38` 的入口正则找 `assets/index-*.js`，但 `vite.config.ts:977` 是多入口配置 `input: { app, teamsConfig }`，产物入口实为 `assets/app-*.js`。该断言写于社区版首发 `b06e09a`，入口改名后未跟进。
+  它长期未被发现，是因为 `describe.skipIf(!hasDist)` 加上 CI 的 Node Gate **不构建 `dist/`**（`scripts/verify.sh` 的 `run_node_tests` 只跑 `npm run test:node`）——在 CI 里永远跳过，在本机则对着上一次遗留的 `dist/` 通过。本次执行 `./scripts/verify.sh build` 后它第一次真正运行并失败。
+  **与本计划无关**（未修改 `vite.config.ts`，该测试不在 Allowed Paths），归属 Active `EP-GOV-004`「让质量门禁真正拦得住东西」，在此登记为证据，不在本 PR 修改。
+- **2026-08-27（M1，已实测）**：非安全上下文的诊断在 Node 中逐条复现——`crypto.subtle` 缺席时，`verifyAsync` 抛 `crypto.subtle must be defined, consider polyfill`，同步 `verify` 抛 `hashes.sha512 not set`；装上 `hashes.sha512 = sha512`（`@noble/hashes/sha2.js`）后，对 `node:crypto` 独立生成的签名 `verify` 返回 `true`，篡改签名与篡改消息均返回 `false`。该探针同时证明 Node 签发 ↔ noble 验证互通，为 M2 的交叉验证铺路。
+- **2026-08-27（M1）**：关键用例做过"摘掉钩子"的反向验证——移除钩子后，恰好且仅有两条无-`crypto.subtle` 用例变红，返回值为 `unverifiable`，与诊断逐字吻合。测试确实有牙齿，不是恒真断言。
+- **2026-08-27（M1）**：`decodeStrictBase64` 需要已知长度，而许可证载荷长度可变，因此新增 `decodeStrictBase64Any`，保留同样的"重新编码后比对"反可塑性检查。
+- **2026-08-27（M1）**：RV-KEY-V1 证书构造上提为共享 `rvKeyV1CertMessage`，而不是在 licensing 里复制一份。契约 §3 要求两边字节一致，靠两份副本"不漂移"是靠不住的。
+- **2026-08-27（M1）**：浏览器测试不做类型检查，`crypto.subtle.sign` 的 `Uint8Array<ArrayBuffer>` 约束是由 Static Gate 抓出的——证明"浏览器测试绿"不等于"类型正确"。
+
+- **2026-08-27（M0）**：许可证载荷 v1 **不含** `notBefore`。预先签发未来生效的凭证不在 v1 范围，省掉它使判定顺序少一个状态，且按只加不减规则日后可追加。契约已写明该省略是刻意的。
+- **2026-08-27（M0）**：生产密钥对不由 Agent 生成——私钥必须只存在于 Owner 的签发环境。`rv-lic-public-key.ts` 在 M1 建立时先由测试注入信任根（沿用 `VerifyRvSigOptions.rootPublicKeyBase64` 的既有测试缝），真实公钥在 M2 的 CLI `--keygen` 可用后由 Owner 填入。**不得**使用占位公钥，那会造成一个验证不了任何东西的信任根。
+
+- **2026-08-26（起草期，已核实）**：在局域网 IP 的明文 HTTP 部署上，本仓库今天的 Ed25519 验证必然返回 `unverifiable`——WebCrypto 因非安全上下文缺席，noble 的异步回退同样依赖 `crypto.subtle` 做 sha512（`node_modules/@noble/ed25519/index.js:125`、`:51-54`、`:794`），而同步钩子未安装、`@noble/hashes` 未作为依赖存在。该形态正是私有化 on-prem 的典型形态。此缺陷**已经影响现有的模型签名验证**，不是本次新引入的。
+- **2026-08-26**：`RvDocument.applyOp` 对被 `canApply` 拒绝的 op 静默丢弃（`rv-document.ts:365-368`）。若按直觉把授权闸放在这里，会造成用户改动无声消失。降级点因此改为 `decideSaveVerb`。
+- **2026-08-26**：`gatewayAllowed` 在 `src/` 中从未被读取，是死字段；今天真正被授权状态阻断的能力只有 Browse 的 Add 按钮一处，且该闸刻意失败即开。"替换授权体系"的实际代码面比预期小得多。
+- **2026-08-26（设计评审）**：把 `payload.issuedAt` 用作时钟下界是零成本且不可清除的——许可证不可能在签发前运行，因此把系统时钟拨到 1970 只会读出签发日。它在不依赖任何浏览器存储的前提下，让最朴素的改时钟手法在整个合同期内失效，严格优于单靠 localStorage 高水位（后者随 profile、隐私模式和清缓存丢失）。
+- **2026-08-26（设计评审）**：必须有 `license.required` 开关。缺少它会让「文件缺失」与「这份部署本来就不需要许可证」塌缩成同一状态，导致公共 CDN 演示、社区构建和每个开发检出都显示「未授权」文案。
+- **2026-08-26**：本仓库无上游 remote，`license-store.ts` 全部历史仅 3 次提交——删除它不会造成反复合并冲突。该选项的成本低于预期，故列入 OD-007 由 Owner 决定。
+
+## Decision Log
+
+- 2026-08-26：用户当前明确指令确认本系统的定位是**「合同凭证 + 防篡改审计记录」，不是技术 DRM**。据此，一切反绕过手段（混淆、反调试、自校验）列为 Non-goal，绑定与上限被如实降级为审计断言与合同条款。
+- 2026-08-26：用户当前明确指令要求先开 PR 再给方案；PR #6 以 draft 建立，`OD-007` 登记为首个提交。
+- 2026-08-27：用户当前明确指令批准本方案并授权执行。`ADR-0007` 接受，本计划移入 `active/`。
+- 2026-08-27：用户当前明确指令作出 `OD-007` 的四项决定并据此关闭该条目——**宽限期 30 天**；**`installId` 与 `hosts[]` 两个绑定维度都要**；**删除上游 CONNECT 授权查询**；**确认「合同凭证 + 防篡改审计记录」的表述进入销售合同**。ADR-0007 与本计划已按此更新；ADR 接受与计划激活仍是独立动作，尚未发生。
+
+## Validation
+
+**M1 已运行（2026-08-27，本机）**：
+- `./scripts/verify.sh static` — 通过（治理 + 外部 origin 门禁 + ESLint + 社区 `tsc`）
+- `npm run test:node` — 63 文件通过 / 2 跳过，640 用例通过 / 7 跳过，0 失败
+- `npx vitest run tests/licensing-verify.test.ts` — 19 通过
+- `npx vitest run tests/rv-sig-verify.test.ts` — 15 通过（证明原语上提未改变模型签名行为）
+- `npx vitest run --config vitest.node.config.ts tests/rv-sig-deploy.node.test.ts` — 7 通过
+- `./scripts/verify.sh build` — 通过
+
+**生产信任根接入后的最终本机门禁（2026-08-28）**：
+- `node scripts/rv-sign-license.mjs --keygen` 的输出在进程内拆分：公钥进入源码，私钥以 Base64 PKCS#8 进入 macOS 登录钥匙串 `RV_LIC_SIGN_PRIVATE_KEY`，未回显、未写入仓库或临时文件
+- 从钥匙串读回私钥并推导 Ed25519 公钥，与 `RV_LIC_ROOT_PUBLIC_KEY_BASE64` 一致；真实 CLI 签发 smoke license 后 `--verify` 返回 `valid`
+- `./scripts/verify.sh governance`、`./scripts/verify.sh static` — 通过
+- `npx vitest run --config vitest.node.config.ts tests/licensing-sign.node.test.ts tests/licensing-state.node.test.ts` — 54 通过
+- `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能 run）**10,918 例零失败**
+- `./scripts/verify.sh build` — 通过
+- `./scripts/verify.sh all` — 在 Node 阶段停止：693 通过 / 7 跳过 / 1 失败，唯一失败仍是范围外 `bundle-chunk.node.test.ts` 的陈旧入口正则（见 Discoveries）；没有通过删除 `dist` 让该断言跳过
+- PR #6 生产信任根代码 head `121fb58`：GitHub Actions run [`33170012618`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33170012618) 五项必需 Gate 全绿；Browser Gate 14m29s
+
+**全量门禁（2026-08-28，本机，提交 `49525c7`——评审两轮修复后）**：
+- `./scripts/verify.sh browser` — **exit 0**，9 次运行（8 分片 + 性能run）**10,918 例零失败**
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 693 通过 / 7 跳过 / 1 失败（范围外的 `bundle-chunk.node.test.ts`）
+- 授权与 CONNECT 相关 Browser 测试 92 例通过
+
+**首轮门禁（提交 `bad47d9`）**：
+- `./scripts/verify.sh browser` — **exit 0**，8 分片 + 性能run，约 10,900 例零失败
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 693 通过 / 7 跳过 / 1 失败（范围外的 `bundle-chunk.node.test.ts`，见 Discoveries）
+- **教训**：早前用 `./scripts/verify.sh browser | tail -40` 取结果，管道把退出码换成了 `tail` 的 0，一次真实失败被吞掉。此后一律不带管道并显式回显 `$?`。
+
+**M5 已运行（2026-08-27，本机）**：
+- `./scripts/verify.sh static` — 通过（社区 `tsc` 是这次的主力，逐个指出悬空引用）
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+- 受影响 Browser 测试 8 文件 / 73 例通过（CONNECT 面板信号树、折叠、多选、两个性能门禁、`connect-license-ui`、`i18n-shell`、`licensing-degrade`）
+- i18n 三道门禁（catalog 双语对齐 / inventory 硬零 / preboot 逐字追溯）通过
+- `./scripts/verify.sh build` — 通过
+
+**M4 已运行（2026-08-27，本机）**：
+- `tests/licensing-degrade.test.tsx` — 18 通过
+- `tests/save-document-routing.test.ts` + `tests/mixed-log-save.test.ts` — 28 通过（保存路径无回归）
+- `tests/i18n-catalog.node.test.ts`、`tests/i18n-inventory.node.test.ts`、`tests/i18n-preboot.node.test.ts` — 通过
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+
+**M3 已运行（2026-08-27，本机）**：
+- `tests/licensing-state.node.test.ts` — 40 通过（到期边界逐毫秒、绑定双维度、通配符、配置解析与幂等）
+- `tests/licensing-clock.test.ts` — 11 通过（`issuedAt` 下界、高水位单调、回拨容差、存储不可用降级）
+- `tests/licensing-store.test.ts` — 12 通过（未声明 `required` 时**一次 fetch 都不发**、404/异常/超限一律失败关闭、同源路径断言）
+- `./scripts/verify.sh static`、`./scripts/verify.sh build` — 通过
+- `npm run test:node` — 690 通过 / 7 跳过 / 1 失败（仍是范围外的 `bundle-chunk.node.test.ts`）
+
+**M2 已运行（2026-08-27，本机）**：
+- `npx vitest run --config vitest.node.config.ts tests/licensing-sign.node.test.ts` — 11 通过
+- `./scripts/verify.sh static` — 通过
+- `npm run test:node` — 650 通过 / 7 跳过 / 1 失败，唯一失败是范围外的 `bundle-chunk.node.test.ts`（见 Discoveries），本计划新增用例全部通过
+
+- **最终远程验收**：生产信任根代码 head `121fb58` 的五项 Gate 全绿；计划归档提交仍由同一分支保护在合并前复验。
+
+
+- `./scripts/verify.sh governance`（文档与治理，M0 起每个里程碑）
+- `./scripts/verify.sh static`（含社区 `tsc -p tsconfig.json`、ESLint 边界、外部 origin 静态门禁）
+- `npm run test:node`（含 `i18n-inventory` 零漂移、`i18n-catalog` 双语对齐、私有排除清单守卫）
+- `./scripts/verify.sh browser`（8 分片 Chromium，含 licensing 与 rv-sig 回归）
+- `./scripts/verify.sh build`
+- `./scripts/verify.sh all`（M5）
+- 关键专项：`crypto.subtle` 为 `undefined` 时验签成功；Node 签发 ↔ 浏览器验证交叉用例；`readonly` 状态下 PLC 写与信号刷新**未被阻断**的断言。
+- 人工：断网 + 系统时钟拨到到期后的端到端巡检。
+- **必须如实披露为未验证**：真实客户内网、真实 PLC 与产线、真实时钟偏移、真实气隙安装流程、真实经销商签发链路、移动端与 WebXR 下的呈现。
+
+## Rollback
+
+删除部署目录中的 `license.rvlic` 即回到 `absent` 状态，等价于本计划之前的行为；**没有数据迁移需要撤销**，不涉及 GLB、项目文档或持久化格式。
+
+代码分层回退：M1 的原语上提与同步 sha512 钩子是纯改进，可单独保留；M3–M4 可整体回退到上一发布版本。依赖回退需同时还原 `package.json` 与 `package-lock.json`。
+
+密钥泄露的应对是轮换签发密钥并重签存量许可证——`cert` 两级结构使其无需更换根密钥、无需发新客户端。更换**根**密钥则需发新版本客户端，属已知代价。
+
+## Outcomes & Retrospective
+
+本计划交付了完整的自有离线许可证黄金切片：Approved 产品规格与文件契约、Accepted ADR、严格 `.rvlic` 编解码与 Ed25519 两级委托、无 WebCrypto 环境的同步验签、签发 CLI、部署加载与九态状态机、只收回保存能力的到期降级、中英文呈现、CONNECT 上游授权客户端删除，以及对应 Schema、验收矩阵和 111 条新增用例。生产根密钥于 2026-08-28 由 Owner 生成；公钥编译进客户端，私钥只保存于本机登录钥匙串 `RV_LIC_SIGN_PRIVATE_KEY`。真实根密钥签发 smoke license 后验证为 `valid`，系统不再处于空信任根状态。
+
+最终自动化证据：Governance、Static、Build、本地完整 Browser（8 分片 + 性能 run，10,918 例）和许可证专项 54 例通过；生产信任根代码 head `121fb58` 的 GitHub Actions run [`33170012618`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33170012618) 五项必需 Gate 全绿。`./scripts/verify.sh all` 在本机 Node 阶段仍被范围外既有缺陷 `tests/bundle-chunk.node.test.ts` 阻断：它只认 `assets/index-*`，当前入口是 `assets/app-*`；693 例通过、7 跳过、仅该 1 例失败。没有删除 `dist` 让测试跳过，也没有在本计划越界修改；该债务继续归属 Active `EP-GOV-004`。远程 Node Gate 在干净 CI 环境通过。
+
+未验证项保持不夸大：真实客户内网、真实产线与 PLC、真实时钟偏移、真实气隙安装、真实经销商委托签发、移动端和 WebXR 呈现。根私钥目前只有本机登录钥匙串一处受保护副本；离线备份、双人保管和恢复演练属于上线后的密钥运营工作，不在仓库内完成。`PS-LICENSE-001` §6 已按实际代码行为核对，但进入合同模板前仍必须由法务审核措辞；工程完成不能替代律师意见。
+
+回滚没有数据迁移：回退生产信任根提交会让许可证重新变为 `unverifiable`（不锁定）；移除部署目录的 `license.rvlic` 会回到 `absent`。密钥泄露时优先用 `cert` 委托链轮换签发密钥；更换根密钥需要发新客户端。

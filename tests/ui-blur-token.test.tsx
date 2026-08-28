@@ -314,6 +314,21 @@ describe('ui blur token — source invariant', () => {
     // Nothing replaced its glass — the red Stop segment and the greyed-out
     // authoring buttons carry the "a run is live" signal now — so this is one
     // inline blur fewer, not one relocated.
+    //
+    // 27.08.2026, EP-LICENSE-001 M4: 43. LicenseNoticeBanner.tsx (8px) — the
+    // offline-licence notice, which copies CommissioningTrustBanner's glass for
+    // the same reason that one copied SigWarningBanner's: all three are
+    // fixed top-centre advisories that can stand on screen together, and three
+    // different glasses would read as three different products. Checked, it
+    // goes through the factor. The watermark in the same file has no blur.
+    //
+    // 27.08.2026, EP-LICENSE-001 M5: back to 42 — the second REMOVAL this
+    // inventory records, and it cancels the addition above on the same day.
+    // LicenseSection.tsx carried a 16px scaled blur (its activation dialog's
+    // glass); the whole file went when this project stopped administering the
+    // upstream CONNECT gateway's licence. One glass surface out, one in, so the
+    // inventory lands where it started even though neither is the other's
+    // replacement.
     expect(scaled.length).toBe(42);
   });
 

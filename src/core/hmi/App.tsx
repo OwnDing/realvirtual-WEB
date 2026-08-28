@@ -83,6 +83,7 @@ import { AnnotationPanel } from './AnnotationPanel';
 import { SharedViewBanner } from './SharedViewBanner';
 import { GPUWarningBanner } from './GPUWarningBanner';
 import { StorageNoticeBanner } from './StorageNoticeBanner';
+import { LicenseNoticeBanner, LicenseWatermark } from './LicenseNoticeBanner';
 import { SigWarningBanner } from './SigWarningBanner';
 import { CommissioningTrustBanner } from './CommissioningTrustBanner';
 import { AutoQualityDialog } from './AutoQualityDialog';
@@ -352,6 +353,8 @@ function FullHmiShell({
         <SharedViewBanner />
         <GPUWarningBanner />
         <StorageNoticeBanner />
+        <LicenseNoticeBanner />
+        <LicenseWatermark />
         {showSigWarningBanner && <SigWarningBanner />}
         {/* plan-423 F6. Gates itself: it owns its own `useUIVisible` rule
             (commissioning only) AND renders nothing unless the model on screen

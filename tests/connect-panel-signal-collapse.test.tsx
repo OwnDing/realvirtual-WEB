@@ -86,7 +86,6 @@ function signalListTree(current: ConnectInterface, key = current.id) {
           <SignalListView
             key={key}
             iface={current}
-            overLimitSignals={[]}
           />
         </div>
       </RVViewerProvider>

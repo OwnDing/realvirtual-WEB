@@ -3,14 +3,24 @@
 
 /** Central list of all localStorage keys used by the WebViewer. */
 
+/**
+ * Highest wall-clock instant this install has ever observed, as a number.
+ *
+ * A floor for license expiry arithmetic, never an authority: it is per-origin
+ * and per-browser-profile, a private window never sees it, and clearing site
+ * data removes it. The license's own `issuedAt` is the floor that cannot be
+ * cleared, so a missing value here degrades the evidence, not the behaviour.
+ */
+export const LICENSE_CLOCK_KEY = 'rv-license-clock';
+
 /** The CONNECT standalone signal-link hint has already been shown on this device. */
 export const CONNECT_EMBED_SIGNAL_HINT_SEEN_KEY = 'rv-connect-embed-signal-hint-seen';
 
 /**
  * Versioned acknowledgement of what the AI Bridge may reach (plan-366 Phase 6).
  * Stores the ACCEPTED version string, not a boolean: raising
- * `AI_BRIDGE_CONSENT_VERSION` (ai-consent-store.ts) must ask again, the same way
- * `LICENSE_TERMS_VERSION` re-asks when the terms change. Never written implicitly.
+ * `AI_BRIDGE_CONSENT_VERSION` (ai-consent-store.ts) must ask again when the
+ * scope of what the bridge may reach changes. Never written implicitly.
  */
 export const AI_BRIDGE_CONSENT_KEY = 'rv-ai-bridge-consent';
 

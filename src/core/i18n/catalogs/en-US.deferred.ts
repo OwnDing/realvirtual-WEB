@@ -314,8 +314,6 @@ export const enUSDeferred = {
         keba: 'KEBA',
       },
       windowTitle: 'CONNECT Settings',
-    license: 'License',
-    notConnected: 'Connect to a gateway to manage its license, configuration profiles and historian.',
     connection: 'Connection',
       address: 'Address',
       port: 'Port',
@@ -851,7 +849,6 @@ export const enUSDeferred = {
       empty: 'No signals discovered — check that the interface is enabled and its source is reachable.',
       all: 'All',
       none: 'None',
-      overBudget: 'Signal limit: {{selected}} new signals selected, only {{free}} of {{limit}} free. Deselect {{excess}} or activate a license.',
       add: 'Add to signals ({{count}})',
     },
     log: {
@@ -901,8 +898,6 @@ export const enUSDeferred = {
     },
     signal: {
       inModel: 'Used by the model — a component (drive / cylinder / sensor) references this signal, coupled by name',
-      limitTooltip: 'Signal limit - this signal is not being served',
-      limitAria: 'Signal limit',
       recordingTooltip: 'Recording to historian — click to view history',
       showTrend: 'Show historian trend for {{name}}',
       stopRecording: 'Stop recording this signal in the historian',
@@ -1046,7 +1041,6 @@ export const enUSDeferred = {
       connecting: 'Connecting...',
       error: 'Error',
       disconnected: 'Disconnected',
-      signalBudget: 'Signals {{used}} / {{max}}',
       lastResponse: '· last response {{age}} ago',
     },
     opener: {
@@ -1062,11 +1056,6 @@ export const enUSDeferred = {
       capCommissioningText: 'validate the real PLC program against the 3D machine, before or without the hardware.',
       capControllers: 'Real controllers',
       capControllersText: 'S7, TwinCAT ADS, OPC UA, Modbus TCP, EtherNet/IP, ctrlX and MQTT, plus robot interfaces (FANUC, Denso, ABB).',
-    },
-    limit: {
-      servedFirst: 'Only the first {{limit}} signals are served',
-      servedWithin: 'Only the signals within the license limit are served',
-      notice: '{{served}} - {{count}} more are configured. Activate a license to serve all signals.',
     },
     issues: {
       summary_one: '{{count}} signal is configured but never receives values',
@@ -1182,8 +1171,7 @@ export const enUSDeferred = {
     },
     options: {
       windowTitle: 'CONNECT Settings',
-      license: 'License',
-      notConnected: 'Connect to a gateway to manage its license, configuration profiles and historian.',
+      notConnected: 'Connect to a gateway to manage its configuration profiles and historian.',
       connection: 'Connection',
       server: 'Server',
       connected: 'Connected',

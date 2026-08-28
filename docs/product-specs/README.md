@@ -3,7 +3,7 @@ doc_id: PRODUCT-SPEC-INDEX
 title: 产品规格索引
 status: approved
 owner: product
-last_reviewed: 2026-08-22
+last_reviewed: 2026-08-27
 authority: normative-registry
 ---
 
@@ -16,6 +16,7 @@ authority: normative-registry
 - [`SMART_ASSET_EDITOR.md`](SMART_ASSET_EDITOR.md)：Approved 智能资产编辑器；GLB 导入、端口/行为/信号向导、发布校验、统一保存与 Planner Library 复用。
 - [`PUBLIC_DES.md`](PUBLIC_DES.md)：Approved 公开、行业无关 DES；通用事件/实体/资源/队列/路由、四种运行模式、快照、实验与跨行业验收。
 - [`DEPLOYMENT_IDENTITY_EGRESS.md`](DEPLOYMENT_IDENTITY_EGRESS.md)：Approved 部署身份与默认零外呼；同一源码通过版本化部署配置交付客户身份，外部访问按 origin/purpose 明确授权。
+- [`LICENSE_AND_EXPIRY.md`](LICENSE_AND_EXPIRY.md)：Approved 授权与到期行为；离线可校验的签名凭证，到期只降级创作不降级运行，含可直接引入合同的到期条款。
 
 后续建议规格：
 
