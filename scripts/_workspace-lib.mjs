@@ -96,6 +96,9 @@ const DELIVERY_CONFIG_KEYS = new Set([
   // would otherwise be readable by every other team in that repository.
   'sharedRepo',
   'tier', 'restrictedFeatures', 'remote', 'mirror', 'connectChannel', 'connectLicenseKey',
+  // Unified delivery inputs (ADR-0008). These are projected into settings.json
+  // and replace customer-specific source forks.
+  'identity', 'defaults', 'policy',
   // The diagnosis credentials, alongside connectLicenseKey and for the same reason: a delivery must
   // be reproducible from the config alone. They used to live only in the operator's environment, so
   // a delivery from a machine that had never run one failed at the RAG step with nothing on disk
@@ -1254,8 +1257,37 @@ function bareDefaultModel(project) {
 
 function generatedSettings(project, delivery, connectPin) {
   const settings = {
+    schemaVersion: 2,
     defaultModel: bareDefaultModel(project),
     connectChannel: delivery.connectChannel,
+    ...(delivery.identity && typeof delivery.identity === 'object'
+      ? { identity: delivery.identity }
+      : {}),
+    defaults: {
+      locale: 'zh-CN',
+      workspace: {
+        default: 'hmi',
+        allowed: ['viewer', 'hmi', 'des', 'planner', 'commissioning', 'editor'],
+      },
+      features: {},
+      ...(delivery.defaults && typeof delivery.defaults === 'object' ? delivery.defaults : {}),
+    },
+    policy: {
+      lockedPaths: [],
+      features: {},
+      ...(delivery.policy && typeof delivery.policy === 'object' ? delivery.policy : {}),
+    },
+    egress: { mode: 'deny-external', allow: [] },
+    services: {
+      analytics: null,
+      news: null,
+      documentation: null,
+      connectUpdates: null,
+      firebaseDemo: null,
+      githubLibrary: null,
+      cadLinks: null,
+      qr: { mode: 'local' },
+    },
   };
   // NO prefill in the shared repository (plan-434 §2.7): settings.json is a
   // delivered file, and in a repository every standard customer can read, one

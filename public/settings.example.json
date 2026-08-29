@@ -1,6 +1,27 @@
 {
   "_comment": "Copy this file to settings.json to configure the WebViewer deployment.",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+
+  "defaults": {
+    "locale": "zh-CN",
+    "workspace": {
+      "default": "hmi",
+      "allowed": ["viewer", "hmi", "des", "planner", "commissioning", "editor"]
+    },
+    "features": {
+      "mcp-bridge": false
+    }
+  },
+
+  "policy": {
+    "lockedPaths": [],
+    "workspace": {
+      "allowed": ["viewer", "hmi", "des", "planner", "commissioning", "editor"]
+    },
+    "features": {
+      "mcp-bridge": "deny"
+    }
+  },
 
   "identity": {
     "productName": "Customer Digital Twin",

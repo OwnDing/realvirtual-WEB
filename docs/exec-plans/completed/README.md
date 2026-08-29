@@ -3,7 +3,7 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-25
+last_reviewed: 2026-08-29
 authority: normative-registry
 ---
 
@@ -31,5 +31,6 @@ authority: normative-registry
 - [`EP-UI-001-hmi-layout-regressions.md`](EP-UI-001-hmi-layout-regressions.md)：修复告警收回操作区、全屏 3D 画布与 HMI 顶部 KPI 看板回归，并完成真实 Chromium、两轮本地全量与最终实现提交远程三轮门禁验收；2026-08-25 完成。
 - [`EP-CONFIG-001-deployment-identity-egress.md`](EP-CONFIG-001-deployment-identity-egress.md)：交付版本化部署身份、默认拒绝外呼、origin/purpose allowlist、本地 QR/Draco/Teams SDK、构建 CSP 与静态/浏览器反退化门禁；2026-08-25 完成。
 - [`EP-LICENSE-001-offline-license.md`](EP-LICENSE-001-offline-license.md)：交付自有离线许可证、Ed25519 信任根与签发 CLI、到期只读降级、CONNECT 上游授权客户端移除和合同到期行为说明；2026-08-28 完成。
+- [`EP-CONFIG-002-unified-configuration.md`](EP-CONFIG-002-unified-configuration.md)：交付 Deployment v2、项目/用户/会话分层 resolver、locale/workspace/feature 策略、旧 settings 无污染 overlay 与可配置客户交付生成；2026-08-29 完成。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。

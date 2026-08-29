@@ -90,8 +90,13 @@ export function projectDeploymentProfile(html, config) {
     'Open, browser-based 3D HMI and digital twin viewer for industrial automation.',
   );
   const title = `${productName} — Browser-based 3D HMI & Digital Twin Viewer`;
+  const defaultLocale = config?.defaults?.locale === 'en-US' ? 'en-US' : 'zh-CN';
 
   let projected = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`);
+  projected = projected.replace(
+    /<html\s+lang="[^"]*"\s+data-rv-default-locale="[^"]*">/,
+    `<html lang="${defaultLocale}" data-rv-default-locale="${defaultLocale}">`,
+  );
   projected = replaceMarkedText(projected, 'data-rv-product-name', productName);
   projected = replaceMarkedText(projected, 'data-rv-product-short-name', shortName);
   projected = replaceMarkedAttribute(projected, 'data-rv-description', 'content', description);

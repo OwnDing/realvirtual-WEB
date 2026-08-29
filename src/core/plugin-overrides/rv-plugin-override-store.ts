@@ -16,6 +16,12 @@
  * for the case where it happens anyway.
  */
 
+import {
+  clearAllUserFeaturePreferences,
+  readUserConfig,
+  replaceUserFeaturePreferences,
+} from '../config/user-config-store';
+
 /** localStorage key prefix — also listed in `RV_DYNAMIC_PREFIXES`. */
 export const LS_KEY_PLUGIN_OVERRIDES_PREFIX = 'rv-plugin-overrides/';
 
@@ -71,6 +77,11 @@ function storageKey(scope: string): string {
  * than a throw: a broken record must not stop the viewer from booting.
  */
 export function loadOverrides(scope: string): string[] {
+  const unified = Object.entries(readUserConfig(scope).features ?? {})
+    .filter(([, enabled]) => enabled === false)
+    .map(([id]) => id)
+    .filter(id => !isPluginOverrideProtected(id));
+  if (unified.length > 0) return unified;
   try {
     const raw = localStorage.getItem(storageKey(scope));
     if (!raw) return [];
@@ -84,6 +95,14 @@ export function loadOverrides(scope: string): string[] {
   }
 }
 
+/** Unified boolean preferences; unlike the legacy list this preserves explicit enables. */
+export function loadFeaturePreferences(scope: string): Record<string, boolean> {
+  return Object.fromEntries(
+    Object.entries(readUserConfig(scope).features ?? {})
+      .filter(([id]) => !isPluginOverrideProtected(id)),
+  );
+}
+
 /**
  * Persist the disabled IDs for a scope. Protected IDs are stripped, and an
  * empty list removes the entry instead of leaving `{"v":1,"disabled":[]}`
@@ -92,6 +111,7 @@ export function loadOverrides(scope: string): string[] {
  */
 export function saveOverrides(scope: string, ids: readonly string[]): void {
   const disabled = ids.filter((id) => !isPluginOverrideProtected(id));
+  replaceUserFeaturePreferences(scope, Object.fromEntries(disabled.map(id => [id, false])));
   try {
     if (disabled.length === 0) {
       localStorage.removeItem(storageKey(scope));
@@ -104,8 +124,22 @@ export function saveOverrides(scope: string, ids: readonly string[]): void {
   }
 }
 
+export function saveFeaturePreferences(scope: string, preferences: Record<string, boolean>): void {
+  const safe = Object.fromEntries(
+    Object.entries(preferences).filter(([id]) => !isPluginOverrideProtected(id)),
+  );
+  replaceUserFeaturePreferences(scope, safe);
+  // Compatibility writer: old clients understand only disabled IDs.
+  const disabled = Object.entries(safe).filter(([, enabled]) => !enabled).map(([id]) => id);
+  try {
+    if (disabled.length === 0) localStorage.removeItem(storageKey(scope));
+    else localStorage.setItem(storageKey(scope), JSON.stringify({ v: 1, disabled } satisfies PluginOverrideRecord));
+  } catch { /* unified in-memory preference still applies this session */ }
+}
+
 /** Drop the stored overrides for a scope (RESET button, `?resetPlugins=1`). */
 export function clearOverrides(scope: string): void {
+  replaceUserFeaturePreferences(scope, {});
   try {
     localStorage.removeItem(storageKey(scope));
   } catch {
@@ -120,6 +154,7 @@ export function clearOverrides(scope: string): void {
  * fault.
  */
 export function clearAllOverrides(): void {
+  clearAllUserFeaturePreferences();
   try {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {

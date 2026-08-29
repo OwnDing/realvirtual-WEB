@@ -199,6 +199,8 @@ export function isAllowedSecretSchemaPath(relativePath, propertyPath) {
     && /(^|\/)connect\/[^/]+\.json$/i.test(String(relativePath).replace(/\\/g, '/'))) {
     return true;
   }
+  const isViewerSettings = relativePath === 'realvirtual-web/public/settings.json'
+    || relativePath === 'xyvirtual-web/public/settings.json';
   return relativePath === 'connect/project-config.json'
     && propertyPath.length === 2
     && propertyPath[0] === 'Diagnosis'
@@ -209,7 +211,7 @@ export function isAllowedSecretSchemaPath(relativePath, propertyPath) {
     && propertyPath[1] === 'DeliveredApiKeys'
     && typeof propertyPath[2] === 'string'
     && propertyPath[2].length > 0
-    || relativePath === 'realvirtual-web/public/settings.json'
+    || isViewerSettings
     && propertyPath.length === 1
     && propertyPath[0] === 'connectLicensePrefill';
 }

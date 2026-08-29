@@ -1,6 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "defaultModel": "DemoRealvirtualWeb.glb",
+  "defaults": {
+    "locale": "zh-CN",
+    "workspace": {
+      "default": "hmi",
+      "allowed": ["viewer", "hmi", "des", "planner", "commissioning", "editor"]
+    },
+    "features": {}
+  },
+  "policy": {
+    "lockedPaths": [],
+    "features": {}
+  },
   "egress": {
     "mode": "deny-external",
     "allow": []

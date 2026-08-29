@@ -365,14 +365,31 @@ describe('customer workspace generator', () => {
 
   it('physically excludes internal/restricted source and emits deterministic customer settings', () => {
     const { core, privateRoot, delivery } = fixture();
-    const first = stageFilteredSourceTree({ coreRoot: core, privateRoot, projectKey: 'acme', profile: delivery, delivery });
-    const second = stageFilteredSourceTree({ coreRoot: core, privateRoot, projectKey: 'acme', profile: delivery, delivery });
+    const configuredDelivery = {
+      ...delivery,
+      identity: { productName: 'ACME Twin' },
+      defaults: { locale: 'en-US', workspace: { default: 'viewer', allowed: ['viewer', 'hmi'] } },
+      policy: { lockedPaths: ['workspace.allowed'], workspace: { allowed: ['viewer', 'hmi'] } },
+    };
+    const first = stageFilteredSourceTree({
+      coreRoot: core, privateRoot, projectKey: 'acme', profile: configuredDelivery, delivery: configuredDelivery,
+    });
+    const second = stageFilteredSourceTree({
+      coreRoot: core, privateRoot, projectKey: 'acme', profile: configuredDelivery, delivery: configuredDelivery,
+    });
     temporary.push(first.workspaceRoot, second.workspaceRoot);
     expect(readFileSync(join(first.privateRoot!, 'src', 'commercial', 'safe.ts'), 'utf8')).toContain('safe');
     expect(() => readFileSync(join(first.privateRoot!, 'src', 'internal', 'sentinel.ts'))).toThrow();
     expect(() => readFileSync(join(first.privateRoot!, 'src', 'restricted', 'register.ts'))).toThrow();
     const settings = JSON.parse(readFileSync(join(first.coreRoot, 'public', 'settings.json'), 'utf8'));
     expect(settings).toMatchObject({ defaultModel: 'machine.glb', connectChannel: 'stable', connectLicensePrefill: 'RVC1-PLACEHOLDER' });
+    expect(settings).toMatchObject({
+      schemaVersion: 2,
+      identity: { productName: 'ACME Twin' },
+      defaults: { locale: 'en-US', workspace: { default: 'viewer', allowed: ['viewer', 'hmi'] } },
+      policy: { lockedPaths: ['workspace.allowed'], workspace: { allowed: ['viewer', 'hmi'] } },
+      egress: { mode: 'deny-external', allow: [] },
+    });
     expect(settings.analytics.googleAnalyticsId).toBe('');
     expect(settings.news).toBeUndefined();
     expect(readFileSync(join(first.privateRoot!, 'package.json'), 'utf8')).not.toContain('@nvidia');

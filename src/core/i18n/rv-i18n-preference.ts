@@ -18,6 +18,11 @@
  */
 
 import { LANGUAGE_PREFERENCE_KEY } from '../hmi/rv-storage-keys';
+import {
+  readUserConfig,
+  resetUserConfigMemoryForTests,
+  writeUserConfigPatch,
+} from '../config/user-config-store';
 import { DEFAULT_LOCALE, normalizeLocale, type RVLocale } from './rv-locale';
 
 /** Bump when the stored shape changes; an older or newer record reads as "no preference". */
@@ -48,6 +53,8 @@ function storage(): Storage | null {
  * browser that refuses storage, not a second cache in front of it.
  */
 export function readStoredLocale(): RVLocale | null {
+  const unified = readUserConfig(null).locale;
+  if (unified === 'zh-CN' || unified === 'en-US') return unified;
   const store = storage();
   if (!store) return memoryLocale;
   let raw: string | null;
@@ -73,6 +80,7 @@ export function readStoredLocale(): RVLocale | null {
 /** Persist the user's choice. Falls back to memory when storage refuses. */
 export function writeStoredLocale(locale: RVLocale): void {
   memoryLocale = locale;
+  writeUserConfigPatch(null, { locale });
   const store = storage();
   if (!store) return;
   try {
@@ -96,6 +104,7 @@ export function resolveStartupLocale(): RVLocale {
 /** Test seam for the in-memory path. */
 export function resetPreferenceMemory(): void {
   memoryLocale = null;
+  resetUserConfigMemoryForTests();
 }
 
 export { normalizeLocale };

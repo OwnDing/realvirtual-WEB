@@ -16,6 +16,15 @@ describe('deployment profile projection', () => {
     expect(projected).toContain('data-rv-logo src="/brand/logo.png"');
   });
 
+  it('projects the deployment locale into the pre-React document shell', () => {
+    const html = '<html lang="zh-CN" data-rv-default-locale="zh-CN"><head><title>Old</title></head></html>';
+    const projected = projectDeploymentProfile(html, {
+      defaults: { locale: 'en-US' },
+      egress: { mode: 'deny-external', allow: [] },
+    });
+    expect(projected).toContain('<html lang="en-US" data-rv-default-locale="en-US">');
+  });
+
   it('keeps CSP external-free by default and scopes allowed origins', () => {
     expect(buildDeploymentCsp({ egress: { mode: 'deny-external', allow: [] } }))
       .toContain("connect-src 'self';");

@@ -25,6 +25,10 @@ import {
 import type { GroupVisibilitySettings } from './group-visibility-store';
 import type { ModelCameraStart } from './camera-startpos-types';
 import { isValidPreset } from './camera-startpos-store';
+import {
+  clearLegacyModelSettingsOverlay,
+  setLegacySettingsOverlay,
+} from '../config/legacy-settings-overlay';
 
 const CAMERA_START_LS_PREFIX = 'rv-camera-start:';
 
@@ -211,6 +215,7 @@ export function applySettingsBundle(bundle: RVSettingsBundle): void {
  * (no 'rv-visual-settings' key in localStorage).
  */
 export async function loadModelSettingsConfig(modelUrl: string): Promise<void> {
+  clearLegacyModelSettingsOverlay();
   try {
     // Guard: only auto-load if no visual settings exist (first visit)
     if (localStorage.getItem('rv-visual-settings')) return;
@@ -222,7 +227,10 @@ export async function loadModelSettingsConfig(modelUrl: string): Promise<void> {
     const data = await resp.json();
     if (!data || typeof data !== 'object' || data.$schema !== 'rv-settings-bundle/1.0') return;
 
-    applySettingsBundle(data as RVSettingsBundle);
+    // Auto-loaded content is a project/model default, never a user import.
+    // Keeping it in memory prevents one model from rewriting the user's
+    // browser preferences for every other project.
+    setLegacySettingsOverlay(`model:${modelUrl}`, (data as RVSettingsBundle).settings);
   } catch {
     // Silent on any error — never abort model loading
   }

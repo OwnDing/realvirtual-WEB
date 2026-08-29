@@ -143,4 +143,32 @@ describe('RVViewer plugin user overrides', () => {
     viewer.setPluginUserEnabled('known', false);
     expect(emit).toHaveBeenCalledTimes(count);
   });
+
+  it('lets an explicit user enable override an ordinary configured default-off', () => {
+    const { viewer, modes } = createCoreViewer();
+    viewer.use({ id: 'optional-feature', modes: ['hmi'] });
+    modes.setMode('hmi');
+    viewer.setPluginConfiguredEnabled('optional-feature', false);
+    expect(viewer.isPluginDisabled('optional-feature')).toBe(true);
+
+    viewer.setPluginUserEnabled('optional-feature', true);
+    expect(viewer.isPluginDisabled('optional-feature')).toBe(false);
+    expect(viewer.getPersistedPluginPreferences()).toEqual({ 'optional-feature': true });
+
+    modes.setMode('planner');
+    modes.setMode('hmi');
+    expect(viewer.isPluginDisabled('optional-feature')).toBe(false);
+  });
+
+  it('does not let a user or mode re-enable a deployment-policy deny', () => {
+    const { viewer, modes } = createCoreViewer();
+    viewer.use({ id: 'denied-feature', modes: ['hmi'] });
+    modes.setMode('hmi');
+    viewer.setPluginPolicyEnabled('denied-feature', false);
+    viewer.setPluginUserEnabled('denied-feature', true);
+    modes.setMode('planner');
+    modes.setMode('hmi');
+    expect(viewer.isPluginDisabled('denied-feature')).toBe(true);
+    expect(viewer.getPersistedPluginPreferences()).toEqual({});
+  });
 });

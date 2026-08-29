@@ -30,6 +30,9 @@ export interface ViewerInternals {
   _postPluginsSnapshot: readonly RVViewerPlugin[] | null;
   _disabledIds: Set<string>;
   _userDisabledIds: Set<string>;
+  _userEnabledIds: Set<string>;
+  _configuredDisabledIds: Set<string>;
+  _policyDisabledIds: Set<string>;
   _persistedUserDisabled: Set<string>;
   _missedModelLoad: Set<string>;
   _modelLoadedIds: Set<string>;
@@ -60,6 +63,9 @@ export function createCoreViewer() {
     _postPluginsSnapshot: null,
     _disabledIds: new Set(),
     _userDisabledIds: new Set(),
+    _userEnabledIds: new Set(),
+    _configuredDisabledIds: new Set(),
+    _policyDisabledIds: new Set(),
     _persistedUserDisabled: new Set(),
     _missedModelLoad: new Set(),
     _modelLoadedIds: new Set(),

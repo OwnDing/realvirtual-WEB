@@ -3,7 +3,7 @@ doc_id: PS-CONFIG-001
 title: 部署身份与默认零外呼
 status: approved
 owner: product
-last_reviewed: 2026-08-25
+last_reviewed: 2026-08-29
 authority: normative
 ---
 
@@ -36,7 +36,7 @@ authority: normative
 
 本规格只批准部署层：安全内置默认值先建立边界，部署配置可在边界内启用能力；安全配置采用最严格规则优先。组织平台以后可以生成同一份已解析部署配置，但浏览器不直接合并多层策略。
 
-项目、模型、用户和会话配置的通用覆盖字段与优先级继续由 `OD-003` 管理，不在本规格中决定。
+项目、模型、用户和会话配置的通用覆盖字段与优先级已由 Closed `OD-003`、[`PS-CONFIG-002`](UNIFIED_CONFIGURATION.md) 和 Accepted [`ADR-0008`](../adr/ADR-0008-unified-configuration.md) 决定；本规格仍只管理部署身份、法律、服务与外呼安全字段。
 
 ## 5. 法律与身份边界
 

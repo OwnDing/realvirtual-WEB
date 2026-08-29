@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xyvirtual.local/schema/v1/project-config.json",
+  "title": "XYvirtual WEB Project Config v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema"],
+  "properties": {
+    "$schema": { "const": "rv-project-config/1.0" },
+    "defaults": { "$ref": "#/$defs/values" },
+    "modelProfiles": {
+      "type": "object",
+      "maxProperties": 500,
+      "propertyNames": { "type": "string", "minLength": 1, "maxLength": 128 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": { "defaults": { "$ref": "#/$defs/values" } }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "enum": ["zh-CN", "en-US"] },
+        "workspace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default": { "$ref": "#/$defs/id" },
+            "allowed": {
+              "type": "array",
+              "maxItems": 100,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/id" }
+            }
+          }
+        },
+        "features": {
+          "type": "object",
+          "maxProperties": 200,
+          "propertyNames": { "$ref": "#/$defs/id" },
+          "additionalProperties": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

@@ -26,6 +26,12 @@ import { isSettingsLocked } from '../rv-app-config';
 
 /** Options accepted by {@link lsLoad}. */
 export interface LsLoadOptions<T> {
+  /** Deployment ordinary defaults, below project and user values. */
+  deploymentDefault?: Partial<T> | undefined;
+
+  /** Active project/model in-memory defaults, below the user's stored values. */
+  projectDefault?: Partial<T> | undefined;
+
   /**
    * Field-level validator. Receives the per-field merge of `defaults` and the
    * parsed JSON (`{ ...defaults, ...parsed }`) and returns the cleaned partial.
@@ -87,8 +93,11 @@ export function lsLoad<T extends object>(
     parsed = {};
   }
 
-  // Layer 1+2: defaults + parsed (parsed overrides per-key).
-  const merged: T = { ...defaults, ...parsed };
+  // ADR-0008 ordinary plane: built-in -> deployment -> project -> user.
+  let merged: T = { ...defaults };
+  if (options?.deploymentDefault) merged = applyOverride(merged, options.deploymentDefault);
+  if (options?.projectDefault) merged = applyOverride(merged, options.projectDefault);
+  merged = applyOverride(merged, parsed);
 
   // Optional field-level cleanup.
   const validated = options?.validate ? options.validate(merged, parsed) : null;

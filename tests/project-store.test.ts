@@ -47,6 +47,7 @@ import {
   type RvProject,
 } from '../src/core/project/rv-project-types';
 import type { RvScene, SceneBase } from '../src/core/hmi/scene/rv-scene-types';
+import { getLegacySettingsOverlay } from '../src/core/config/legacy-settings-overlay';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ describe('every load step is conditional', () => {
     expect(store.getSnapshot().documents).toEqual([]);
   });
 
-  it('applies a settings bundle when one is present', async () => {
+  it('applies a legacy settings bundle as project defaults without contaminating the user store', async () => {
     const s = scene('scn_a', 'A');
     const root = makeFolder({
       scenes: [entryFor(s)],
@@ -187,7 +188,8 @@ describe('every load step is conditional', () => {
       }),
     );
     await store.openProjectFolder(asDirHandle(root));
-    expect(localStorage.getItem('rv-search-settings')).toContain('fuzzy');
+    expect(localStorage.getItem('rv-search-settings')).toBeNull();
+    expect(getLegacySettingsOverlay('search')).toEqual({ fuzzy: true });
   });
 
   it('ignores a settings file with a foreign schema instead of applying it', async () => {
