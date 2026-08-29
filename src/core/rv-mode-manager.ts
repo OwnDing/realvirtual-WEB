@@ -25,6 +25,7 @@
 import type { RVViewer } from './rv-viewer';
 import type { RVViewerPlugin } from './rv-plugin';
 import { debug } from './engine/rv-debug'; // TEMP open-perf instrumentation
+import { writeUserConfigPatch } from './config/user-config-store';
 
 /** Workspace mode identifier. Extensible via any string. */
 export type ModeId = 'hmi' | 'des' | 'planner' | (string & {});
@@ -107,6 +108,7 @@ export class ModeManager {
   private _modes = new Map<ModeId, ModeDescriptor>();
   private _active: ModeId | null = null;
   private _lockedMode: ModeId | null = null;
+  private _allowedModes: Set<ModeId> | null = null;
   private _switching = false;
   private _version = 0;
   private _listeners = new Set<() => void>();
@@ -128,14 +130,36 @@ export class ModeManager {
 
   /** All registered modes, sorted by `order` (then insertion order). */
   list(): ModeDescriptor[] {
-    return [...this._modes.values()].sort(
+    return [...this._modes.values()].filter(mode => this.isAvailable(mode.id)).sort(
       (a, b) => (a.order ?? 100) - (b.order ?? 100),
     );
+  }
+
+  /** All shipped/registered mode IDs, independent of the current policy cap. */
+  getCapabilityIds(): ModeId[] {
+    return [...this._modes.values()]
+      .sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
+      .map(mode => mode.id);
   }
 
   /** Whether a mode id is registered. */
   has(id: ModeId): boolean {
     return this._modes.has(id);
+  }
+
+  /** Whether the mode is both shipped and permitted by effective configuration. */
+  isAvailable(id: ModeId): boolean {
+    return this._modes.has(id) && (this._allowedModes === null || this._allowedModes.has(id));
+  }
+
+  /** Apply the effective workspace cap. Unknown IDs remain unavailable. */
+  setAllowedModes(ids: Iterable<string> | null): void {
+    this._allowedModes = ids === null ? null : new Set([...ids] as ModeId[]);
+    if (this._active !== null && !this.isAvailable(this._active)) {
+      const fallback = this.list()[0]?.id;
+      if (fallback) this.setMode(fallback, { persist: false });
+    }
+    this._bump();
   }
 
   /** The registered descriptor for a mode id, or undefined if unknown. */
@@ -157,7 +181,7 @@ export class ModeManager {
    *   4. enable entering plugins (replays missed onModelLoaded) → onModeActivate hooks
    *   5. persist, notify, emit 'mode-changed'
    */
-  setMode(id: ModeId): void {
+  setMode(id: ModeId, options: { persist?: boolean } = {}): void {
     if (this._switching) {
       console.warn(`[ModeManager] setMode('${id}') ignored — switch already in progress`);
       return;
@@ -166,8 +190,8 @@ export class ModeManager {
       console.warn(`[ModeManager] setMode('${id}') ignored — locked to '${this._lockedMode}'`);
       return;
     }
-    if (!this._modes.has(id)) {
-      console.warn(`[ModeManager] setMode('${id}') ignored — unknown mode`);
+    if (!this.isAvailable(id)) {
+      console.warn(`[ModeManager] setMode('${id}') ignored — unknown or unavailable mode`);
       return;
     }
     if (id === this._active) return;
@@ -201,7 +225,7 @@ export class ModeManager {
       }
 
       this._active = id;
-      this._persist(id);
+      if (options.persist !== false) this._persist(id);
       this._bump();
       this.host.emit('mode-changed', { from, to: id });
     } finally {
@@ -239,8 +263,8 @@ export class ModeManager {
       console.warn(`[ModeManager] requestMode('${id}') ignored — a guarded switch is already in progress`);
       return false;
     }
-    if (!this._modes.has(id)) {
-      console.warn(`[ModeManager] requestMode('${id}') ignored — unknown mode`);
+    if (!this.isAvailable(id)) {
+      console.warn(`[ModeManager] requestMode('${id}') ignored — unknown or unavailable mode`);
       return false;
     }
     this._requesting = true;
@@ -277,12 +301,12 @@ export class ModeManager {
    * `?mode=` cannot leave the workspace on a different (or null) mode.
    */
   lock(id: ModeId): void {
-    if (!this._modes.has(id)) {
-      console.warn(`[ModeManager] lock('${id}') ignored — unknown mode`);
+    if (!this.isAvailable(id)) {
+      console.warn(`[ModeManager] lock('${id}') ignored — unknown or unavailable mode`);
       return;
     }
     this._lockedMode = id;
-    this.setMode(id);
+    this.setMode(id, { persist: false });
     this._bump();
   }
 
@@ -306,20 +330,20 @@ export class ModeManager {
    */
   restore(fallback: ModeId = 'hmi'): void {
     if (this._lockedMode !== null) {
-      this.setMode(this._lockedMode);
+      this.setMode(this._lockedMode, { persist: false });
       return;
     }
     let target: ModeId = fallback;
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved && this._modes.has(saved)) target = saved;
+      if (saved && this.isAvailable(saved)) target = saved;
     } catch {
       /* localStorage unavailable — use fallback */
     }
-    if (!this._modes.has(target)) {
+    if (!this.isAvailable(target)) {
       target = this.list()[0]?.id ?? fallback;
     }
-    if (this._modes.has(target)) this.setMode(target);
+    if (this.isAvailable(target)) this.setMode(target, { persist: false });
   }
 
   /** Subscribe to mode changes (useSyncExternalStore). */
@@ -332,6 +356,7 @@ export class ModeManager {
   getSnapshot = (): number => this._version;
 
   private _persist(id: ModeId): void {
+    writeUserConfigPatch(null, { workspace: { default: id } });
     try {
       localStorage.setItem(LS_KEY, id);
     } catch {
@@ -349,6 +374,7 @@ export class ModeManager {
     this._modes.clear();
     this._active = null;
     this._lockedMode = null;
+    this._allowedModes = null;
     this._switching = false;
     this._requesting = false;
     this._version = 0;

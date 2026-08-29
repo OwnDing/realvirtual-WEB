@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 realvirtual GmbH <https://realvirtual.io>
 
-/** Versioned deployment identity, service and external-access contract. */
+/** Versioned deployment identity, service, external-access and policy contract. */
+
+import {
+  parseUnifiedConfigPolicy,
+  parseUnifiedConfigValues,
+  type UnifiedConfigPolicy,
+  type UnifiedConfigValues,
+} from '../config/unified-config';
 
 export const DEFAULT_PRODUCT_NAME = 'XYvirtual WEB';
 export const DEFAULT_PRODUCT_SHORT_NAME = 'XYvirtual';
@@ -95,12 +102,16 @@ export interface DeploymentLicenseConfig {
 }
 
 export interface DeploymentConfigFields {
-  schemaVersion?: 1;
+  schemaVersion?: 1 | 2;
   identity?: DeploymentIdentityConfig;
   legal?: DeploymentLegalConfig;
   egress?: DeploymentEgressConfig;
   services?: DeploymentServicesConfig;
   license?: DeploymentLicenseConfig;
+  /** Ordinary deployment defaults; v2 only. */
+  defaults?: UnifiedConfigValues;
+  /** Organization/deployment policy plane; v2 only and never loosened below deployment. */
+  policy?: UnifiedConfigPolicy;
 }
 
 export interface DeploymentConfigValidation<T extends Record<string, unknown>> {
@@ -365,23 +376,48 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
 ): DeploymentConfigValidation<T> {
   const issues: string[] = [];
   const config = { ...raw } as T & DeploymentConfigFields;
-  if (raw.schemaVersion !== undefined && raw.schemaVersion !== 1) {
+  if (raw.schemaVersion !== undefined && raw.schemaVersion !== 1 && raw.schemaVersion !== 2) {
     issues.push('schemaVersion is unsupported; deployment-owned fields were ignored');
     delete config.schemaVersion;
     delete config.identity;
     delete config.legal;
     delete config.services;
     delete config.license;
+    delete config.defaults;
+    delete config.policy;
     config.egress = { mode: 'deny-external', allow: [] };
     return { config, issues };
   }
-  if (raw.schemaVersion === 1) config.schemaVersion = 1;
+  if (raw.schemaVersion === 1 || raw.schemaVersion === 2) config.schemaVersion = raw.schemaVersion;
   config.identity = parseIdentity(raw.identity, issues);
   config.legal = parseLegal(raw.legal, issues);
   config.egress = parseEgress(raw.egress, issues);
   config.services = parseServices(raw.services, issues);
   config.license = parseLicense(raw.license, issues);
+  if (raw.schemaVersion === 2) {
+    config.defaults = parseUnifiedConfigValues(raw.defaults, issues);
+    config.policy = parseUnifiedConfigPolicy(raw.policy, issues);
+  } else {
+    // Versioned add-only boundary: v1/legacy files cannot smuggle v2 policy.
+    delete config.defaults;
+    delete config.policy;
+  }
   return { config, issues };
+}
+
+/** Pure, idempotent deployment-file migration. The caller decides whether to persist it. */
+export function migrateDeploymentConfigV1ToV2<T extends Record<string, unknown>>(
+  raw: T,
+): (T & { schemaVersion: 2 }) | null {
+  if (raw.schemaVersion !== undefined && raw.schemaVersion !== 1 && raw.schemaVersion !== 2) return null;
+  if (raw.schemaVersion !== 2) {
+    // `defaults` and `policy` are reserved v2 fields. A v1 file may preserve
+    // unrelated extension fields, but migration must not activate data that a
+    // v1 runtime was required to ignore.
+    const { defaults: _defaults, policy: _policy, ...legacy } = raw;
+    return { ...legacy, schemaVersion: 2 } as T & { schemaVersion: 2 };
+  }
+  return { ...raw, schemaVersion: 2 };
 }
 
 export function deploymentProductName(config: DeploymentConfigFields): string {

@@ -91,7 +91,9 @@ import {
 } from '../hmi/scene/rv-scene-storage';
 import { setActiveSceneId } from '../hmi/scene/rv-scene-mutations';
 import { glbSceneShell, type RvScene } from '../hmi/scene/rv-scene-types';
-import { applySettingsBundle, type RVSettingsBundle } from '../hmi/rv-settings-bundle';
+import { parseProjectConfiguration } from '../config/project-config';
+import { clearUnifiedProjectConfig, setUnifiedProjectConfig } from '../config/runtime-config';
+import { clearLegacySettingsOverlay, setLegacySettingsOverlay } from '../config/legacy-settings-overlay';
 import {
   readSettingsFile,
   updateManifestCas,
@@ -1478,6 +1480,8 @@ export class ProjectStore {
   // ─── Settings ─────────────────────────────────────────────────────────
 
   private async _applySettings(project: RvProject): Promise<void> {
+    clearUnifiedProjectConfig();
+    clearLegacySettingsOverlay();
     const ref = project.settingsRef?.ref;
     if (!ref) return;
     let bundle: unknown;
@@ -1487,13 +1491,12 @@ export class ProjectStore {
       return;
     }
     if (!bundle || typeof bundle !== 'object') return;
-    const candidate = bundle as { $schema?: unknown };
-    if (candidate.$schema !== 'rv-settings-bundle/1.0') return;
-    try {
-      applySettingsBundle(bundle as RVSettingsBundle);
-    } catch (e) {
-      this._warnings.push(`Project settings could not be applied: ${String(e)}`);
+    const parsed = parseProjectConfiguration(bundle);
+    if (parsed.kind === 'unified') setUnifiedProjectConfig(bundle);
+    else if (parsed.kind === 'legacy-bundle') {
+      setLegacySettingsOverlay(project.id, parsed.legacySettings ?? {});
     }
+    for (const issue of parsed.issues) this._warnings.push(`Project settings: ${issue}`);
   }
 
   // ─── Knowledge ────────────────────────────────────────────────────────
@@ -1660,6 +1663,8 @@ export class ProjectStore {
   async closeProject(): Promise<void> {
     if (!this._project && !this._backend) return;
     const kind = this._backend?.kind ?? null;
+    clearUnifiedProjectConfig();
+    clearLegacySettingsOverlay();
     // §2.2.1b — deactivation flushes and unsubscribes. It is the only way the
     // writer is torn down, so no path can leave a bus listener behind that
     // would write the next project's saves into this project's folder.

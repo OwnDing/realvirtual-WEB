@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- SPDX-License-Identifier: AGPL-3.0-only
      Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io> -->
-<html lang="zh-CN">
+<html lang="zh-CN" data-rv-default-locale="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
@@ -358,15 +358,20 @@
   -->
   <script>
     (function () {
+      var useEnglish = document.documentElement.getAttribute('data-rv-default-locale') === 'en-US';
       try {
         var raw = localStorage.getItem('rv-language');
-        if (!raw) return;
-        var rec = JSON.parse(raw);
-        if (!rec || rec.v !== 1 || typeof rec.locale !== 'string') return;
-        if (rec.locale.trim().toLowerCase().split(/[-_]/)[0] !== 'en') return;
+        if (raw) {
+          var rec = JSON.parse(raw);
+          if (rec && rec.v !== 1) rec = null;
+          if (rec && typeof rec.locale === 'string') {
+            useEnglish = rec.locale.trim().toLowerCase().split(/[-_]/)[0] === 'en';
+          }
+        }
       } catch (err) {
-        return; // storage refused, or the value is junk — keep the default
+        // Storage refused or contains junk — keep the deployment default.
       }
+      if (!useEnglish) return;
       document.documentElement.lang = 'en-US';
       var set = function (selector, text) {
         var el = document.querySelector(selector);

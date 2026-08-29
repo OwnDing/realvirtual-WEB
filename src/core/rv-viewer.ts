@@ -867,6 +867,12 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
   private _disabledIds = new Set<string>();
   /** Session-scoped user overrides that mode reconciliation must not undo. */
   private _userDisabledIds = new Set<string>();
+  /** Explicit user enables that override an ordinary deployment/project default-off. */
+  private _userEnabledIds = new Set<string>();
+  /** Ordinary configuration defaults-off; unlike policy, a user may override these. */
+  private _configuredDisabledIds = new Set<string>();
+  /** Deployment-policy disables that no user, project, model or mode can undo. */
+  private _policyDisabledIds = new Set<string>();
   /**
    * The persisted INTENT to keep a plugin switched off (plan-435 §2.9),
    * deliberately independent of the plugin registry.
@@ -1063,6 +1069,14 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     if (this._persistedUserDisabled.has(plugin.id) && plugin.core !== true) {
       this.setPluginUserEnabled(plugin.id, false);
     }
+    if (this._configuredDisabledIds.has(plugin.id) && !this._userEnabledIds.has(plugin.id) && plugin.core !== true) {
+      this.disablePlugin(plugin.id);
+      if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.unregister(plugin.id);
+    }
+    if (this._policyDisabledIds.has(plugin.id) && plugin.core !== true) {
+      this.disablePlugin(plugin.id);
+      if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.unregister(plugin.id);
+    }
 
     // Retroactive: if model already loaded, call onModelLoaded immediately (skip
     // disabled and mode-scoped plugins outside their mode — the mode transition
@@ -1160,6 +1174,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     if (!enabled) {
       if (this._userDisabledIds.has(id)) return;
       this._userDisabledIds.add(id);
+      this._userEnabledIds.delete(id);
       // Keep the persisted intent in step. `core` plugins are never persisted:
       // a reload must not be able to boot into a crippled viewer.
       if (plugin.core !== true) this._persistedUserDisabled.add(id);
@@ -1184,7 +1199,11 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       return;
     }
 
-    if (!this._userDisabledIds.delete(id)) return;
+    if (this._policyDisabledIds.has(id)) return;
+    const wasUserDisabled = this._userDisabledIds.delete(id);
+    const overridesConfiguredDefault = this._configuredDisabledIds.has(id);
+    if (!wasUserDisabled && !overridesConfiguredDefault) return;
+    this._userEnabledIds.add(id);
     this._persistedUserDisabled.delete(id);
     // Slots come back BEFORE the lifecycle so an activate hook already sees
     // its own UI. `register()` is idempotent and restores the slot position.
@@ -1216,6 +1235,57 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       this.setPluginUserEnabled(id, true);
     }
     this._persistedUserDisabled.clear();
+    this._userEnabledIds.clear();
+    for (const id of this._configuredDisabledIds) {
+      const plugin = this._plugins.find(candidate => candidate.id === id);
+      if (!plugin || plugin.core === true) continue;
+      this.disablePlugin(id);
+      if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.unregister(id);
+    }
+  }
+
+  /** Apply an ordinary resolved feature default. User preferences may override it. */
+  setPluginConfiguredEnabled(id: string, enabled: boolean): void {
+    const plugin = this._plugins.find(candidate => candidate.id === id);
+    if (plugin?.core === true) return;
+    if (!enabled) {
+      this._configuredDisabledIds.add(id);
+      if (!plugin || this._userEnabledIds.has(id)) return;
+      this.disablePlugin(id);
+      if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.unregister(id);
+      return;
+    }
+    if (!this._configuredDisabledIds.delete(id) || !plugin
+      || this._userDisabledIds.has(id) || this._policyDisabledIds.has(id)) return;
+    if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.register(plugin);
+    if (this._shouldParticipate(plugin)) this.enablePlugin(id);
+  }
+
+  /**
+   * Apply an immutable-per-boot feature policy. Core infrastructure is never
+   * disabled by a generic feature ID; feature-capable non-core plugins are
+   * hidden and disabled before model delivery, including late registrations.
+   */
+  setPluginPolicyEnabled(id: string, enabled: boolean): void {
+    const plugin = this._plugins.find(candidate => candidate.id === id);
+    if (plugin?.core === true) return;
+    if (!enabled) {
+      this._policyDisabledIds.add(id);
+      if (!plugin) return;
+      this.disablePlugin(id);
+      if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.unregister(id);
+      this.emit('plugins-changed', { kind: 'policy-disabled', id });
+      return;
+    }
+    if (!this._policyDisabledIds.delete(id) || !plugin || this._userDisabledIds.has(id)) return;
+    if (plugin.slots && plugin.slots.length > 0) this.uiRegistry.register(plugin);
+    if (this._shouldParticipate(plugin)) this.enablePlugin(id);
+    this.emit('plugins-changed', { kind: 'policy-enabled', id });
+  }
+
+  /** Stable capability IDs exposed to the unified resolver. */
+  getPluginIds(): string[] {
+    return this._plugins.map(plugin => plugin.id);
   }
 
   /**
@@ -1238,6 +1308,29 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       this._persistedUserDisabled.add(id);
       if (plugin) this.setPluginUserEnabled(id, false);
     }
+  }
+
+  /** Apply the versioned unified preference map, including explicit enables. */
+  applyPersistedPluginPreferences(preferences: Record<string, boolean>): void {
+    for (const [id, enabled] of Object.entries(preferences)) {
+      if (isPluginOverrideProtected(id)) continue;
+      const plugin = this._plugins.find(candidate => candidate.id === id);
+      if (plugin?.core === true) continue;
+      if (!enabled) {
+        this._persistedUserDisabled.add(id);
+        if (plugin) this.setPluginUserEnabled(id, false);
+      } else {
+        this._userEnabledIds.add(id);
+        if (plugin && this._configuredDisabledIds.has(id)) this.setPluginUserEnabled(id, true);
+      }
+    }
+  }
+
+  getPersistedPluginPreferences(): Record<string, boolean> {
+    const result: Record<string, boolean> = {};
+    for (const id of this._userEnabledIds) if (!isPluginOverrideProtected(id)) result[id] = true;
+    for (const id of this.getPersistedPluginOverrideIds()) result[id] = false;
+    return result;
   }
 
   /**
@@ -1290,6 +1383,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * plugin is not currently disabled. See plan-198 (mode system).
    */
   enablePlugin(id: string): void {
+    if (this._policyDisabledIds.has(id)
+      || (this._configuredDisabledIds.has(id) && !this._userEnabledIds.has(id))) return;
     if (!this._disabledIds.has(id)) return;
     this._disabledIds.delete(id);
     const plugin = this._plugins.find(p => p.id === id);
@@ -1327,7 +1422,9 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       (id) => this._disabledIds.has(id),
       from,
       to,
-      (id) => this._userDisabledIds.has(id),
+      (id) => this._userDisabledIds.has(id)
+        || this._policyDisabledIds.has(id)
+        || (this._configuredDisabledIds.has(id) && !this._userEnabledIds.has(id)),
     );
   }
 
@@ -1356,6 +1453,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     this._invalidatePluginSnapshots();
     this._disabledIds.delete(id);
     this._userDisabledIds.delete(id);
+    this._userEnabledIds.delete(id);
+    this._configuredDisabledIds.delete(id);
     // Also drop the PERSISTED intent (plan-435): an explicit unregistration is
     // a deliberate act, and a re-registered plugin must not silently come back
     // switched off. Without this, `removePlugin()` + `use()` would resurrect

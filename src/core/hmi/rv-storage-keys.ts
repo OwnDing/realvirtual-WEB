@@ -129,6 +129,9 @@ export const ALL_RV_STORAGE_KEYS = [
   ASSETS_SECTIONS_COLLAPSED_KEY,
   EDITOR_LAST_ASSET_KEY,
   LANGUAGE_PREFERENCE_KEY,
+  // ADR-0008 unified global user preference record. The scoped records use
+  // the dynamic prefix below.
+  'rv-config/user/v1/global',
 ] as const;
 
 /** Read the CONNECT standalone hint flag without failing when storage is unavailable. */
@@ -209,6 +212,7 @@ export const RV_DYNAMIC_PREFIXES = [
   // (LS_KEY_PLUGIN_OVERRIDES_PREFIX). Without this entry a "Reset all" would
   // leave a switched-off plugin switched off forever.
   'rv-plugin-overrides/',
+  'rv-config/user/v1/scope/',
 ] as const;
 
 /**

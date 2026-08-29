@@ -58,6 +58,19 @@ describe('ModeManager — registry', () => {
     m.register({ id: 'hmi', label: 'HMI' });
     expect(m.has('hmi')).toBe(true);
   });
+
+  it('filters unavailable workspaces and rejects direct entry', () => {
+    const m = new ModeManager(makeHost(EMPTY, [], []));
+    m.register({ id: 'hmi', label: 'HMI', order: 20 });
+    m.register({ id: 'planner', label: 'Planner', order: 10 });
+    m.setAllowedModes(['hmi']);
+    expect(m.has('planner')).toBe(true); // shipped capability remains observable
+    expect(m.isAvailable('planner')).toBe(false);
+    expect(m.list().map(mode => mode.id)).toEqual(['hmi']);
+    expect(m.getCapabilityIds()).toEqual(['planner', 'hmi']);
+    m.setMode('planner');
+    expect(m.activeMode).toBeNull();
+  });
 });
 
 describe('ModeManager — setMode orchestration', () => {

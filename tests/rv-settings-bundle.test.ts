@@ -11,6 +11,8 @@ import {
 } from '../src/core/hmi/rv-settings-bundle';
 import type { RVSettingsBundle } from '../src/core/hmi/rv-settings-bundle';
 import { loadVisualSettings, saveVisualSettings } from '../src/core/hmi/visual-settings-store';
+import { loadSearchSettings } from '../src/core/hmi/search-settings-store';
+import { clearLegacyModelSettingsOverlay } from '../src/core/config/legacy-settings-overlay';
 
 function createTestBundle(settings: RVSettingsBundle['settings']): RVSettingsBundle {
   return {
@@ -140,14 +142,22 @@ describe('applySettingsBundle', () => {
 
 describe('loadModelSettingsConfig', () => {
   beforeEach(() => localStorage.clear());
-  afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    clearLegacyModelSettingsOverlay();
+  });
 
-  test('applies settings from sidecar on first visit', async () => {
-    const bundle = { $schema: 'rv-settings-bundle/1.0', exportedAt: '', settings: { search: { query: 'sidecar' } } };
+  test('applies a sidecar as an in-memory default without polluting user storage', async () => {
+    const bundle = {
+      $schema: 'rv-settings-bundle/1.0',
+      exportedAt: '',
+      settings: { search: { highlightEnabled: false } },
+    };
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify(bundle), { status: 200 }));
     await loadModelSettingsConfig('models/demo.glb');
-    const raw = JSON.parse(localStorage.getItem('rv-search-settings') ?? '{}');
-    expect(raw.query).toBe('sidecar');
+    expect(loadSearchSettings().highlightEnabled).toBe(false);
+    expect(localStorage.getItem('rv-search-settings')).toBeNull();
   });
 
   test('silent on 404', async () => {

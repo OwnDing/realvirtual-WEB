@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xyvirtual.local/schema/v2/deployment-config.json",
+  "title": "XYvirtual WEB Deployment Config v2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "identity": { "$ref": "../v1/deployment-config.json#/$defs/identity" },
+    "legal": { "$ref": "../v1/deployment-config.json#/$defs/legal" },
+    "egress": { "$ref": "../v1/deployment-config.json#/$defs/egress" },
+    "services": { "$ref": "../v1/deployment-config.json#/$defs/services" },
+    "license": { "$ref": "../v1/deployment-config.json#/$defs/license" },
+    "defaults": { "$ref": "#/$defs/values" },
+    "policy": { "$ref": "#/$defs/policy" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "idArray": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "workspaceValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default": { "$ref": "#/$defs/id" },
+        "allowed": { "$ref": "#/$defs/idArray" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "maxProperties": 200,
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "enum": ["zh-CN", "en-US"] },
+        "workspace": { "$ref": "#/$defs/workspaceValues" },
+        "features": { "$ref": "#/$defs/features" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lockedPaths": {
+          "type": "array",
+          "maxItems": 200,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(locale|workspace\\.(default|allowed)|features\\.[a-z0-9][a-z0-9._-]{0,63})$"
+          }
+        },
+        "workspace": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "allowed": { "$ref": "#/$defs/idArray" } }
+        },
+        "features": {
+          "type": "object",
+          "maxProperties": 200,
+          "propertyNames": { "$ref": "#/$defs/id" },
+          "additionalProperties": { "enum": ["allow", "deny"] }
+        }
+      }
+    }
+  }
+}

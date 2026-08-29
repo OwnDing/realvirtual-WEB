@@ -4,8 +4,9 @@
 /** Persists visual settings and camera bookmarks to localStorage. */
 
 import { useSyncExternalStore } from 'react';
-import { getAppConfig } from '../rv-app-config';
+import { getAppConfig, isSettingsLocked } from '../rv-app-config';
 import { lsSave } from './ls-store-utils';
+import { getLegacySettingsOverlay } from '../config/legacy-settings-overlay';
 import { applyUIBlurScale, clampUIBlurScale, DEFAULT_UI_BLUR_SCALE } from './rv-ui-blur';
 import { RENDER_MODES, RENDER_MODE_IDS, DEFAULT_RENDER_MODE, isRenderMode, type RenderMode } from '../rv-render-modes';
 import {
@@ -311,7 +312,9 @@ function parseModeSettings(raw: unknown): Record<RenderMode, LightingModeSetting
 
 export function loadVisualSettings(): VisualSettings {
   const fromStorage = loadFromLocalStorage();
-  const override = getAppConfig().visual;
+  // Deployment/project defaults were already parsed below the user layer.
+  // Only an explicit deployment settings lock re-applies them as policy.
+  const override = isSettingsLocked() ? getAppConfig().visual : undefined;
   if (!override) return fromStorage;
   // Back-compat: accept the legacy `lightingMode` override key.
   const overrideMode = override.renderMode ?? override.lightingMode;
@@ -389,8 +392,12 @@ export function loadVisualSettings(): VisualSettings {
 function loadFromLocalStorage(): VisualSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS, modeSettings: { simple: { ...MODE_DEFAULTS.simple }, default: { ...MODE_DEFAULTS.default }, toon: { ...MODE_DEFAULTS.toon } }, cameras: [...DEFAULTS.cameras] };
-    const parsed = JSON.parse(raw) as Partial<VisualSettings> & { lightIntensity?: number; qualityPreset?: string; lightingMode?: string };
+    const stored = raw ? JSON.parse(raw) as Partial<VisualSettings> : {};
+    const parsed = {
+      ...(getAppConfig().visual ?? {}),
+      ...(getLegacySettingsOverlay<VisualSettings>('visual') ?? {}),
+      ...stored,
+    } as Partial<VisualSettings> & { lightIntensity?: number; qualityPreset?: string; lightingMode?: string };
     // Back-compat: the field was renamed `lightingMode` → `renderMode`.
     const rawMode = parsed.renderMode ?? parsed.lightingMode;
     const mode: RenderMode = isRenderMode(rawMode) ? rawMode : DEFAULTS.renderMode;

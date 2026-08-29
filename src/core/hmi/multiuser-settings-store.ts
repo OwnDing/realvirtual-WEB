@@ -10,6 +10,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { lsLoad } from './ls-store-utils';
+import { getLegacySettingsOverlay } from '../config/legacy-settings-overlay';
 
 const LS_KEY = 'rv-multiuser-settings';
 
@@ -41,7 +42,9 @@ const DEFAULTS: MultiuserSettings = {
 };
 
 export function loadMultiuserSettings(): MultiuserSettings {
-  return lsLoad<MultiuserSettings>(LS_KEY, DEFAULTS);
+  return lsLoad<MultiuserSettings>(LS_KEY, DEFAULTS, {
+    projectDefault: getLegacySettingsOverlay<MultiuserSettings>('multiuser'),
+  });
 }
 
 // ── Reactivity ──────────────────────────────────────────────────────────

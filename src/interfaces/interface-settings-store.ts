@@ -6,8 +6,9 @@
  * Settings are persisted to localStorage so they survive page reloads.
  */
 
-import { getAppConfig } from '../core/rv-app-config';
+import { getAppConfig, isSettingsLocked } from '../core/rv-app-config';
 import { lsLoad, lsSave } from '../core/hmi/ls-store-utils';
+import { getLegacySettingsOverlay } from '../core/config/legacy-settings-overlay';
 
 const STORAGE_KEY = 'rv-interface-settings';
 
@@ -75,7 +76,9 @@ export const INTERFACE_DEFAULTS: InterfaceSettings = {
 /** Load settings from localStorage (merged with defaults for forward-compat). */
 export function loadInterfaceSettings(): InterfaceSettings {
   return lsLoad<InterfaceSettings>(STORAGE_KEY, INTERFACE_DEFAULTS, {
-    configOverride: getAppConfig().interface,
+    deploymentDefault: getAppConfig().interface,
+    projectDefault: getLegacySettingsOverlay<InterfaceSettings>('interface'),
+    configOverride: isSettingsLocked() ? getAppConfig().interface : undefined,
   });
 }
 

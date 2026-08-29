@@ -181,6 +181,15 @@ export function getLocale(): RVLocale {
  * has to happen after i18next has actually swapped.
  */
 export async function setLocale(locale: RVLocale): Promise<void> {
+  await changeLocale(locale, true);
+}
+
+/** Apply a resolved deployment/project/session locale without turning it into user state. */
+export async function applyConfiguredLocale(locale: RVLocale): Promise<void> {
+  await changeLocale(locale, false);
+}
+
+async function changeLocale(locale: RVLocale, persist: boolean): Promise<void> {
   getI18n();
   // BEFORE the no-op check, not after. A returning user's stored preference is
   // already `en-US`, so `initI18n` starts there and this call has nothing to
@@ -188,9 +197,9 @@ export async function setLocale(locale: RVLocale): Promise<void> {
   // behind the early return left exactly those users with English startup
   // namespaces and Chinese panels (ADR-0001 R1).
   if (locale === 'en-US') await ensureEnglishCatalog();
-  if (getLocale() === locale && readStoredLocale() === locale) return;
+  if (getLocale() === locale && (!persist || readStoredLocale() === locale)) return;
   await i18next.changeLanguage(locale);
-  writeStoredLocale(locale);
+  if (persist) writeStoredLocale(locale);
   applyDocumentLanguage(locale);
   for (const listener of listeners) listener(locale);
 }

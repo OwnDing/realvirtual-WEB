@@ -12,7 +12,7 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
-import { ensureEnglishCatalog, getLocale, initI18n, rvT } from './core/i18n';
+import { applyConfiguredLocale, ensureEnglishCatalog, getLocale, initI18n, rvT } from './core/i18n';
 import { RVViewer, type RendererKind } from './core/rv-viewer';
 import type { RVExtrasOverlay } from './core/engine/rv-extras-overlay-store';
 import { debug, logInfo } from './core/engine/rv-debug';
@@ -111,9 +111,9 @@ import { requestProjectCodeConsent } from './core/project/rv-project-code-consen
 
 import {
   clearAllOverrides as clearAllPluginOverrides,
-  loadOverrides as loadPluginOverrides,
+  loadFeaturePreferences as loadPluginPreferences,
   overrideScopeKey,
-  saveOverrides as savePluginOverrides,
+  saveFeaturePreferences as savePluginPreferences,
 } from './core/plugin-overrides/rv-plugin-override-store';
 // plan-716 §2.4 — an old `?scene=scn_…` link resolves through the alias map onto
 // the document it became, and the address bar is normalised to `?doc=`.
@@ -132,6 +132,15 @@ import { installProjectLibraryProvider } from './core/library/project-library-pr
 import { installGlobalLibraryProvider } from './core/library/global-library-provider';
 import { readProjectLibraries } from './core/library/project-libraries';
 import { getCadGlbCacheSize, clearCadGlbCache } from './core/import/rv-cad-glb-cache';
+import { parseSessionConfig } from './core/config/session-config';
+import {
+  getUnifiedConfig,
+  getUnifiedConfigIssues,
+  initializeUnifiedRuntime,
+  setUnifiedCapabilities,
+  setUnifiedProjectProfile,
+  setUnifiedUserScope,
+} from './core/config/runtime-config';
 
 // CONNECT gateway plugin (NavButton + LeftPanel for interface management)
 import { ConnectPlugin } from './plugins/connect-plugin';
@@ -536,18 +545,9 @@ async function init() {
   // --- Load App Config (MUST complete before React mount — no flicker) ---
   const appConfig = await fetchAppConfig();
 
-  // --- Deferred English catalog (ADR-0001 R1) ---
-  // Same rule as the line above, and for the same reason: this must be in before
-  // React mounts, or an English user gets a frame of Chinese. It rides alongside
-  // the config fetch while the pre-boot overlay is up, and it never rejects — a
-  // chunk that does not arrive leaves the UI in Chinese, which is readable, and
-  // reports a diagnostic. Booting does not depend on it (ADR-0001 §8).
-  if (getLocale() === 'en-US') await ensureEnglishCatalog();
-
-  // URL param override for lockSettings (highest priority)
-  if (params.has('lockSettings')) {
-    appConfig.lockSettings = params.get('lockSettings') !== 'false';
-  }
+  // A session may tighten a deployment lock, never loosen it. `false` is not
+  // an allowlisted unified-config value and must not defeat deployment policy.
+  if (params.get('lockSettings') === 'true') appConfig.lockSettings = true;
 
   // Perf test mode: suppress UI chrome
   const perfMode = params.has('perf');
@@ -557,6 +557,14 @@ async function init() {
 
   // Set singleton — from here all stores have access via getAppConfig()
   setAppConfig(appConfig);
+  initializeUnifiedRuntime(appConfig, parseSessionConfig(params));
+  let unifiedConfig = getUnifiedConfig();
+  await applyConfiguredLocale(unifiedConfig.effective.locale);
+
+  // --- Deferred English catalog (ADR-0001 R1) ---
+  // The deployment/project/session default has now been resolved, still before
+  // React mounts. A missing chunk degrades to the bundled Chinese source catalog.
+  if (getLocale() === 'en-US') await ensureEnglishCatalog();
   applyDeploymentIdentityToDocument(appConfig);
   setDeploymentBranding(appConfig.identity);
   // Deliberately NOT awaited. A licence is contract evidence, not permission to
@@ -1079,6 +1087,51 @@ async function init() {
     console.warn('[main] Project resolution skipped:', e);
   }
 
+  // Project defaults and scoped user preferences are known only after project
+  // resolution. Re-resolve once, then project the single snapshot into every
+  // consumer before model delivery and workspace boot.
+  setUnifiedUserScope(getProjectStore().getProject()?.id ?? null);
+  setUnifiedCapabilities({
+    workspaces: viewer.modes.getCapabilityIds(),
+    features: viewer.getPluginIds(),
+  });
+  let appliedFeatureIds = new Set<string>();
+  const applyResolvedUnifiedConfig = async () => {
+    unifiedConfig = getUnifiedConfig();
+    for (const issue of getUnifiedConfigIssues()) console.warn(`[config] ${issue}`);
+    viewer.modes.setAllowedModes(unifiedConfig.effective.workspace.allowed);
+    const nextFeatureIds = new Set(Object.keys(unifiedConfig.effective.features));
+    for (const id of appliedFeatureIds) {
+      if (nextFeatureIds.has(id)) continue;
+      viewer.setPluginPolicyEnabled(id, true);
+      viewer.setPluginConfiguredEnabled(id, true);
+    }
+    for (const [id, enabled] of Object.entries(unifiedConfig.effective.features)) {
+      const source = unifiedConfig.provenance[`features.${id}`]?.source;
+      if (!enabled && (source === 'policy' || source === 'capability')) {
+        viewer.setPluginPolicyEnabled(id, false);
+      } else {
+        viewer.setPluginPolicyEnabled(id, true);
+        viewer.setPluginConfiguredEnabled(id, enabled);
+      }
+    }
+    appliedFeatureIds = nextFeatureIds;
+    await applyConfiguredLocale(unifiedConfig.effective.locale);
+  };
+  await applyResolvedUnifiedConfig();
+  // Some shipped capabilities are registered lazily or by a model package.
+  // Refresh the capability clamp when that inventory changes; the filtered
+  // event kinds avoid feedback from the enable/disable operations above.
+  viewer.on('plugins-changed', (data: unknown) => {
+    const kind = (data as { kind?: string } | null)?.kind;
+    if (kind !== 'registered' && kind !== 'removed') return;
+    setUnifiedCapabilities({
+      workspaces: viewer.modes.getCapabilityIds(),
+      features: viewer.getPluginIds(),
+    });
+    void applyResolvedUnifiedConfig();
+  });
+
   // ── Scene window: register, migrate any legacy autosave, build store ──
   // Migration runs once: if `rv-layout-autosave` exists from a previous session,
   // import it as an "Untitled Layout" entry in the new registry so users don't
@@ -1112,11 +1165,11 @@ async function init() {
       (() => { try { return localStorage.getItem('rv-webviewer-last-model'); } catch { return null; } })(),
     );
     if (scope !== null) {
-      viewer.applyPersistedPluginOverrides(loadPluginOverrides(scope));
+      viewer.applyPersistedPluginPreferences(loadPluginPreferences(scope));
       viewer.on('plugins-changed', (data: unknown) => {
         const kind = (data as { kind?: string } | null)?.kind;
         if (kind !== 'user-disabled' && kind !== 'user-enabled') return;
-        savePluginOverrides(scope, viewer.getPersistedPluginOverrideIds());
+        savePluginPreferences(scope, viewer.getPersistedPluginPreferences());
       });
     }
   }
@@ -1187,6 +1240,12 @@ async function init() {
     const modelName = matchedEntry?.filename.replace(/\.glb$/i, '')
       ?? (identityUrl.split('/').pop() ?? identityUrl).split('?')[0].replace(/\.glb$/i, '');
     lastLoadRequest = { url, options, egressPurpose };
+    const cleanIdentity = identityUrl.split('?')[0]!;
+    const profileDocument = documentsOf(getProjectStore().getProject()).find(document => (
+      cleanIdentity === document.path || cleanIdentity.endsWith(`/${document.path}`)
+    ));
+    setUnifiedProjectProfile(profileDocument?.id ?? null);
+    await applyResolvedUnifiedConfig();
     if (!connectEmbedEnabled) {
       showLoadingOverlay(modelName);
       localStorage.setItem(LS_KEY_MODEL, identityUrl);
@@ -1847,17 +1906,17 @@ async function init() {
   // now runs through the mode system.
   if (!connectEmbedEnabled) {
     const urlMode = params.get('mode');
-    if (urlMode && viewer.modes.has(urlMode)) {
-      viewer.modes.setMode(urlMode);
-    } else if (publishedBootMode && viewer.modes.has(publishedBootMode)) {
-      viewer.modes.setMode(publishedBootMode);
-    } else if (resumeBootMode && viewer.modes.has(resumeBootMode)) {
+    if (urlMode && viewer.modes.isAvailable(urlMode)) {
+      viewer.modes.setMode(urlMode, { persist: false });
+    } else if (publishedBootMode && viewer.modes.isAvailable(publishedBootMode)) {
+      viewer.modes.setMode(publishedBootMode, { persist: false });
+    } else if (resumeBootMode && viewer.modes.isAvailable(resumeBootMode)) {
       // The resumed session's own mode (decision 24). Above `restore()` because
       // that answer is global, and the pair is per project — but below the two
       // above, which are statements about THIS load.
-      viewer.modes.setMode(resumeBootMode);
+      viewer.modes.setMode(resumeBootMode, { persist: false });
     } else {
-      viewer.modes.restore('hmi');
+      viewer.modes.restore(unifiedConfig.effective.workspace.default);
     }
   }
 

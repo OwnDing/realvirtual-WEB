@@ -28,6 +28,7 @@ import {
   useRvTranslation,
 } from '../src/core/i18n';
 import { LANGUAGE_PREFERENCE_KEY, clearAllRVStorage } from '../src/core/hmi/rv-storage-keys';
+import { USER_CONFIG_GLOBAL_KEY } from '../src/core/config/user-config-store';
 import { BADGE_FONT_STACK, buildBadgeTexture } from '../src/core/engine/rv-error-visual';
 import { rvDarkTheme } from '../src/core/hmi/theme';
 
@@ -119,13 +120,15 @@ describe('preference persistence (PS-I18N-001 §7)', () => {
     expect(resolveStartupLocale()).toBe('zh-CN');
   });
 
-  it('never writes the language into anything but its own key', async () => {
-    // ADR-0001 §5: user/browser state, never project state.
+  it('writes only the approved unified record and compatibility key', async () => {
+    // ADR-0008: user/browser state is written to the unified record and is
+    // temporarily dual-written to the legacy language key, never project data.
     await act(async () => { await setLocale('en-US'); });
     const polluted = Object.keys(localStorage)
-      .filter((key) => key !== LANGUAGE_PREFERENCE_KEY)
+      .filter((key) => key !== LANGUAGE_PREFERENCE_KEY && key !== USER_CONFIG_GLOBAL_KEY)
       .filter((key) => (localStorage.getItem(key) ?? '').includes('en-US'));
     expect(polluted).toEqual([]);
+    expect(localStorage.getItem(USER_CONFIG_GLOBAL_KEY)).toContain('en-US');
   });
 });
 

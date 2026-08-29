@@ -1,19 +1,19 @@
 ---
 doc_id: CONTRACT-DEPLOYMENT-CONFIG-001
-title: Deployment Config v1 契约
+title: Deployment Config v1 兼容契约
 status: approved
 owner: architecture
-last_reviewed: 2026-08-27
+last_reviewed: 2026-08-29
 authority: normative
 ---
 
-# Deployment Config v1 契约
+# Deployment Config v1 兼容契约
 
-机器可读 Schema 为 [`../../schema/v1/deployment-config.json`](../../schema/v1/deployment-config.json)。运行时输入是同源 `settings.json` 中的 JSON object。
+机器可读 v1 Schema 为 [`../../schema/v1/deployment-config.json`](../../schema/v1/deployment-config.json)。运行时输入是同源 `settings.json` 中的 JSON object。新增普通值与策略字段由 [`CONTRACT-UNIFIED-CONFIG-001`](UNIFIED_CONFIGURATION.md) 和 Deployment Config v2 Schema 管理；本文件继续约束 v1 安全字段与兼容行为。
 
 ## 1. 新增顶层字段
 
-- `schemaVersion`: 当前唯一支持值为 `1`；缺失表示兼容旧配置。
+- `schemaVersion`: 本兼容版本值为 `1`；缺失表示更早的 legacy 配置。运行时同时支持 add-only 的 v2。
 - `identity`: 产品名、短名、说明、Logo、favicon 和主题色。资源 URL 必须为同源相对 URL。
 - `legal`: 对应源码、许可证、隐私与条款链接；是否必需由部署许可证配置决定。
 - `egress`: `deny-external` 或 `allow-listed`，以及逐项 `origin + purposes[]`。

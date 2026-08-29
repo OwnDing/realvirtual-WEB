@@ -10,6 +10,7 @@
  */
 
 import { lsLoad } from './ls-store-utils';
+import { getLegacySettingsOverlay } from '../config/legacy-settings-overlay';
 
 const STORAGE_KEY = 'rv-group-visibility';
 
@@ -43,6 +44,7 @@ const DEFAULTS: GroupVisibilitySettings = {
  */
 export function loadGroupVisibilitySettings(): GroupVisibilitySettings {
   return lsLoad<GroupVisibilitySettings>(STORAGE_KEY, DEFAULTS, {
+    projectDefault: getLegacySettingsOverlay<GroupVisibilitySettings>('groupVisibility'),
     // Coerce non-array fields back to [] and non-string isolated* fields to null
     // (mirrors the prior defensive parsing).
     validate: (_merged, parsed) => {
