@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "target": "linux-arm64",
+  "resolvedAt": "2026-08-30T00:00:00.000Z",
+  "images": {
+    "edge": "caddy:2.11.4-alpine@sha256:1172d4213087d3fc30bafc7ff2c2896180eb0c41ff7f75f315568fb36cabdcba",
+    "control": "node:24.20.0-bookworm-slim@sha256:e9b5516b06baeaea9a8e65a7aec6a85fbb960a30b52b66968f2c8092b3e2a3eb",
+    "connect": "debian:12-slim@sha256:6bd27d44e6c32a66bbd72d7cb2b76a8ae3497ec2e5274a81abd1b37f6013fa1f",
+    "forgejo": "codeberg.org/forgejo/forgejo:15.0.7@sha256:631a9e0075004a975cf2c66309c7a165062442696aa602af9659c5ea9585c436",
+    "influxdb": "influxdb:2.9.1@sha256:f8af6f227b5932201b7714580b9d569a3fb88a8d63af9451a61f436f55c15d4d"
+  }
+}

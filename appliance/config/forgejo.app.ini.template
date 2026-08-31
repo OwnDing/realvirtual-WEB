@@ -1,0 +1,31 @@
+APP_NAME = XYvirtual Project Git
+RUN_MODE = prod
+WORK_PATH = {{FORGEJO_DATA}}
+
+[server]
+PROTOCOL = http
+HTTP_ADDR = 127.0.0.1
+HTTP_PORT = {{FORGEJO_PORT}}
+DOMAIN = {{HOSTNAME}}
+ROOT_URL = https://{{HOSTNAME}}{{HTTPS_PORT_SUFFIX}}/git/
+OFFLINE_MODE = true
+
+[database]
+DB_TYPE = sqlite3
+PATH = {{FORGEJO_DATA}}/forgejo.db
+
+[repository]
+ROOT = {{FORGEJO_DATA}}/repositories
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY_URI = file:{{FORGEJO_SECRET_FILE}}
+INTERNAL_TOKEN_URI = file:{{FORGEJO_INTERNAL_TOKEN_FILE}}
+
+[service]
+DISABLE_REGISTRATION = true
+REQUIRE_SIGNIN_VIEW = true
+
+[log]
+MODE = console
+LEVEL = Info

@@ -1,0 +1,11 @@
+Component: InfluxDB OSS
+Version: 2.9.1
+Project: https://www.influxdata.com/products/influxdb-overview/
+Source release: https://github.com/influxdata/influxdb/tree/v2.9.1
+License: MIT
+
+Copyright (c) 2018 InfluxData.
+
+This product includes InfluxDB OSS v2. The formal appliance must include the exact upstream LICENSE
+file and notices/SBOM for software included in the selected binary or OCI image. InfluxDB 3 license
+terms do not describe this pinned v2 component.

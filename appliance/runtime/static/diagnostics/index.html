@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>XYvirtual 环境检查</title>
+  <link rel="stylesheet" href="/diagnostics/diagnostics.css">
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">XYvirtual Appliance</p><h1>浏览器环境检查</h1><p>一次检查 HTTPS、浏览器、图形、XR、本地文件、OPFS 和 Appliance 服务。</p></div><a href="/appliance/">返回状态页</a></header>
+    <section class="toolbar"><button id="run" type="button">重新检查</button><button id="download" type="button" disabled>导出脱敏 JSON</button><span id="summary" aria-live="polite">准备检查…</span></section>
+    <section id="results" class="results" aria-live="polite"></section>
+    <aside><strong>证书说明：</strong>浏览器脚本不能直接读取 TLS 证书链；“证书上下文”把当前 secure context 与控制面返回的主机侧证书有效期、SAN（客户证书）和指纹证据合并。正式验收仍须核对主机预检和客户信任库。</aside>
+  </main>
+  <script type="module" src="/diagnostics/diagnostics.mjs"></script>
+</body>
+</html>

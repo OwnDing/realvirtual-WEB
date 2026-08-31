@@ -19,5 +19,6 @@ authority: normative-registry
 - [`DEPLOYMENT_CONFIG.md`](DEPLOYMENT_CONFIG.md)：Deployment Config v1；部署身份、法律链接、服务和默认拒绝的 origin/purpose 外呼策略。
 - [`UNIFIED_CONFIGURATION.md`](UNIFIED_CONFIGURATION.md)：Deployment Config v2 与 Project Config v1；四层普通值、部署策略上限、来源解释和兼容迁移。
 - [`LICENSE_FILE.md`](LICENSE_FILE.md)：许可证文件 v1；信封与载荷、`RV-LIC-V1` 域分隔签名、同源失败关闭加载、判定顺序与到期状态行为。
+- [`OFFLINE_APPLIANCE_BUNDLE.md`](OFFLINE_APPLIANCE_BUNDLE.md)：Offline Appliance Bundle v1；目标平台归档、依赖锁、安装状态、HTTPS 路由、健康和浏览器诊断契约。
 
 后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。

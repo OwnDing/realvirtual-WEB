@@ -1,0 +1,9 @@
+Component: Caddy
+Version: 2.11.4
+Project: https://caddyserver.com/
+Source release: https://github.com/caddyserver/caddy/tree/v2.11.4
+License: Apache License 2.0
+
+This product includes Caddy. The formal appliance must include the unmodified upstream LICENSE and
+NOTICE material, the selected release checksum/signature evidence, and notices for modules present
+in the distributed binary or image.

@@ -11,6 +11,8 @@ authority: normative-registry
 
 本目录承载经审计、已批准的当前架构。首期治理阶段不把根目录技术百科自动升级为 Approved；现有资料见 [`../LEGACY_DOCUMENT_REGISTER.md`](../LEGACY_DOCUMENT_REGISTER.md)。
 
+- [`OFFLINE_APPLIANCE.md`](OFFLINE_APPLIANCE.md)：完整离线 Appliance 的服务拓扑、运行模式、失败边界、状态和安全架构。
+
 后续优先建立：
 
 1. 系统上下文与部署边界；

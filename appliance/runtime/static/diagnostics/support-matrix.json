@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "lastReviewed": "2026-08-30",
+  "browsers": {
+    "chromium": { "minimumMajor": 143, "testedMajor": 145, "level": "full" },
+    "edge": { "minimumMajor": 143, "testedMajor": 145, "level": "full" },
+    "firefox": { "minimumMajor": null, "testedMajor": null, "level": "diagnostic-only" },
+    "safari": { "minimumMajor": null, "testedMajor": null, "level": "diagnostic-only" }
+  },
+  "features": {
+    "secureContext": "required",
+    "webgl2": "required",
+    "opfsRoundTrip": "required",
+    "fileSystemAccess": "authoring",
+    "webgpu": "feature",
+    "webxr": "feature"
+  }
+}

@@ -1,0 +1,91 @@
+{
+	auto_https disable_redirects
+	skip_install_trust
+	admin 127.0.0.1:2019
+}
+
+http://{{HOSTNAME}}:{{LISTEN_HTTP_PORT}} {
+	redir https://{{HOSTNAME}}{{HTTPS_PORT_SUFFIX}}{uri} permanent
+}
+
+https://{{HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
+	{{TLS_DIRECTIVE}}
+	encode zstd gzip
+
+	@health path /health/live /health/ready
+	handle @health {
+		reverse_proxy {{CONTROL_UPSTREAM}}
+	}
+
+	@protected {
+		not path /health/live /health/ready
+	}
+	basic_auth @protected {
+		{{OPERATOR_USER}} {{OPERATOR_PASSWORD_HASH}}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), fullscreen=(self), xr-spatial-tracking=(self)"
+		Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+		-Server
+	}
+	@webDocument path / /index.html
+	header @webDocument Set-Cookie "rv_connect_origin=1; Path=/; Secure; SameSite=Strict"
+
+	handle /appliance/* {
+		reverse_proxy {{CONTROL_UPSTREAM}}
+	}
+	handle /diagnostics/* {
+		reverse_proxy {{CONTROL_UPSTREAM}}
+	}
+	redir /appliance /appliance/
+	redir /diagnostics /diagnostics/
+	redir /git /git/
+	handle_path /connect/* {
+		reverse_proxy {{CONNECT_UPSTREAM}}
+	}
+	@connectRoot path /health /ws /webviewer /mcp /mcp/* /interface-types /config /config/* /discover/* /signals/* /model /logs /status /history /history/* /update/* /news /news/* /diagnose/* /comments /comments/* /docs/*
+	handle @connectRoot {
+		reverse_proxy {{CONNECT_UPSTREAM}}
+	}
+	handle /git/* {
+		reverse_proxy {{FORGEJO_UPSTREAM}}
+	}
+	handle /api/v2/* {
+		reverse_proxy {{INFLUX_UPSTREAM}}
+	}
+	handle /influx/health {
+		rewrite * /health
+		reverse_proxy {{INFLUX_UPSTREAM}}
+	}
+	handle /license.rvlic {
+		header Cache-Control "no-cache, must-revalidate"
+		root * {{LICENSE_ROOT}}
+		file_server
+	}
+
+	@mutable path / /index.html /settings.json /license.rvlic /appliance-manifest.json
+	header @mutable Cache-Control "no-cache, must-revalidate"
+	@immutable path /assets/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+	root * {{WEB_ROOT}}
+	try_files {path} /index.html
+	file_server
+}
+
+https://{{INFLUX_HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
+	{{TLS_DIRECTIVE}}
+	basic_auth {
+		{{OPERATOR_USER}} {{OPERATOR_PASSWORD_HASH}}
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	reverse_proxy {{INFLUX_UPSTREAM}}
+}
