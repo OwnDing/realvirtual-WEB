@@ -1,0 +1,4 @@
+bolt-path = "{{INFLUX_DATA}}/influxd.bolt"
+engine-path = "{{INFLUX_DATA}}/engine"
+http-bind-address = "127.0.0.1:{{INFLUX_PORT}}"
+reporting-disabled = true

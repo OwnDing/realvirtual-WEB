@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "target": "linux-arm64",
+  "resolvedAt": "2026-08-30T00:00:00.000Z",
+  "artifacts": [
+    {
+      "component": "node",
+      "version": "24.20.0",
+      "url": "https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-arm64.tar.xz",
+      "bytes": 30778928,
+      "sha256": "5f4ddab610c1ab2016b3c227cebdbf6d9495161487e4739c7b90090595f465f7"
+    },
+    {
+      "component": "caddy",
+      "version": "2.11.4",
+      "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.4/caddy_2.11.4_linux_arm64.tar.gz",
+      "bytes": 15704974,
+      "sha256": "52d42ae12b3462097e9868da6dfed3c9648ae12edd3b3638102312af84cb6904",
+      "upstreamSha512": "d5a7c423853c24a799765e0e8210d5c7c22a8f56ed37a3cae2fb9f58be138853c02b4efd6b59d576e6d8c7c0d30b9c1592deeaa6a536ff69bcca23b8c1ea709c"
+    },
+    {
+      "component": "forgejo",
+      "version": "15.0.7",
+      "url": "https://code.forgejo.org/forgejo/forgejo/releases/download/v15.0.7/forgejo-15.0.7-linux-arm64",
+      "bytes": 107071776,
+      "sha256": "ba3a543822c734439c2f84145a9d5cf7e449aacfd9ee0b2f8fa87926feb42c80"
+    },
+    {
+      "component": "influxdb",
+      "version": "2.9.1",
+      "url": "https://download.influxdata.com/influxdb/releases/influxdb2-2.9.1_linux_arm64.tar.gz",
+      "bytes": 52720410,
+      "sha256": "a99c3b89fc580f945a6d7a7b0b9c66961bb8b3bf9ddaaab1dae17cdf6af531c9"
+    },
+    {
+      "component": "influx-cli",
+      "version": "2.8.0",
+      "url": "https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.8.0-linux-arm64.tar.gz",
+      "bytes": 11325580,
+      "sha256": "95cda9399dcda3c704dd8ab929c2c08f20e55cab7273dd1f3d305be942530232"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Component: Windows Service Wrapper (WinSW)
+Version: 2.12.0
+Project: https://github.com/winsw/winsw
+Source release: https://github.com/winsw/winsw/tree/v2.12.0
+License: MIT
+
+This product includes WinSW for Windows native service registration. The formal Windows appliance
+must include the upstream LICENSE.txt corresponding to the selected executable and the executable's
+release checksum.

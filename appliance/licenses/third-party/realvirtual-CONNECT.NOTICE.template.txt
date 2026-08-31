@@ -1,0 +1,11 @@
+Component: realvirtual CONNECT
+Version: MUST_BE_REPLACED_BY_RELEASE_ENGINEERING
+Vendor: realvirtual GmbH
+License: Proprietary — use only under the applicable customer/distribution agreement
+Artifact SHA-256: MUST_BE_REPLACED_BY_RELEASE_ENGINEERING
+Build revision: MUST_BE_REPLACED_BY_RELEASE_ENGINEERING
+Signer: MUST_BE_REPLACED_BY_RELEASE_ENGINEERING
+
+This template is not a license grant and must not be accepted by a formal dependency lock. Replace
+it with the approved CONNECT license/entitlement notice and exact artifact evidence for the target
+release.

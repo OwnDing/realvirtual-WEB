@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "hostname": "xyvirtual-appliance.example.internal",
+  "influxHostname": "influx.xyvirtual-appliance.example.internal",
+  "httpsPort": 443,
+  "httpPort": 80,
+  "controlPort": 8081,
+  "connectPort": 5100,
+  "forgejoPort": 3000,
+  "influxPort": 8086,
+  "tls": {
+    "mode": "internal-ca",
+    "certificate": null,
+    "privateKey": null,
+    "trustBundle": null
+  },
+  "authentication": {
+    "operatorUser": "operator"
+  },
+  "license": {
+    "file": null
+  },
+  "browserSupport": {
+    "chromiumMinimumMajor": 143,
+    "chromiumTestedMajor": 145
+  }
+}

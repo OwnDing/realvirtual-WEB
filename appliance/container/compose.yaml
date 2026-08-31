@@ -1,0 +1,84 @@
+name: xyvirtual-appliance
+
+services:
+  edge:
+    image: xyvirtual-appliance/edge:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "${RV_HTTP_PORT:-80}:80"
+      - "${RV_HTTPS_PORT:-443}:443"
+    volumes:
+      - "${RV_RELEASE_ROOT}/web:/srv/xyvirtual/web:ro"
+      - "${RV_STATE_ROOT}/license:/var/lib/xyvirtual-appliance/license:ro"
+      - "${RV_CONFIG_ROOT}/Caddyfile:/etc/caddy/Caddyfile:ro"
+      - "${RV_STATE_ROOT}/pki:/var/lib/xyvirtual-appliance/pki:ro"
+      - "${RV_STATE_ROOT}/pki/caddy-data:/data"
+      - "${RV_STATE_ROOT}/pki/caddy-config:/config"
+    depends_on:
+      - control
+      - forgejo
+      - influxdb
+    networks: [frontend, backend]
+
+  control:
+    image: xyvirtual-appliance/control:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    command: ["node", "/app/control-plane.mjs", "--config", "/state/control.json"]
+    volumes:
+      - "${RV_RELEASE_ROOT}:/release:ro"
+      - "${RV_CONFIG_ROOT}/control.container.json:/state/control.json:ro"
+      - "${RV_STATE_ROOT}/pki:/state-pki:ro"
+    networks: [backend]
+
+  connect:
+    image: xyvirtual-appliance/connect:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    profiles: [linux-connect]
+    volumes:
+      - "${RV_STATE_ROOT}/data/connect:/var/lib/xyvirtual-connect"
+      - "${RV_CONFIG_ROOT}/connect:/etc/xyvirtual-connect:ro"
+    networks: [backend]
+
+  forgejo:
+    image: xyvirtual-appliance/forgejo:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    env_file: "${RV_SECRET_ENV}"
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      FORGEJO_WORK_DIR: /data
+      FORGEJO__server__ROOT_URL: "https://${RV_HOSTNAME}/git/"
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__server__DOMAIN: "${RV_HOSTNAME}"
+      FORGEJO__server__OFFLINE_MODE: "true"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__service__REQUIRE_SIGNIN_VIEW: "true"
+    volumes:
+      - "${RV_STATE_ROOT}/data/forgejo:/data"
+    networks: [backend]
+
+  influxdb:
+    image: xyvirtual-appliance/influxdb:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    env_file: "${RV_SECRET_ENV}"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: appliance
+      DOCKER_INFLUXDB_INIT_ORG: xyvirtual
+      DOCKER_INFLUXDB_INIT_BUCKET: signals
+      DOCKER_INFLUXDB_INIT_RETENTION: 0
+    volumes:
+      - "${RV_STATE_ROOT}/data/influxdb:/var/lib/influxdb2"
+      - "${RV_STATE_ROOT}/config/influxdb:/etc/influxdb2"
+    networks: [backend]
+
+networks:
+  frontend:
+  backend:
+    internal: true

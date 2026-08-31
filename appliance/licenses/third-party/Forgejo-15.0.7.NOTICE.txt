@@ -1,0 +1,10 @@
+Component: Forgejo
+Version: 15.0.7 LTS
+Project: https://forgejo.org/
+Source release: https://codeberg.org/forgejo/forgejo/src/tag/v15.0.7
+License: GNU General Public License v3 or later (GPL-3.0-or-later)
+
+This product redistributes Forgejo. The recipient must receive the complete license text and the
+Corresponding Source for the exact distributed build, including applicable build scripts and
+modifications, or another distribution method approved by legal counsel that satisfies GPLv3+.
+An internet URL alone is not sufficient evidence for an air-gapped handover.

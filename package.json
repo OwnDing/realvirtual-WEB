@@ -41,6 +41,8 @@
     "deploy:private": "node scripts/bunny-deploy.mjs --private",
     "deploy:embed": "npm run build:embed && node scripts/embed-deploy.mjs",
     "deploy:embed:dry-run": "npm run build:embed && node scripts/embed-deploy.mjs --dry-run",
+    "build:appliance": "node scripts/build-offline-appliance.mjs",
+    "build:appliance-images": "node scripts/build-appliance-images.mjs",
     "test:node": "vitest run --config vitest.node.config.ts",
     "test:all": "node scripts/run-all-tests.mjs",
     "lint": "eslint src/"

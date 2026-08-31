@@ -1,0 +1,11 @@
+Component: Node.js
+Version: 24.20.0 (Krypton LTS)
+Project: https://nodejs.org/
+Source release: https://github.com/nodejs/node/tree/v24.20.0
+Primary license: MIT
+
+Copyright Node.js contributors. All rights reserved.
+
+This product includes Node.js. The complete upstream Node.js LICENSE file, including notices and
+license texts for dependencies bundled into the Node.js binary, must accompany the exact binary in
+the formal appliance. This summary does not replace that file.

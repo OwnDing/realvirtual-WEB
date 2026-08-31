@@ -1,0 +1,9 @@
+Component: influx CLI
+Version: 2.8.0
+Project: https://github.com/influxdata/influx-cli
+Source release: https://github.com/influxdata/influx-cli/tree/v2.8.0
+License: MIT
+
+This product includes the separately versioned InfluxDB v2 command-line client. The formal
+appliance must include its unmodified upstream LICENSE file and exact release checksum/signature
+evidence.

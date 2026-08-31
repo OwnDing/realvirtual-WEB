@@ -1,0 +1,9 @@
+Component: OCI image aggregate
+Version: platform-specific release lock
+License: NOASSERTION (aggregate; see each image and package)
+
+The offline OCI archive contains multiple applications, base distributions and transitive OS
+packages under different licenses. Application-level notices alone are insufficient. For every
+platform-specific archive, retain the immutable image/manifest digests, image configuration,
+package inventory, SBOM, all image-provided license directories, and required source/source-offer
+material. Review copyleft packages, including Forgejo and Git, before distribution.
