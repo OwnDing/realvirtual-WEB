@@ -152,16 +152,27 @@ export async function listBrowserUpgradeBackups(): Promise<BrowserUpgradeBackup[
   }
 }
 
-/** Create and verify the once-per-migration backup. Failure deliberately blocks migration. */
+function sameStorageItems(left: BrowserUpgradeBackupItem[], right: BrowserUpgradeBackupItem[]): boolean {
+  return left.length === right.length && left.every((item, index) =>
+    item.key === right[index]?.key && item.value === right[index]?.value,
+  );
+}
+
+/** Reuse only an exact source snapshot; otherwise create a fresh verified backup. */
 export async function ensureBrowserUpgradeBackup(options: {
   migrationId: string;
   sourceVersion: string;
   targetVersion: string;
 }): Promise<BrowserUpgradeBackup> {
   try {
+    const currentItems = collectUpgradeStorageItems();
+    const currentOrigin = typeof location !== 'undefined' ? location.origin : 'test://local';
     const existing = (await listBrowserUpgradeBackups()).find(backup =>
       backup.migrationId === options.migrationId &&
-      backup.targetVersion === options.targetVersion,
+      backup.sourceVersion === options.sourceVersion &&
+      backup.targetVersion === options.targetVersion &&
+      backup.origin === currentOrigin &&
+      sameStorageItems(backup.items, currentItems),
     );
     if (existing && await verifyBrowserUpgradeBackup(existing)) {
       localStorage.removeItem(UPGRADE_BLOCKED_KEY);

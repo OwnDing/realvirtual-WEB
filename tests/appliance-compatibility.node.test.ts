@@ -31,6 +31,7 @@ describe('appliance release compatibility', () => {
     expect(compareReleaseVersions('6.3.27', '6.4.0')).toBeLessThan(0);
     expect(compareReleaseVersions('6.4.0-rc.2', '6.4.0-rc.10')).toBeLessThan(0);
     expect(compareReleaseVersions('6.4.0-rc.10', '6.4.0')).toBeLessThan(0);
+    expect(compareReleaseVersions('6.4.0-Beta', '6.4.0-alpha')).toBeLessThan(0);
     expect(() => compareReleaseVersions('6.4.0-rc.01', '6.4.0')).toThrow(/Invalid release version/);
     expect(isRollbackDataCompatible(compatibility, compatibility)).toBe(true);
     expect(isRollbackDataCompatible(

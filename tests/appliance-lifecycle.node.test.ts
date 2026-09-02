@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
@@ -110,12 +110,13 @@ function options(root: string, bundleRoot: string, configPath: string) {
   };
 }
 
-function dependencies(readiness: () => Promise<void>) {
+function dependencies(readiness: () => Promise<void>, commands: string[] = []) {
   return {
     lookupImpl: async () => [{ address: '127.0.0.1', family: 4 }],
     canBindImpl: async () => ({ ok: true }),
     isAdministratorImpl: async () => true,
     runImpl: (command: string, args: string[] = []) => {
+      commands.push(`${command} ${args.join(' ')}`);
       if (command.includes('caddy') && args[0] === 'hash-password') return '$argon2id$v=19$m=65536,t=3,p=2$fixture$fixture';
       if (command === 'runuser' && args.includes('create')) return 'generated random password: fixture-forgejo-password';
       return '';
@@ -189,10 +190,12 @@ describe('appliance lifecycle', () => {
     setBundleVersion(original, '6.3.16');
     setBundleVersion(candidate, '6.3.28');
     const configPath = configAt(root);
-    const deps = dependencies(async () => {});
+    const commands: string[] = [];
+    const deps = dependencies(async () => {}, commands);
     const installed = await installOrUpgrade(options(root, original, configPath), deps);
     const sentinel = join(installed.roots.stateRoot, 'data', 'connect', 'upgrade-sentinel.txt');
     writeFileSync(sentinel, 'preserved');
+    commands.length = 0;
 
     const upgraded = await installOrUpgrade(options(root, candidate, configPath), deps);
 
@@ -203,6 +206,26 @@ describe('appliance lifecycle', () => {
     expect(upgraded.state.lastUpgrade).toMatchObject({
       sourceVersion: '6.3.16', targetVersion: '6.3.28', outcome: 'committed',
     });
+    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(5);
+  });
+
+  it('restarts the old runtime when the required consistency backup fails verification', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-backup-failure-'));
+    cleanups.push(root);
+    const release = await bundle(root, 'release', '1.0.0');
+    const configPath = configAt(root);
+    const commands: string[] = [];
+    const deps = dependencies(async () => {}, commands);
+    const installed = await installOrUpgrade(options(root, release, configPath), deps);
+    symlinkSync('missing-target', join(installed.roots.stateRoot, 'data', 'connect', 'unsafe-link'));
+    commands.length = 0;
+
+    await expect(backupAppliance({
+      ...options(root, release, configPath), leaveStopped: true,
+    }, deps)).rejects.toThrow(/Symlinks are not allowed/);
+
+    expect(commands.filter(command => command.startsWith('systemctl disable --now'))).toHaveLength(5);
+    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(5);
   });
 
   it('refuses downgrade before creating another release or backup', async () => {

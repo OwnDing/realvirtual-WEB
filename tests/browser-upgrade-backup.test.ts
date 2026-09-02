@@ -5,6 +5,7 @@ import fixture from './fixtures/upgrade/6.3.16/browser-storage.json';
 import {
   collectUpgradeStorageItems,
   createBrowserUpgradeBackup,
+  ensureBrowserUpgradeBackup,
   listBrowserUpgradeBackups,
   restoreBrowserUpgradeBackup,
   verifyBrowserUpgradeBackup,
@@ -44,6 +45,22 @@ describe('browser upgrade backup', () => {
     expect(await verifyBrowserUpgradeBackup(backup)).toBe(true);
     expect(backup.items).toEqual(collectUpgradeStorageItems());
     expect((await listBrowserUpgradeBackups()).map(item => item.id)).toContain(backup.id);
+  });
+
+  it('creates a fresh backup when the source state changes before a retry', async () => {
+    const options = {
+      migrationId: 'workspace-scenes-v1', sourceVersion: fixture.release, targetVersion: '6.4.0',
+    };
+    const first = await ensureBrowserUpgradeBackup(options);
+    localStorage.setItem('rv-scenes/scn_6316_fixture', '{"retry":"new-source-state"}');
+
+    const second = await ensureBrowserUpgradeBackup(options);
+    const unchangedRetry = await ensureBrowserUpgradeBackup(options);
+
+    expect(second.id).not.toBe(first.id);
+    expect(second.items.find(item => item.key === 'rv-scenes/scn_6316_fixture')?.value)
+      .toBe('{"retry":"new-source-state"}');
+    expect(unchangedRetry.id).toBe(second.id);
   });
 
   it('restores exact migration-owned keys and first backs up the current state', async () => {

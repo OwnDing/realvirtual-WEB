@@ -46,7 +46,8 @@ export function compareReleaseVersions(left, right) {
       return aParts[index] < bParts[index] ? -1 : 1;
     }
     if (aNumeric !== bNumeric) return aNumeric ? -1 : 1;
-    return aParts[index].localeCompare(bParts[index]);
+    // SemVer requires ASCII lexical ordering, not locale-sensitive collation.
+    return aParts[index] < bParts[index] ? -1 : 1;
   }
   return 0;
 }

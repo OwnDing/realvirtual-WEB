@@ -2,7 +2,7 @@
 doc_id: EP-UPGRADE-001
 title: 版本支持与可恢复升级闭环
 status: approved
-plan_status: completed
+plan_status: active
 owner: engineering
 last_reviewed: 2026-09-02
 authority: normative-process
@@ -62,7 +62,7 @@ authority: normative-process
 - [x] 项目 schema 兼容姿态和 migration registry
 - [x] 6.3.16 fixtures 与聚焦测试
 - [x] 全量治理/static/node/browser/build 本地门禁
-- [x] PR 和远程五项 Gate 全绿
+- [ ] 处理 PR 自动审查发现并再次取得远程五项 Gate 全绿
 
 ## Surprises & Discoveries
 
@@ -70,6 +70,7 @@ authority: normative-process
 - 服务器无法访问浏览器 origin storage；浏览器备份必须由同 origin 应用创建。
 - 仓库既有项目 fixture 使用 schema 3 验证加法前向兼容；因此 `maxReadable=2` 是经验证的合同承诺上界，不得改成破坏现有高 revision 尽力读取的运行时硬门。
 - 本机全量 Browser 首次发现 schema 前向兼容冲突和场景索引键双重所有权，均按既有契约修复；一次无关 avatar 16 ms 微基准抖动，单测与整个分片复跑通过，未放宽门槛。
+- PR 自动审查在首轮远程全绿后发现三个恢复语义缺陷：服务器快照后不应短暂重启、重复浏览器迁移不得复用陈旧源状态、SemVer 预发布标识必须按 ASCII 而非 locale 排序；计划保持活动直到修复复验。
 
 ## Decision Log
 
@@ -87,4 +88,4 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-已形成版本路径门、来源/候选数据格式门、每版本立即回读校验的全备份、候选失败自动恢复、浏览器迁移写前备份与同 origin 恢复、加法 project revision 兼容和合同/runbook 的闭环，并由 PR 与远程五项 Gate 留证后关闭计划。真实 Linux/Windows Appliance、真实 CONNECT/Forgejo/InfluxDB、客户浏览器/模型和生产恢复演练未在本机执行，仍须按 runbook 在客户交付前完成。
+已形成版本路径门、来源/候选数据格式门、每版本立即回读校验的全备份、候选失败自动恢复、浏览器迁移写前备份与同 origin 恢复、加法 project revision 兼容和合同/runbook 的闭环。首轮远程五项 Gate 已通过，但计划因 PR 审查发现的恢复语义问题重新激活；真实 Linux/Windows Appliance、真实 CONNECT/Forgejo/InfluxDB、客户浏览器/模型和生产恢复演练未在本机执行。

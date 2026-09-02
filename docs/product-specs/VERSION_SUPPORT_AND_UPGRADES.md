@@ -54,4 +54,4 @@ authority: normative
 - schema 1 fixture 可迁移且保留未知字段；满足已知形状的 schema 3 加法 revision 可读取且未知字段不丢失。
 - 契约、发行清单、运行手册和测试矩阵同步。
 
-实现依据为 Accepted [`ADR-0010`](../adr/ADR-0010-versioned-upgrades.md)、[`CONTRACT-VERSION-COMPAT-001`](../contracts/VERSION_COMPATIBILITY.md)、[`RUNBOOK-VERSION-UPGRADE-001`](../runbooks/VERSION_UPGRADE.md) 和 Completed [`EP-UPGRADE-001`](../exec-plans/completed/EP-UPGRADE-001-versioned-upgrades.md)。
+实现依据为 Accepted [`ADR-0010`](../adr/ADR-0010-versioned-upgrades.md)、[`CONTRACT-VERSION-COMPAT-001`](../contracts/VERSION_COMPATIBILITY.md)、[`RUNBOOK-VERSION-UPGRADE-001`](../runbooks/VERSION_UPGRADE.md) 和 Active [`EP-UPGRADE-001`](../exec-plans/active/EP-UPGRADE-001-versioned-upgrades.md)。

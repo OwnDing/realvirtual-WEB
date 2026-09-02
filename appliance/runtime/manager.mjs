@@ -624,8 +624,12 @@ export async function installOrUpgrade(options, dependencies = {}) {
   assertStableOrigin(existing, preflight.config);
   const existingManifest = existing ? await verifyBundle(existing.releaseRoot, { expectedTarget: existing.target }) : null;
   let safetyBackup = null;
+  let existingStoppedForUpgrade = false;
   if (existing && existing.version !== preflight.manifest.version) {
-    safetyBackup = await backupAppliance({ ...options, noStop: false, leaveStopped: Boolean(options.noStart) }, dependencies);
+    // The consistency point is only valid while the old release remains stopped.
+    // Do not reopen a write window between the snapshot and candidate handoff.
+    safetyBackup = await backupAppliance({ ...options, noStop: false, leaveStopped: true }, dependencies);
+    existingStoppedForUpgrade = true;
   }
   const configurationSnapshot = existing ? backupConfiguration(roots, preflight.manifest.version) : null;
   ensureStateDirectories(roots);
@@ -661,7 +665,9 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!options.noStart) {
     let candidateAttempted = false;
     try {
-      if (existing) stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
+      if (existing && !existingStoppedForUpgrade) {
+        stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
+      }
       if (mode === 'container') {
         candidateAttempted = true;
         if (preflight.manifest.target.startsWith('windows-')) {
@@ -758,6 +764,7 @@ export async function backupAppliance(options, dependencies = {}) {
   const backupRoot = join(roots.stateRoot, 'backups', `${stamp}-${randomBytes(3).toString('hex')}-${state.version}`);
   if (existsSync(backupRoot)) throw new Error(`Backup already exists: ${backupRoot}`);
   if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  let verified = false;
   try {
     mkdirSync(backupRoot, { recursive: true, mode: 0o700 });
     cpSync(roots.configRoot, join(backupRoot, 'config'), { recursive: true, errorOnExist: true, force: false });
@@ -773,8 +780,13 @@ export async function backupAppliance(options, dependencies = {}) {
       files,
     });
     await verifyBackup(backupRoot, state.installId);
+    verified = true;
   } finally {
-    if (!options.noStop && !options.leaveStopped) startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+    // A failed snapshot never authorizes an upgrade outage. Keep the runtime
+    // stopped only after the requested consistency point was fully verified.
+    if (!options.noStop && (!options.leaveStopped || !verified)) {
+      startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+    }
   }
   return backupRoot;
 }
