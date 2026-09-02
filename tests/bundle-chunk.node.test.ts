@@ -35,7 +35,12 @@ describe.skipIf(!hasDist)('bundle chunking (plan-271 9.8)', () => {
 
     // The entry chunk is referenced by dist/index.html via <script type="module" src=...>
     const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
-    const entryMatches = [...html.matchAll(/src="\.?\/?assets\/(index-[^"]+\.js)"/g)].map((m) => m[1]);
+    const entryMatches = [...html.matchAll(/<script\b([^>]*)>/g)]
+      .filter((match) => /\btype=(['"])module\1/.test(match[1]))
+      .flatMap((match) => {
+        const src = /\bsrc=(['"])\.?\/?assets\/([^'"?]+\.js)(?:\?[^'"]*)?\1/.exec(match[1]);
+        return src ? [src[2]] : [];
+      });
     expect(entryMatches.length, 'entry chunk referenced from index.html').toBeGreaterThan(0);
 
     for (const entry of entryMatches) {

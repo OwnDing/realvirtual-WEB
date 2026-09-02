@@ -1072,7 +1072,7 @@ export class ProjectStore {
    * overlay's teardown to the same guarantee.
    */
   private async _migrateWorkspaceScenes(): Promise<void> {
-    const [{ runWorkspaceScenesMigration }, overlay] = await Promise.all([
+    const [{ runWorkspaceScenesMigration, workspaceScenesMigrationRequiresBackup }, overlay] = await Promise.all([
       import('./rv-workspace-migration'),
       import('../hmi/info-overlay-store'),
     ]);
@@ -1082,6 +1082,19 @@ export class ProjectStore {
     // `getItem`s the migration costs it.
     let shown = false;
     try {
+      if (workspaceScenesMigrationRequiresBackup()) {
+        try {
+          const { ensureBrowserUpgradeBackup, WORKSPACE_SCENES_MIGRATION_ID } = await import('../upgrade/rv-browser-upgrade-backup');
+          await ensureBrowserUpgradeBackup({
+            migrationId: WORKSPACE_SCENES_MIGRATION_ID,
+            sourceVersion: '<6.3.27',
+            targetVersion: __RV_VERSION__,
+          });
+        } catch (error) {
+          console.error('[project] workspace migration blocked because its backup failed:', error);
+          return;
+        }
+      }
       const result = await runWorkspaceScenesMigration({
         onProgress: (done, total) => {
           shown = true;

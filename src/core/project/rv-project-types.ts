@@ -582,9 +582,9 @@ export function sceneFileNameOfPath(path: string): string {
  * Validate the *shape* of a manifest.
  *
  * Checks `schemaVersion`, `id`, `name` and the form of whichever optional
- * sections are present. **Unknown fields are never a reason to reject** —
- * that is the forward-compatibility contract, and rejecting them would turn
- * a newer project into an unopenable one.
+ * sections are present. Schema revisions are additive: a higher revision is
+ * accepted when the known required shape remains valid, and unknown fields
+ * are preserved by the read-modify-write path.
  */
 export function isValidProjectV1(value: unknown): value is RvProject {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;

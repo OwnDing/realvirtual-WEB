@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "prj_6316_fixture",
+  "name": "6.3.16 Compatibility Fixture",
+  "scenes": [
+    {
+      "id": "scn_6316_fixture",
+      "name": "Legacy Cell",
+      "path": "scenes/legacy-cell.scene.glb",
+      "futureEntryField": "preserve-me"
+    }
+  ],
+  "futureTopLevelSection": {
+    "preserve": true
+  }
+}

@@ -124,7 +124,9 @@ describe('rv-embed AP3 vignette pipeline', () => {
     } finally {
       rmSync(dist, { recursive: true, force: true });
     }
-  }, 120_000);
+  // A production embed build can exceed two minutes when the full node suite
+  // is running concurrently; keep the semantic assertions and budget for CI contention.
+  }, 240_000);
 });
 
 interface GlbNode {

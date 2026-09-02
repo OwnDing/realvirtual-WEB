@@ -1,0 +1,17 @@
+{
+  "release": "6.3.16",
+  "items": [
+    {
+      "key": "rv-scenes-index",
+      "value": "[{\"id\":\"scn_6316_fixture\",\"name\":\"Legacy Cell\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"modifiedAt\":\"2026-01-02T00:00:00.000Z\",\"schemaVersion\":2,\"base\":{\"kind\":\"empty\"}}]"
+    },
+    {
+      "key": "rv-scenes/scn_6316_fixture",
+      "value": "{\"id\":\"scn_6316_fixture\",\"name\":\"Legacy Cell\",\"schemaVersion\":2,\"base\":{\"kind\":\"empty\"},\"edits\":{\"ops\":[],\"settings\":{\"catalogUrls\":[],\"gridSizeMm\":100}}}"
+    },
+    {
+      "key": "rv-scene-glb/scn_6316_fixture",
+      "value": "{\"sha256\":\"fixture-digest\",\"bytes\":128}"
+    }
+  ]
+}

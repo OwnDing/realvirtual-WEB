@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
@@ -179,6 +179,67 @@ describe('appliance lifecycle', () => {
     expect(readFileSync(sentinel, 'utf8')).toBe('old-data');
     expect(readinessCalls).toBe(3);
     expect(JSON.parse(readFileSync(join(installed.roots.installRoot, 'current.json'), 'utf8')).version).toBe('6.3.27');
+  });
+
+  it('creates a verified full backup before every version change, even when service versions are unchanged', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-any-upgrade-'));
+    cleanups.push(root);
+    const original = await bundle(root, 'release-6316', '1.0.0');
+    const candidate = await bundle(root, 'release-6328', '1.0.0');
+    setBundleVersion(original, '6.3.16');
+    setBundleVersion(candidate, '6.3.28');
+    const configPath = configAt(root);
+    const deps = dependencies(async () => {});
+    const installed = await installOrUpgrade(options(root, original, configPath), deps);
+    const sentinel = join(installed.roots.stateRoot, 'data', 'connect', 'upgrade-sentinel.txt');
+    writeFileSync(sentinel, 'preserved');
+
+    const upgraded = await installOrUpgrade(options(root, candidate, configPath), deps);
+
+    const safetyBackup = String(upgraded.state.safetyBackup);
+    expect(safetyBackup).toMatch(/backups/);
+    expect(existsSync(join(safetyBackup, 'backup-manifest.json'))).toBe(true);
+    expect(readFileSync(sentinel, 'utf8')).toBe('preserved');
+    expect(upgraded.state.lastUpgrade).toMatchObject({
+      sourceVersion: '6.3.16', targetVersion: '6.3.28', outcome: 'committed',
+    });
+  });
+
+  it('refuses downgrade before creating another release or backup', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-downgrade-'));
+    cleanups.push(root);
+    const installedBundle = await bundle(root, 'release-current', '1.0.0');
+    const downgradeBundle = await bundle(root, 'release-older', '1.0.0');
+    setBundleVersion(downgradeBundle, '6.3.16');
+    const configPath = configAt(root);
+    const deps = dependencies(async () => {});
+    const installed = await installOrUpgrade(options(root, installedBundle, configPath), deps);
+
+    await expect(installOrUpgrade(options(root, downgradeBundle, configPath), deps))
+      .rejects.toThrow(/DOWNGRADE_REQUIRES_ROLLBACK_OR_RESTORE/);
+    expect(JSON.parse(readFileSync(join(installed.roots.stateRoot, 'install-state.json'), 'utf8')).version).toBe('6.3.27');
+  });
+
+  it('refuses an upgrade that cannot read the installed persisted formats before backup', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-format-gate-'));
+    cleanups.push(root);
+    const sourceBundle = await bundle(root, 'release-source', '1.0.0');
+    const candidateBundle = await bundle(root, 'release-candidate', '1.0.0');
+    setBundleVersion(candidateBundle, '6.3.28');
+    const configPath = configAt(root);
+    const deps = dependencies(async () => {});
+    const installed = await installOrUpgrade(options(root, sourceBundle, configPath), deps);
+    const statePath = join(installed.roots.stateRoot, 'install-state.json');
+    const state = JSON.parse(readFileSync(statePath, 'utf8'));
+    state.compatibility.dataFormats.projectManifest = { minReadable: 1, maxReadable: 3, current: 3 };
+    writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
+    const backupRoot = join(installed.roots.stateRoot, 'backups');
+    const before = readdirSync(backupRoot);
+
+    await expect(installOrUpgrade(options(root, candidateBundle, configPath), deps))
+      .rejects.toThrow(/PERSISTED_FORMAT_UNSUPPORTED/);
+    expect(readdirSync(backupRoot)).toEqual(before);
+    expect(JSON.parse(readFileSync(statePath, 'utf8')).version).toBe('6.3.27');
   });
 
   it('validates purge confirmation before deleting any managed path', async () => {

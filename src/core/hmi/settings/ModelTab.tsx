@@ -3,7 +3,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Typography, Box, Button } from '@mui/material';
-import { RestartAlt, FileDownload, FileUpload, CleaningServices, Cookie } from '@mui/icons-material';
+import { RestartAlt, FileDownload, FileUpload, CleaningServices, Cookie, RestorePage } from '@mui/icons-material';
 import { useViewer } from '../../../hooks/use-viewer';
 import { clearAllRVStorage } from '../rv-storage-keys';
 import { clearCadGlbCache, getCadGlbCacheSize } from '../../import/rv-cad-glb-cache';
@@ -12,6 +12,13 @@ import { isAnalyticsConfigured, useAnalyticsConsent, resetAnalyticsConsent } fro
 import { SettingsSection } from './settings-helpers';
 import { WorkfolderMigrationSection } from './WorkfolderMigrationSection';
 import { useRvTranslation } from '../../i18n';
+import {
+  downloadBrowserUpgradeBackup,
+  listBrowserUpgradeBackups,
+  restoreBrowserUpgradeBackup,
+  UPGRADE_BLOCKED_KEY,
+  type BrowserUpgradeBackup,
+} from '../../upgrade/rv-browser-upgrade-backup';
 
 /**
  * Enumerate legacy WebViewer localStorage keys that the unified Scene model
@@ -60,6 +67,38 @@ export function BackupTab() {
   // Import confirmation state
   const [pendingImport, setPendingImport] = useState<RVSettingsBundle | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [upgradeBackups, setUpgradeBackups] = useState<BrowserUpgradeBackup[]>([]);
+  const [upgradeBackupError, setUpgradeBackupError] = useState<string | null>(null);
+  const [upgradeRestoreBusy, setUpgradeRestoreBusy] = useState(false);
+
+  useEffect(() => {
+    void listBrowserUpgradeBackups()
+      .then(setUpgradeBackups)
+      .catch(error => setUpgradeBackupError(error instanceof Error ? error.message : String(error)));
+  }, []);
+
+  const latestUpgradeBackup = upgradeBackups[0] ?? null;
+  const upgradeBlocked = useMemo(() => {
+    try {
+      const raw = localStorage.getItem(UPGRADE_BLOCKED_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { reason?: unknown };
+      return typeof parsed.reason === 'string' ? parsed.reason : t('backup.upgradeBlockedUnknown');
+    } catch {
+      return t('backup.upgradeBlockedUnknown');
+    }
+  }, [t]);
+  const handleRestoreUpgradeBackup = useCallback(() => {
+    if (upgradeRestoreBusy || !latestUpgradeBackup || !confirm(t('backup.upgradeRestoreConfirm', { version: latestUpgradeBackup.sourceVersion }))) return;
+    setUpgradeBackupError(null);
+    setUpgradeRestoreBusy(true);
+    void restoreBrowserUpgradeBackup(latestUpgradeBackup)
+      .then(() => window.location.reload())
+      .catch(error => {
+        setUpgradeBackupError(error instanceof Error ? error.message : String(error));
+        setUpgradeRestoreBusy(false);
+      });
+  }, [latestUpgradeBackup, t, upgradeRestoreBusy]);
 
   // Analytics consent (only relevant when a tracker is configured).
   const analyticsConfigured = isAnalyticsConfigured();
@@ -208,6 +247,44 @@ export function BackupTab() {
                 </Button>
               </Box>
             </Box>
+          )}
+        </SettingsSection>
+      )}
+
+      {(latestUpgradeBackup || upgradeBackupError || upgradeBlocked) && (
+        <SettingsSection id="model-upgrade-backup" title={t('backup.upgradeTitle')}>
+          {latestUpgradeBackup && <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.75, fontSize: 10 }}>
+            {t('backup.upgradeHint', {
+              version: latestUpgradeBackup.sourceVersion,
+              date: new Date(latestUpgradeBackup.createdAt).toLocaleString(locale),
+            })}
+          </Typography>}
+          {latestUpgradeBackup && <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<FileDownload sx={{ fontSize: 14 }} />}
+              onClick={() => downloadBrowserUpgradeBackup(latestUpgradeBackup)}
+              sx={{ fontSize: 11, textTransform: 'none', flex: 1 }}
+            >
+              {t('backup.upgradeDownload')}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<RestorePage sx={{ fontSize: 14 }} />}
+              onClick={handleRestoreUpgradeBackup}
+              disabled={upgradeRestoreBusy}
+              sx={{ fontSize: 11, textTransform: 'none', flex: 1 }}
+            >
+              {t('backup.upgradeRestore')}
+            </Button>
+          </Box>}
+          {(upgradeBackupError || upgradeBlocked) && (
+            <Typography variant="caption" sx={{ color: '#f44336', display: 'block', mt: 1, fontSize: 10 }}>
+              {t('backup.upgradeBlocked', { reason: upgradeBackupError ?? upgradeBlocked })}
+            </Typography>
           )}
         </SettingsSection>
       )}

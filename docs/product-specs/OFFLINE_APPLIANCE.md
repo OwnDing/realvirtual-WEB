@@ -3,7 +3,7 @@ doc_id: PS-APPLIANCE-001
 title: 完整离线 Appliance
 status: approved
 owner: product
-last_reviewed: 2026-08-30
+last_reviewed: 2026-09-01
 authority: normative
 ---
 
@@ -34,6 +34,7 @@ authority: normative
 6. 卸载默认只移除程序和服务，保留数据、证书和备份；删除持久数据必须使用独立参数和明确确认。
 7. 浏览器诊断一次检查浏览器版本、secure context、WebGL、WebGPU、WebXR、File System Access、OPFS 往返写入、存储持久化、证书信任结果和 WSS/服务连通性，并导出脱敏 JSON。
 8. 运行时默认零外呼；安装与升级在断网环境下完成，且容器模式强制 `pull=never`。
+9. 版本升级遵循 [`PS-UPGRADE-001`](VERSION_SUPPORT_AND_UPGRADES.md)：候选发布声明 N-2/基线/bridge/数据格式范围，每次版本变化先完整备份，降级或越窗路径在写状态前拒绝。
 
 ## 4. HTTPS 与 Origin
 

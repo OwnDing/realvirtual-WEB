@@ -219,6 +219,19 @@ export interface WorkspaceMigrationOptions {
   waitForOtherTabMs?: number;
 }
 
+/** True when this boot could mutate legacy browser storage and therefore needs a verified backup first. */
+export function workspaceScenesMigrationRequiresBackup(): boolean {
+  if (isScenesMigrationDone() && !hasMigrationResidue()) return false;
+  try {
+    const rows = listMetas();
+    return rows.length > 0 || listOrphanBodies(rows.map(row => row.id)).length > 0;
+  } catch {
+    // Failure to inspect legacy state must not turn into permission to migrate
+    // without a backup. The backup attempt will surface the storage failure.
+    return true;
+  }
+}
+
 // ─── Entry point ────────────────────────────────────────────────────────
 
 /**
