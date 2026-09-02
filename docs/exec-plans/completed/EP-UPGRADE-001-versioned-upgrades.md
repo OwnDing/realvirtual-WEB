@@ -2,7 +2,7 @@
 doc_id: EP-UPGRADE-001
 title: 版本支持与可恢复升级闭环
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-09-02
 authority: normative-process
@@ -62,7 +62,7 @@ authority: normative-process
 - [x] 项目 schema 兼容姿态和 migration registry
 - [x] 6.3.16 fixtures 与聚焦测试
 - [x] 全量治理/static/node/browser/build 本地门禁
-- [ ] 处理 PR 自动审查发现并再次取得远程五项 Gate 全绿
+- [x] 处理 PR 自动审查发现并再次取得远程五项 Gate 全绿
 
 ## Surprises & Discoveries
 
@@ -80,7 +80,7 @@ authority: normative-process
 
 ## Validation
 
-2026-09-01 本地：governance 79 份受治理文档通过；static（治理、发布链接、外部来源、ESLint、TypeScript）通过；Node 71 文件/730 例通过，2 文件/7 例按既有条件跳过；Browser 八分片共 10,917 例通过，隔离性能 11/11，最后恢复范围收窄对应 migration/backup/ownership 50/50 复跑；production build 14,943 modules 通过。2026-09-02：[`PR #9`](https://github.com/OwnDing/realvirtual-WEB/pull/9) 的首个实现提交 `5ab0f17` 在 [`Quality Gates #80`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33629385015) 上通过 Governance、Static、Node、Browser、Build 五项 Gate。
+2026-09-01 本地：governance 79 份受治理文档通过；static（治理、发布链接、外部来源、ESLint、TypeScript）通过；Node 71 文件/730 例通过，2 文件/7 例按既有条件跳过；Browser 八分片共 10,917 例通过，隔离性能 11/11，最后恢复范围收窄对应 migration/backup/ownership 50/50 复跑；production build 14,943 modules 通过。2026-09-02：[`PR #9`](https://github.com/OwnDing/realvirtual-WEB/pull/9) 的首个实现提交 `5ab0f17` 在 [`Quality Gates #80`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33629385015) 上通过 Governance、Static、Node、Browser、Build 五项 Gate。审查修复后，本地 static 通过、Node 全套 730 例通过/7 例跳过、Browser 八分片 10,919 例通过并且隔离性能 11/11、production build 14,943 modules 通过；新增 Appliance 审查反例 12/12、Browser backup 5/5。修复提交 `0e9d3b6` 在 [`Quality Gates #82`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/33635875264) 再次通过五项 Gate，三个审查线程均有修复说明并已 resolved。
 
 ## Rollback
 
@@ -88,4 +88,4 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-已形成版本路径门、来源/候选数据格式门、每版本立即回读校验的全备份、候选失败自动恢复、浏览器迁移写前备份与同 origin 恢复、加法 project revision 兼容和合同/runbook 的闭环。首轮远程五项 Gate 已通过，但计划因 PR 审查发现的恢复语义问题重新激活；真实 Linux/Windows Appliance、真实 CONNECT/Forgejo/InfluxDB、客户浏览器/模型和生产恢复演练未在本机执行。
+已形成版本路径门、来源/候选数据格式门、每版本立即回读校验的全备份、候选失败自动恢复、浏览器迁移写前备份与同 origin 恢复、加法 project revision 兼容和合同/runbook 的闭环。PR 审查发现的快照后写窗口、陈旧浏览器备份复用和 SemVer locale 排序问题均已增加反例并修复，修复提交再次通过远程五项 Gate，计划关闭。真实 Linux/Windows Appliance、真实 CONNECT/Forgejo/InfluxDB、客户浏览器/模型和生产恢复演练未在本机执行，仍须按 runbook 在客户交付前完成。
