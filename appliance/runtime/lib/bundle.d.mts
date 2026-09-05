@@ -11,12 +11,32 @@ export interface ApplianceComponentDeclaration {
   licenseFiles: string[];
 }
 
+export interface ApplianceDataFormatCompatibility {
+  minReadable: number;
+  maxReadable: number;
+  current: number;
+}
+
+export interface ApplianceReleaseCompatibility {
+  schemaVersion: 1;
+  policy: 'N-2';
+  effectiveBaseline: string;
+  directUpgrade: {
+    sameMajorOnly: true;
+    maximumMinorDistance: 2;
+    minimumSourceVersion: string;
+  };
+  bridges: Array<{ sourceBefore: string; via: string }>;
+  dataFormats: Record<string, ApplianceDataFormatCompatibility>;
+}
+
 export interface ApplianceManifest {
   schemaVersion: 1;
   product: 'xyvirtual-web-appliance';
   version: string;
   target: 'linux-x64' | 'linux-arm64' | 'windows-x64';
   modes: Array<'container' | 'native'>;
+  compatibility?: ApplianceReleaseCompatibility;
   services: string[];
   components: ApplianceComponentDeclaration[];
   files: ApplianceFileDeclaration[];

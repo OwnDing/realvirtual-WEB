@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { lstat, readFile, readdir } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
+import { compareReleaseVersions, parseReleaseVersion } from './compatibility.mjs';
 
 export const APPLIANCE_PRODUCT = 'xyvirtual-web-appliance';
 export const APPLIANCE_MANIFEST = 'appliance-manifest.json';
@@ -60,8 +61,49 @@ export function validateManifestShape(manifest) {
   if (manifest.schemaVersion !== 1) throw new Error(`Unsupported appliance manifest schemaVersion: ${manifest.schemaVersion}`);
   if (manifest.product !== APPLIANCE_PRODUCT) throw new Error(`Unexpected appliance product: ${manifest.product}`);
   if (!SUPPORTED_TARGETS.has(manifest.target)) throw new Error(`Unsupported appliance target: ${manifest.target}`);
-  if (typeof manifest.version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+  if (typeof manifest.version !== 'string') {
     throw new Error(`Invalid appliance version: ${manifest.version}`);
+  }
+  try {
+    parseReleaseVersion(manifest.version);
+  } catch {
+    throw new Error(`Invalid appliance version: ${manifest.version}`);
+  }
+  const compatibility = manifest.compatibility;
+  const direct = compatibility?.directUpgrade;
+  if (compatibility !== undefined && (
+    compatibility?.schemaVersion !== 1 || compatibility.policy !== 'N-2' ||
+    typeof compatibility.effectiveBaseline !== 'string' ||
+    !direct || direct.sameMajorOnly !== true || direct.maximumMinorDistance !== 2 ||
+    typeof direct.minimumSourceVersion !== 'string' ||
+    !compatibility.dataFormats || typeof compatibility.dataFormats !== 'object' || Array.isArray(compatibility.dataFormats) ||
+    Object.keys(compatibility.dataFormats).length === 0
+  )) {
+    throw new Error('Appliance manifest must contain a valid compatibility declaration.');
+  }
+  if (compatibility !== undefined) {
+    try {
+      parseReleaseVersion(compatibility.effectiveBaseline);
+      parseReleaseVersion(compatibility.directUpgrade.minimumSourceVersion);
+      if (compareReleaseVersions(compatibility.directUpgrade.minimumSourceVersion, compatibility.effectiveBaseline) < 0) {
+        throw new Error('minimum source precedes baseline');
+      }
+      for (const bridge of compatibility.bridges ?? []) {
+        if (!bridge || typeof bridge.sourceBefore !== 'string' || typeof bridge.via !== 'string') throw new Error('invalid bridge');
+        parseReleaseVersion(bridge.sourceBefore);
+        parseReleaseVersion(bridge.via);
+      }
+    } catch {
+      throw new Error('Appliance manifest compatibility versions are invalid.');
+    }
+  }
+  for (const [id, format] of Object.entries(compatibility?.dataFormats ?? {})) {
+    if (!/^[a-z][A-Za-z0-9]*$/.test(id) || !format ||
+      !Number.isSafeInteger(format.minReadable) || format.minReadable < 1 ||
+      !Number.isSafeInteger(format.maxReadable) || !Number.isSafeInteger(format.current) ||
+      format.minReadable > format.current || format.current > format.maxReadable) {
+      throw new Error(`Invalid compatibility data format: ${id}`);
+    }
   }
   if (!Array.isArray(manifest.modes) || manifest.modes.length === 0 || manifest.modes.some((mode) => !['container', 'native'].includes(mode))) {
     throw new Error('Appliance manifest modes must contain native and/or container.');

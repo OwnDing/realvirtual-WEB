@@ -20,6 +20,7 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
 const applianceSource = join(repoRoot, 'appliance');
 const packageJson = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+const releaseCompatibility = JSON.parse(readFileSync(join(applianceSource, 'release-compatibility.json'), 'utf8'));
 const REQUIRED_NATIVE_COMPONENTS = ['node', 'caddy', 'connect', 'forgejo', 'influxdb', 'influx-cli'];
 const REQUIRED_DESTINATIONS = {
   'linux-x64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/connect/realvirtual-Connect', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
@@ -268,6 +269,7 @@ export async function buildOfflineAppliance(options) {
       createdAt: options.createdAt,
       modes,
       originIdentity: 'scheme-host-port',
+      compatibility: releaseCompatibility,
       services: ['edge', 'control', 'web', 'connect', 'forgejo', 'influxdb'],
       components: dependencyLock.components
         .map(({ id, version, license, licenseFiles }) => ({ id, version, license, licenseFiles }))

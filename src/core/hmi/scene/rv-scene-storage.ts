@@ -72,7 +72,8 @@ import {
 
 // ─── Storage keys ───────────────────────────────────────────────────────
 
-const LS_KEY_INDEX = 'rv-scenes-index';
+/** Sole authority for the retired local scene catalogue key. */
+export const LS_KEY_INDEX = 'rv-scenes-index';
 const LS_KEY_ACTIVE = 'rv-scenes/active';
 const LS_KEY_SCENE_PREFIX = 'rv-scenes/';
 const LS_KEY_DRAFT_PREFIX = 'rv-scenes/draft/';

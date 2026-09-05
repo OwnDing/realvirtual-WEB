@@ -3,7 +3,7 @@ doc_id: CONTRACT-INDEX
 title: 契约文档索引
 status: approved
 owner: architecture
-last_reviewed: 2026-08-27
+last_reviewed: 2026-09-01
 authority: normative-registry
 ---
 
@@ -20,5 +20,6 @@ authority: normative-registry
 - [`UNIFIED_CONFIGURATION.md`](UNIFIED_CONFIGURATION.md)：Deployment Config v2 与 Project Config v1；四层普通值、部署策略上限、来源解释和兼容迁移。
 - [`LICENSE_FILE.md`](LICENSE_FILE.md)：许可证文件 v1；信封与载荷、`RV-LIC-V1` 域分隔签名、同源失败关闭加载、判定顺序与到期状态行为。
 - [`OFFLINE_APPLIANCE_BUNDLE.md`](OFFLINE_APPLIANCE_BUNDLE.md)：Offline Appliance Bundle v1；目标平台归档、依赖锁、安装状态、HTTPS 路由、健康和浏览器诊断契约。
+- [`VERSION_COMPATIBILITY.md`](VERSION_COMPATIBILITY.md)：版本支持、兼容与升级恢复；N-2/bridge 判定、数据格式范围、Appliance 全备份和浏览器 origin 恢复契约。
 
 后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。

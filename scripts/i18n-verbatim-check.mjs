@@ -488,10 +488,26 @@ const OFFLINE_LICENSE_KEYS = [
   'shell.license.dismiss',
 ];
 
+const VERSION_UPGRADE = 'No English original exists to move: the versioned upgrade and verified '
+  + 'browser backup workflow (EP-UPGRADE-001, ADR-0010) was added after the migration base ref. '
+  + 'These strings expose backup download, verified restore and migration-blocked states. Declaring '
+  + 'the keys explicitly preserves the proof that older product wording was moved rather than rewritten.';
+
+const VERSION_UPGRADE_KEYS = [
+  'settings.backup.upgradeTitle',
+  'settings.backup.upgradeHint',
+  'settings.backup.upgradeDownload',
+  'settings.backup.upgradeRestore',
+  'settings.backup.upgradeRestoreConfirm',
+  'settings.backup.upgradeBlocked',
+  'settings.backup.upgradeBlockedUnknown',
+];
+
 export const NEW_STRING_EXEMPTIONS = new Map([
   ...SMART_ASSET_EDITOR_KEYS.map((key) => [key, SMART_ASSET_EDITOR]),
   ...PUBLIC_DES_KEYS.map((key) => [key, PUBLIC_DES]),
   ...OFFLINE_LICENSE_KEYS.map((key) => [key, OFFLINE_LICENSE]),
+  ...VERSION_UPGRADE_KEYS.map((key) => [key, VERSION_UPGRADE]),
   ['connect.options.notConnected', OFFLINE_LICENSE_REMOVAL],
   ['demo.paintline.tourOverview', PAINTLINE_DEMO],
   ['demo.paintline.tourPretreat', PAINTLINE_DEMO],

@@ -8,6 +8,7 @@ import { createServer } from 'node:net';
 import { dirname, parse, resolve } from 'node:path';
 import { targetForPlatform, verifyBundle } from './bundle.mjs';
 import { validateApplianceConfig, validateCustomerCertificate } from './config.mjs';
+import { assessDataFormatReadability, assessReleaseUpgrade } from './compatibility.mjs';
 
 const NATIVE_ENTRYPOINTS = {
   'linux-x64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/connect/realvirtual-Connect', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
@@ -84,6 +85,27 @@ export async function runPreflight(options, dependencies = {}) {
     findings.push(finding('bundle', 'required', 'fail', 'BUNDLE_INVALID', error.message));
     return { ok: false, findings, manifest: null, config: null };
   }
+
+  const upgrade = assessReleaseUpgrade(options.installedVersion ?? null, manifest.version, manifest.compatibility);
+  findings.push(finding(
+    'upgrade-compatibility',
+    'required',
+    upgrade.ok ? 'pass' : 'fail',
+    upgrade.code,
+    upgrade.detail,
+    upgrade,
+  ));
+  const formats = options.installedVersion
+    ? assessDataFormatReadability(options.installedCompatibility, manifest.compatibility, { allowUndeclaredWriter: true })
+    : { ok: true, code: 'FRESH_INSTALL_DATA_FORMATS', detail: 'Fresh install has no existing persisted formats.' };
+  findings.push(finding(
+    'upgrade-data-formats',
+    'required',
+    formats.ok ? 'pass' : 'fail',
+    formats.code,
+    formats.detail,
+    formats,
+  ));
 
   let config;
   try {

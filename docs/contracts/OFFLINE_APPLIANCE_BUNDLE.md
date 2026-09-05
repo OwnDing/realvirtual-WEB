@@ -3,7 +3,7 @@ doc_id: CONTRACT-APPLIANCE-BUNDLE-001
 title: Offline Appliance Bundle v1 契约
 status: approved
 owner: architecture
-last_reviewed: 2026-08-30
+last_reviewed: 2026-09-01
 authority: normative
 ---
 
@@ -47,6 +47,13 @@ images/                 # 支持 container 时必需
   "createdAt": "2026-08-30T00:00:00.000Z",
   "modes": ["container", "native"],
   "originIdentity": "scheme-host-port",
+  "compatibility": {
+    "schemaVersion": 1,
+    "policy": "N-2",
+    "effectiveBaseline": "6.3.16",
+    "directUpgrade": { "sameMajorOnly": true, "maximumMinorDistance": 2, "minimumSourceVersion": "6.3.16" },
+    "dataFormats": { "projectManifest": { "minReadable": 1, "maxReadable": 2, "current": 2 } }
+  },
   "services": ["edge", "control", "web", "connect", "forgejo", "influxdb"],
   "components": [{ "id": "forgejo", "version": "...", "license": "MIT", "licenseFiles": ["licenses/third-party/forgejo-MIT.txt"] }],
   "files": [{ "path": "web/index.html", "bytes": 123, "sha256": "..." }]
@@ -58,6 +65,8 @@ images/                 # 支持 container 时必需
 `components` 记录每个运行时的稳定 ID、版本和许可证。若 CONNECT、Forgejo 或 InfluxDB 版本在两个 release 间变化，安装器必须把升级视为可能的数据迁移：升级前创建一致性全备份；未用该备份恢复前不得把已迁移数据交给旧版本。
 
 `manifest.sha256` 是 manifest 文件自身的 SHA-256。可选发布签名文件只签 manifest 字节，不替代摘要全量验证。
+
+`compatibility` 对升级候选必需；其完整字段、bridge 和判定规则见 [`CONTRACT-VERSION-COMPAT-001`](VERSION_COMPATIBILITY.md)。为接收本契约扩展前安装的 release，旧来源 manifest 可以缺少该字段，但缺少它的 bundle 不得成为新候选。
 
 ## 3. 依赖输入
 
@@ -93,7 +102,7 @@ Linux 默认根为 `/opt/xyvirtual-appliance`、`/etc/xyvirtual-appliance` 和 `
 
 - `preflight`：只读；一次报告全部错误，非零退出表示不可安装。
 - `install`：幂等；相同版本/配置重复运行不重置 Secret 或数据。
-- `upgrade`：验证候选和 origin、备份配置；数据服务版本变化时创建一致性全备份；短暂停机启动候选，等待控制面与真实 HTTPS 就绪后提交指针并保留上一版本；失败时先恢复数据再重启旧版。
+- `upgrade`：验证候选、来源版本、origin 和数据格式范围；每次版本变化创建一致性全备份；短暂停机启动候选，等待控制面与真实 HTTPS 就绪后提交指针并保留上一版本；失败时先恢复数据再重启旧版。
 - `rollback`：只切回已验证的上一发布，不降级或删除共享数据；若 Schema 不兼容则拒绝并说明恢复步骤。
 - `backup`：停止写服务后复制配置、PKI、许可证、Secret、Git、历史和 CONNECT 数据，生成逐文件摘要后恢复服务。
 - `restore`：只接受本安装 `backups/` 下、origin/target/installId 一致且摘要完整的备份；需要显式 installId 确认。

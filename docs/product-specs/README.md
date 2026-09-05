@@ -3,7 +3,7 @@ doc_id: PRODUCT-SPEC-INDEX
 title: 产品规格索引
 status: approved
 owner: product
-last_reviewed: 2026-08-27
+last_reviewed: 2026-09-01
 authority: normative-registry
 ---
 
@@ -19,6 +19,7 @@ authority: normative-registry
 - [`UNIFIED_CONFIGURATION.md`](UNIFIED_CONFIGURATION.md)：Approved 统一分层配置；部署/项目/用户/会话普通值优先级、部署策略上限、来源解释与版本迁移。
 - [`LICENSE_AND_EXPIRY.md`](LICENSE_AND_EXPIRY.md)：Approved 授权与到期行为；离线可校验的签名凭证，到期只降级创作不降级运行，含可直接引入合同的到期条款。
 - [`OFFLINE_APPLIANCE.md`](OFFLINE_APPLIANCE.md)：Approved 完整离线 Appliance；Linux/Windows、容器/原生、WEB/CONNECT/Git/历史库、HTTPS、健康和环境诊断闭环。
+- [`VERSION_SUPPORT_AND_UPGRADES.md`](VERSION_SUPPORT_AND_UPGRADES.md)：Approved N-2 版本支持、6.3.16 有效基线、升级前自动备份、失败恢复与项目格式兼容边界。
 
 后续建议规格：
 

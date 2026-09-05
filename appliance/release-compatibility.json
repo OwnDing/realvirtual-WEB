@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "policy": "N-2",
+  "effectiveBaseline": "6.3.16",
+  "directUpgrade": {
+    "sameMajorOnly": true,
+    "maximumMinorDistance": 2,
+    "minimumSourceVersion": "6.3.16"
+  },
+  "bridges": [
+    {
+      "sourceBefore": "6.3.16",
+      "via": "6.3.16"
+    }
+  ],
+  "dataFormats": {
+    "projectManifest": {
+      "minReadable": 1,
+      "maxReadable": 2,
+      "current": 2
+    },
+    "browserUpgradeBackup": {
+      "minReadable": 1,
+      "maxReadable": 1,
+      "current": 1
+    }
+  }
+}

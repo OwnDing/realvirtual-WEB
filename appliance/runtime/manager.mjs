@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { runPreflight } from './lib/preflight.mjs';
 import { httpsPortSuffix, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
+import { isRollbackDataCompatible } from './lib/compatibility.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bundleFromRuntime = resolve(here, '..');
@@ -612,6 +613,8 @@ export async function installOrUpgrade(options, dependencies = {}) {
     mode, containerRuntime: options.containerRuntime, verifyPlatform: options.verifyPlatform,
     minimumFreeBytes: options.minimumFreeBytes, diskPath: roots.installRoot,
     skipPortChecks: Boolean(existing) || options.skipPortChecks,
+    installedVersion: existing?.version ?? null,
+    installedCompatibility: existing?.compatibility ?? null,
   }, dependencies);
   if (!preflight.ok) {
     const codes = preflight.findings.filter((item) => item.status === 'fail').map((item) => item.code).join(', ');
@@ -621,8 +624,12 @@ export async function installOrUpgrade(options, dependencies = {}) {
   assertStableOrigin(existing, preflight.config);
   const existingManifest = existing ? await verifyBundle(existing.releaseRoot, { expectedTarget: existing.target }) : null;
   let safetyBackup = null;
-  if (existing && existing.version !== preflight.manifest.version && dataRuntimeChanged(existingManifest, preflight.manifest) && !options.noStart) {
-    safetyBackup = await backupAppliance({ ...options, noStop: false }, dependencies);
+  let existingStoppedForUpgrade = false;
+  if (existing && existing.version !== preflight.manifest.version) {
+    // The consistency point is only valid while the old release remains stopped.
+    // Do not reopen a write window between the snapshot and candidate handoff.
+    safetyBackup = await backupAppliance({ ...options, noStop: false, leaveStopped: true }, dependencies);
+    existingStoppedForUpgrade = true;
   }
   const configurationSnapshot = existing ? backupConfiguration(roots, preflight.manifest.version) : null;
   ensureStateDirectories(roots);
@@ -643,6 +650,14 @@ export async function installOrUpgrade(options, dependencies = {}) {
     origin: `https://${preflight.config.hostname}${httpsPortSuffix(preflight.config.httpsPort)}`,
     releaseRoot,
     safetyBackup,
+    compatibility: preflight.manifest.compatibility,
+    lastUpgrade: existing?.version && existing.version !== preflight.manifest.version ? {
+      sourceVersion: existing.version,
+      targetVersion: preflight.manifest.version,
+      backup: safetyBackup,
+      outcome: 'candidate',
+      at: new Date().toISOString(),
+    } : existing?.lastUpgrade ?? null,
     installedAt: existing?.installedAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -650,7 +665,9 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!options.noStart) {
     let candidateAttempted = false;
     try {
-      if (existing) stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
+      if (existing && !existingStoppedForUpgrade) {
+        stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
+      }
       if (mode === 'container') {
         candidateAttempted = true;
         if (preflight.manifest.target.startsWith('windows-')) {
@@ -689,11 +706,14 @@ export async function installOrUpgrade(options, dependencies = {}) {
       throw error;
     }
   }
-  atomicJson(installStatePath(roots), next);
-  atomicJson(join(roots.installRoot, 'current.json'), { schemaVersion: 1, version: next.version, releaseRoot: next.releaseRoot });
+  const committed = next.lastUpgrade?.outcome === 'candidate'
+    ? { ...next, lastUpgrade: { ...next.lastUpgrade, outcome: 'committed' } }
+    : next;
+  atomicJson(installStatePath(roots), committed);
+  atomicJson(join(roots.installRoot, 'current.json'), { schemaVersion: 1, version: committed.version, releaseRoot: committed.releaseRoot });
   const candidate = join(roots.stateRoot, 'candidate.json');
   if (existsSync(candidate)) rmSync(candidate);
-  return { state: next, preflight, roots, runtimeConfig, generatedOperatorPassword: initialized.generatedOperatorPassword };
+  return { state: committed, preflight, roots, runtimeConfig, generatedOperatorPassword: initialized.generatedOperatorPassword };
 }
 
 function readInstalledSecrets(roots) {
@@ -715,8 +735,8 @@ export async function rollbackAppliance(options, dependencies = {}) {
   const previousRoot = join(roots.installRoot, 'releases', state.previousVersion);
   const manifest = await verifyBundle(previousRoot, { expectedTarget: state.target });
   const activeManifest = await verifyBundle(state.releaseRoot, { expectedTarget: state.target });
-  if (dataRuntimeChanged(activeManifest, manifest)) {
-    throw new Error('Rollback is blocked because CONNECT, Forgejo, or InfluxDB changed; restore the pre-upgrade consistency backup instead.');
+  if (dataRuntimeChanged(activeManifest, manifest) || !isRollbackDataCompatible(activeManifest.compatibility, manifest.compatibility)) {
+    throw new Error('Rollback is blocked because a data service or persisted format changed; restore the pre-upgrade consistency backup instead.');
   }
   const config = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
   const secrets = readInstalledSecrets(roots);
@@ -744,6 +764,7 @@ export async function backupAppliance(options, dependencies = {}) {
   const backupRoot = join(roots.stateRoot, 'backups', `${stamp}-${randomBytes(3).toString('hex')}-${state.version}`);
   if (existsSync(backupRoot)) throw new Error(`Backup already exists: ${backupRoot}`);
   if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  let verified = false;
   try {
     mkdirSync(backupRoot, { recursive: true, mode: 0o700 });
     cpSync(roots.configRoot, join(backupRoot, 'config'), { recursive: true, errorOnExist: true, force: false });
@@ -758,8 +779,14 @@ export async function backupAppliance(options, dependencies = {}) {
       installId: state.installId, version: state.version, target: state.target, origin: state.origin,
       files,
     });
+    await verifyBackup(backupRoot, state.installId);
+    verified = true;
   } finally {
-    if (!options.noStop) startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+    // A failed snapshot never authorizes an upgrade outage. Keep the runtime
+    // stopped only after the requested consistency point was fully verified.
+    if (!options.noStop && (!options.leaveStopped || !verified)) {
+      startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+    }
   }
   return backupRoot;
 }
@@ -900,7 +927,16 @@ async function main() {
     noStart: has(args, 'no-start'), noStop: has(args, 'no-stop'),
   };
   if (action === 'preflight') {
-    const report = await runPreflight({ bundleRoot, configPath: common.configPath, expectedTarget: common.expectedTarget, mode: common.mode, containerRuntime: common.containerRuntime });
+    const installed = currentState(resolveRoots(common));
+    const report = await runPreflight({
+      bundleRoot,
+      configPath: common.configPath,
+      expectedTarget: common.expectedTarget,
+      mode: common.mode,
+      containerRuntime: common.containerRuntime,
+      installedVersion: installed?.version ?? null,
+      installedCompatibility: installed?.compatibility ?? null,
+    });
     printPreflight(report);
     if (!report.ok) process.exitCode = 2;
     return;
