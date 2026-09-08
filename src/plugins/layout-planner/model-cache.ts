@@ -13,6 +13,7 @@
  * re-exported here (and from the plugin index) for backwards compatibility.
  */
 
+import { runtimeFetch } from '../../core/deployment/runtime-egress';
 import {
   Group,
   Vector3,
@@ -527,7 +528,7 @@ export class ModelCache {
 
   /** Fetch raw GLB bytes for a (blob or object) URL. Test seam. */
   protected async _fetchBytes(url: string): Promise<ArrayBuffer> {
-    const resp = await fetch(url);
+    const resp = await runtimeFetch(url, "remote-model");
     if (!resp.ok) throw new Error(`GLB fetch failed (${resp.status}) for ${url}`);
     return resp.arrayBuffer();
   }

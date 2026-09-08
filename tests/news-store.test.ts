@@ -237,6 +237,7 @@ describe('news-store', () => {
   });
 
   it('acknowledges CONNECT news with POST /news/seen and exact IDs body', async () => {
+    setAppConfigForTest({ egress: { mode: 'allow-listed', allow: [{ origin: 'http://localhost:5100', purposes: ['industrial-interface', 'news'] }] } });
     const calls: Array<{ url: string; init?: RequestInit }> = [];
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

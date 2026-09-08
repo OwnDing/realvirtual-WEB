@@ -77,6 +77,7 @@
  * was doubled, never the safety.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import type { RVViewer } from '../rv-viewer';
 import type { AssetDocument, AssetBase } from './rv-asset-document';
 import { exportAssetGlb } from './rv-asset-glb-export';
@@ -234,7 +235,7 @@ async function expectedRevisionFor(
   const resolved = await backend.readBlobUrl(relPath).catch(() => null);
   if (!resolved) return null;
   try {
-    const bytes = await (await fetch(resolved.url)).arrayBuffer();
+    const bytes = await (await runtimeFetch(resolved.url, 'remote-model')).arrayBuffer();
     const revision = await revisionOfBytes(bytes);
     seenRevisions.set(ledgerKey(backend, relPath), revision);
     return revision;
@@ -801,7 +802,7 @@ async function writeThumbnailBesideAsset(
     thumbs.dispose();
     // null = WebGPU renderer; thumbnails need the classic one (plan-271).
     if (!dataUrl) return;
-    const blob = await (await fetch(dataUrl)).blob();
+    const blob = await (await runtimeFetch(dataUrl, 'remote-model')).blob();
     await backend.writeBlob(
       `library/.thumbnails/${libraryRelative.replace(/\.glb$/i, '.png')}`,
       blob,

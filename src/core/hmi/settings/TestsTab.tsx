@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { runtimeFetch } from '../../deployment/runtime-egress';
 import { useState, useCallback } from 'react';
 import { Typography, Box, Button, CircularProgress } from '@mui/material';
 import { PlayArrow, CheckCircle, Error as ErrorIcon } from '@mui/icons-material';
@@ -29,7 +30,7 @@ export function TestsTab() {
     setError(null);
     setResult(null);
     try {
-      const res = await fetch('/__api/tests/run', { method: 'POST' });
+      const res = await runtimeFetch('/__api/tests/run', "debug-tool", { method: 'POST' });
       const json = await res.json();
       if (json.error) {
         setError(json.error);

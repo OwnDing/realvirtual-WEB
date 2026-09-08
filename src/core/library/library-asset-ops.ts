@@ -45,6 +45,7 @@
  * travels or bloats an archive.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import type { DocumentTransferSession, DocumentTransferSide } from '../project/rv-document-transfer';
 import {
   classificationOfGlbBlob,
@@ -92,7 +93,7 @@ async function readBytesAt(surface: BlobSurface, path: string): Promise<Blob | n
   const resolved = await surface.readBlobUrl(path);
   if (!resolved) return null;
   try {
-    return await (await fetch(resolved.url)).blob();
+    return await (await runtimeFetch(resolved.url, "remote-model")).blob();
   } finally {
     resolved.release();
   }

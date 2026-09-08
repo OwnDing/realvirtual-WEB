@@ -13,6 +13,7 @@
  * CORS) they return an empty string / null instead of throwing.
  */
 
+import { requireRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { loadReactPdf } from './DocViewerOverlay';
 
 /** Minimal structural view of a pdf.js page text content item. */
@@ -34,7 +35,7 @@ function getDoc(url: string): Promise<PdfDocProxy | null> {
   let p = _docCache.get(url);
   if (!p) {
     p = loadReactPdf()
-      .then((mod) => mod.pdfjs.getDocument(url).promise as unknown as PdfDocProxy)
+      .then((mod) => mod.pdfjs.getDocument(requireRuntimeEgressUrl(url, 'documentation').href).promise as unknown as PdfDocProxy)
       .catch(() => null);
     _docCache.set(url, p);
   }

@@ -21,6 +21,7 @@
  *    absence of a new write path plus a positive and a negative test on the
  *    existing one.
  */
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
@@ -114,6 +115,7 @@ function renderBanner(onReload = vi.fn()) {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: ['https://files.example.org', 'https://signed.example.org', 'https://elsewhere.example.org'].map(origin => ({ origin, purposes: ['share'] })) } });
   localStorage.clear();
   clearSharedGlb();
   resetModelProvenance();
@@ -121,6 +123,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   vi.restoreAllMocks();
   clearSharedGlb();

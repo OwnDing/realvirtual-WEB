@@ -10,6 +10,7 @@
  * own beyond the `/health` the panel performs anyway (plan-343 T26).
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, act } from '@testing-library/react';
@@ -73,12 +74,14 @@ function renderNotice(onOpenSettings = vi.fn()) {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: SERVER, purposes: ['industrial-interface'] }] } });
   localStorage.clear();
   _resetConnectStore();
   __resetConnectDownloadsForTest();
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   vi.unstubAllGlobals();
   _resetConnectStore();

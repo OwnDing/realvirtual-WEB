@@ -21,6 +21,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+if (process.env.RV_DEPLOYMENT_PROFILE === 'offline') {
+  console.log('[inject-ga] Offline deployment: analytics injection disabled.');
+  process.exit(0);
+}
+
 /** Best-effort read of one key from a gitignored .env file (no dotenv dep). */
 function valueFromEnvFile(key) {
   for (const name of ['.env.production', '.env']) {
@@ -53,7 +58,7 @@ if (!existsSync(distSettings)) {
 try {
   const cfg = JSON.parse(readFileSync(distSettings, 'utf-8'));
   const origin = new URL(scriptUrl).origin;
-  cfg.schemaVersion = 1;
+  cfg.schemaVersion ??= 1;
   cfg.services = {
     ...(cfg.services ?? {}),
     analytics: { provider: 'google-analytics', measurementId: gaId, scriptUrl },
@@ -63,7 +68,7 @@ try {
   if (existing) existing.purposes = [...new Set([...(existing.purposes ?? []), 'analytics'])];
   else cfg.egress.allow.push({ origin, purposes: ['analytics'] });
   writeFileSync(distSettings, JSON.stringify(cfg, null, 2) + '\n');
-  console.log(`[inject-ga] Injected GA id into dist/settings.json: ${gaId}`);
+  console.log('[inject-ga] Applied explicitly configured analytics to dist/settings.json.');
 } catch (e) {
   console.error('[inject-ga] Failed to patch dist/settings.json:', e);
   process.exit(1);

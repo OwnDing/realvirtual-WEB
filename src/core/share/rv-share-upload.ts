@@ -47,6 +47,8 @@
  * That document is the hand-off to the backend repo (§2.6, R1).
  */
 
+import { fetchWithEgress, EgressBlockedError } from '../deployment/egress-io';
+import { getAppConfig } from '../rv-app-config';
 import {
   ShareApiError,
   requireShareSession,
@@ -210,7 +212,8 @@ async function putBytes(
   bytes: ArrayBuffer,
   signal?: AbortSignal,
 ): Promise<void> {
-  const doFetch = getShareApiConfig().fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const transport = getShareApiConfig().fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const doFetch: typeof fetch = (input, init) => fetchWithEgress(input, 'share', getAppConfig().egress, init, undefined, transport);
   // Exactly the headers the signature was bound to. No Authorization: the
   // storage host is a third party and our session token is not its business.
   const headers: Record<string, string> = created.uploadHeaders
@@ -226,6 +229,7 @@ async function putBytes(
       signal,
     });
   } catch (e) {
+    if (e instanceof EgressBlockedError) throw e;
     if (signal?.aborted) throw new ShareApiError('aborted', 'The upload was cancelled.', { cause: e });
     throw new ShareApiError('network', 'The file could not be uploaded to storage.', { cause: e });
   }
@@ -331,7 +335,8 @@ interface DownloadUrlResponse {
  * available" when it does not.
  */
 export async function resolveShareDownloadUrl(id: string): Promise<string> {
-  const doFetch = getShareApiConfig().fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const transport = getShareApiConfig().fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const doFetch: typeof fetch = (input, init) => fetchWithEgress(input, 'share', getAppConfig().egress, init, undefined, transport);
   const base = getShareApiConfig().baseUrl.replace(/\/+$/, '');
   const url = `${base}/shares/${encodeURIComponent(id)}/download-url`;
 
@@ -339,6 +344,7 @@ export async function resolveShareDownloadUrl(id: string): Promise<string> {
   try {
     resp = await doFetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
   } catch (e) {
+    if (e instanceof EgressBlockedError) throw e;
     throw new ShareFetchError('network', 'The shared link could not be resolved.', { cause: e });
   }
 

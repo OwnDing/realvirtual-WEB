@@ -27,6 +27,7 @@
  * executor would need a real viewer.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 vi.mock('../src/core/hmi/scene/rv-scene-glb-io', () => ({
@@ -140,6 +141,7 @@ let viewer: FakeViewer;
 let store: SceneStore;
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: ['https://files.example.test', 'https://example.test'].map(origin => ({ origin, purposes: ['remote-model'] })) } });
   localStorage.clear();
   localStorage.setItem(LS_ACTIVE, PRE_ACTIVE);
   localStorage.setItem(LS_DRAFT_EMPTY, PRE_DRAFT);
@@ -157,6 +159,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   vi.useRealTimers();
   vi.restoreAllMocks();
   store.dispose();

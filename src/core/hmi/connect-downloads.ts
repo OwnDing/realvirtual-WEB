@@ -2,7 +2,7 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { getAppConfig } from '../rv-app-config';
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 
 /** Legacy exports retained for API compatibility; deployments now own all release URLs. */
 export const CONNECT_STABLE_DOWNLOAD_URL = '';
@@ -100,7 +100,7 @@ function _channelFromManifest(m: ConnectReleaseManifest, fallbackUrl: string): C
 
 async function _probe(url: string): Promise<ConnectReleaseManifest | null> {
   try {
-    const res = await fetch(url, { method: 'GET', cache: 'no-cache' });
+    const res = await runtimeFetch(url, "connect-updates", { method: 'GET', cache: 'no-cache' });
     if (!res.ok) return null;
     const json = (await res.json()) as ConnectReleaseManifest;
     if (!json || typeof json !== 'object') return null;

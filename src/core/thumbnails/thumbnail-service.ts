@@ -41,6 +41,7 @@
  *   their icon; nothing about a preview is worth breaking a render over.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import type { Object3D, Scene, WebGLRenderer } from 'three';
 import { ThumbnailRenderer } from './thumbnail-renderer';
 import { ThumbnailCache } from './thumbnail-cache';
@@ -240,7 +241,7 @@ export class ThumbnailService {
     if (cached) {
       // The cache hands out an object URL; the service's contract is a blob.
       try {
-        const blob = await (await fetch(cached)).blob();
+        const blob = await (await runtimeFetch(cached, "remote-model")).blob();
         return blob;
       } finally {
         URL.revokeObjectURL(cached);
@@ -253,7 +254,7 @@ export class ThumbnailService {
     const dataUrl = this._render(model);
     if (!dataUrl) return null;          // WebGPU skip — treated as "no preview"
 
-    const blob = await (await fetch(dataUrl)).blob();
+    const blob = await (await runtimeFetch(dataUrl, "remote-model")).blob();
     // Best-effort persistence; a full quota must not fail the request.
     await this._cache.put(job.key, blob);
     return blob;

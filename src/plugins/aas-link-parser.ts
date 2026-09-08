@@ -20,6 +20,7 @@
  * `tests/bundle-splitting.test.ts`.
  */
 
+import { runtimeFetch } from '../core/deployment/runtime-egress';
 import type JSZip from 'jszip';
 
 // ─── Types ──────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ export function loadIndexResult(basePath?: string): Promise<AasIndexResult> {
 
   const base = basePath ?? `${import.meta.env.BASE_URL}`;
   const url = `${base}aasx/index.json`;
-  const promise = fetch(url, { signal: AbortSignal.timeout(10_000) })
+  const promise = runtimeFetch(url, "remote-model", { signal: AbortSignal.timeout(10_000) })
     .then(async (r): Promise<AasIndexResult> => {
       if (r.status === 404) return { kind: 'missing' };
       if (!r.ok) return { kind: 'error', reason: `HTTP ${r.status}` };
@@ -212,7 +213,7 @@ export function loadAasx(filename: string, basePath?: string): Promise<AasParsed
 
 async function doLoad(filename: string, basePath?: string): Promise<AasParsedData> {
   const base = basePath ?? `${import.meta.env.BASE_URL}`;
-  const response = await fetch(`${base}aasx/${filename}`, { signal: AbortSignal.timeout(10_000) });
+  const response = await runtimeFetch(`${base}aasx/${filename}`, "remote-model", { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error(`Failed to load ${filename}: ${response.status}`);
 
   const cacheKey = basePath ? `${basePath}::${filename}` : filename;

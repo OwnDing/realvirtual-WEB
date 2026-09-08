@@ -3,7 +3,7 @@ doc_id: GOV-HARNESS
 title: XYvirtual WEB AI Coding Harness
 status: approved
 owner: engineering
-last_reviewed: 2026-08-25
+last_reviewed: 2026-09-07
 authority: normative-process
 ---
 
@@ -24,6 +24,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 | `./scripts/verify.sh node` | Node 环境 Vitest | 纯逻辑、脚本、文件和结构门禁 |
 | `./scripts/verify.sh browser` | 浏览器模式 Vitest；主套件以八个顺序、独立 Chromium 进程的互补 shard 全量运行，性能套件单独运行；不隐式构建 `dist/` | 引擎、React、Three.js 行为；包体积测试前先运行 build |
 | `./scripts/verify.sh build` | 公共生产构建 | 打包、公共 Stub 和资源发现 |
+| `./scripts/verify.sh offline` | 离线生产构建 + Linux 无外部路由的 Chromium 功能旅程、拒绝反例和检测器自测 | 离线交付与外呼边界变更 |
 | `./scripts/verify.sh e2e` | Playwright 端到端场景 | 关键用户流程和发布前验证 |
 | `./scripts/verify.sh all` | static + node + browser + build | 综合交付门禁，不包含真实设备和 E2E |
 
@@ -44,6 +45,8 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 - 现有公开文档发布检查继续通过。
 
 ## 4. Static 门禁
+
+- 已知外部域名扫描及原生网络入口 AST 审计；准确表达式例外失效、新入口出现都失败。覆盖范围与维护见 [离线交付说明](../delivery/OFFLINE_OPERATIONS.md)。
 
 - 执行 `npm run lint`，保持 `engine -> viewer/plugin` 等已存在边界失败关闭。当前可证明的语义覆盖是已配置的边界规则；为兼容缺失私有 sibling 注册的 no-op 规则名不提供额外 Lint 保证。
 - 执行公共 `tsconfig.json`，不要求不存在的私有 sibling。
@@ -77,7 +80,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 1. 无依赖 Governance Gate；
 2. 安装锁定依赖后的 Static Gate；
 3. 独立的 Node Gate、Browser Gate 和 Build Gate，使一个失败不会遮蔽其他证据；
-4. Browser Gate 固定使用 Ubuntu 24.04，显式拉取 Git LFS、先生成 `dist/`，再安装与锁定 Playwright 版本匹配的 Chromium；主套件以八个顺序、独立 Chromium 进程的确定性 shard 全量运行，性能套件在第九个进程运行，并输出临时盘/主机可用内存最低值。任一进程非零即整项失败；安装、测试和 job 分别以 10、20、35 分钟上限失败关闭，且安装关键路径不执行 APT。
+4. Browser Gate 固定使用 Ubuntu 24.04，显式拉取 Git LFS、先生成 `dist/`，再安装与锁定 Playwright 版本匹配的 Chromium；主套件以八个顺序、独立 Chromium 进程的确定性 shard 全量运行，性能套件在第九个进程运行，并输出临时盘/主机可用内存最低值。任一进程非零即整项失败；安装、测试和 job 分别以 10、20、45 分钟上限失败关闭，且安装关键路径不执行 APT。离线生产验收在同一 required Browser Gate 内另有 10 分钟上限，使用本次 offline 构建和独立 Linux 网络命名空间；始终上传离线报告/失败 trace。
 
 2026-08-18 的首次远程 run `32151338635` 中 Governance Gate 与 Static Gate 通过，组合测试 job 因 3 个 Node 测试失败而失败。拆分后的远程 run `32157736678` 中 Governance、Static、Node、Build 通过，旧 Browser job 因 LFS/`dist` 输入缺口和无界名称探测在 GitHub 6 小时上限被取消。EP-GOV-003 完成后，远程 run `32222458677` 在提交 `47f9807` 上五个 Gate 全部通过；Chromium 安装耗时 8 秒，Browser Harness 用时 7 分 17 秒，944 个文件、10,366 个测试通过。
 

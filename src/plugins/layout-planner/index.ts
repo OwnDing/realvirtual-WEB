@@ -20,6 +20,8 @@
  *   - LayoutLibraryPanel.tsx   — React UI (library panel + toolbar button)
  */
 
+import { createEgressLoadingManager } from '../../core/deployment/egress-loading-manager';
+import { runtimeFetch } from '../../core/deployment/runtime-egress';
 import {
   Group,
   Mesh,
@@ -799,9 +801,9 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
     // proxies and on mobile networks, and when it does, DRACO-compressed
     // library assets never decode at all. This mirrors the central loader in
     // `core/engine/rv-glb-parse.ts`; the planner had been the one holdout.
-    const dracoLoader = new DRACOLoader();
+    const dracoLoader = new DRACOLoader(createEgressLoadingManager());
     dracoLoader.setDecoderPath(`${import.meta.env.BASE_URL}draco/`);
-    const gltfLoader = new GLTFLoader();
+    const gltfLoader = new GLTFLoader(createEgressLoadingManager());
     gltfLoader.setDRACOLoader(dracoLoader);
 
     this._modelCache = new ModelCache(gltfLoader);
@@ -3373,7 +3375,7 @@ export class LayoutPlannerPlugin implements RVViewerPlugin {
 
     // ── Dev-server fallback (catalog/URL libraries) ────────────────
     try {
-      const resp = await fetch('/api/library-thumbnail', {
+      const resp = await runtimeFetch('/api/library-thumbnail', "remote-model", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ catalogId: entryId, dataUrl }),

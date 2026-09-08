@@ -11,6 +11,7 @@
     "dev": "vite",
     "prebuild": "node scripts/install-private-dependencies.mjs --internal-only && node scripts/patch-occt-memory.mjs && node scripts/build-local-library-catalog.mjs",
     "build": "vite build",
+    "build:offline": "node scripts/build-offline-web.mjs",
     "build:embed": "vite build --config vite.embed.config.ts",
     "postbuild": "node scripts/inject-ga-settings.mjs && node scripts/apply-deployment-profile.mjs",
     "viewer:chrome": "node scripts/launch-viewer-chrome.mjs",

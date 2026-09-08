@@ -18,7 +18,7 @@
  * the bytes already live in the browser.
  */
 
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 
 interface AssetBlobCacheOptions {
   /** Cache API bucket name (e.g. `rv-planner-glbs`). One bucket per asset type. */
@@ -43,7 +43,7 @@ export class RVAssetBlobCache {
    */
   async getBlob(url: string): Promise<Blob> {
     if (url.startsWith('blob:') || url.startsWith('data:')) {
-      const resp = await fetch(url);
+      const resp = await runtimeFetch(url, "remote-model");
       return resp.blob();
     }
 
@@ -81,7 +81,7 @@ export class RVAssetBlobCache {
         return blob;
       }
 
-      const resp = await fetch(url);
+      const resp = await runtimeFetch(url, "remote-model");
       if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
       // Clone BEFORE consuming so we can store and return the body once each.
       cache.put(url, resp.clone()).catch(() => { /* quota / unsupported — fine */ });
@@ -91,7 +91,7 @@ export class RVAssetBlobCache {
     } catch {
       // Cache API unavailable (private browsing, file://, …) — fall back to
       // a direct fetch so the caller still gets the bytes.
-      const resp = await fetch(url);
+      const resp = await runtimeFetch(url, "remote-model");
       if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
       const blob = await resp.blob();
       console.log(`[blob-cache:${this._bucket}] NO-CACHE ${name} → direct fetch ${(blob.size / 1024 / 1024).toFixed(1)} MB`);

@@ -27,7 +27,7 @@ describe('deployment profile projection', () => {
 
   it('keeps CSP external-free by default and scopes allowed origins', () => {
     expect(buildDeploymentCsp({ egress: { mode: 'deny-external', allow: [] } }))
-      .toContain("connect-src 'self';");
+      .toContain("connect-src 'self' blob: data:;");
     const csp = buildDeploymentCsp({
       egress: {
         mode: 'allow-listed',
@@ -37,7 +37,7 @@ describe('deployment profile projection', () => {
         ],
       },
     });
-    expect(csp).toContain("connect-src 'self' https://news.example.test https://script.example.test");
+    expect(csp).toContain("connect-src 'self' blob: data: https://news.example.test https://script.example.test");
     expect(csp).toContain("script-src 'self' 'unsafe-inline' https://script.example.test");
     expect(csp).not.toContain("script-src 'self' 'unsafe-inline' https://news.example.test");
   });

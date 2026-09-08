@@ -14,6 +14,7 @@
  * - sessionStorage for persistence (per session, clears on tab close)
  */
 
+import { runtimeFetch, isRuntimeEgressAllowed, openRuntimeUrl } from '../core/deployment/runtime-egress';
 import { useState, useSyncExternalStore, useCallback } from 'react';
 import {
   Box,
@@ -577,6 +578,11 @@ export function OrderPanel() {
   }, []);
 
   const handleEmailExport = useCallback(() => {
+    if (getAppConfig().egress?.mode !== 'allow-listed') {
+      setOrderMsg(rvT('common', 'externalAccessBlocked'));
+      setShowOrderMsg(true);
+      return;
+    }
     const email = plugin?.config.orderEmail ?? '';
     const productName = deploymentProductName(getAppConfig());
     const subject = encodeURIComponent(`Order Request - ${productName}`);
@@ -602,6 +608,12 @@ export function OrderPanel() {
       return;
     }
 
+    if (!isRuntimeEgressAllowed(cfg.orderUrl, 'share')) {
+      setOrderMsg(rvT('common', 'externalAccessBlocked'));
+      setShowOrderMsg(true);
+      return;
+    }
+
     // Build payload
     const payload = {
       items: _items.map(it => ({
@@ -616,13 +628,13 @@ export function OrderPanel() {
 
     if (cfg.orderMethod === 'GET') {
       const qs = encodeURIComponent(JSON.stringify(payload.items));
-      window.open(`${cfg.orderUrl}?items=${qs}`, '_blank');
+      openRuntimeUrl(`${cfg.orderUrl}?items=${qs}`, 'share');
       return;
     }
 
     // POST
     try {
-      const resp = await fetch(cfg.orderUrl, {
+      const resp = await runtimeFetch(cfg.orderUrl, "share", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

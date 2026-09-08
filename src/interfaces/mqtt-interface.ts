@@ -20,6 +20,7 @@ import {
 } from './base-industrial-interface';
 import type { InterfaceSettings } from './interface-settings-store';
 import { debug } from '../core/engine/rv-debug';
+import { requireRuntimeEgressUrl } from '../core/deployment/runtime-egress';
 
 // ── mqtt.js type imports (runtime-loaded via dynamic import) ──
 
@@ -135,6 +136,7 @@ export class MqttInterface extends BaseIndustrialInterface {
   // ── Protocol Implementation ──
 
   protected async doConnect(settings: InterfaceSettings): Promise<void> {
+    const brokerUrl = requireRuntimeEgressUrl(settings.mqttBrokerUrl, 'industrial-interface');
     const mqtt = await import('mqtt') as unknown as MqttModule;
 
     this._topicPrefix = normalizePrefix(settings.mqttTopicPrefix);
@@ -143,7 +145,7 @@ export class MqttInterface extends BaseIndustrialInterface {
 
     debug('interface', `[mqtt] Connecting to ${settings.mqttBrokerUrl} (prefix: "${this._topicPrefix}", clientId: ${clientId})`);
 
-    this.client = await mqtt.connectAsync(settings.mqttBrokerUrl, {
+    this.client = await mqtt.connectAsync(brokerUrl.href, {
       username: settings.mqttUsername || undefined,
       password: settings.mqttPassword || undefined,
       clientId,

@@ -143,6 +143,9 @@ function hasScheme(url: string): boolean {
  */
 export function resolveReferencePath(baseUrl: string, path: string): string {
   if (!path) return baseUrl;
+  // Project document identities name a project-relative file, not a URL base.
+  // Resolve its children by the same path rules used before the file was saved.
+  if (baseUrl.startsWith('rvproject:')) return resolveReferencePath(baseUrl.slice('rvproject:'.length), path);
   if (hasScheme(path)) return path;
   if (hasScheme(baseUrl)) {
     // An OPAQUE base — the blob:/data: object URLs library providers hand out —

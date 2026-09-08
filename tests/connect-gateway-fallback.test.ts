@@ -9,6 +9,7 @@
  * gateway", ask CONNECT's own port once, and adopt it when it answers.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   connectToServer,
@@ -62,12 +63,14 @@ function healthUrls(urls: string[]): string[] {
 
 describe('connect gateway fallback (bare Vite on 5173)', () => {
   beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [FALLBACK_GATEWAY_URL, 'http://localhost:6123'].map(origin => ({ origin, purposes: ['industrial-interface'] })) } });
     localStorage.removeItem(LS_KEY_URL);
     _resetConnectStore();
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
+  setAppConfig({});
     vi.restoreAllMocks();
     localStorage.removeItem(LS_KEY_URL);
     _resetConnectStore();

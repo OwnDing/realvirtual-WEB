@@ -3,6 +3,7 @@
 
 /** Presentational news dialog and the single queue-arbitrating shell host. */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
@@ -148,7 +149,7 @@ export function NewsDialog({ items, onSeen }: NewsDialogProps) {
             </Box>
             {current.link && isSafeHttpUrl(current.link) && (
               <Link
-                href={current.link}
+                href={allowRuntimeEgressUrl(current.link, 'news')?.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{ display: 'inline-flex', mt: 1.5, fontSize: 13, fontWeight: 600 }}

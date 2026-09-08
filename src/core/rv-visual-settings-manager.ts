@@ -9,6 +9,7 @@
  * Receives a reference to shared viewer state via ViewerVisualState.
  */
 
+import { createEgressLoadingManager } from './deployment/egress-loading-manager';
 import {
   Scene,
   AmbientLight,
@@ -329,7 +330,7 @@ export class VisualSettingsManager {
 
   async loadEnvMap(): Promise<void> {
     if (this._envMapTexture) return;
-    const loader = new RGBELoader();
+    const loader = new RGBELoader(createEgressLoadingManager());
     const hdrTexture = await loader.loadAsync(`${import.meta.env.BASE_URL}envmaps/empty_warehouse_01_1k.hdr`);
 
     // WebGPU path (plan-271): the classic PMREMGenerator is WebGL-only, but

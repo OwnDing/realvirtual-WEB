@@ -16,6 +16,7 @@
  * tests are where it shows.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
@@ -100,6 +101,7 @@ function signedIn(email = 'thomas@realvirtual.test'): MagicLinkSession {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: ['https://share.example.test', 'https://storage.example.test'].map(origin => ({ origin, purposes: ['share'] })) } });
   localStorage.removeItem(SHARE_SESSION_KEY);
   localStorage.removeItem(SHARE_DRAFT_KEY);
   resetShareSessionCache();
@@ -108,6 +110,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   clearShareSession();
   clearShareDraft();
@@ -352,6 +355,14 @@ describe('plan-386 §9.3 — upload state machine', () => {
     expect(err).toBeInstanceOf(ShareApiError);
     // No link, and nothing in "my shared links" a sender could not explain.
     expect(await listMyShares(session)).toHaveLength(0);
+    expect(stub.confirmedCount()).toBe(0);
+  });
+
+  it('refuses an unauthorized storage target before PUT and releases the authorized upload reservation', async () => {
+    setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: new URL(stub.apiBase).origin, purposes: ['share'] }] } });
+    const err = await uploadSharedGlb(glbBytes(), META, { session: signedIn(), terms: TERMS }).catch(e => e);
+    expect(err).toMatchObject({ code: 'EGRESS_BLOCKED' });
+    expect(stub.requests.map(request => request.method)).toEqual(['POST', 'DELETE']);
     expect(stub.confirmedCount()).toBe(0);
   });
 });

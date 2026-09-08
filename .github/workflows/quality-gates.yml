@@ -53,7 +53,7 @@ jobs:
   browser:
     name: Browser Gate
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,6 +64,8 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build browser test artifacts
+        env:
+          RV_DEPLOYMENT_PROFILE: offline
         run: ./scripts/verify.sh build
       - name: Install Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
@@ -73,6 +75,16 @@ jobs:
           RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
         run: ./scripts/verify.sh browser
         timeout-minutes: 20
+      - name: Verify offline production journeys in an isolated network
+        run: node scripts/run-offline-gate.mjs
+        timeout-minutes: 10
+      - name: Upload offline gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-gate-evidence
+          path: test-results/offline/
+          if-no-files-found: ignore
 
   build:
     name: Build Gate

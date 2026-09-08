@@ -24,6 +24,7 @@
  *   }
  */
 
+import { EgressBlockedError } from '../core/deployment/egress-io';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
@@ -287,7 +288,7 @@ export abstract class BaseIndustrialInterface implements RVViewerPlugin {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       this.setConnectionState('error', errorMsg);
-      this.scheduleReconnect();
+      if (!(err instanceof EgressBlockedError)) this.scheduleReconnect();
       throw err;
     }
   }

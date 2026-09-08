@@ -14,6 +14,7 @@
  * null unless `branding.titleBar` is set.
  */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { Box, Typography } from '@mui/material';
 import { useCustomBranding } from './branding-store';
 import { useMobileLayout } from '../../hooks/use-mobile-layout';
@@ -54,7 +55,7 @@ export function TitleBar() {
       {branding.titleLogoUrl && (
         <Box
           component="img"
-          src={branding.titleLogoUrl}
+          src={allowRuntimeEgressUrl(branding.titleLogoUrl, 'remote-model')?.href}
           alt={branding.title ?? 'Logo'}
           sx={{ height: logoHeight, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
         />

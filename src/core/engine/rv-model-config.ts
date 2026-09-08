@@ -15,7 +15,7 @@
 
 import { debugWarn } from './rv-debug';
 import type { Scene } from 'three';
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export async function loadModelJsonConfig(
   try {
     const allowedUrl = allowRuntimeEgressUrl(configUrl, 'remote-model');
     if (!allowedUrl) return {};
-    const resp = await fetch(configUrl, { signal });
+    const resp = await runtimeFetch(configUrl, "remote-model", { signal });
     if (!resp.ok) return {};
     const data = await resp.json();
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {

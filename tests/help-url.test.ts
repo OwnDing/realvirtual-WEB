@@ -59,6 +59,7 @@ describe('buildHelpUrl', () => {
 describe('openExternal', () => {
   it('opens in a new tab with the opener severed', () => {
     const spy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://xyvirtual.io', purposes: ['documentation'] }] } });
     openExternal('https://xyvirtual.io/doc/web/');
     expect(spy).toHaveBeenCalledWith(
       'https://xyvirtual.io/doc/web/', '_blank', 'noopener,noreferrer',

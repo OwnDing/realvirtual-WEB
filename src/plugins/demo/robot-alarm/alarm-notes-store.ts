@@ -17,6 +17,7 @@
  * The same hint appears when the CONNECT store is offline.
  */
 
+import { runtimeFetch } from '../../../core/deployment/runtime-egress';
 import { lsLoad, lsSave } from '../../../core/hmi/ls-store-utils';
 import { getAppConfig, isSettingsLocked } from '../../../core/rv-app-config';
 import { ALARM_SCENARIOS, type AlarmNote, type AlarmScenario } from './alarm-seed-data';
@@ -103,8 +104,8 @@ function parseRemoteNote(raw: unknown): AlarmNote | null {
 /** GET `{notesUrl}/comments?errorId=…` → AlarmNote[]. Never throws (`?? []`). */
 async function loadRemoteNotes(baseUrl: string, errorId: string): Promise<AlarmNote[]> {
   try {
-    const resp = await fetch(
-      `${baseUrl}/comments?errorId=${encodeURIComponent(errorId)}`,
+    const resp = await runtimeFetch(
+      `${baseUrl}/comments?errorId=${encodeURIComponent(errorId)}`, "industrial-interface",
       { signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) },
     );
     if (!resp.ok) throw new Error(`comment store returned ${resp.status}`);
@@ -121,7 +122,7 @@ async function loadRemoteNotes(baseUrl: string, errorId: string): Promise<AlarmN
 /** POST `{notesUrl}/comments`. Resolves without throwing on failure (offline). */
 async function addRemoteNote(baseUrl: string, errorId: string, note: AlarmNote): Promise<void> {
   try {
-    const resp = await fetch(`${baseUrl}/comments`, {
+    const resp = await runtimeFetch(`${baseUrl}/comments`, "industrial-interface", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

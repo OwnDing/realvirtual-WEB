@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-09-02
+last_reviewed: 2026-09-08
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [`EP-OFFLINE-001-runtime-egress-gate.md`](EP-OFFLINE-001-runtime-egress-gate.md)：WEB 离线构建/启动策略、受控 I/O、CSP、静态反退化与生产零外呼 CI；本地全量门禁和隔离网络旅程通过，2026-09-08 完成。
 
 - [`EP-GOV-001-document-governance-foundation.md`](EP-GOV-001-document-governance-foundation.md)：建立文档优先、AI 安全、ExecPlan/ADR、Harness 与 CI 基座。
 - [`EP-GOV-002-governance-hardening.md`](EP-GOV-002-governance-hardening.md)：加固元数据/索引/计划状态、安全指令与 Quality Gates 证据闭环。

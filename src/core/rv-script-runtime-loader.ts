@@ -42,6 +42,7 @@
  *    Without a consent callback nothing runs — this loader fails CLOSED (R8).
  */
 
+import { requireRuntimeEgressUrl } from './deployment/runtime-egress';
 import { debug, debugWarn } from './engine/rv-debug';
 
 // ─── The source seam ────────────────────────────────────────────────────
@@ -246,6 +247,7 @@ export async function loadRuntimeScript(
 
   try {
     const importer = opts.importer ?? ((u: string) => import(/* @vite-ignore */ u));
+    requireRuntimeEgressUrl(url, 'debug-tool');
     const namespace = (await importer(url)) as Record<string, unknown>;
     if (!namespace || typeof namespace !== 'object') {
       _lastFailure = 'import-failed';

@@ -26,6 +26,7 @@
  * exportLayoutJSON) remain for callers still on the old API.
  */
 
+import { runtimeFetch } from '../../deployment/runtime-egress';
 import type { RVViewer } from '../../rv-viewer';
 import { debug } from '../../engine/rv-debug'; // TEMP open-perf instrumentation
 import type { FlattenSizeEstimate } from '../../engine/rv-glb-flatten';
@@ -1283,7 +1284,7 @@ export class SceneStore {
    * can never load.
    */
   private async _fetchPublishedGlb(entry: PublishedSceneEntry): Promise<Uint8Array> {
-    const resp = await fetch(publishedSceneUrl(entry.file), { cache: 'no-store' });
+    const resp = await runtimeFetch(publishedSceneUrl(entry.file), "remote-model", { cache: 'no-store' });
     if (!resp.ok) throw new Error(`Failed to fetch example scene ${entry.file}: HTTP ${resp.status}`);
     const bytes = new Uint8Array(await resp.arrayBuffer());
     if (bytes.byteLength < 12
@@ -1835,14 +1836,14 @@ export class SceneStore {
         bytes = source.kind === 'bytes'
           ? source.bytes
           : await (async () => {
-              try { return await (await fetch(source.url)).arrayBuffer(); }
+              try { return await (await runtimeFetch(source.url, "remote-model")).arrayBuffer(); }
               finally { source.release(); }
             })();
         void this._noteDocumentRevisionOf(relPath, bytes);
         this._setBaseBytes(key, bytes);
         return bytes;
       }
-      const response = await fetch(base.url);
+      const response = await runtimeFetch(base.url, "remote-model");
       if (!response.ok) throw new Error(`Could not read the model file (${response.status}).`);
       bytes = await response.arrayBuffer();
     } else {
@@ -2800,7 +2801,7 @@ export class SceneStore {
       // a rare, explicit action, so one fetch is the better trade — and
       // `expectedNames` below covers the risk that fetch brings back a
       // different file than the one the node indices were captured from.
-      const response = await fetch(base.url);
+      const response = await runtimeFetch(base.url, "remote-model");
       if (!response.ok) throw new Error(`Could not read the model file (${response.status}): ${base.url}`);
       const source = await response.arrayBuffer();
 

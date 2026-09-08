@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   HISTORIAN_TIMEOUT_MS,
@@ -11,12 +12,14 @@ import { setServerUrl } from '../src/core/hmi/connect-store';
 
 describe('historian-store', () => {
   beforeEach(() => {
+    setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'http://connect.test:5100', purposes: ['industrial-interface'] }] } });
     localStorage.clear();
     __resetHistorianStore();
     setServerUrl('http://connect.test:5100');
   });
 
   afterEach(() => {
+    setAppConfig({});
     vi.restoreAllMocks();
     vi.useRealTimers();
   });

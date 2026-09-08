@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'" />
+  <meta data-rv-csp http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'" />
   <title>XYvirtual WEB — Tab Configuration</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,6 +30,7 @@
   </style>
 </head>
 <body>
+  <p id="teams-status" role="status"></p>
   <h2>XYvirtual WEB — Configure Digital Twin Tab</h2>
 
   <div class="section">
@@ -57,9 +58,18 @@
   </div>
 
   <script type="module">
-    import { app, pages } from '@microsoft/teams-js';
+    import { fetchAppConfig, setAppConfig, getAppConfig } from './src/core/rv-app-config';
+    import { installRuntimeCsp } from './src/core/deployment/runtime-csp';
+    import { canInitializeTeams } from './src/core/deployment/teams-egress';
 
     (async function () {
+      setAppConfig(await fetchAppConfig());
+      installRuntimeCsp(getAppConfig());
+      if (!canInitializeTeams()) {
+        document.getElementById('teams-status').textContent = 'Teams is unavailable under this deployment’s external-access policy.';
+        return;
+      }
+      const { app, pages } = await import('@microsoft/teams-js');
       await app.initialize();
 
       const modelInput = document.getElementById('model-url');
@@ -118,7 +128,7 @@
 
         saveEvent.notifySuccess();
       });
-    })();
+    })().catch(() => { document.getElementById('teams-status').textContent = 'Teams could not be initialized.'; });
   </script>
 </body>
 </html>

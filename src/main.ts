@@ -12,15 +12,17 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
+import { canInitializeTeams } from './core/deployment/teams-egress';
 import { applyConfiguredLocale, ensureEnglishCatalog, getLocale, initI18n, rvT } from './core/i18n';
 import { RVViewer, type RendererKind } from './core/rv-viewer';
 import type { RVExtrasOverlay } from './core/engine/rv-extras-overlay-store';
 import { debug, logInfo } from './core/engine/rv-debug';
 import { initTestRunner } from './rv-test-runner';
-import { fetchAppConfig, setAppConfig, initAnalytics, trackAnalyticsEvent } from './core/rv-app-config';
+import { installRuntimeCsp } from './core/deployment/runtime-csp';
+import { fetchAppConfig, getAppConfig, setAppConfig, initAnalytics, trackAnalyticsEvent } from './core/rv-app-config';
 import { applyDeploymentIdentityToDocument } from './core/deployment/deployment-identity';
 import { setDeploymentBranding } from './core/hmi/branding-store';
-import { allowRuntimeEgressUrl } from './core/deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from './core/deployment/runtime-egress';
 import type { EgressPurpose } from './core/deployment/deployment-config';
 import { initFragmentSecret, decryptModelData } from './core/hmi/password-gate';
 import { isEncryptedEnvelope } from './core/persistence/rv-crypto-utils';
@@ -428,7 +430,7 @@ async function downloadGlb(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
     try {
-      const resp = await fetch(allowedUrl.href, { signal: controller.signal });
+      const resp = await runtimeFetch(allowedUrl.href, opts.egressPurpose ?? 'remote-model', { signal: controller.signal });
       if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
       const len = parseInt(resp.headers.get('content-length') || '0', 10);
 
@@ -498,7 +500,7 @@ async function discoverPublishedScenes(): Promise<PublishedSceneEntry[]> {
   // built-in example scenes.
   if (import.meta.env.VITE_PRIVATE_BUILD) return [];
   try {
-    const resp = await fetch(`${import.meta.env.BASE_URL}scenes/index.json`, { cache: 'no-store' });
+    const resp = await runtimeFetch(`${import.meta.env.BASE_URL}scenes/index.json`, "remote-model", { cache: 'no-store' });
     if (!resp.ok) return [];
     return parsePublishedIndex(await resp.json());
   } catch {
@@ -513,11 +515,28 @@ async function init() {
   // below reads window.location.hash.
   initFragmentSecret();
 
+  // --- Load App Config (MUST complete before React mount — no flicker) ---
+  const appConfig = await fetchAppConfig();
+
+  // A session may tighten a deployment lock, never loosen it. `false` is not
+  // an allowlisted unified-config value and must not defeat deployment policy.
+  if (params.get('lockSettings') === 'true') appConfig.lockSettings = true;
+
+  // Perf test mode: suppress UI chrome
+  const perfMode = params.has('perf');
+  if (perfMode) {
+    appConfig.lockSettings = true;
+  }
+
+  // Set singleton — from here all stores have access via getAppConfig()
+  setAppConfig(appConfig);
+  installRuntimeCsp(getAppConfig() as unknown as Record<string, unknown>);
+
   // --- Microsoft Teams integration ---
   // When running inside a Teams tab (?teams=1), dynamically import the Teams JS SDK
   // so the iframe handshake completes and Teams shows the content.
   const isTeams = params.has('teams');
-  if (isTeams) {
+  if (isTeams && canInitializeTeams()) {
     try {
       const microsoftTeams = await import('@microsoft/teams-js');
       await microsoftTeams.app.initialize();
@@ -541,22 +560,6 @@ async function init() {
       console.warn('[main] Teams SDK init failed (running outside Teams?)', e);
     }
   }
-
-  // --- Load App Config (MUST complete before React mount — no flicker) ---
-  const appConfig = await fetchAppConfig();
-
-  // A session may tighten a deployment lock, never loosen it. `false` is not
-  // an allowlisted unified-config value and must not defeat deployment policy.
-  if (params.get('lockSettings') === 'true') appConfig.lockSettings = true;
-
-  // Perf test mode: suppress UI chrome
-  const perfMode = params.has('perf');
-  if (perfMode) {
-    appConfig.lockSettings = true;
-  }
-
-  // Set singleton — from here all stores have access via getAppConfig()
-  setAppConfig(appConfig);
   initializeUnifiedRuntime(appConfig, parseSessionConfig(params));
   let unifiedConfig = getUnifiedConfig();
   await applyConfiguredLocale(unifiedConfig.effective.locale);
@@ -913,7 +916,7 @@ async function init() {
   // models in via the runtime `models.json` manifest below, not this endpoint.)
   if (import.meta.env.DEV) {
     try {
-      const resp = await fetch('/__api/private-models');
+      const resp = await runtimeFetch('/__api/private-models', "remote-model");
       if (resp.ok) {
         const privateModels: Array<{ project: string; filename: string; url: string }> = await resp.json();
         for (const pm of privateModels) {
@@ -934,7 +937,7 @@ async function init() {
   // build-time entries around would leave stale filenames matchable by localStorage, causing
   // 404s when a returning user had previously opened a model that only exists in another deploy.
   try {
-    const resp = await fetch(`${import.meta.env.BASE_URL}models.json`, { cache: 'no-store' });
+    const resp = await runtimeFetch(`${import.meta.env.BASE_URL}models.json`, "remote-model", { cache: 'no-store' });
     if (resp.ok) {
       const runtimeModels: string[] = await resp.json();
       entries.length = 0;
@@ -978,7 +981,7 @@ async function init() {
   // plan-700/701 delivery manifests. If CONNECT ever speaks `documents[]`, the
   // change belongs here and nowhere else.
   try {
-    const resp = await fetch('/model/manifest', { cache: 'no-store' });
+    const resp = await runtimeFetch('/model/manifest', "remote-model", { cache: 'no-store' });
     if (resp.ok) {
       const manifest: { models?: Array<{ name?: string; url?: string; revision?: string }> } =
         await resp.json();

@@ -79,6 +79,7 @@ describe('NewsDialog rendering', () => {
   });
 
   it('renders safe external links with a protected new-tab target', () => {
+    setAppConfigForTest({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://xyvirtual.io', purposes: ['news'] }] } });
     renderNews({ id: 'x', title: 'T', body: '', link: 'https://xyvirtual.io' });
     const link = screen.getByRole('link');
     expect(link.getAttribute('target')).toBe('_blank');
@@ -155,7 +156,7 @@ describe('NewsDialog rendering', () => {
     setAppConfigForTest({
       schemaVersion: 1,
       services: { news: { apiUrl: 'https://portal.test/news/api/v1' } },
-      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }] },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }, { origin: 'http://localhost:5100', purposes: ['industrial-interface'] }] },
     });
     stubNewsResponse([{ id: 'web-1', title: 'WEB item', body: '' }]);
     await fetchUnseenNews('web');
@@ -175,7 +176,7 @@ describe('NewsDialog rendering', () => {
     setAppConfigForTest({
       schemaVersion: 1,
       services: { news: { apiUrl: 'https://portal.test/news/api/v1' } },
-      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }] },
+      egress: { mode: 'allow-listed', allow: [{ origin: 'https://portal.test', purposes: ['news'] }, { origin: 'http://localhost:5100', purposes: ['industrial-interface'] }] },
     });
     stubNewsResponse([{ id: 'web-1', title: 'WEB item', body: '' }]);
     await fetchUnseenNews('web');

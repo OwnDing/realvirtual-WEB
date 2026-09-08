@@ -7,14 +7,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+import { buildDeploymentCsp } from '../src/core/deployment/deployment-csp.mjs';
+import { offlineProfile } from './offline-profile.mjs';
+export { buildDeploymentCsp } from '../src/core/deployment/deployment-csp.mjs';
 
-const CONNECT_PURPOSES = new Set([
-  'analytics', 'news', 'documentation', 'connect-updates', 'firebase-demo',
-  'github-library', 'remote-model', 'industrial-interface', 'multiuser', 'share', 'debug-tool',
-]);
-const SCRIPT_PURPOSES = new Set(['analytics', 'debug-tool']);
-const IMAGE_PURPOSES = new Set(['analytics', 'github-library', 'remote-model']);
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 function escapeHtml(value) {
   return String(value)
@@ -32,43 +29,6 @@ function validAsset(value) {
   return typeof value === 'string'
     && value.trim()
     && !/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(value.trim());
-}
-
-function allowedOrigins(config) {
-  if (config?.egress?.mode !== 'allow-listed' || !Array.isArray(config.egress.allow)) return [];
-  return config.egress.allow.flatMap((rule) => {
-    if (!rule || !Array.isArray(rule.purposes)) return [];
-    try {
-      const parsed = new URL(rule.origin);
-      if (!['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol)) return [];
-      if (parsed.pathname !== '/' || parsed.search || parsed.hash || parsed.username || parsed.password) return [];
-      return [{ origin: parsed.origin, purposes: rule.purposes.filter((p) => typeof p === 'string') }];
-    } catch {
-      return [];
-    }
-  });
-}
-
-export function buildDeploymentCsp(config) {
-  const origins = allowedOrigins(config);
-  const forPurposes = (purposes) => [...new Set(origins
-    .filter((rule) => rule.purposes.some((purpose) => purposes.has(purpose)))
-    .map((rule) => rule.origin))];
-  const directive = (name, base, extra) => `${name} ${[...base, ...extra].join(' ')}`;
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    directive('connect-src', ["'self'"], forPurposes(CONNECT_PURPOSES)),
-    directive('script-src', ["'self'", "'unsafe-inline'"], forPurposes(SCRIPT_PURPOSES)),
-    "style-src 'self' 'unsafe-inline'",
-    directive('img-src', ["'self'", 'data:', 'blob:'], forPurposes(IMAGE_PURPOSES)),
-    "font-src 'self' data:",
-    "worker-src 'self' blob:",
-    "media-src 'self' blob:",
-    "frame-src 'self'",
-    "form-action 'self'",
-  ].join('; ');
 }
 
 function replaceMarkedText(html, marker, value) {
@@ -128,13 +88,27 @@ export function projectDeploymentProfile(html, config) {
   return projected;
 }
 
-export function applyDeploymentProfile(distDir = join(root, 'dist'), { dryRun = false } = {}) {
+export function applyDeploymentProfile(distDir = join(root, 'dist'), { dryRun = false, profile = process.env.RV_DEPLOYMENT_PROFILE } = {}) {
   const settingsPath = join(distDir, 'settings.json');
   const indexPath = join(distDir, 'index.html');
   if (!existsSync(settingsPath) || !existsSync(indexPath)) return false;
-  const config = JSON.parse(readFileSync(settingsPath, 'utf8'));
+  if (profile !== undefined && profile !== '' && profile !== 'offline') throw new Error('Unknown deployment profile');
+  const raw = JSON.parse(readFileSync(settingsPath, 'utf8'));
+  const config = profile === 'offline' ? offlineProfile(raw) : raw;
   const projected = projectDeploymentProfile(readFileSync(indexPath, 'utf8'), config);
-  if (!dryRun) writeFileSync(indexPath, projected);
+  if (!dryRun) {
+    if (profile === 'offline') writeFileSync(settingsPath, JSON.stringify(config, null, 2) + '\n');
+    writeFileSync(indexPath, projected);
+    const teamsPath = join(distDir, 'teams-config.html');
+    if (existsSync(teamsPath)) {
+      writeFileSync(teamsPath, replaceMarkedAttribute(readFileSync(teamsPath, 'utf8'), 'data-rv-csp', 'content', buildDeploymentCsp(config)));
+    }
+    // Static hosts should apply this policy to documents AND worker scripts.
+    writeFileSync(join(distDir, 'deployment-headers.json'), JSON.stringify({
+      'Content-Security-Policy': buildDeploymentCsp(config),
+      'X-DNS-Prefetch-Control': 'off',
+    }, null, 2) + '\n');
+  }
   return true;
 }
 

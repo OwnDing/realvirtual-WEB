@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Paper } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
@@ -38,7 +39,7 @@ function BrandingContent() {
   }
   return (
     <img
-      src={custom.logoUrl}
+      src={allowRuntimeEgressUrl(custom.logoUrl, 'remote-model')?.href}
       alt={custom.name ?? 'Logo'}
       style={{ height: 24, width: 'auto', maxWidth: 38, objectFit: 'contain' }}
     />

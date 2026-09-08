@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { fetchWithEgress, EgressBlockedError } from '../deployment/egress-io';
+import { getAppConfig } from '../rv-app-config';
+
 /**
  * Fetching a shared GLB from a host we do not control (plan-386 §2.8).
  *
@@ -139,7 +142,8 @@ export async function fetchSharedGlb(
 ): Promise<SharedGlbPayload> {
   const target = validateShareUrl(url);
   const budget = options?.byteBudget ?? DEFAULT_SHARE_BYTE_BUDGET;
-  const doFetch = options?.fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const transport = options?.fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const doFetch: typeof fetch = (input, init) => fetchWithEgress(input, 'share', getAppConfig().egress, init, undefined, transport);
 
   // Own controller so the budget can cut the stream even when the caller
   // passed no signal; the caller's signal is chained onto it.
@@ -155,6 +159,7 @@ export async function fetchSharedGlb(
   try {
     resp = await doFetch(target.href, { signal: controller.signal, cache: 'no-store' });
   } catch (e) {
+    if (e instanceof EgressBlockedError) throw e;
     if (external?.aborted) {
       throw new ShareFetchError('aborted', 'Loading was cancelled.', { cause: e });
     }

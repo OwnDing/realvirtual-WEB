@@ -23,6 +23,7 @@
  * Registration: viewer.registerLazy('gaussian-splat', ...)
  */
 
+import { createEgressLoadingManager } from '../core/deployment/egress-loading-manager';
 import { MathUtils, Group, Points, PointsMaterial, BufferGeometry, Color, Vector3, Quaternion, Matrix4, Ray, Sphere, Box3 } from 'three';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
@@ -701,12 +702,12 @@ export class GaussianSplatPlugin implements RVViewerPlugin {
     try {
       if (ext === 'pcd') {
         const { PCDLoader } = await import('three/addons/loaders/PCDLoader.js');
-        const loader = new PCDLoader();
+        const loader = new PCDLoader(createEgressLoadingManager());
         const points = await loader.loadAsync(loadUrl);
         geometry = points.geometry;
       } else {
         const { PLYLoader } = await import('three/addons/loaders/PLYLoader.js');
-        const loader = new PLYLoader();
+        const loader = new PLYLoader(createEgressLoadingManager());
         geometry = await loader.loadAsync(loadUrl);
       }
     } finally {

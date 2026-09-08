@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { requireRuntimeEgressUrl } from '../deployment/runtime-egress';
+
 /**
  * rv-plugin-loader.ts — Dynamic ESM plugin loader.
  *
@@ -43,6 +45,7 @@ export async function loadExternalPlugin(
 
   const url = `${baseUrl}/plugins/${pluginId}.js`;
   try {
+    requireRuntimeEgressUrl(url, 'debug-tool');
     const module = await import(/* @vite-ignore */ url) as ExternalPluginModule;
     const PluginOrInstance = module.default;
     if (!PluginOrInstance) {

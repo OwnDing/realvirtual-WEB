@@ -28,6 +28,7 @@
  * Dev-mode only — not included in production builds.
  */
 
+import { runtimeFetch } from '../core/deployment/runtime-egress';
 import { RVBehavior } from '../core/rv-behavior';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
 import type { RVLogicStep } from '../core/engine/rv-logic-step';
@@ -218,7 +219,7 @@ export class DebugEndpointPlugin extends RVBehavior {
       this._lastPush = now;
       const snapshot = this._collectState();
       this._pushInFlight = true;
-      fetch('/__api/debug/snapshot', {
+      runtimeFetch('/__api/debug/snapshot', "debug-tool", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(snapshot),
@@ -317,7 +318,7 @@ export class DebugEndpointPlugin extends RVBehavior {
   // ── Command Polling ──
 
   private _pollCommands(): void {
-    fetch('/__api/debug/cmd/poll')
+    runtimeFetch('/__api/debug/cmd/poll', "debug-tool")
       .then(r => r.json())
       .then((data: { commands: DebugCommand[] }) => {
         for (const cmd of data.commands) {
@@ -391,7 +392,7 @@ export class DebugEndpointPlugin extends RVBehavior {
     }
 
     // Report result back
-    fetch('/__api/debug/cmd/result', {
+    runtimeFetch('/__api/debug/cmd/result', "debug-tool", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: cmd.id, success, error }),

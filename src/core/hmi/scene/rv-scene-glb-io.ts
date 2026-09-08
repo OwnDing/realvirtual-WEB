@@ -139,7 +139,11 @@ export interface SceneGlbWrite {
  * "conflict" beside the one definition of "destination".
  */
 export async function writeSceneGlbBody(write: SceneGlbWrite): Promise<SceneGlbWriteResult> {
-  const backend = writableBackend();
+  // Drafts use the id-keyed slot read by readSceneGlbBody and removed by
+  // dropSceneGlbBody. They are recovery snapshots, not project documents:
+  // turning "draft/<id>" into a filename loses the slot's identity and can
+  // neither be read back nor deleted through those existing recovery paths.
+  const backend = write.sceneId.startsWith('draft/') ? null : writableBackend();
 
   if (backend) {
     const existing = projectEntry(write.sceneId);

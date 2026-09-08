@@ -21,6 +21,7 @@
  * badge on the card.
  */
 
+import { allowRuntimeEgressUrl } from '../../deployment/runtime-egress';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
 import { RV_SCROLL_CLASS } from '../shared-sx';
@@ -137,7 +138,7 @@ export function ProjectsDetailPane({
           {thumbnailUrl && (
             <Box
               component="img"
-              src={thumbnailUrl}
+              src={allowRuntimeEgressUrl(thumbnailUrl, 'remote-model')?.href}
               alt={title}
               sx={{
                 width: '100%',

@@ -3,7 +3,7 @@ doc_id: CONTRACT-DEPLOYMENT-CONFIG-001
 title: Deployment Config v1 兼容契约
 status: approved
 owner: architecture
-last_reviewed: 2026-08-29
+last_reviewed: 2026-09-07
 authority: normative
 ---
 
@@ -43,3 +43,9 @@ Origin 必须是绝对 `http:`/`https:`/`ws:`/`wss:` origin，不包含路径、
 ## 5. 兼容
 
 本契约不重命名现有字段、GLB/rv-ODT、`rv_extras`、NodeId、项目文档、资产引用、插件 ID 或存储 key。旧客户端忽略新增字段；新客户端在旧配置下使用安全默认值。
+
+## 6. 离线运行投影
+
+[ADR-0011](../adr/ADR-0011-offline-runtime-gate.md) 规定 `RV_DEPLOYMENT_PROFILE=offline` 仅投影本契约既有 `egress/services` 字段；没有新的项目可覆盖开关。构建和启动共享 origin/purpose 解析与 CSP 生成，启动 CSP 只能收紧。配置更新通过页面重新加载生效。
+
+受控 HTTP 在发起前检查策略，并设置 `redirect: error`；拒绝错误码为 `EGRESS_BLOCKED`，错误文本不包含目标凭据或查询参数。工业连接遇到此错误不安排重连。自有 Three.js Loader 的子资源通过 LoadingManager URL 判定；Worker 还需宿主应用生成的 CSP 响应头。离线策略允许本地 Wasm 和 blob Worker，未开放 JavaScript `unsafe-eval`。操作与明确边界见 [离线交付说明](../delivery/OFFLINE_OPERATIONS.md)。

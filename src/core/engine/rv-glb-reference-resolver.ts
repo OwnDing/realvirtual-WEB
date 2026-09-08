@@ -39,7 +39,7 @@ import { listLibrarySources, type ResolvedAsset } from '../library/library-sourc
 import { verifyRvSigBuffer } from '../persistence/rv-sig-verify';
 import { sha256Hex } from '../import/rv-cad-glb-cache';
 import { debug } from './rv-debug';
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 
 /** Fetch a URL as bytes, or null when the URL does not serve a file. */
 async function fetchBytes(url: string): Promise<ArrayBuffer | null> {
@@ -47,7 +47,7 @@ async function fetchBytes(url: string): Promise<ArrayBuffer | null> {
   if (!allowedUrl) return null;
   let response: Response;
   try {
-    response = await fetch(allowedUrl.href);
+    response = await runtimeFetch(allowedUrl.href, "remote-model");
   } catch (e) {
     debug('loader', `[compose] fetch failed for ${url}: ${String(e)}`);
     return null;

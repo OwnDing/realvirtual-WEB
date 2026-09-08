@@ -9,6 +9,8 @@
  * Only active when the dev server exposes /__api/tests endpoints.
  */
 
+import { runtimeFetch } from './core/deployment/runtime-egress';
+
 interface VitestResult {
   numTotalTests?: number;
   numPassedTests?: number;
@@ -28,7 +30,7 @@ interface VitestResult {
 /** Call once during init — no-ops silently if not in dev mode or no tests exist. */
 export async function initTestRunner(): Promise<void> {
   try {
-    const resp = await fetch('/__api/tests');
+    const resp = await runtimeFetch('/__api/tests', "debug-tool");
     const data = (await resp.json()) as { files: string[] };
     if (data.files.length === 0) return;
     setupTestUI(data.files);
@@ -58,7 +60,7 @@ function setupTestUI(testFiles: string[]): void {
     resultsEl.innerHTML = '';
 
     try {
-      const resp = await fetch('/__api/tests/run', { method: 'POST' });
+      const resp = await runtimeFetch('/__api/tests/run', "debug-tool", { method: 'POST' });
       const result = (await resp.json()) as VitestResult;
 
       if (result.error) {

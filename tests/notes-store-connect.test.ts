@@ -22,7 +22,7 @@ const NOTE: AlarmNote = { author: 'Meier', dateLabel: '6 Jul', shift: 'Early', t
 
 describe('alarm-notes-store — CONNECT mode (notesUrl set)', () => {
   beforeEach(() => {
-    setAppConfig({ diagnostics: { notesUrl: 'http://connect:5100/' } });
+    setAppConfig({ diagnostics: { notesUrl: 'http://connect:5100/' }, egress: { mode: 'allow-listed', allow: [{ origin: 'http://connect:5100', purposes: ['industrial-interface'] }] } });
     __resetRemoteNotesState();
   });
   afterEach(() => {

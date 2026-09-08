@@ -3,6 +3,7 @@
 
 /** Shared authenticated REST transport for calls to XYvirtual CONNECT. */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import { loadInterfaceSettings } from '../../interfaces/interface-settings-store';
 
 /** Add the configured CONNECT API key without replacing caller headers. */
@@ -17,7 +18,7 @@ export function connectRestHeaders(init?: RequestInit): Headers {
 
 /** Execute an authenticated CONNECT request against an absolute URL. */
 export async function connectRestFetch(url: string, init?: RequestInit): Promise<Response> {
-  return fetch(url, {
+  return runtimeFetch(url, "industrial-interface", {
     ...init,
     headers: connectRestHeaders(init),
   });

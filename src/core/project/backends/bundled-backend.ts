@@ -26,6 +26,8 @@
  * without a bundler.
  */
 
+import { fetchWithEgress } from '../../deployment/egress-io';
+import { getAppConfig } from '../../rv-app-config';
 import {
   parsePublishedIndex,
   publishedScenePath,
@@ -446,7 +448,7 @@ export class BundledBackend implements ProjectBackend {
   private async _fetchBytes(relPath: string): Promise<Uint8Array | null> {
     if (!this._fetch) return null;
     try {
-      const resp = await this._fetch(this._url(relPath), { cache: 'no-store' });
+      const resp = await fetchWithEgress(this._url(relPath), 'remote-model', getAppConfig().egress, { cache: 'no-store' }, undefined, this._fetch);
       if (!resp.ok) return null;
       return new Uint8Array(await resp.arrayBuffer());
     } catch {
@@ -457,7 +459,7 @@ export class BundledBackend implements ProjectBackend {
   private async _fetchJson(relPath: string): Promise<unknown | null> {
     if (!this._fetch) return null;
     try {
-      const resp = await this._fetch(this._url(relPath), { cache: 'no-store' });
+      const resp = await fetchWithEgress(this._url(relPath), 'remote-model', getAppConfig().egress, { cache: 'no-store' }, undefined, this._fetch);
       if (!resp.ok) return null;
       return await resp.json();
     } catch {

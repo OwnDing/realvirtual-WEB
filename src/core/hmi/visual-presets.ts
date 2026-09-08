@@ -18,6 +18,7 @@
  *                    pre-commit session storage (a static deploy cannot write git).
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import type { RVViewer } from '../rv-viewer';
 import {
   loadVisualSettings, saveVisualSettings, getDefaultVisualSettings,
@@ -229,14 +230,14 @@ let _published: VisualPreset[] = [];
 export async function loadPublishedPresets(): Promise<void> {
   try {
     const base = import.meta.env.BASE_URL ?? '/';
-    const idxResp = await fetch(`${base}presets/index.json`, { cache: 'no-store' });
+    const idxResp = await runtimeFetch(`${base}presets/index.json`, "remote-model", { cache: 'no-store' });
     if (!idxResp.ok) return;
     const stems = await idxResp.json();
     if (!Array.isArray(stems)) return;
     const loaded: VisualPreset[] = [];
     for (const stem of stems) {
       try {
-        const r = await fetch(`${base}presets/${encodeURIComponent(String(stem))}.preset.json`, { cache: 'no-store' });
+        const r = await runtimeFetch(`${base}presets/${encodeURIComponent(String(stem))}.preset.json`, "remote-model", { cache: 'no-store' });
         if (r.ok) {
           const p = await r.json();
           if (isValidPreset(p)) loaded.push(p);
@@ -268,7 +269,7 @@ export function listPresets(): VisualPreset[] {
 export async function savePreset(preset: VisualPreset): Promise<'file' | 'local'> {
   if (import.meta.env.DEV) {
     try {
-      const r = await fetch('/api/preset', {
+      const r = await runtimeFetch('/api/preset', "remote-model", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: preset.name, preset }),

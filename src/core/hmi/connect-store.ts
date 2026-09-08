@@ -10,6 +10,7 @@
  * Uses module-level state with subscribe/getSnapshot for React useSyncExternalStore.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import { createStore } from './create-store';
 import { deriveWireType, type S7Tag, type ParsedTopic } from '../import/s7-tag-table';
 import { connectRestFetch } from './connect-rest';
@@ -1169,7 +1170,7 @@ export async function fetchStatus(): Promise<void> {
   const serverUrl = _store.getSnapshot().serverUrl;
   let resp: Response;
   try {
-    resp = await fetch(`${serverUrl}/status`);
+    resp = await runtimeFetch(`${serverUrl}/status`, "industrial-interface");
   } catch {
     _statusFailCount++;
     if (_statusFailCount >= STATUS_FAIL_THRESHOLD && !_store.getSnapshot().gatewayUnreachable) {
@@ -1287,7 +1288,7 @@ export async function fetchDiagnoseStatus(): Promise<void> {
   const timeout = setTimeout(() => controller.abort(), 4000);
   let resp: Response;
   try {
-    resp = await fetch(`${url}/diagnose/status`, { signal: controller.signal });
+    resp = await runtimeFetch(`${url}/diagnose/status`, "industrial-interface", { signal: controller.signal });
   } catch {
     return; // network error / abort — keep the last value; connection state drives "offline"
   } finally {
@@ -1653,7 +1654,7 @@ export async function updateInterface(id: string, patch: Partial<ConnectInterfac
 /** Remove an interface via REST API. */
 export async function removeInterface(id: string): Promise<void> {
   try {
-    await fetch(`${_store.getSnapshot().serverUrl}/config/interfaces/${id}`, { method: 'DELETE' });
+    await runtimeFetch(`${_store.getSnapshot().serverUrl}/config/interfaces/${id}`, "industrial-interface", { method: 'DELETE' });
     _store.set(prev => {
       const interfaces = prev.interfaces.filter(i => i.id !== id);
       const cleared = prev.activeInterfaceId === id;
@@ -1964,7 +1965,7 @@ export async function importMultiTabTagTable(
     topics: mqttTopics,
   };
 
-  const resp = await fetch(`${_store.getSnapshot().serverUrl}/config/interfaces/${interfaceId}`, {
+  const resp = await runtimeFetch(`${_store.getSnapshot().serverUrl}/config/interfaces/${interfaceId}`, "industrial-interface", {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
