@@ -123,12 +123,16 @@ try {
     });
     report.browser.webgl2 = result;
     if (!result.available) {
-      const session = await browser.newBrowserCDPSession();
+      let session;
       try {
+        session = await browser.newBrowserCDPSession();
         report.browser.gpu = (await session.send('SystemInfo.getInfo')).gpu;
         console.error('[offline] GPU diagnostics:', JSON.stringify(report.browser.gpu));
-      } finally { await session.detach(); }
-
+      } catch (error) { report.browser.gpuDiagnosticError = error.message; }
+      finally {
+        try { await session?.detach(); }
+        catch (error) { report.browser.gpuDiagnosticCleanupError = error.message; }
+      }
     }
     assert(result.available, `Offline Chromium cannot create WebGL2: ${result.creationError}`);
     assert.equal(result.error, 0, 'WebGL2 preflight must render without GL errors');
@@ -138,6 +142,7 @@ try {
   const canaryContext = await browser.newContext({ serviceWorkers: 'block' });
   const canaryObserver = await observeOfflineContext(canaryContext, server.origin);
   await canaryContext.tracing.start({ screenshots: true, snapshots: true });
+  let canaryFailure;
   try {
     const observer = canaryObserver;
     const page = await canaryContext.newPage();
@@ -171,13 +176,21 @@ try {
       worker.onerror = reject;
     }));
     await expect.poll(() => observer.attempts.has('csp: http://127.0.0.6:54321')).toBe(true);
-    report.journeys.push({ name: 'detector-canaries', status: 'passed', detected: [...observer.attempts] });
     await canaryContext.tracing.stop();
+    report.journeys.push({ name: 'detector-canaries', status: 'passed', detected: [...observer.attempts] });
   } catch (error) {
-    report.journeys.push({ name: 'detector-canaries', status: 'failed', detected: [...canaryObserver.attempts], violations: canaryObserver.violations });
-    await canaryContext.tracing.stop({ path: resolve(reportDir, 'detector-canaries.zip') });
+    canaryFailure = { name: 'detector-canaries', status: 'failed', failure: error.message, detected: [...canaryObserver.attempts], violations: canaryObserver.violations };
+    report.journeys.push(canaryFailure);
+    try { await canaryContext.tracing.stop({ path: resolve(reportDir, 'detector-canaries.zip') }); }
+    catch (traceError) { canaryFailure.traceError = traceError.message; }
     throw error;
-  } finally { await canaryContext.close(); }
+  } finally {
+    try { await canaryContext.close(); }
+    catch (closeError) {
+      if (!canaryFailure) throw closeError;
+      canaryFailure.closeError = closeError.message;
+    }
+  }
   console.log('[offline] detector canaries passed');
   const settings = JSON.parse(await readFile('dist/settings.json', 'utf8'));
   assert.equal(settings.egress.mode, 'deny-external');

@@ -4,7 +4,7 @@ title: 离线运行与生产零外呼门禁
 status: approved
 plan_status: completed
 owner: engineering
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 authority: normative
 ---
 
@@ -97,3 +97,5 @@ GOV-CONSTITUTION、GOV-AI-SAFETY、GOV-DOC-PRIORITY、GOV-CHANGE、GOV-DOD；Acc
 2026-09-08 完成用户批准的 WEB 离线范围。offline 构建与重新加载生效的部署策略、受控 I/O、共享 CSP、入口反退化、真实生产旅程、检测器自测、网络隔离及 required CI 配置均已落地。两项既有持久化缺陷由生产旅程发现并修复；没有更改格式、ID、白名单所有权或既有测试门槛。
 
 使用说明见 [OFFLINE_OPERATIONS](../../delivery/OFFLINE_OPERATIONS.md)。上线须由静态宿主实际应用生成的响应头；扩大在线授权需要同步 CSP，受控 HTTP 不跟随重定向。真实 PLC/CONNECT、服务器外呼、独立 embed 宿主、Windows/完整 Appliance、目标服务器部署及远程 CI 未验证。提交与推送依据上述追加授权进行；没有进行发布、部署或真实设备操作。
+
+2026-09-09 后续验证：上述远程 CI 缺口已由 [EP-OFFLINE-002](EP-OFFLINE-002-ci-webgl.md) 关闭。修复隔离运行器的浏览器身份与 WebGL2 初始化后，提交 `4cb7759` 的 [Quality Gates #89](https://github.com/OwnDing/realvirtual-WEB/actions/runs/34349615615) 五项全部通过，包含 8 条零外呼应用旅程、检测器 canary、WebGL2 像素校验、Browser 10,930 条与性能 11 条；其余真实宿主和设备限制仍保留。前文为本计划完成当日的历史证据。
