@@ -18,6 +18,14 @@ const networkProbe = await new Promise((done) => {
   socket.setTimeout(2_000, () => { socket.destroy(); done('timeout'); });
 });
 assert.equal(networkProbe, 'ENETUNREACH', 'The child namespace must have no external network route');
+const identity = { uid: process.getuid(), gid: process.getgid(),
+  groups: [...new Set([...process.getgroups(), process.getgid()])].sort((a, b) => a - b), home: process.env.HOME };
+if (process.env.RV_OFFLINE_EXPECTED_IDENTITY !== undefined) {
+  const expected = JSON.parse(process.env.RV_OFFLINE_EXPECTED_IDENTITY);
+  assert.equal(process.geteuid(), expected.uid, 'The isolated process must use the expected effective uid');
+  assert.equal(process.getegid(), expected.gid, 'The isolated process must use the expected effective gid');
+  for (const [key, value] of Object.entries(expected)) assert.deepEqual(identity[key], value, `Isolated browser identity: ${key}`);
+}
 const reportDir = resolve('test-results/offline');
 await mkdir(reportDir, { recursive: true });
 let server;
@@ -30,6 +38,7 @@ let browser;
 const report = {
   startedAt: new Date().toISOString(),
   browser: { platform: process.platform, arch: process.arch, args: browserArgs },
+  namespace: { mode: process.env.RV_OFFLINE_NAMESPACE_MODE, ...identity },
   production: Object.fromEntries(await Promise.all(['index.html', 'settings.json'].map(async file =>
     [file, createHash('sha256').update(await readFile(resolve('dist', file))).digest('hex')]))),
   isolation: 'network namespace: loopback only; external TCP returns ENETUNREACH', journeys: [],
@@ -119,30 +128,7 @@ try {
         report.browser.gpu = (await session.send('SystemInfo.getInfo')).gpu;
         console.error('[offline] GPU diagnostics:', JSON.stringify(report.browser.gpu));
       } finally { await session.detach(); }
-      // Diagnostic contexts never substitute for the required production run.
-      // Keep its original failure even if another supported backend works.
-      report.browser.backendDiagnostics = [];
-      for (const [name, args] of [
-        ['default', ['--no-sandbox', '--enable-unsafe-swiftshader']],
-        ['webgl-fallback', ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader']],
-        ['software-compositor', ['--no-sandbox', '--disable-gpu', '--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader']],
-      ]) {
-        let diagnosticBrowser;
-        const diagnostic = { name, args };
-        try {
-          diagnosticBrowser = await chromium.launch({ channel: 'chromium', executablePath: process.env.RV_OFFLINE_CHROMIUM, headless: true, args });
-          const diagnosticPage = await diagnosticBrowser.newPage();
-          diagnostic.webgl2 = await diagnosticPage.evaluate(() => {
-            const gl = document.createElement('canvas').getContext('webgl2', { antialias: false, alpha: true, stencil: true, powerPreference: 'high-performance' });
-            if (!gl) return { available: false };
-            const extension = gl.getExtension('WEBGL_debug_renderer_info');
-            return { available: true, renderer: extension ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) };
-          });
-        } catch (error) { diagnostic.error = error.message; }
-        finally { await diagnosticBrowser?.close(); }
-        report.browser.backendDiagnostics.push(diagnostic);
-        console.error('[offline] Backend diagnostic:', JSON.stringify(diagnostic));
-      }
+
     }
     assert(result.available, `Offline Chromium cannot create WebGL2: ${result.creationError}`);
     assert.equal(result.error, 0, 'WebGL2 preflight must render without GL errors');

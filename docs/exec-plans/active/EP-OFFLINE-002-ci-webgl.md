@@ -85,6 +85,7 @@ authority: normative
 - 首次远程 CI 的网络外呼、页面错误和 CSP 违规均为 0，而 trace 在渲染器创建阶段报告 WebGL 上下文失败；现有 90 秒旅程超时不足以直接暴露这一前置条件。
 - 本地验收通过不能证明托管 CI 的图形栈可用。`--use-gl=angle` 的遗漏与失败相关，但真实 CI 平台尚未复验，因果关系仍待确认。
 - 2026-09-09，提交 `2d6a23d` 的远程 run `34323941646` 仍无法创建 WebGL2；新增前置检查约 3 秒内保留了明确错误，四项其他 Gate 通过。该结果否定“只补 --use-gl=angle 就足够”的假设。继续收集 Chromium GPU 初始化日志及同一隔离环境内的默认、WebGL fallback 和软件合成器对照；对照结果不替代必需旅程，也不将原始失败转为通过。
+- 2026-09-09，诊断提交 `198bc64` 的 run `34324423421` 确认直接原因：GPU 进程加载 Playwright 自带 `libGLESv2.so` 时被拒绝访问，默认/仅 WebGL fallback/软件合成器三种对照均失败；不是特定 SwiftShader 模式或 90 秒超时问题。下一修复优先用 runner 已授权的 sudo 创建独立网络命名空间、设置 loopback，再用 setpriv 切回原调用用户运行 Node/Chromium，避免给浏览器增加用户身份映射；无 sudo 能力的本地环境保留原非特权命名空间路径。通过实际 UID 断言、仅 loopback 与 ENETUNREACH 探针同时验证身份和网络隔离，不更改宿主权限或安全配置。
 - 5.6 子代理审查确认 `chromium.executablePath()` 已返回完整 Chromium，并非误选 headless shell；离线入口补齐 `--use-gl=angle` 与 SwiftShader 配对，保留跨 sudo 的可执行文件路径。真实 WebGL2 前置检查使用 RVViewer 的上下文属性并读回已绘制像素，不回退 WebGL1。
 - 清理浏览器或 trace 的异常原本可能覆盖首个失败并阻止报告写入；现在保留原始失败，独立清理浏览器与服务器，且清理失败不能将成功旅程伪装为整轮成功。CI 将生产隔离检查前置到 Browser 单元测试之前，以更早暴露环境错误，测试和超时保持原值。
 
@@ -104,6 +105,7 @@ authority: normative
 - 当前尚未验证目标 CI 平台上的修复效果，也未验证真实 PLC/CONNECT、Windows Appliance、部署或生产设备。
 - 2026-09-09 本地 `node scripts/run-offline-gate.mjs` 退出 0：WebGL2 像素读回、网络检测器 canary、8 条生产旅程全部通过；应用旅程保持零外呼、零页面异常、零 CSP 违规。日志 `/tmp/rv-offline-ci-fix-local.log`，报告 `test-results/offline/report.json`。
 - 对实际门禁脚本的临时副本注入 `--disable-webgl`，约 2.9 秒内失败并保留 trace/report；进一步同时注入 trace、browser 和 server 清理异常，原始 WebGL 失败仍保留，清理异常单独记录。注入不存在的 Chromium 路径时也保存启动失败报告，未进入应用旅程。故障注入不改仓库脚本或产品代码。
+- 本机带 no-new-privileges，无法执行 sudo 路径；保留的 userns 路径可以初始化 WebGL2、检测器和默认模型。新增实际 UID/EUID、GID/EGID、附加组和 HOME 断言，sudo 路径的 setpriv 清除 capabilities 并设置 no-new-privileges。其实际执行仍须由有 sudo 能力的 GitHub runner 验证。本地另一次运行在 commissioning 模式跨页面求值时遇到原有 5 秒 polling 超时，已保留 trace 并继续调查，未增加超时或删除断言。
 
 ## Rollback
 
