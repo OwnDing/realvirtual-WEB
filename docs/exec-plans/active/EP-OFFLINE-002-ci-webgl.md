@@ -55,6 +55,7 @@ authority: normative
 - `.github/workflows/quality-gates.yml`
 - `docs/exec-plans/active/EP-OFFLINE-002-ci-webgl.md`
 - `docs/exec-plans/active/README.md`
+- `docs/delivery/OFFLINE_OPERATIONS.md`
 - 完成后仅移动本计划并同步 `docs/exec-plans/completed/README.md`
 
 ## Forbidden Paths
@@ -106,6 +107,8 @@ authority: normative
 - 2026-09-09 本地 `node scripts/run-offline-gate.mjs` 退出 0：WebGL2 像素读回、网络检测器 canary、8 条生产旅程全部通过；应用旅程保持零外呼、零页面异常、零 CSP 违规。日志 `/tmp/rv-offline-ci-fix-local.log`，报告 `test-results/offline/report.json`。
 - 对实际门禁脚本的临时副本注入 `--disable-webgl`，约 2.9 秒内失败并保留 trace/report；进一步同时注入 trace、browser 和 server 清理异常，原始 WebGL 失败仍保留，清理异常单独记录。注入不存在的 Chromium 路径时也保存启动失败报告，未进入应用旅程。故障注入不改仓库脚本或产品代码。
 - 本机带 no-new-privileges，无法执行 sudo 路径；保留的 userns 路径可以初始化 WebGL2、检测器和默认模型。新增实际 UID/EUID、GID/EGID、附加组和 HOME 断言，sudo 路径的 setpriv 清除 capabilities 并设置 no-new-privileges。其实际执行仍须由有 sudo 能力的 GitHub runner 验证。本地另一次运行在 commissioning 模式跨页面求值时遇到原有 5 秒 polling 超时，已保留 trace 并继续调查，未增加超时或删除断言。
+- 模式切换 trace 显示 `requestMode('commissioning')` 已返回 true，快照已显示 Commissioning 界面；卡住的是下一次独立 CDP 求值。本地代码契约确认 requestMode 仅在 setMode 完成且 activeMode 相符时返回 true。旅程改为在同一次浏览器任务内等待 requestMode 并返回 activeMode，严格断言请求成功和目标模式相符，随后仍检查 canvas 可见性；未改为绕过 guard 的 setMode，未增加超时。这样避免把浏览器主线程后续绘制的调度延迟误判为模式错误；切换后的响应性性能不在本次离线功能验收中新增承诺。
+- 2026-09-09，身份修复 `d8a2bc6` 的远程 run `34349117490` 已通过完整隔离生产旅程，其他四项 required Gate 通过，Browser 单元测试仍运行中。模式断言修正后的本地最终门禁也退出 0，10 项检查（WebGL2、canary、8 条应用旅程）全部通过；日志 `/tmp/rv-offline-identity-final-local.log`。仍等待最终提交的全部 required Gate 后归档。
 
 ## Rollback
 

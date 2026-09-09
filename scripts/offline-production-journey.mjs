@@ -188,8 +188,14 @@ try {
     assert(model.meshes > 0 && model.vertices > 0, 'A real model must be decoded');
     assert(observer.requests.has('/models/DemoRealvirtualWeb.glb'));
     for (const mode of ['viewer', 'hmi', 'planner', 'des', 'commissioning']) {
-      await page.evaluate((next) => window.viewer.modes.requestMode(next), mode);
-      await expect.poll(() => page.evaluate(() => window.viewer.modes.activeMode)).toBe(mode);
+      // requestMode resolves after committing the mode. Read that state in the
+      // same browser task, before React/SwiftShader renders the large model.
+      const transition = await page.evaluate(async (next) => {
+        const switched = await window.viewer.modes.requestMode(next);
+        return { switched, activeMode: window.viewer.modes.activeMode };
+      }, mode);
+      assert.equal(transition.switched, true, `${mode}: guarded switch must succeed`);
+      assert.equal(transition.activeMode, mode, `${mode}: requested mode must be active`);
       assert(await page.locator('canvas').first().isVisible());
     }
   });

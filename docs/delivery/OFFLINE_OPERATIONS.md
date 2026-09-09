@@ -3,7 +3,7 @@ doc_id: DELIVERY-OFFLINE-001
 title: WEB 离线构建、配置和门禁
 status: approved
 owner: engineering
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 authority: normative-process
 ---
 
@@ -46,9 +46,9 @@ authority: normative-process
 
 ## CI 和本地验收
 
-`./scripts/verify.sh offline` 是完整入口：重新构建离线生产包，在仅有 loopback 的 Linux 网络命名空间中运行 Chromium。环境需已有 Node、依赖、Playwright Chromium、`unshare`、`ip`；可使用非特权用户命名空间，受限 CI runner 则使用无交互 sudo 创建独立网络命名空间。能力缺失会失败，不跳过测试，也不修改宿主防火墙。
+`./scripts/verify.sh offline` 是完整入口：重新构建离线生产包，在仅有 loopback 的 Linux 网络命名空间中运行 Chromium。环境需已有 Node、依赖、Playwright Chromium、`unshare`、`ip`。若有无交互 sudo 能力，优先创建独立网络命名空间、启用 loopback，再通过 `setpriv` 恢复调用者的 UID、GID、附加组和 HOME，清除 capabilities 并禁止新增权限后运行 Node/Chromium；报告同时验证身份与网络隔离。无 sudo 时使用非特权用户命名空间；若宿主策略阻止 Chromium 读取其 GLES 库，前置检查会明确失败，须在具备上述能力的 Linux runner 上验证，不修改宿主安全策略或防火墙。
 
-已有 required **Browser Gate** 构建离线包并运行 `node scripts/run-offline-gate.mjs`；该直接命令要求 `dist/` 已由当前源码构建。`verify.sh all` 保留原有跨平台范围，Linux 离线验收另外运行 `offline`。
+已有 required **Browser Gate** 构建离线包并在浏览器单元测试前运行 `node scripts/run-offline-gate.mjs`；该直接命令要求 `dist/` 已由当前源码构建。门禁首先验证真实 WebGL2 像素读回，报告包含浏览器版本、图形后端、进程身份和失败诊断；浏览器启动或清理失败仍保留报告。`verify.sh all` 保留原有跨平台范围，Linux 离线验收另外运行 `offline`。
 
 门禁验证真实 GLB、工作区、本地保存重开、Draco Wasm、异常及残留在线配置、被拒绝的模型和重定向。检测器覆盖整个浏览器上下文的请求、弹窗、帧、WebSocket、Worker 和 CSP 拒绝，并用故意外呼的 canary 证明检测器会失败。OS 网络探针必须得到 `ENETUNREACH`。报告位于 `test-results/offline/report.json`，失败旅程保留 Playwright trace，CI 上传该目录。
 
