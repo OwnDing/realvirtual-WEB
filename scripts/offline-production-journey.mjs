@@ -20,10 +20,16 @@ const networkProbe = await new Promise((done) => {
 assert.equal(networkProbe, 'ENETUNREACH', 'The child namespace must have no external network route');
 const reportDir = resolve('test-results/offline');
 await mkdir(reportDir, { recursive: true });
-const server = await startOfflineServer('dist');
-const browser = await chromium.launch({ executablePath: process.env.RV_OFFLINE_CHROMIUM, headless: true, args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+let server;
+// Keep the full Chromium selected by the parent across sudo's HOME change.
+// SwANGLE requires both switches; selecting only the ANGLE backend can leave
+// headless Linux without a usable GL implementation.
+// https://chromium.googlesource.com/chromium/src/+/main/docs/gpu/swiftshader.md
+const browserArgs = ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+let browser;
 const report = {
   startedAt: new Date().toISOString(),
+  browser: { platform: process.platform, arch: process.arch, args: browserArgs },
   production: Object.fromEntries(await Promise.all(['index.html', 'settings.json'].map(async file =>
     [file, createHash('sha256').update(await readFile(resolve('dist', file))).digest('hex')]))),
   isolation: 'network namespace: loopback only; external TCP returns ENETUNREACH', journeys: [],
@@ -34,6 +40,7 @@ async function contextForJourney(name, callback) {
   const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 1000 } });
   const observer = await observeOfflineContext(context, server.origin);
   await context.tracing.start({ screenshots: true, snapshots: true });
+  let failure;
   try {
     await context.addInitScript(() => {
       if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
@@ -51,14 +58,22 @@ async function contextForJourney(name, callback) {
     assert.deepEqual([...observer.attempts], [], `${name}: external attempts`);
     assert.deepEqual(observer.errors, [], `${name}: page errors`);
     assert.deepEqual(observer.violations, [], `${name}: CSP violations`);
+    await context.tracing.stop();
     report.journeys.push({ name, status: 'passed', durationMs: Date.now() - started, localResources: observer.requests.size, externalAttempts: 0 });
     console.log(`[offline] ${name}: passed (${observer.requests.size} local resources)`);
-    await context.tracing.stop();
   } catch (error) {
-    report.journeys.push({ name, status: 'failed', durationMs: Date.now() - started, externalAttempts: [...observer.attempts], errors: observer.errors, violations: observer.violations });
-    await context.tracing.stop({ path: resolve(reportDir, `${name}.zip`) });
+    failure = { name, status: 'failed', failure: error.message, durationMs: Date.now() - started, externalAttempts: [...observer.attempts], errors: observer.errors, violations: observer.violations };
+    report.journeys.push(failure);
+    try { await context.tracing.stop({ path: resolve(reportDir, `${name}.zip`) }); }
+    catch (traceError) { failure.traceError = traceError.message; }
     throw error;
-  } finally { await context.close(); }
+  } finally {
+    try { await context.close(); }
+    catch (closeError) {
+      if (!failure) throw closeError;
+      failure.closeError = closeError.message;
+    }
+  }
 }
 
 async function boot(page, suffix = '/?mode=hmi&lang=en-US') {
@@ -74,6 +89,35 @@ async function boot(page, suffix = '/?mode=hmi&lang=en-US') {
 }
 
 try {
+  server = await startOfflineServer('dist');
+  browser = await chromium.launch({ channel: 'chromium', executablePath: process.env.RV_OFFLINE_CHROMIUM, headless: true, args: browserArgs });
+  report.browser.version = browser.version();
+  await contextForJourney('webgl2-preflight', async (page) => {
+    // This is a real draw/readback in the same browser and isolated namespace
+    // as the application, using RVViewer's WebGL context attributes.
+    const result = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 2;
+      let creationError = '';
+      canvas.addEventListener('webglcontextcreationerror', (event) => { creationError = event.statusMessage; });
+      const gl = canvas.getContext('webgl2', { antialias: false, alpha: true, stencil: true, powerPreference: 'high-performance' });
+      if (!gl) return { available: false, creationError };
+      try {
+        gl.clearColor(17 / 255, 34 / 255, 51 / 255, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        const pixel = new Uint8Array(4);
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+        const extension = gl.getExtension('WEBGL_debug_renderer_info');
+        return { available: true, pixel: [...pixel], error: gl.getError(),
+          renderer: extension ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) };
+      } finally { gl.getExtension('WEBGL_lose_context')?.loseContext(); }
+    });
+    report.browser.webgl2 = result;
+    assert(result.available, `Offline Chromium cannot create WebGL2: ${result.creationError}`);
+    assert.equal(result.error, 0, 'WebGL2 preflight must render without GL errors');
+    assert.deepEqual(result.pixel, [17, 34, 51, 255], 'WebGL2 preflight must read back the rendered pixel');
+    console.log(`[offline] WebGL2 renderer: ${result.renderer}`);
+  });
   const canaryContext = await browser.newContext({ serviceWorkers: 'block' });
   const canaryObserver = await observeOfflineContext(canaryContext, server.origin);
   await canaryContext.tracing.start({ screenshots: true, snapshots: true });
@@ -248,8 +292,15 @@ try {
   });
   server.setConfig(undefined);
 
+} catch (error) {
+  report.failure = error.message;
+  throw error;
 } finally {
-  await browser.close();
-  await server.close();
+  // A crashed GPU/browser must not prevent server cleanup or erase the
+  // original failure report. Cleanup failures still fail an otherwise good run.
+  const cleanup = await Promise.allSettled([browser?.close(), server?.close()]);
+  const failed = cleanup.filter(result => result.status === 'rejected');
+  if (failed.length) report.cleanupErrors = failed.map(result => result.reason.message);
   await writeFile(resolve(reportDir, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+  if (!report.failure && failed.length) throw failed[0].reason;
 }

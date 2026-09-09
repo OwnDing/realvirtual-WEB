@@ -70,14 +70,14 @@ jobs:
       - name: Install Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
         timeout-minutes: 10
+      - name: Verify offline production journeys in an isolated network
+        run: node scripts/run-offline-gate.mjs
+        timeout-minutes: 10
       - name: Run browser tests
         env:
           RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
         run: ./scripts/verify.sh browser
         timeout-minutes: 20
-      - name: Verify offline production journeys in an isolated network
-        run: node scripts/run-offline-gate.mjs
-        timeout-minutes: 10
       - name: Upload offline gate evidence
         if: always()
         uses: actions/upload-artifact@v4
