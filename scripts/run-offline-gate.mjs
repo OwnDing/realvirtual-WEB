@@ -7,7 +7,7 @@ import { chromium } from 'playwright';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 if (process.platform !== 'linux') throw new Error('The offline network gate requires Linux network namespaces; run it in the Linux CI runner.');
-const env = { ...process.env, RV_OFFLINE_CHROMIUM: chromium.executablePath() };
+const env = { ...process.env, RV_OFFLINE_CHROMIUM: chromium.executablePath(), DEBUG: 'pw:browser' };
 // Drop shell-exported functions. They are unrelated to the gate and can produce
 // shell startup failures inside the isolated child environment.
 for (const key of Object.keys(env)) if (key.startsWith('BASH_FUNC_')) delete env[key];
@@ -18,7 +18,7 @@ if (probe.status !== 0) {
   // Some hosted Linux runners disable unprivileged namespaces. sudo changes
   // only a new child network namespace, never the host firewall or routes.
   command = 'sudo';
-  args.splice(0, args.length, '-n', '--preserve-env=RV_OFFLINE_CHROMIUM', 'unshare', '--net', 'sh', '-eu', '-c', 'ip link set lo up\nexec "$1" "$2"', 'offline-gate', process.execPath, resolve(root, 'scripts/offline-production-journey.mjs'));
+  args.splice(0, args.length, '-n', '--preserve-env=RV_OFFLINE_CHROMIUM,DEBUG', 'unshare', '--net', 'sh', '-eu', '-c', 'ip link set lo up\nexec "$1" "$2"', 'offline-gate', process.execPath, resolve(root, 'scripts/offline-production-journey.mjs'));
 }
 const result = spawnSync(command, args, { cwd: root, env, stdio: 'inherit' });
 if (result.error) throw result.error;

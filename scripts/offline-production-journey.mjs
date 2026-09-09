@@ -113,6 +113,37 @@ try {
       } finally { gl.getExtension('WEBGL_lose_context')?.loseContext(); }
     });
     report.browser.webgl2 = result;
+    if (!result.available) {
+      const session = await browser.newBrowserCDPSession();
+      try {
+        report.browser.gpu = (await session.send('SystemInfo.getInfo')).gpu;
+        console.error('[offline] GPU diagnostics:', JSON.stringify(report.browser.gpu));
+      } finally { await session.detach(); }
+      // Diagnostic contexts never substitute for the required production run.
+      // Keep its original failure even if another supported backend works.
+      report.browser.backendDiagnostics = [];
+      for (const [name, args] of [
+        ['default', ['--no-sandbox', '--enable-unsafe-swiftshader']],
+        ['webgl-fallback', ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader']],
+        ['software-compositor', ['--no-sandbox', '--disable-gpu', '--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader']],
+      ]) {
+        let diagnosticBrowser;
+        const diagnostic = { name, args };
+        try {
+          diagnosticBrowser = await chromium.launch({ channel: 'chromium', executablePath: process.env.RV_OFFLINE_CHROMIUM, headless: true, args });
+          const diagnosticPage = await diagnosticBrowser.newPage();
+          diagnostic.webgl2 = await diagnosticPage.evaluate(() => {
+            const gl = document.createElement('canvas').getContext('webgl2', { antialias: false, alpha: true, stencil: true, powerPreference: 'high-performance' });
+            if (!gl) return { available: false };
+            const extension = gl.getExtension('WEBGL_debug_renderer_info');
+            return { available: true, renderer: extension ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) };
+          });
+        } catch (error) { diagnostic.error = error.message; }
+        finally { await diagnosticBrowser?.close(); }
+        report.browser.backendDiagnostics.push(diagnostic);
+        console.error('[offline] Backend diagnostic:', JSON.stringify(diagnostic));
+      }
+    }
     assert(result.available, `Offline Chromium cannot create WebGL2: ${result.creationError}`);
     assert.equal(result.error, 0, 'WebGL2 preflight must render without GL errors');
     assert.deepEqual(result.pixel, [17, 34, 51, 255], 'WebGL2 preflight must read back the rendered pixel');
