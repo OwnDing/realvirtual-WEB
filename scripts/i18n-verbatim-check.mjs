@@ -504,6 +504,7 @@ const VERSION_UPGRADE_KEYS = [
 ];
 
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['common.externalAccessBlocked', 'New policy-denial UX approved in PS-OFFLINE-001 / EP-OFFLINE-001 on 2026-09-05; not part of the historical English migration.'],
   ...SMART_ASSET_EDITOR_KEYS.map((key) => [key, SMART_ASSET_EDITOR]),
   ...PUBLIC_DES_KEYS.map((key) => [key, PUBLIC_DES]),
   ...OFFLINE_LICENSE_KEYS.map((key) => [key, OFFLINE_LICENSE]),

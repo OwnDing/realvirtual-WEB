@@ -40,6 +40,7 @@
  * `@rv-private` — `tests/private-internal-gate.node.test.ts` guards that.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import {
   deleteBlob,
   getBlobUrl,
@@ -127,7 +128,7 @@ async function readFromOpfs(sha256: string, quality: string): Promise<ArrayBuffe
     const resolved = await getBlobUrl(await opfsKey(sha256, quality));
     if (!resolved) return null;
     try {
-      return await (await fetch(resolved.url)).arrayBuffer();
+      return await (await runtimeFetch(resolved.url, "remote-model")).arrayBuffer();
     } finally {
       // The store hands out an owned object URL; free it in every path.
       resolved.revokeUrl();

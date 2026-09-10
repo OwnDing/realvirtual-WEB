@@ -34,6 +34,7 @@
  * assertion here for a store that sent no precondition at all.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const h = vi.hoisted(() => ({
@@ -167,6 +168,7 @@ let store: SceneStore;
 let urlBefore: string;
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://files.example.test', purposes: ['remote-model'] }] } });
   urlBefore = window.location.href;
   localStorage.clear();
   clearAllScenes();
@@ -192,6 +194,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   vi.restoreAllMocks();
   store.dispose();
   project.restore();

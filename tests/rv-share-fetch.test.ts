@@ -9,7 +9,8 @@
  * of hops it takes, not the fact that it answered at all.
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { setAppConfig } from '../src/core/rv-app-config';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   fetchSharedGlb,
   validateShareUrl,
@@ -47,7 +48,10 @@ async function rejection(p: Promise<unknown>): Promise<ShareFetchError> {
 
 const REMOTE = 'https://files.example.org/cell.glb';
 
+beforeEach(() => setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://files.example.org', purposes: ['share'] }] } }));
+
 afterEach(() => {
+  setAppConfig({});
   vi.restoreAllMocks();
 });
 
@@ -79,10 +83,9 @@ describe('rv-share-fetch — byte budget', () => {
     expect(err.kind).toBe('too-large');
   });
 
-  it('fetch_FollowsRedirect_BudgetStillApplies: a redirect does not widen the budget', async () => {
-    // The browser follows redirects transparently, so what reaches us is the
-    // FINAL response — with a different `url`. The budget lives downstream of
-    // every hop, so it applies unchanged.
+  it('fetch_ResponseUrl_BudgetStillApplies: a transport response URL does not widen the budget', async () => {
+    // An injected transport can return another response URL. Its byte budget
+    // still applies; the native fetch path refuses redirects before this layer.
     const fetchImpl = vi.fn(async () => streamResponse(
       [chunk(4096)],
       { url: 'https://cdn.elsewhere.example/redirected.glb' },
@@ -94,7 +97,7 @@ describe('rv-share-fetch — byte budget', () => {
     expect(err.kind).toBe('too-large');
   });
 
-  it('keeps the post-redirect URL as the payload identity when the transfer succeeds', async () => {
+  it('keeps the transport response URL as the payload identity when the transfer succeeds', async () => {
     const fetchImpl = vi.fn(async () => streamResponse(
       [chunk(64)],
       { url: 'https://cdn.elsewhere.example/redirected.glb' },

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import mainSource from '../src/main.ts?raw';
 import connectPanelSource from '../src/core/hmi/ConnectPanel.tsx?raw';
@@ -25,12 +26,13 @@ const iface: ConnectInterface = {
 
 describe('historian trend plugin', () => {
   beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'http://connect.test:5100', purposes: ['industrial-interface'] }] } });
     localStorage.clear();
     _resetConnectStore();
     setServerUrl('http://connect.test:5100');
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => { vi.restoreAllMocks(); setAppConfig({}); });
 
   it('registers a button-group slot', () => {
     const plugin = new HistorianTrendPlugin();

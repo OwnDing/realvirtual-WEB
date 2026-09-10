@@ -10,6 +10,7 @@
  * Self-registers with the fieldRendererRegistry on import.
  */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { parseTags, extractAttr } from './tooltip/MetadataTooltipContent';
@@ -102,7 +103,7 @@ function MetadataContentRenderer({ value }: FieldRendererProps) {
               <Typography
                 key={i}
                 component="a"
-                href={url ?? '#'}
+                href={allowRuntimeEgressUrl(url ?? '#', 'documentation')?.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{ fontSize: 11, color: '#64b5f6', textDecoration: 'underline', cursor: 'pointer', pointerEvents: 'auto' }}

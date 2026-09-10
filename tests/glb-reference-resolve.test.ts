@@ -112,6 +112,14 @@ function driveSpeedAt(occurrenceRoot: Object3D): number | undefined {
 // ─── Relative path resolution (F18) ──────────────────────────────────────
 
 describe('resolveReferencePath (F18)', () => {
+  it('resolves saved project document children without treating rvproject as a network URL', () => {
+    expect(resolveReferencePath('rvproject:Saved scene.glb', '/embed/vignettes/conveyor-sensor.glb'))
+      .toBe('/embed/vignettes/conveyor-sensor.glb');
+    expect(resolveReferencePath('rvproject:cells/assembly.glb', '../parts/conveyor.glb')).toBe('parts/conveyor.glb');
+    expect(resolveReferencePath('rvproject:cells/assembly.glb', './part.glb')).toBe('cells/part.glb');
+    expect(resolveReferencePath('rvproject:cells/assembly.glb', '')).toBe('rvproject:cells/assembly.glb');
+  });
+
   it('resolves against the containing file, not against the scene root', () => {
     // anlage.glb → unterordner/baugruppe.glb → ./teil.glb  ⇒  unterordner/teil.glb
     expect(resolveReferencePath('unterordner/baugruppe.glb', './teil.glb')).toBe('unterordner/teil.glb');

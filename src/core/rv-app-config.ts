@@ -240,7 +240,7 @@ export async function fetchAppConfig(): Promise<RVAppConfig> {
   try {
     // Use BASE_URL (not a bare relative path) so it resolves correctly under
     // sub-folder deploys (e.g. Bunny CDN /demo/) regardless of a trailing slash.
-    const resp = await fetch(`${import.meta.env.BASE_URL}settings.json?v=${Date.now()}`, { cache: 'no-store' });
+    const resp = await fetch(`${import.meta.env.BASE_URL}settings.json?v=${Date.now()}`, { cache: 'no-store', redirect: 'error' });
     if (!resp.ok) {
       debug('config', 'No settings.json found, using defaults');
       return {};

@@ -24,7 +24,7 @@
  * assertion would be vacuous.
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
 import { FakeDir, asDirHandle, namedError } from './helpers/fake-fs-handles';
 import { glbBytes, glbWrite } from './helpers/scene-write';
 import { BrowserBackend } from '../src/core/project/backends/browser-backend';
@@ -47,9 +47,11 @@ import {
   type BlobStoreNotice,
 } from '../src/core/storage/rv-opfs-blobs';
 import { readSceneGlbPointer } from '../src/core/storage/rv-scene-glb-store';
+import { getProjectStore } from '../src/core/project/project-store';
 import {
   readSceneGlbBody,
   writeSceneGlbBody,
+  dropSceneGlbBody,
 } from '../src/core/hmi/scene/rv-scene-glb-io';
 import {
   announceSceneWrite,
@@ -106,6 +108,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   localStorage.clear();
   await clearAllBlobs();
 });
@@ -294,6 +297,23 @@ describe('Atomarer Ersatz — kein Teilzustand', () => {
 // conflict instead of an overwrite.
 
 describe('Ablage ohne Projekt (phase 6)', () => {
+  it.each(['browser', 'folder'])('keeps draft recovery readable and isolated with a writable %s project', async (kind) => {
+    const backend = kind === 'browser' ? await openBrowser() : await openFolder(folderWithScene());
+    vi.spyOn(getProjectStore(), 'getBackend').mockReturnValue(backend);
+    const projectWrite = vi.spyOn(backend, 'writeScene');
+    const slot = 'draft/builtin:%2Fembed%2Fvignettes%2Fconveyor-sensor.glb';
+    const first = await writeSceneGlbBody({ sceneId: slot, name: 'Conveyor', glb: glbBytes('draft-v1'), expectedRevision: null });
+    expect(first.target).toBe('opfs');
+    expect(projectWrite).not.toHaveBeenCalled();
+    expect((await readSceneGlbBody(slot))?.glb).toEqual(glbBytes('draft-v1'));
+    await expect(writeSceneGlbBody({ sceneId: slot, name: 'Conveyor', glb: glbBytes('stale'), expectedRevision: null }))
+      .rejects.toBeInstanceOf(SceneRevisionConflictError);
+    expect((await readSceneGlbBody(slot))?.revision).toBe(first.revision);
+    await dropSceneGlbBody(slot);
+    expect(await readSceneGlbBody(slot)).toBeNull();
+    await backend.deactivate();
+  });
+
   it('writes a scene body to OPFS when no writable project is open', async () => {
     // No project store is attached in this suite, so `writableBackend()` finds
     // nothing — which is the DEFAULT case in the field, not an edge case: the

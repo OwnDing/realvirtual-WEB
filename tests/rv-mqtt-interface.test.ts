@@ -13,6 +13,7 @@
  * async dynamic imports in the browser provider).
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { InterfaceSettings } from '../src/interfaces/interface-settings-store';
 import { INTERFACE_DEFAULTS } from '../src/interfaces/interface-settings-store';
@@ -132,12 +133,14 @@ describe('MqttInterface', () => {
   let iface: TestMqttInterface;
 
   beforeEach(() => {
+    setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'ws://test-broker:8080', purposes: ['industrial-interface'] }] } });
     iface = new TestMqttInterface();
     lastConnectOptions = undefined;
   });
 
   afterEach(() => {
     iface.disconnect();
+    setAppConfig({});
   });
 
   // ── Lifecycle ──

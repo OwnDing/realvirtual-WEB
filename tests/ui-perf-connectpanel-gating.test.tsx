@@ -22,6 +22,7 @@
  * memoised rows.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup, render, screen, waitFor, act } from '@testing-library/react';
@@ -80,11 +81,13 @@ function renderPanel(viewer: RVViewer) {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: SERVER, purposes: ['industrial-interface'] }] } });
   localStorage.clear();
   setServerUrl(SERVER);
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();

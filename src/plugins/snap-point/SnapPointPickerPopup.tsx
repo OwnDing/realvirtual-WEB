@@ -9,6 +9,7 @@
  * click, or after a successful placement.
  */
 
+import { allowRuntimeEgressUrl } from '../../core/deployment/runtime-egress';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactElement } from 'react';
 import { Box, Paper, Typography, CircularProgress, ButtonBase } from '@mui/material';
@@ -227,7 +228,7 @@ export function SnapPointPickerPopup({ viewer }: UISlotProps): ReactElement | nu
         >
           {item.entry.thumbnailUrl ? (
             <img
-              src={item.entry.thumbnailUrl}
+              src={allowRuntimeEgressUrl(item.entry.thumbnailUrl, 'remote-model')?.href}
               width={36}
               height={36}
               alt=""

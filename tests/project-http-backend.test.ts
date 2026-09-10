@@ -15,7 +15,8 @@
  * and "inherited, therefore fine" is exactly the assumption worth testing.
  */
 
-import { describe, it, expect } from 'vitest';
+import { setAppConfig } from '../src/core/rv-app-config';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { BundledBackend } from '../src/core/project/backends/bundled-backend';
 import { BackendNotWritableError } from '../src/core/project/backends/project-backend';
 import { ProjectStore } from '../src/core/project/project-store';
@@ -24,6 +25,9 @@ import { WORKSPACE_DEFAULT_PROJECT_ID } from '../src/core/project/rv-workspace-d
 import { sceneDocumentsOf } from '../src/core/project/rv-project-documents';
 
 const REMOTE = 'https://cdn.example.test/customer/';
+
+beforeEach(() => setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://cdn.example.test', purposes: ['remote-model'] }] } }));
+afterEach(() => setAppConfig({}));
 
 /** A fetch that answers only the files listed, 404 for everything else. */
 function fakeFetch(files: Record<string, unknown>): typeof fetch {

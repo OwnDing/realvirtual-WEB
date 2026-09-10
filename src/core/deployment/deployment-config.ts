@@ -13,21 +13,8 @@ import {
 export const DEFAULT_PRODUCT_NAME = 'XYvirtual WEB';
 export const DEFAULT_PRODUCT_SHORT_NAME = 'XYvirtual';
 
-export const EGRESS_PURPOSES = [
-  'analytics',
-  'news',
-  'documentation',
-  'legal-link',
-  'connect-updates',
-  'firebase-demo',
-  'github-library',
-  'cad-link',
-  'remote-model',
-  'industrial-interface',
-  'multiuser',
-  'share',
-  'debug-tool',
-] as const;
+import { EGRESS_PURPOSES, parseEgress } from './egress-config.mjs';
+export { EGRESS_PURPOSES, canonicalEgressOrigin } from './egress-config.mjs';
 
 export type EgressPurpose = (typeof EGRESS_PURPOSES)[number];
 export type EgressMode = 'deny-external' | 'allow-listed';
@@ -119,7 +106,6 @@ export interface DeploymentConfigValidation<T extends Record<string, unknown>> {
   issues: string[];
 }
 
-const PURPOSE_SET = new Set<string>(EGRESS_PURPOSES);
 const COLOR_RE = /^#[0-9a-f]{6}$/i;
 const RELATIVE_ASSET_RE = /^(?![a-z][a-z0-9+.-]*:|\/\/).+/i;
 
@@ -150,20 +136,6 @@ function relativeAssetUrl(value: unknown): string | undefined {
 }
 
 /** Canonical absolute origin. Paths, credentials, query and fragments are rejected. */
-export function canonicalEgressOrigin(value: unknown): string | null {
-  const candidate = text(value, 300);
-  if (!candidate) return null;
-  try {
-    const parsed = new URL(candidate);
-    if (!['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol)) return null;
-    if (parsed.username || parsed.password || parsed.search || parsed.hash) return null;
-    if (parsed.pathname !== '/' && parsed.pathname !== '') return null;
-    return parsed.origin;
-  } catch {
-    return null;
-  }
-}
-
 function addInvalidIssue(
   issues: string[],
   path: string,
@@ -217,41 +189,6 @@ function parseLegal(value: unknown, issues: string[]): DeploymentLegalConfig | u
     addInvalidIssue(issues, `legal.${key}`, value[key], result[key]);
   }
   return result;
-}
-
-function parseEgress(value: unknown, issues: string[]): DeploymentEgressConfig {
-  if (value === undefined) return { mode: 'deny-external', allow: [] };
-  if (!isRecord(value)) {
-    issues.push('egress must be an object; external access remains denied');
-    return { mode: 'deny-external', allow: [] };
-  }
-  const mode: EgressMode = value.mode === 'allow-listed' ? 'allow-listed' : 'deny-external';
-  if (value.mode !== undefined && value.mode !== 'allow-listed' && value.mode !== 'deny-external') {
-    issues.push('egress.mode is invalid; external access remains denied');
-  }
-  const allow: EgressOriginRule[] = [];
-  if (value.allow !== undefined && !Array.isArray(value.allow)) {
-    issues.push('egress.allow must be an array');
-  } else if (Array.isArray(value.allow)) {
-    for (const [index, rawRule] of value.allow.slice(0, 100).entries()) {
-      if (!isRecord(rawRule)) {
-        issues.push(`egress.allow[${index}] must be an object`);
-        continue;
-      }
-      const origin = canonicalEgressOrigin(rawRule.origin);
-      const purposes = Array.isArray(rawRule.purposes)
-        ? [...new Set(rawRule.purposes.filter((purpose): purpose is EgressPurpose => (
-          typeof purpose === 'string' && PURPOSE_SET.has(purpose)
-        )))]
-        : [];
-      if (!origin || purposes.length === 0) {
-        issues.push(`egress.allow[${index}] has no valid origin/purpose and was ignored`);
-        continue;
-      }
-      allow.push({ origin, purposes });
-    }
-  }
-  return { mode, allow };
 }
 
 function parseServices(value: unknown, issues: string[]): DeploymentServicesConfig | undefined {

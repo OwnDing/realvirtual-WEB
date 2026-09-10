@@ -7,7 +7,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
-const executableExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.json']);
+const executableExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.html', '.json']);
 const forbiddenHosts = [
   'www.googletagmanager.com',
   'api.qrserver.com',

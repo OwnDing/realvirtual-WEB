@@ -1,0 +1,176 @@
+[
+  {
+    "file": "src/core/deployment/egress-io.ts",
+    "api": "fetch-capability",
+    "fingerprint": "41943a93a679d60877f51b9cac0a1127dd035c710f42d6f0ecf7e4fc631580d2",
+    "reason": "The single HTTP adapter validates exact origin/purpose before invoking this capability and forces redirect:error."
+  },
+  {
+    "file": "src/core/deployment/runtime-egress.ts",
+    "api": "navigation",
+    "fingerprint": "02ebbf408c648623dcf2299ded50c694f8c2f41f0220d7769e27287e62c643fb",
+    "reason": "Navigation target is normalized and required by the deployment policy immediately before window.open."
+  },
+  {
+    "file": "src/core/editor/rv-mesh-merge-client.ts",
+    "api": "Worker",
+    "fingerprint": "b28878a616bd9cf43b4621fa7e61ae51931501884789106eadf6962b4109d383",
+    "reason": "Bundled same-origin module worker for mesh computations; worker has no application network transport."
+  },
+  {
+    "file": "src/core/editor/rv-mesh-separator-client.ts",
+    "api": "Worker",
+    "fingerprint": "bdffd35cf65774974fb43cd0cb495807ef14cc710697ff20cfc777c813d06175",
+    "reason": "Bundled same-origin module worker for mesh computations; worker has no application network transport."
+  },
+  {
+    "file": "src/core/engine/rv-gpu-info.ts",
+    "api": "fetch",
+    "fingerprint": "6a2ee04e3def370a9472b51cc4f4a4785af1b244830f467b6cbd8e80ac6226f3",
+    "reason": "Local function named fetch calls navigator.gpu.requestAdapter; it does not perform network I/O."
+  },
+  {
+    "file": "src/core/engine/rv-gpu-info.ts",
+    "api": "fetch",
+    "fingerprint": "b172256edaa23ff765253197f5b245bd8d215a7d1f9b340f92540f6ff972edca",
+    "reason": "Local function named fetch calls navigator.gpu.requestAdapter; it does not perform network I/O."
+  },
+  {
+    "file": "src/core/engine/rv-plugin-loader.ts",
+    "api": "dynamic-import",
+    "fingerprint": "c7ce4597dc092d68bd9823e3434012745d9c977893566551bcdfee04cfb2a2e5",
+    "reason": "The dynamic plugin URL is required with debug-tool purpose before import; deployment CSP also restricts module resources."
+  },
+  {
+    "file": "src/core/licensing/rv-lic-store.ts",
+    "api": "fetch",
+    "fingerprint": "9b343dbde83dd307e0e10cd3ea278a46d82c4b22e511a87646b9aa9edd5b2c3b",
+    "reason": "License path validation requires same-origin relative deployment resource and this request refuses redirects."
+  },
+  {
+    "file": "src/core/persistence/rv-sig-verify.ts",
+    "api": "Worker",
+    "fingerprint": "25c505fab5ea0a6bfcd4588f9668102ebcb0c94a1a8db76c43a860eb0970d97e",
+    "reason": "Bundled same-origin signature verification worker; verification does not use external keys or network lookups."
+  },
+  {
+    "file": "src/core/project/backends/bundled-backend.ts",
+    "api": "fetch",
+    "fingerprint": "ad81f91b6080a58c05a196d78daef92d4faf69b1d30ada00143fea6b79e4749e",
+    "reason": "Captures an injectable transport; both call sites invoke fetchWithEgress with remote-model purpose and redirect refusal."
+  },
+  {
+    "file": "src/core/rv-app-config.ts",
+    "api": "fetch",
+    "fingerprint": "9038619203ad4ec68d4dc6102a91048af3ce79294414e21d01e20aeb7ee07a40",
+    "reason": "Bootstrap reads only BASE_URL settings.json with redirect:error before runtime policy exists; build CSP is active."
+  },
+  {
+    "file": "src/core/rv-script-runtime-loader.ts",
+    "api": "dynamic-import",
+    "fingerprint": "1866c7968c4c4f304b043dd6a420f4e081864c1fdfdc8db17f394e7ba110d95d",
+    "reason": "Consented native code resolves local bytes or an authorized debug-tool URL; policy checked before importer invocation."
+  },
+  {
+    "file": "src/core/rv-viewer.ts",
+    "api": "dynamic-import",
+    "fingerprint": "7ad0dad2bf0b8de1d2b7a12314f55d47d57b524d12dd58807c44a58fa9c232b9",
+    "reason": "Per-model code URL must pass debug-tool policy before dynamic import; CSP restricts module resources."
+  },
+  {
+    "file": "src/core/share/rv-share-fetch.ts",
+    "api": "fetch",
+    "fingerprint": "6b5fecb5a33f56c4fedcd05b4e55f245694bf7f202fb49e781769401b4e7d049",
+    "reason": "Captures injectable transport only; requests pass fetchWithEgress with share purpose and redirect refusal."
+  },
+  {
+    "file": "src/core/share/rv-share-fetch.ts",
+    "api": "fetch-capability",
+    "fingerprint": "41943a93a679d60877f51b9cac0a1127dd035c710f42d6f0ecf7e4fc631580d2",
+    "reason": "Captures injectable transport only; requests pass fetchWithEgress with share purpose and redirect refusal."
+  },
+  {
+    "file": "src/core/share/rv-share-session.ts",
+    "api": "fetch",
+    "fingerprint": "6b5fecb5a33f56c4fedcd05b4e55f245694bf7f202fb49e781769401b4e7d049",
+    "reason": "Captures injectable transport only; requests pass fetchWithEgress with share purpose and redirect refusal."
+  },
+  {
+    "file": "src/core/share/rv-share-session.ts",
+    "api": "fetch-capability",
+    "fingerprint": "41943a93a679d60877f51b9cac0a1127dd035c710f42d6f0ecf7e4fc631580d2",
+    "reason": "Captures injectable transport only; requests pass fetchWithEgress with share purpose and redirect refusal."
+  },
+  {
+    "file": "src/core/share/rv-share-upload.ts",
+    "api": "fetch",
+    "fingerprint": "6b5fecb5a33f56c4fedcd05b4e55f245694bf7f202fb49e781769401b4e7d049",
+    "reason": "Captures injectable transport only; signed storage URLs and API requests require share purpose before I/O."
+  },
+  {
+    "file": "src/core/share/rv-share-upload.ts",
+    "api": "fetch-capability",
+    "fingerprint": "41943a93a679d60877f51b9cac0a1127dd035c710f42d6f0ecf7e4fc631580d2",
+    "reason": "Captures injectable transport only; signed storage URLs and API requests require share purpose before I/O."
+  },
+  {
+    "file": "src/core/share/rv-share-upload.ts",
+    "api": "fetch",
+    "fingerprint": "6b5fecb5a33f56c4fedcd05b4e55f245694bf7f202fb49e781769401b4e7d049",
+    "reason": "Captures injectable transport only; signed storage URLs and API requests require share purpose before I/O."
+  },
+  {
+    "file": "src/core/share/rv-share-upload.ts",
+    "api": "fetch-capability",
+    "fingerprint": "41943a93a679d60877f51b9cac0a1127dd035c710f42d6f0ecf7e4fc631580d2",
+    "reason": "Captures injectable transport only; signed storage URLs and API requests require share purpose before I/O."
+  },
+  {
+    "file": "src/interfaces/mqtt-interface.ts",
+    "api": "connectAsync",
+    "fingerprint": "16806ab0fb8b25f6a9e5fd5de0c15889195fa7dac2ebb1625dc323ceaf8399eb",
+    "reason": "MQTT broker URL requires industrial-interface authorization before importing mqtt.js or connecting; reconnect disabled in mqtt.js."
+  },
+  {
+    "file": "src/interfaces/signal-transport.worker.ts",
+    "api": "WebSocket",
+    "fingerprint": "5521513a141010dc8778b205ec8fce72b7e36af93f44fd42fdce4d0c3bcb9a56",
+    "reason": "Internal worker receives connect settings only after WebSocketRealtimeInterface validates deployment policy; HTTP CSP headers protect shipped workers."
+  },
+  {
+    "file": "src/interfaces/twincat-hmi-interface.ts",
+    "api": "WebSocket",
+    "fingerprint": "5521513a141010dc8778b205ec8fce72b7e36af93f44fd42fdce4d0c3bcb9a56",
+    "reason": "doConnect requires industrial-interface authorization before creating the socket; policy failures do not reconnect."
+  },
+  {
+    "file": "src/interfaces/websocket-realtime-interface.ts",
+    "api": "Worker",
+    "fingerprint": "26e513d331b1db133ad056fb443900e1fc797babe3d12a02da83418d4217c9e3",
+    "reason": "Socket target is authorized in doConnect before either same-origin bundled worker or inline transport receives connect settings."
+  },
+  {
+    "file": "src/interfaces/websocket-realtime-interface.ts",
+    "api": "WebSocket",
+    "fingerprint": "5521513a141010dc8778b205ec8fce72b7e36af93f44fd42fdce4d0c3bcb9a56",
+    "reason": "Socket target is authorized in doConnect before either same-origin bundled worker or inline transport receives connect settings."
+  },
+  {
+    "file": "src/plugins/mcp-bridge-plugin.ts",
+    "api": "WebSocket",
+    "fingerprint": "8631aadfdf27ada89f5d3a5df4680dbb7bb8ac881f666499a343ffa7d6ca927c",
+    "reason": "MCP transport requires deployment industrial-interface authorization before creating this socket."
+  },
+  {
+    "file": "src/plugins/multiuser-plugin.ts",
+    "api": "WebSocket",
+    "fingerprint": "c2e9c15938940815cb06dfc50edf4d97fc744739faa40a6e8f190ee796dd3751",
+    "reason": "Multiuser socket factory checks the deployment multiuser purpose for every connection attempt."
+  },
+  {
+    "file": "src/plugins/order-manager-plugin.tsx",
+    "api": "navigation",
+    "fingerprint": "8c64e9ee4a8e9db64f536d2a335c615b156740a56ccadc44783afca6be95cc49",
+    "reason": "mailto hands off to the user mail application only in allow-listed deployment mode; offline reports policy denial before handoff."
+  }
+]

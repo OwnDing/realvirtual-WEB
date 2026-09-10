@@ -3,6 +3,7 @@
 
 /** Safe React renderer for agent Markdown subsets and validated ECharts specs. */
 
+import { allowRuntimeEgressUrl } from '../../core/deployment/runtime-egress';
 import { Fragment, useEffect } from 'react';
 import {
   Alert,
@@ -73,7 +74,7 @@ export function AgentReportView({ result }: AgentReportViewProps) {
           {result.sources.map((source) => (
             <Typography key={source.id} sx={{ fontSize: 11, fontFamily: 'monospace', color: 'text.secondary' }}>
               {source.url && isSafeHttpUrl(source.url) ? (
-                <Link href={source.url} target="_blank" rel="noopener noreferrer" color="primary.main">
+                <Link href={allowRuntimeEgressUrl(source.url, 'documentation')?.href} target="_blank" rel="noopener noreferrer" color="primary.main">
                   {source.title || source.id}
                 </Link>
               ) : source.title || source.id}
@@ -90,7 +91,7 @@ function InlineNodes({ nodes }: { nodes: SafeInlineNode[] }) {
     if (node.kind === 'strong') return <Box key={index} component="strong" sx={{ fontWeight: 600 }}>{node.text}</Box>;
     if (node.kind === 'link' || (node.kind === 'source' && node.href)) {
       return (
-        <Link key={index} href={node.href} target="_blank" rel="noopener noreferrer" color="primary.main">
+        <Link key={index} href={allowRuntimeEgressUrl(node.href ?? '', 'documentation')?.href} target="_blank" rel="noopener noreferrer" color="primary.main">
           {node.text}
         </Link>
       );

@@ -23,6 +23,7 @@
  * this component so a change to the visual language lands in both at once.
  */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { forwardRef, type ReactNode } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { TimerOutlined, Landscape, PrecisionManufacturingOutlined } from '@mui/icons-material';
@@ -110,7 +111,7 @@ export const AssetCard = forwardRef<HTMLDivElement, AssetCardProps>(function Ass
   const preview = entry.thumbnailUrl ? (
     <Box
       component="img"
-      src={entry.thumbnailUrl}
+      src={allowRuntimeEgressUrl(entry.thumbnailUrl, 'remote-model')?.href}
       alt={entry.name}
       sx={{
         width: '100%',

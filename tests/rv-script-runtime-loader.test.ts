@@ -14,6 +14,7 @@
  * observe the URL that was handed over, which is where the cache-busting lives.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   jsSiblingOf,
@@ -64,8 +65,10 @@ function fakeViewer(): RVViewer & { pendingModelUrl: string | null } {
 
 const allow = () => true;
 
-beforeEach(() => { localStorage.clear(); });
-afterEach(() => { setContext('planner', false); _resetStore(); localStorage.clear(); });
+beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'https://example.test', purposes: ['debug-tool'] }] } }); localStorage.clear(); });
+afterEach(() => {
+  setAppConfig({}); setContext('planner', false); _resetStore(); localStorage.clear(); });
 
 // ─── Paths ──────────────────────────────────────────────────────────────
 

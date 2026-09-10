@@ -28,6 +28,7 @@
  * inside the user gesture).
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import type { Object3D, Group, WebGLRenderer } from 'three';
 import type { RVViewer } from '../rv-viewer';
 import type { AssetDocument } from './rv-asset-document';
@@ -166,7 +167,7 @@ function renderThumbnailBlob(viewer: RVViewer, assetRoot: Object3D): Promise<Blo
     thumbs.dispose();
     // null = skipped (WebGPURenderer — thumbnails need the classic WebGLRenderer, plan-271)
     if (!dataUrl) return null;
-    return fetch(dataUrl).then((r) => r.blob());
+    return runtimeFetch(dataUrl, "remote-model").then((r) => r.blob());
   } catch (e) {
     console.warn('[asset-editor] thumbnail render failed:', e);
     return null;

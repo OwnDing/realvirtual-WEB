@@ -36,6 +36,7 @@
  * anything about safety, because both are now safe.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import { bakeIntoGlb } from '../hmi/scene/rv-scene-glb-bake';
 import { materialise } from '../hmi/scene/rv-scene-edits';
 import type { ProjectBackend } from './backends/project-backend';
@@ -107,7 +108,7 @@ export async function writeDocumentClassification(
   if (!resolved) throw new Error(`"${doc.name}" could not be read from this project.`);
   let bytes: ArrayBuffer;
   try {
-    bytes = await (await fetch(resolved.url)).arrayBuffer();
+    bytes = await (await runtimeFetch(resolved.url, "remote-model")).arrayBuffer();
   } finally {
     // Always: an object URL that outlives its read is a leak whether the read
     // succeeded or threw.

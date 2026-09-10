@@ -3,6 +3,7 @@
 
 /** Safe React renderer for the dependency-free HMI Markdown subset. */
 
+import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { Fragment } from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import type { SafeMarkdownBlock, SafeMarkdownInlineNode } from './safe-markdown';
@@ -65,7 +66,7 @@ function SafeInlineNodes({ nodes }: { nodes: SafeMarkdownInlineNode[] }) {
       return (
         <Link
           key={index}
-          href={node.href}
+          href={allowRuntimeEgressUrl(node.href, 'documentation')?.href}
           target="_blank"
           rel="noopener noreferrer"
           color="primary.main"

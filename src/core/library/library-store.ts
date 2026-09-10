@@ -37,7 +37,7 @@ import {
   type LibrarySnapshot,
 } from './library-types';
 import { getAppConfig } from '../rv-app-config';
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 import type { DeploymentServicesConfig } from '../deployment/deployment-config';
 
 // ─── URL / entry normalization (moved verbatim) ─────────────────────────
@@ -246,7 +246,7 @@ export async function buildCatalogFromGitHub(url: string): Promise<LibraryCatalo
     const candidate = new URL(path, baseWithSlash(service.apiBaseUrl));
     const allowed = allowRuntimeEgressUrl(candidate, 'github-library');
     if (!allowed) throw new Error('Git repository API is blocked by deployment egress policy');
-    return fetch(allowed.href);
+    return runtimeFetch(allowed.href, "github-library");
   };
 
   // Resolve the default branch when the URL did not specify one.
@@ -472,7 +472,7 @@ export class LibraryStore {
         const purpose = isGitHubCatalogUrl(fetchUrl) ? 'github-library' : 'remote-model';
         const allowedUrl = allowRuntimeEgressUrl(fetchUrl, purpose);
         if (!allowedUrl) throw new Error('Catalog URL is blocked by deployment egress policy');
-        const resp = await fetch(allowedUrl.href);
+        const resp = await runtimeFetch(allowedUrl.href, purpose);
         if (!resp.ok) {
           this._catalogErrors.set(url, `HTTP ${resp.status}`);
           this._notify();

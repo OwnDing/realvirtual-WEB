@@ -10,6 +10,7 @@
  * Pattern: follows rv-extras-overlay-store.ts for download/import.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import { loadVisualSettings, saveVisualSettings } from './visual-settings-store';
 import type { VisualSettings } from './visual-settings-store';
 import { loadInterfaceSettings, saveInterfaceSettings } from '../../interfaces/interface-settings-store';
@@ -221,7 +222,7 @@ export async function loadModelSettingsConfig(modelUrl: string): Promise<void> {
     if (localStorage.getItem('rv-visual-settings')) return;
 
     const settingsUrl = modelUrl.replace(/\.glb$/i, '.settings.json');
-    const resp = await fetch(settingsUrl);
+    const resp = await runtimeFetch(settingsUrl, "remote-model");
     if (!resp.ok) return;
 
     const data = await resp.json();

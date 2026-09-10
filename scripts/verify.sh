@@ -47,6 +47,7 @@ run_static() {
   (
     cd "$verify_repo_root"
     node scripts/assert-runtime-external-origins.mjs
+    node scripts/assert-network-boundaries.mjs
     npm run lint
   )
   say "Community TypeScript gate"
@@ -98,6 +99,17 @@ run_e2e() {
   )
 }
 
+run_offline() {
+  require_command node
+  require_file "$verify_repo_root/node_modules/.bin/playwright"
+  say "Offline production build and isolated network gate"
+  (
+    cd "$verify_repo_root"
+    npm run build:offline
+    node scripts/run-offline-gate.mjs
+  )
+}
+
 usage() {
   cat <<'USAGE'
 Usage: ./scripts/verify.sh [scope]
@@ -109,6 +121,7 @@ Scopes:
   browser     Browser-mode Vitest suite
   build       Public production build
   e2e         Playwright end-to-end suite
+  offline     Offline production build + isolated Chromium journeys (Linux)
   all         static + node + browser + build (not E2E or real-device validation)
 USAGE
 }
@@ -132,6 +145,9 @@ case "$verify_scope" in
     ;;
   e2e)
     run_e2e
+    ;;
+  offline)
+    run_offline
     ;;
   all)
     run_static

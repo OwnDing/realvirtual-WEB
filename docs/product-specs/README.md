@@ -27,3 +27,5 @@ authority: normative-registry
 2. 项目导入导出和协作。
 
 规格必须引用相关 OD/ADR、正式契约和 [`../acceptance/ACCEPTANCE_MATRIX.md`](../acceptance/ACCEPTANCE_MATRIX.md)。
+
+- [OFFLINE_RUNTIME.md](OFFLINE_RUNTIME.md)：Approved WEB 离线运行与生产零外呼验收。

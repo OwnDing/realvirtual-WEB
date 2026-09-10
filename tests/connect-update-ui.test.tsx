@@ -13,6 +13,7 @@
  * update is silent except for the two causes the operator can actually remove.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi, beforeAll } from 'vitest';
 import { cleanup, render, screen, waitFor, act } from '@testing-library/react';
@@ -75,6 +76,7 @@ function renderSection() {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: SERVER, purposes: ['industrial-interface'] }] } });
   localStorage.clear();
   __resetConnectUpdateStore();
   __setConnectUpdateTimings({ idlePollMs: 20, activePollMs: 10 });
@@ -82,6 +84,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   __resetConnectUpdateStore();
   vi.unstubAllGlobals();

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { fetchWithEgress, EgressBlockedError } from '../deployment/egress-io';
+import { getAppConfig } from '../rv-app-config';
+
 /**
  * Who the sender is, and what survives him leaving the page (plan-386 §2.6).
  *
@@ -145,7 +148,8 @@ function apiUrl(path: string): string {
 }
 
 function currentFetch(): typeof fetch {
-  return config.fetchImpl ?? globalThis.fetch.bind(globalThis);
+  const transport = config.fetchImpl ?? globalThis.fetch.bind(globalThis);
+  return (input, init) => fetchWithEgress(input, 'share', getAppConfig().egress, init, undefined, transport);
 }
 
 const STATUS_CODES: Readonly<Record<number, ShareApiErrorCode>> = {
@@ -233,6 +237,7 @@ export async function shareApiRequest<T>(req: ShareApiRequest): Promise<T> {
       cache: 'no-store',
     });
   } catch (e) {
+    if (e instanceof EgressBlockedError) throw e;
     if (req.signal?.aborted) throw new ShareApiError('aborted', 'Sharing was cancelled.', { cause: e });
     throw new ShareApiError('network', 'The share service could not be reached.', { cause: e });
   }

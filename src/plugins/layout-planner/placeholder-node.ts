@@ -23,6 +23,7 @@
  * and nothing else).
  */
 
+import { createEgressLoadingManager } from '../../core/deployment/egress-loading-manager';
 import {
   Group,
   BoxGeometry,
@@ -104,7 +105,7 @@ interface PlaceholderResources {
 const _resources = new WeakMap<Group, PlaceholderResources>();
 
 /** Shared loader — `TextureLoader` is stateless per `load()` call. */
-const _textureLoader = new TextureLoader();
+const _textureLoader = new TextureLoader(createEgressLoadingManager());
 
 /** Clamp one box edge to a sane, visible millimetre value. */
 function clampEdgeMm(value: number | undefined): number {

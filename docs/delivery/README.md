@@ -9,6 +9,7 @@ authority: normative-registry
 
 # 交付证据索引
 
+- [`OFFLINE_OPERATIONS.md`](OFFLINE_OPERATIONS.md)：离线构建、启动配置、宿主响应头和 CI 门禁。
 - [`snapshots/`](snapshots/)：阶段交付时点的事实、验证结果和已知缺口。
 
 交付快照只能证明记录时点的结果，不能替代当前代码验证或正式产品规格。

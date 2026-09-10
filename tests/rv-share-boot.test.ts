@@ -21,6 +21,7 @@
  * defect.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
@@ -95,11 +96,13 @@ function okFetch(bytes = 512): typeof fetch {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: ['https://files.example.org', 'https://signed.example.org'].map(origin => ({ origin, purposes: ['share'] })) } });
   localStorage.clear();
   clearSharedGlb();
 });
 
 afterEach(() => {
+  setAppConfig({});
   cleanup();
   vi.restoreAllMocks();
   clearSharedGlb();

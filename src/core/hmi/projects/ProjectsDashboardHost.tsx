@@ -19,6 +19,7 @@
  * failure §2.6.4 calls out explicitly.
  */
 
+import { runtimeFetch } from '../../deployment/runtime-egress';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, Box, Button, IconButton, ListItemText, Menu, MenuItem, Snackbar, Tooltip, Typography } from '@mui/material';
 import { Add, ChevronRight, DeleteOutline, MoreVert, Refresh } from '@mui/icons-material';
@@ -1328,7 +1329,7 @@ export function ProjectsDashboardHost() {
         const resolved = await backend.readBlobUrl(DOCS_INDEX_FILE);
         if (!resolved) { if (alive) setAttachments([]); return; }
         let text: string;
-        try { text = await (await fetch(resolved.url)).text(); } finally { resolved.release(); }
+        try { text = await (await runtimeFetch(resolved.url, "remote-model")).text(); } finally { resolved.release(); }
         const paths = docsIndexPaths(parseDocsIndex(JSON.parse(text) as unknown));
         if (alive) setAttachments(paths);
       } catch {
@@ -1645,7 +1646,7 @@ export function ProjectsDashboardHost() {
     const readBytes = async (relPath: string): Promise<Blob | null> => {
       const resolved = await backend.readBlobUrl(relPath);
       if (!resolved) return null;
-      try { return await (await fetch(resolved.url)).blob(); } finally { resolved.release(); }
+      try { return await (await runtimeFetch(resolved.url, "remote-model")).blob(); } finally { resolved.release(); }
     };
     return {
       readBytes,

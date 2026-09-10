@@ -17,6 +17,7 @@
  * side-effect graph.
  */
 
+import { createEgressLoadingManager } from '../deployment/egress-loading-manager';
 import { Object3D, Group } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -26,7 +27,7 @@ import { debug } from './rv-debug';
 
 // ─── Singleton loader ────────────────────────────────────────────────────
 
-const dracoLoader = new DRACOLoader();
+const dracoLoader = new DRACOLoader(createEgressLoadingManager());
 // Serve the Draco decoder from our own bundle (copied into `<base>draco/` by the
 // vite `rv-copy-draco` plugin) instead of the gstatic CDN. The CDN is an external
 // dependency that intermittently fails on mobile networks / behind corporate
@@ -47,7 +48,7 @@ export function setDracoDecoderPath(path: string): void {
 }
 
 /** The one GLTFLoader used by `loadGLB` and `parseGlbSubtree` alike. */
-export const gltfLoader = new GLTFLoader();
+export const gltfLoader = new GLTFLoader(createEgressLoadingManager());
 gltfLoader.setDRACOLoader(dracoLoader);
 
 // ─── Renamed-node reconciliation ─────────────────────────────────────────

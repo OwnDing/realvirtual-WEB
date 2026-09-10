@@ -30,7 +30,7 @@ import {
 } from './base-industrial-interface';
 import type { InterfaceSettings } from './interface-settings-store';
 import { debug, debugWarn } from '../core/engine/rv-debug';
-import { allowRuntimeEgressUrl } from '../core/deployment/runtime-egress';
+import { requireRuntimeEgressUrl } from '../core/deployment/runtime-egress';
 
 // ── TcHmi Protocol Types ─────────────────────────────────────────────────
 
@@ -140,8 +140,7 @@ export class TwinCatHmiInterface extends BaseIndustrialInterface {
 
   protected async doConnect(settings: InterfaceSettings): Promise<void> {
     const requestedUrl = this.buildUrl(settings);
-    const allowedUrl = allowRuntimeEgressUrl(requestedUrl, 'industrial-interface');
-    if (!allowedUrl) throw new Error('TwinCAT HMI target is blocked by deployment policy');
+    const allowedUrl = requireRuntimeEgressUrl(requestedUrl, 'industrial-interface');
     const url = allowedUrl.href;
 
     return new Promise<void>((resolve, reject) => {

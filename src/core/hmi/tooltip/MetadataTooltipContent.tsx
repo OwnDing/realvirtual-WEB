@@ -17,6 +17,7 @@
  *   <signal>signalName</signal>     — labeled value row bound to live signal value
  */
 
+import { allowRuntimeEgressUrl } from '../../deployment/runtime-egress';
 import type { Object3D } from 'three';
 import { useMemo, useCallback } from 'react';
 import { Box, Typography, Button } from '@mui/material';
@@ -155,7 +156,8 @@ function LinkButton({ url, text }: { url: string; text: string }) {
     <Button
       size="small"
       variant="text"
-      href={resolved}
+      href={allowRuntimeEgressUrl(resolved, 'documentation')?.href ?? '#'}
+      disabled={!allowRuntimeEgressUrl(resolved, 'documentation')}
       target="_blank"
       rel="noopener noreferrer"
       endIcon={<OpenInNewIcon sx={{ fontSize: '12px !important' }} />}

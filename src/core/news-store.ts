@@ -10,7 +10,7 @@ import {
   initializeConnectEmbedStore,
 } from '../plugins/connect-embed/connect-embed-store';
 import { isSafeHttpUrl } from './hmi/safe-markdown';
-import { allowRuntimeEgressUrl } from './deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from './deployment/runtime-egress';
 
 export const NEWS_CONTRACT_VERSION = 1;
 export const NEWS_SEEN_STORAGE_KEY = 'rv-news-seen';
@@ -79,7 +79,7 @@ export async function fetchUnseenNews(target: 'web' = 'web'): Promise<NewsItem[]
   let deadlineId: ReturnType<typeof setTimeout> | undefined;
   try {
     apiUrl.searchParams.set('target', target);
-    const request = fetch(apiUrl, { signal: controller.signal }).then(async (response) => {
+    const request = runtimeFetch(apiUrl, "news", { signal: controller.signal }).then(async (response) => {
       if (!response.ok) return null;
       return parseNewsEnvelope(await response.json());
     });

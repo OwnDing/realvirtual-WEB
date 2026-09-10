@@ -25,6 +25,7 @@
  */
 export const enUS = {
   common: {
+    externalAccessBlocked: 'External access is blocked by the deployment policy.',
     open: 'Open',
     cancel: 'Cancel',
     delete: 'Delete',

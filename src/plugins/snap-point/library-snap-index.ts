@@ -13,6 +13,7 @@
  * clear via `clearCache()` for tests.
  */
 
+import { createEgressLoadingManager } from '../../core/deployment/egress-loading-manager';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import type { LibraryCatalogEntry } from '../layout-planner/rv-layout-store';
@@ -54,8 +55,8 @@ let _dracoLoader: DRACOLoader | null = null;
 
 function _getLoader(): GLTFLoader {
   if (_loader) return _loader;
-  _loader = new GLTFLoader();
-  _dracoLoader = new DRACOLoader();
+  _loader = new GLTFLoader(createEgressLoadingManager());
+  _dracoLoader = new DRACOLoader(createEgressLoadingManager());
   _dracoLoader.setDecoderPath(`${import.meta.env.BASE_URL}draco/`);
   _loader.setDRACOLoader(_dracoLoader);
   return _loader;

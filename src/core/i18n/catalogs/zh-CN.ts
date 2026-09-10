@@ -19,6 +19,7 @@
 
 export const zhCN = {
   common: {
+    externalAccessBlocked: '部署策略已禁止外部访问。',
     open: '打开',
     cancel: '取消',
     delete: '删除',

@@ -20,7 +20,7 @@ import type { AssetDocument } from '../editor/rv-asset-document';
 import type { CADLinkExtras } from '../editor/rv-asset-ops';
 import type { ImportResultItem } from './rv-import-provider';
 import { sha256Hex } from './rv-cad-glb-cache';
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
+import { allowRuntimeEgressUrl, runtimeFetch } from '../deployment/runtime-egress';
 
 /** One resolved item, flattened to the bytes + provenance the document needs. */
 export interface AssetImportUnit {
@@ -62,7 +62,7 @@ export async function itemsToAssetImports(items: ImportResultItem[]): Promise<As
       if (!entry.glbUrl) continue;
       const allowedUrl = allowRuntimeEgressUrl(entry.glbUrl, 'remote-model');
       if (!allowedUrl) throw new Error(`[import] URL for "${entry.name}" is blocked by deployment policy`);
-      const resp = await fetch(allowedUrl.href);
+      const resp = await runtimeFetch(allowedUrl.href, "remote-model");
       if (!resp.ok) throw new Error(`[import] Could not download "${entry.name}" (HTTP ${resp.status})`);
       const bytes = await resp.arrayBuffer();
       units.push({

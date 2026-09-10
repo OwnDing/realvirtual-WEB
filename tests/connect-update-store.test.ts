@@ -14,6 +14,7 @@
  * back — the gateway still has to commit pin and job.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   connectUpdateStore,
@@ -143,6 +144,7 @@ function recordPhases(): string[] {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: SERVER, purposes: ['industrial-interface'] }] } });
   __resetConnectUpdateStore();
   gw = freshGateway();
   installGateway();
@@ -157,6 +159,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   __resetConnectUpdateStore();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();

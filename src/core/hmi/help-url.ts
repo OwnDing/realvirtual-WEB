@@ -16,6 +16,7 @@
  * lifecycle. Touching it would break customer tooltips; it stays as it is.
  */
 
+import { openRuntimeUrl } from '../deployment/runtime-egress';
 import type { HelpTopic } from './help-topics';
 
 /** Same-origin utility default. Runtime help stays hidden until a deployment configures docs. */
@@ -67,5 +68,5 @@ export function buildHelpUrl(topic: HelpTopic, baseUrl?: string | null): string 
  * Must be called synchronously from the originating event handler.
  */
 export function openExternal(url: string): void {
-  window.open(url, '_blank', 'noopener,noreferrer');
+  openRuntimeUrl(url, 'documentation');
 }

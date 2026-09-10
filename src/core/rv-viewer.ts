@@ -15,6 +15,7 @@
  *   viewer.on('object-hover', (data) => console.log(data?.path));
  */
 
+import { runtimeFetch, requireRuntimeEgressUrl } from './deployment/runtime-egress';
 import {
   Scene,
   PerspectiveCamera,
@@ -3658,8 +3659,9 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       const modelBaseName = identity.replace(/^.*\//, '').replace(/\.glb$/i, '');
       const tryPreloadPlugin = async (pluginUrl: string): Promise<void> => {
         try {
-          const resp = await fetch(pluginUrl, { method: 'HEAD' });
+          const resp = await runtimeFetch(pluginUrl, "remote-model", { method: 'HEAD' });
           if (!resp.ok) return;
+          requireRuntimeEgressUrl(pluginUrl, 'debug-tool');
           const mod = await import(/* @vite-ignore */ pluginUrl);
           if (typeof mod.default === 'function') mod.default(this);
         } catch { /* skip silently */ }

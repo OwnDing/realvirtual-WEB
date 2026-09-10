@@ -293,7 +293,7 @@ describe('rv_sig loader gate and signed sidecar exclusion', () => {
     const result = await loadGLB('https://example.invalid/direct.glb', new Scene());
     expect(result.logicGated).toBe(true);
     expect(result.signatureState).toBe('invalid');
-    expect(fetchMock).toHaveBeenCalledWith('https://example.invalid/direct.glb');
+    expect(fetchMock).toHaveBeenCalledWith('https://example.invalid/direct.glb', { redirect: 'error' });
   });
 
   it('never requests a kin sidecar when rv_sig exists, regardless of verification result', async () => {
@@ -306,7 +306,7 @@ describe('rv_sig loader gate and signed sidecar exclusion', () => {
 
     await loadGLB('https://example.invalid/unsigned.glb', new Scene(), { data: makeGlb(makeJson()) });
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock).toHaveBeenCalledWith('https://example.invalid/unsigned.kin.json');
+    expect(fetchMock).toHaveBeenCalledWith('https://example.invalid/unsigned.kin.json', { redirect: 'error' });
   });
 });
 

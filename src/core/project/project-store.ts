@@ -74,6 +74,7 @@
  * route around it.
  */
 
+import { runtimeFetch } from '../deployment/runtime-egress';
 import {
   getFolderHandle,
   projectHandleKey,
@@ -1861,7 +1862,7 @@ export class ProjectStore {
           const resolved = await backend.readBlobUrl(path);
           if (!resolved) return null;
           try {
-            const blob = await (await fetch(resolved.url)).blob();
+            const blob = await (await runtimeFetch(resolved.url, "remote-model")).blob();
             return await classificationOfGlbBlob(blob);
           } finally {
             resolved.release();

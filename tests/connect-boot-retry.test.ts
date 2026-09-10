@@ -14,6 +14,7 @@
  * (connect-store.ts:959), so a mock-level reject would not have shown it.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConnectPlugin } from '../src/plugins/connect-plugin';
 import {
@@ -62,6 +63,7 @@ function bootedPlugin(): ConnectPlugin {
 }
 
 beforeEach(() => {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'http://elsewhere.invalid:5100', purposes: ['industrial-interface'] }] } });
   vi.useFakeTimers();
   _resetConnectStore();
   localStorage.removeItem('rv-connect-autoconnect-optout');
@@ -73,6 +75,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setAppConfig({});
   for (const plugin of plugins.splice(0)) plugin.dispose();
   vi.useRealTimers();
   vi.restoreAllMocks();

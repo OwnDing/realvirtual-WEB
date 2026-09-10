@@ -14,6 +14,7 @@
  *    single-author rule intact across a migration that crosses it.
  */
 
+import { setAppConfig } from '../src/core/rv-app-config';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   describeProfileBinding,
@@ -32,10 +33,12 @@ import {
 import type { RvProject } from '../src/core/project/rv-project-types';
 
 afterEach(() => {
+  setAppConfig({});
   vi.restoreAllMocks();
 });
 
 function mockProfiles(body: unknown): void {
+  setAppConfig({ egress: { mode: 'allow-listed', allow: [{ origin: 'http://localhost:5100', purposes: ['industrial-interface'] }] } });
   setServerUrl('http://localhost:5100');
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input.toString();
