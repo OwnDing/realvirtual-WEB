@@ -18,7 +18,7 @@ async function body(req, limit, asJson = true) {
   if (Number(req.headers['content-length'] ?? 0) > limit) { req.resume(); throw new AccessError(413, 'TOO_LARGE'); }
   const data = await new Promise((resolve, reject) => {
     const chunks = []; let length = 0;
-    const cleanup = () => { req.off('data', receive); req.off('end', end); req.off('error', fail); req.off('aborted', aborted); };
+    const cleanup = () => { req.off('data', receive); req.off('end', end); req.off('aborted', aborted); };
     const fail = error => { cleanup(); reject(error); };
     const aborted = () => fail(new AccessError(400, 'UPLOAD_ABORTED'));
     const end = () => { cleanup(); resolve(Buffer.concat(chunks)); };
@@ -28,6 +28,9 @@ async function body(req, limit, asJson = true) {
       chunks.push(chunk);
     };
     req.on('data', receive); req.on('end', end); req.on('error', fail); req.on('aborted', aborted);
+    // IncomingMessage emits error after aborted. Retain its handler until close,
+    // including when an oversized body is being drained, so disconnects cannot crash the service.
+    req.once('close', () => req.off('error', fail));
   });
   if (!asJson) return data;
   try {
@@ -43,7 +46,7 @@ export function createAccessHandler(config, dependencies = {}) {
   const quotaBytes = config.quotaBytes ?? 2 * 1024 * 1024 * 1024;
   requireValue(Number.isSafeInteger(maxBytes) && maxBytes > 0 && Number.isSafeInteger(quotaBytes) && quotaBytes >= maxBytes && Number.isInteger(config.retentionDays ?? 90) && (config.retentionDays ?? 90) > 0, 500, 'INVALID_ACCESS_LIMITS');
   const store = dependencies.store ?? new AccessStore(config.root, { retentionDays: config.retentionDays ?? 90 });
-  const rates = new Map(); let hashing = 0; let uploading = false;
+  const rates = new Map(); let hashing = 0; let uploading = false; let delivering = 0;
   let lastPrune = store.now();
   const rate = (key, maximum) => {
     const now = store.now();
@@ -117,7 +120,17 @@ export function createAccessHandler(config, dependencies = {}) {
         if (!resource[2]) {
           json(res, 200, { id: share.id, name: share.name, expiresAt: share.expires, serverTime: store.now(), visitor: session.username ?? session.visitor, identity: session.user ? 'account' : 'link', size: share.size }); return true;
         }
-        const bytes = await readFile(join(store.root, 'blobs', `${share.presentation}.glb`));
+        // Hold a slot until the socket finishes, including slow response consumers.
+        requireValue(delivering < 4, 429, 'RESOURCE_BUSY'); delivering++;
+        let reading = true, finished = false, released = false;
+        const release = () => {
+          if (reading || !finished || released) return;
+          released = true; delivering--; res.off('finish', responseDone); res.off('close', responseDone);
+        };
+        const responseDone = () => { finished = true; release(); };
+        res.once('finish', responseDone); res.once('close', responseDone);
+        const bytes = await readFile(join(store.root, 'blobs', `${share.presentation}.glb`)).finally(() => { reading = false; release(); });
+        if (res.destroyed) return true;
         // Recheck after async I/O; revoke/expiry/disable may have occurred meanwhile.
         store.share(share.id, store.session(cookie(req)));
         requireValue(bytes.length === share.size && digest(bytes) === share.sha256, 503, 'RESOURCE_UNAVAILABLE');

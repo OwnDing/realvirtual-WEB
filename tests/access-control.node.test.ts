@@ -197,4 +197,34 @@ describe('protected presentations: server authority', () => {
     expect(f.store.all('SELECT * FROM audit')).toEqual([]);
     expect(f.store.all('SELECT * FROM sessions')).toEqual([]);
   });
+
+  it('bounds private response memory while slow clients hold download sockets open', async () => {
+    const f = await fixture(), admin = await f.login();
+    const model = await f.publish(admin, glb({ extras: { padding: 'x'.repeat(6 * 1024 * 1024) } }));
+    const link = await f.share(admin, model.id), visitor = await f.redeem(link);
+    const sockets = [];
+    try {
+      for (let i = 0; i < 4; i++) sockets.push(await new Promise<import('node:http').IncomingMessage>(resolve => {
+        httpRequest(f.base + `/shares/${link.id}/model`, { headers: { cookie: `__Host-rv-access=${visitor.token}` } }, res => { res.pause(); resolve(res); }).end();
+      }));
+      const response = await f.request(`/shares/${link.id}/model`, 'GET', undefined, visitor);
+      expect(response.status).toBe(429);
+      expect((await response.json()).error.code).toBe('RESOURCE_BUSY');
+    } finally { for (const socket of sockets) socket.destroy(); }
+    // Disconnected clients release their slots; no permanent exhaustion.
+    await expect.poll(async () => (await f.request(`/shares/${link.id}/model`, 'HEAD', undefined, visitor)).status).toBe(200);
+  });
+
+  it('survives an interrupted upload, publishes nothing and releases the upload slot', async () => {
+    const f = await fixture(), admin = await f.login();
+    let incoming!: import('node:http').IncomingMessage;
+    const received = new Promise<void>(resolve => f.server.once('request', req => { incoming = req; resolve(); }));
+    const req = httpRequest(f.base + '/presentations?name=interrupted', { method: 'POST', headers: { origin, cookie: `__Host-rv-access=${admin.token}`, 'x-csrf-token': admin.csrf, 'content-type': 'model/gltf-binary', 'idempotency-key': randomUUID() } });
+    req.on('error', () => {}); req.write(glb().subarray(0, 16));
+    await received;
+    const aborted = new Promise<void>(resolve => incoming.once('aborted', () => resolve()));
+    req.destroy(); await aborted;
+    expect(f.store.all('SELECT * FROM presentations')).toEqual([]);
+    await f.publish(admin);
+  });
 });
