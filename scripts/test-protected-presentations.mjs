@@ -105,7 +105,7 @@ try {
   await expect(page.getByRole('option',{name:'customer',exact:true})).toBeAttached();
   await page.getByLabel('Recipient',{exact:true}).selectOption({label:'customer'});
   await page.getByRole('button',{name:'Create link',exact:true}).click();
-  await expect(page.getByLabel('Share link',{exact:true})).not.toHaveValue(link);
+  await expect.poll(async () => (await page.getByLabel('Share link',{exact:true}).inputValue()) !== link).toBe(true);
   const accountLink = await page.getByLabel('Share link',{exact:true}).inputValue();
   await view.goto(accountLink);
   await view.getByRole('button',{name:'English',exact:true}).click();
@@ -120,13 +120,13 @@ try {
   await expect(view.locator('.viewport')).toHaveCount(0,{timeout:20000});
   await expect(view.getByRole('alert')).toContainText('presentation was cleared');
   assert.deepEqual([...origins],[origin]); assert.deepEqual(failures,[]);
-  await page.screenshot({path:join(artifacts,'admin.png')});
+  await page.screenshot({path:join(artifacts,'admin.png'),mask:[page.getByLabel('Share link',{exact:true})]});
   await writeFile(join(artifacts,'result.json'),JSON.stringify({passed:true,checks:['publish','cookie-httpOnly','localStorage-bypass-denied','scope','operator-isolation','range','watermarked-screenshot','revoke-existing-session','visitor-cleared','designated-account','refresh-session','network-failure-clears','same-origin-only'],engine:'RVEmbedViewer',edge:image},null,2));
   await writeFile(join(artifacts,'caddy.log'),caddyLogs);
   console.log('Protected presentations: real Caddy HTTPS + Node + Chromium journey passed.');
 } catch(error) {
   if(browser) for(const context of browser.contexts()) for(const page of context.pages()) {
-    await page.screenshot({path:join(artifacts,'failure.png')}).catch(()=>{});
+    await page.screenshot({path:join(artifacts,'failure.png'),mask:[page.locator('textarea')]}).catch(()=>{});
   }
   await writeFile(join(artifacts,'failure.txt'),String(error.stack??error));
   throw error;

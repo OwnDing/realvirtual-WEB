@@ -122,7 +122,7 @@ export const enUS = {
       published: 'Published',
       uploadFailed: 'Publication was not confirmed. Refresh the presentation list before trying again.',
       sizeKiB: '{{count}} KiB',
-      language: '中文',
+      language: 'Chinese',
     },
     bar: {
       showHmi: 'Show HMI (H)',

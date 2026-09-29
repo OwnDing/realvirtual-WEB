@@ -39,7 +39,12 @@ function App() {
   };
   useEffect(() => {
     document.title = t('title');
+    // Following another share in this tab may be a fragment-only navigation.
+    // Restart the flow so the previous viewer/session UI cannot consume the new link.
+    const openLink = () => { if (new URLSearchParams(location.hash.slice(1)).has('share')) location.reload(); };
+    window.addEventListener('hashchange', openLink);
     refreshSession().catch(e => { if (pendingLink || !(e instanceof AccessFailure) || e.code !== 'UNAUTHENTICATED') setError(errorText(e)); }).finally(() => setLoading(false));
+    return () => window.removeEventListener('hashchange', openLink);
   }, []);
   const login = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); const data = new FormData(event.currentTarget); setBusy(true); setError('');

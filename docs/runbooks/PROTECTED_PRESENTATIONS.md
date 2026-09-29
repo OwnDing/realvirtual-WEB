@@ -41,6 +41,18 @@ authority: normative-process
 
 旧 LoginGatePlugin 的 userB64/passB64 配置现在显示明确迁移错误，不再认证。移除这两个字段，创建服务器账户，并使用受保护发布流程；仅换登录界面不能保护仍在公开静态目录中的旧模型。既有 AES 加密模型和外部 share API 不变。
 
+## 验收入口与证据
+
+| 行为 | 自动化入口 |
+| --- | --- |
+| Cookie/伪造身份、Origin/CSRF、跨资源、Range/HEAD | `tests/access-control.node.test.ts` |
+| 到期/撤销、禁用/重置密码/退出、慢请求期间退出、最后管理员保护 | 同上 |
+| 发布幂等性、脚本/外部依赖拒绝、配额/大小、限速、损坏存储和审计保留 | 同上 |
+| 停机备份恢复后链接失效、禁止不兼容旧版直接回滚 | `tests/appliance-lifecycle.node.test.ts`、`tests/appliance-compatibility.node.test.ts` |
+| 真 HTTPS 发布、指定账户、同标签页切换、刷新恢复、水印截图、撤销和断网清场、运维接口隔离 | `node scripts/test-protected-presentations.mjs`（先运行完整构建，需 Docker 和 Playwright Chromium） |
+
+HTTPS 场景使用真实 Caddy 模板、生产前端产物和真实 Node/SQLite，只创建合成模型及临时账户，容器仅监听本机。证据位于忽略提交的 `test-results/access`；CI Browser Gate 上传对应 artifact，管理截图遮盖分享凭据。完整交付还要求 governance/static/node/browser/build 门禁。Linux 上的自动化不替代 Windows 安装、客户真实大模型、移动浏览器或生产网络的验收。
+
 ## English operating guide
 
 Build the full WEB payload, including `dist/present`, and install it behind the supplied Caddy configuration. Keep all confidential model bytes under the private `data/access` directory. The access session does not authorize CONNECT, MCP, Forgejo, InfluxDB or appliance administration.
