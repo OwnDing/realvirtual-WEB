@@ -80,6 +80,8 @@ export interface RVEmbedNodeTransformState {
 }
 
 export interface RVEmbedOptions {
+  /** Override signature trust gates. Protected presentations use false and reject scripts server-side. */
+  allowUntrustedLogic?: boolean;
   /** Canvas to render into. When omitted, a detached canvas is created. */
   canvas?: HTMLCanvasElement;
   /** Device-pixel-ratio cap. Default 1.5. */
@@ -197,6 +199,7 @@ export class RVEmbedViewer {
   private appliedPixelRatio = 0;
   private tickCount = 0;
   private directorName: string | null;
+  private readonly allowUntrustedLogic: boolean;
   private readonly directorEvents: RVEmbedDirectorEvents | undefined;
   private readonly directorController: RVEmbedDirector;
   private readonly directorProjectionPoint = new Vector3();
@@ -204,6 +207,7 @@ export class RVEmbedViewer {
   private readonly dragLocalPoint = new Vector3();
 
   constructor(options: RVEmbedOptions = {}) {
+    this.allowUntrustedLogic = options.allowUntrustedLogic ?? true;
     this.dprCap = normalizeDprCap(options.dprCap);
     this.width = normalizeDimension(options.width ?? options.canvas?.width, 640);
     this.height = normalizeDimension(options.height ?? options.canvas?.height, 400);
@@ -289,7 +293,7 @@ export class RVEmbedViewer {
     const result = await loadGLB(url, this.scene, {
       data,
       preserveHierarchy: true,
-      allowUntrustedLogic: true,
+      allowUntrustedLogic: this.allowUntrustedLogic,
       loadKinematicsSidecar: false,
       shouldAbort: () => (
         this.disposed

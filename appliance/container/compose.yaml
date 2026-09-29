@@ -30,6 +30,7 @@ services:
       - "${RV_RELEASE_ROOT}:/release:ro"
       - "${RV_CONFIG_ROOT}/control.container.json:/state/control.json:ro"
       - "${RV_STATE_ROOT}/pki:/state-pki:ro"
+      - "${RV_STATE_ROOT}/data/access:/state-access"
     networks: [backend]
 
   connect:

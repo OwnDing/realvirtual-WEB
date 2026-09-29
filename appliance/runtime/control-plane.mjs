@@ -6,6 +6,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyBundle } from './lib/bundle.mjs';
+import { createAccessHandler } from './access/http.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_STATIC = resolve(here, 'static');
@@ -197,7 +198,13 @@ async function serveStatic(res, staticRoot, requestPath) {
 export function createControlServer(rawConfig, dependencies = {}) {
   const config = validateControlConfig(rawConfig);
   const readiness = createReadiness(config, dependencies);
-  return createServer(async (req, res) => {
+  // Disabled/failed initialization never falls through to a public file handler.
+  const access = config.access ? createAccessHandler(config.access) : null;
+  const server = createServer(async (req, res) => {
+    if (req.url?.startsWith('/api/access/')) {
+      if (access && await access.handle(req, res)) return;
+      json(res, 503, { error: { code: 'ACCESS_UNAVAILABLE' } }); return;
+    }
     const pathname = new URL(req.url ?? '/', 'http://appliance.invalid').pathname;
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       json(res, 405, { status: 'failed', code: 'METHOD_NOT_ALLOWED' });
@@ -228,6 +235,8 @@ export function createControlServer(rawConfig, dependencies = {}) {
     }
     json(res, 404, { status: 'failed', code: 'NOT_FOUND' });
   });
+  server.on('close', () => access?.close());
+  return server;
 }
 
 async function main() {

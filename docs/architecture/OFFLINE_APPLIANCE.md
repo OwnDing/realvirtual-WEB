@@ -3,7 +3,7 @@ doc_id: ARCH-APPLIANCE-001
 title: Offline Appliance 架构
 status: approved
 owner: architecture
-last_reviewed: 2026-08-30
+last_reviewed: 2026-09-29
 authority: normative
 ---
 
@@ -14,6 +14,8 @@ authority: normative
 ```text
 Browser -- HTTPS --> Caddy edge
                        |-- /                 --> immutable WEB release
+                       |-- /present/         --> isolated presentation WEB payload
+                       |-- /api/access/v1/*  --> control plane access module + private SQLite/GLB
                        |-- /health,/appliance,/diagnostics --> control plane
                        |-- /connect, WS      --> CONNECT
                        |-- /git              --> Forgejo
@@ -49,5 +51,9 @@ Caddy 是唯一局域网入口。CONNECT、Forgejo、InfluxDB 和控制面默认
 ## 4. 安全与缓存
 
 入口统一执行 HTTPS、认证、CSP、安全头、WebSocket Upgrade 和审计友好的最小日志。`index.html`、`settings.json`、许可证和发布 manifest 使用 no-cache/revalidate；内容哈希资产 immutable；GLB 采用版本文件名或 revalidate。Secret 不进入 WEB 根、Compose YAML、命令行、健康 JSON 或支持包。
+
+受保护演示见 [ADR-0012](../adr/ADR-0012-protected-presentations.md)：仅 `/present/` 专用静态入口和 `/api/access/v1` 由业务会话模块独立鉴权，模型逐请求检查分享范围、期限、撤销和账户状态。该前缀不使用 operator Basic Auth；其余工作台、配置和服务入口仍要求 operator 凭据。展示会话不授予 CONNECT/MCP/工业写权限。Caddy 使用显式 route 顺序，在静态回退之前完成路径匹配与认证。专用入口不拷贝主 public 目录，没有回退至工作台。
+
+控制面独占 `state/data/access` 的 SQLite v1 和不可变 GLB；Edge 不挂载这个目录。演示响应使用 no-store 和限制 CSP；数据库故障拒绝授权。数据纳入停止服务的一致性备份，恢复后撤销全部恢复链接并清除会话。部署及迁移步骤见 [演示运行手册](../runbooks/PROTECTED_PRESENTATIONS.md)。
 
 状态与生命周期的规范定义见 [`CONTRACT-APPLIANCE-BUNDLE-001`](../contracts/OFFLINE_APPLIANCE_BUNDLE.md)。

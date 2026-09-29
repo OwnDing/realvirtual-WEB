@@ -23,6 +23,11 @@
       "minReadable": 1,
       "maxReadable": 1,
       "current": 1
+    },
+    "protectedPresentations": {
+      "minReadable": 1,
+      "maxReadable": 1,
+      "current": 1
     }
   }
 }

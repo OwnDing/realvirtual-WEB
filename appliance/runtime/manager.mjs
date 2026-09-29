@@ -245,9 +245,13 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     FORGEJO_UPSTREAM: upstream.forgejo,
     INFLUX_UPSTREAM: upstream.influxdb,
     WEB_ROOT: caddyQuote(container ? '/srv/xyvirtual/web' : join(releaseRoot, 'web'), windows && !container),
+    PRESENT_ROOT: caddyQuote(container ? '/srv/xyvirtual/web/present' : join(releaseRoot, 'web', 'present'), windows && !container),
     LICENSE_ROOT: caddyQuote(container ? '/var/lib/xyvirtual-appliance/license' : join(roots.stateRoot, 'license'), windows && !container),
   });
   writeFileSync(join(roots.configRoot, 'Caddyfile'), caddyfile, { mode: 0o600 });
+
+  const accessRoot = join(roots.stateRoot, 'data', 'access');
+  mkdirSync(accessRoot, { recursive: true, mode: 0o700 });
 
   const control = {
     schemaVersion: 1,
@@ -260,6 +264,10 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     staticRoot: container ? '/app/static' : join(releaseRoot, 'runtime', 'static'),
     websocketPath: '/connect/webviewer',
     integrityTtlMs: 86_400_000,
+    access: {
+      root: container ? '/state-access' : accessRoot,
+      origin: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}`,
+    },
     certificate: {
       mode: config.tls.mode,
       path: container
@@ -423,7 +431,7 @@ function composeProjectArgs(roots, releaseRoot) {
 function startContainer({ roots, releaseRoot, manifest, runtime = 'docker', runImpl = run }) {
   if (manifest.target.startsWith('linux-')) {
     runImpl('chown', ['-R', '10001:10001', join(roots.stateRoot, 'data', 'connect')]);
-    runImpl('chown', ['-R', '1000:1000', join(roots.stateRoot, 'data', 'forgejo'), join(roots.stateRoot, 'data', 'influxdb'), join(roots.stateRoot, 'config', 'influxdb')]);
+    runImpl('chown', ['-R', '1000:1000', join(roots.stateRoot, 'data', 'forgejo'), join(roots.stateRoot, 'data', 'influxdb'), join(roots.stateRoot, 'config', 'influxdb'), join(roots.stateRoot, 'data', 'access')]);
   }
   runImpl(runtime, ['load', '--input', join(releaseRoot, 'images', 'appliance-images.tar')]);
   const args = composeProjectArgs(roots, releaseRoot);
@@ -850,6 +858,13 @@ export async function restoreAppliance(options, dependencies = {}) {
       if (!existsSync(source)) continue;
       if (existsSync(destination)) rmSync(destination, { recursive: true, force: false });
       cpSync(source, destination, { recursive: true, errorOnExist: true, force: false });
+    }
+    // A historical backup must not resurrect links revoked after its timestamp.
+    const restoredAccess = join(roots.stateRoot, 'data', 'access');
+    if (existsSync(join(restoredAccess, 'access.sqlite'))) {
+      const { AccessStore } = await import('./access/store.mjs');
+      const access = new AccessStore(restoredAccess);
+      try { access.invalidateRestoredShares(); } finally { access.close(); }
     }
     if (existsSync(roots.configRoot)) rmSync(roots.configRoot, { recursive: true, force: false });
     cpSync(join(backupRoot, 'config'), roots.configRoot, { recursive: true, errorOnExist: true, force: false });

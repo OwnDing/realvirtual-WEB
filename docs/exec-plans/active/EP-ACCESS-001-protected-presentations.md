@@ -36,7 +36,7 @@ authority: normative-process
 
 ## Allowed Paths
 
-- appliance/**、src/access/**、src/plugins/login-gate-plugin.tsx、src/core/i18n/**
+- appliance/**、src/access/**、src/plugins/login-gate-plugin.tsx、src/core/i18n/**、src/embed/rv-embed-viewer.ts
 - 专用 HTML/Vite 构建入口、必要构建/验证脚本与 package.json
 - tests/**、e2e/**、docs/**、CI 门禁
 
@@ -56,14 +56,16 @@ authority: normative-process
 
 - [x] 用户批准方案及提交、推送、PR；建立功能分支。
 - [x] 写入规格、ADR、契约和活动计划。
-- [ ] 服务端与安全测试。
-- [ ] UI 与浏览器闭环。
-- [ ] 部署/恢复集成。
+- [x] 服务端与安全测试：会话、CSRF、逐资源读取、限速、配额、错误关闭及并发授权复查。
+- [x] UI 与浏览器闭环：独立访客入口、管理页面、中英文、水印和截图。
+- [x] 部署/恢复集成：私有卷、安装生成配置、格式登记和恢复失效。
 - [ ] 门禁、审查和 PR。
 
 ## Surprises & Discoveries
 
 已有 RVEmbedViewer 提供公开引擎和固定步长仿真，且不依赖工作台/工业接口，可用作访客展示入口。首版资源闭环限制为自包含 GLB，外部依赖拒绝符合已批准预检行为。
+
+真实 Caddy 测试发现默认指令排序会让静态回退先改写路径，现使用显式 route 顺序并验证工作台/CONNECT/MCP/Git/Influx 均不可被访客访问。全量 Node 测试发现语言目录的格式与既有提取器不匹配，已改为仓库惯例并登记经批准的新文案；未修改测试断言或放宽门禁。
 
 ## Decision Log
 
@@ -79,4 +81,4 @@ governance/static/node/browser/build；真实 Caddy + 控制面 + 浏览器发�
 
 ## Outcomes & Retrospective
 
-实施中；尚未声明自动化或真实客户环境验证通过。
+草稿 PR [#11](https://github.com/OwnDing/realvirtual-WEB/pull/11) 已建立。真实 Caddy HTTPS + Node + Chromium 已验证发布、匿名访问、资源隔离、截图水印、撤销和清场；完整仓库门禁与追加的账户/弱网场景复验中。未部署客户环境。

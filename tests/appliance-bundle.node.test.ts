@@ -34,6 +34,8 @@ function fixture() {
   const output = join(root, 'bundle');
   mkdirSync(web, { recursive: true });
   writeFileSync(join(web, 'index.html'), '<!doctype html><title>fixture</title>');
+  mkdirSync(join(web, 'present'), { recursive: true });
+  writeFileSync(join(web, 'present', 'index.html'), '<!doctype html><title>presentation fixture</title>');
   writeFileSync(join(web, 'settings.json'), '{"schemaVersion":2}\n');
   const rows = [
     ['node', 'node', 'runtime/node/bin/node'],

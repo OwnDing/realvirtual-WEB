@@ -10,6 +10,11 @@ import {
 } from '../appliance/runtime/lib/compatibility.mjs';
 
 describe('appliance release compatibility', () => {
+  it('blocks rollback to a release that cannot enforce protected presentation access', () => {
+    const old = { ...compatibility, dataFormats: { projectManifest: compatibility.dataFormats.projectManifest, browserUpgradeBackup: compatibility.dataFormats.browserUpgradeBackup } };
+    expect(isRollbackDataCompatible(compatibility, old)).toBe(false);
+    expect(isRollbackDataCompatible(old, compatibility)).toBe(true);
+  });
   it('allows the supported 6.3 to 6.4 path and repeat installs', () => {
     expect(assessReleaseUpgrade('6.3.16', '6.4.0', compatibility).code).toBe('DIRECT_UPGRADE_SUPPORTED');
     expect(assessReleaseUpgrade('6.4.0', '6.4.0', compatibility).code).toBe('REPEAT_INSTALL');
