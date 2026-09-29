@@ -56,3 +56,5 @@ authority: normative-registry
   3. **删除上游 CONNECT 授权查询**：`/license/status`、`/license/register`、`/license/activate`、`/license/deactivate` 及其 UI 与文案整体移除。网关自身的授权问题仍由网关 `/status` 独立上报（`connect-store.ts:832` 的 `LICENSE_REQUIRED`、`:862` 的 `SignalLimitExceeded`），因此运维不会失明；失去的只是绑定信号前的额度预览与 Add 按钮预检闸（该闸本就失败即开）。
   4. **确认强制力边界表述**：本系统是「合同凭证 + 防篡改审计记录」，不是技术 DRM；该表述进入销售合同文本。依据 `LICENSE:193`（交付、支持与保证可收费）、`LICENSE:451`（不得对 AGPL 已授予的权利额外设限）与 `LICENSE:376`（附加限制条款接收方有权删除）。
   落地文档为 Accepted [`ADR-0007`](../adr/ADR-0007-offline-license-evidence.md) 与 Completed [`EP-LICENSE-001`](../exec-plans/completed/EP-LICENSE-001-offline-license.md)——两者均于 2026-08-27 依用户当前明确指令转为生效状态，计划于 2026-08-28 完成交付。
+
+- 2026-09-29，用户批准 L2-1 方案并要求实施和创建 PR。OD-001 的私有化演示子范围落入 [PS-ACCESS-001](../product-specs/PROTECTED_PRESENTATIONS.md)、[ADR-0012](../adr/ADR-0012-protected-presentations.md) 和 [CONTRACT-ACCESS-001](../contracts/PROTECTED_PRESENTATIONS.md)：客户 Appliance 内的本地账户、演示资源授权和审计。组织/多租户/云端项目后端仍待规格，OD-001 总体保持 decided-pending-spec。

@@ -23,3 +23,5 @@ authority: normative-registry
 - [`VERSION_COMPATIBILITY.md`](VERSION_COMPATIBILITY.md)：版本支持、兼容与升级恢复；N-2/bridge 判定、数据格式范围、Appliance 全备份和浏览器 origin 恢复契约。
 
 后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。
+
+- [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Protected Presentations API v1 与持久化边界。
