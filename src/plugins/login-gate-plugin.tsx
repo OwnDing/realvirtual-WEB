@@ -51,7 +51,7 @@ export class LoginGatePlugin implements RVViewerPlugin {
         return () => { active = false; };
       }, []);
       if (done) return null;
-      return <Box sx={{ position: 'fixed', inset: 0, zIndex: 21000, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0,0,0,.9)' }}>
+      return <Box sx={{ position: 'fixed', inset: 0, zIndex: 21000, display: 'grid', placeItems: 'center', bgcolor: 'rgba(0,0,0,.9)', backdropFilter: 'blur(calc(12px * var(--rv-ui-blur-scale, 1)))' }}>
         <Paper sx={{ p: 4, width: 360 }}><form onSubmit={async event => {
           event.preventDefault(); if (plugin.legacy) return;
           setBusy(true); setError('');
@@ -63,7 +63,7 @@ export class LoginGatePlugin implements RVViewerPlugin {
           <TextField fullWidth margin="normal" label={t('login.username')} autoComplete="username" value={user} onChange={e => setUser(e.target.value)}/>
           <TextField fullWidth margin="normal" label={t('login.password')} type="password" autoComplete="current-password" value={pass} onChange={e => setPass(e.target.value)}/>
           {error && <Typography role="alert" color="error">{error === 'migration' ? t('access.migration') : t('access.invalid')}</Typography>}
-          <Button type="submit" fullWidth disabled={busy || plugin.legacy} variant="contained">{t('login.signIn')}</Button>
+          <Button type="submit" fullWidth disabled={busy || plugin.legacy} variant="contained" sx={{ bgcolor: config.accentColor }}>{t('login.signIn')}</Button>
           {config.footer && <Typography variant="caption">{config.footer}</Typography>}
         </form></Paper>
       </Box>;
