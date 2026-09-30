@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-30
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [`EP-ACCESS-001-protected-presentations.md`](EP-ACCESS-001-protected-presentations.md)：交付 L2-1 服务端账户、资源授权、限时/可撤销分享、水印审计和私有部署恢复；PR #11 功能提交 Quality Gates #96 五项全绿，2026-09-30 归档。
 
 - [`EP-OFFLINE-002-ci-webgl.md`](EP-OFFLINE-002-ci-webgl.md)：修复隔离 CI 浏览器的用户身份与 WebGL2 初始化、模式断言调度误判及失败诊断；PR #10 的 Quality Gates #89 五项通过，2026-09-09 完成。
 - [`EP-OFFLINE-001-runtime-egress-gate.md`](EP-OFFLINE-001-runtime-egress-gate.md)：WEB 离线构建/启动策略、受控 I/O、CSP、静态反退化与生产零外呼 CI；本地全量门禁和隔离网络旅程通过，2026-09-08 完成。

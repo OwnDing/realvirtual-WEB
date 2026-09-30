@@ -2,9 +2,9 @@
 doc_id: EP-ACCESS-001
 title: L2-1 受保护演示访问控制
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-09-29
+last_reviewed: 2026-09-30
 authority: normative-process
 ---
 
@@ -59,7 +59,7 @@ authority: normative-process
 - [x] 服务端与安全测试：会话、CSRF、逐资源读取、限速、配额、错误关闭及并发授权复查。
 - [x] UI 与浏览器闭环：独立访客入口、管理页面、中英文、水印和截图。
 - [x] 部署/恢复集成：私有卷、安装生成配置、格式登记和恢复失效。
-- [ ] 门禁、审查和 PR。
+- [x] 门禁、审查和 PR：功能提交 05e2bab 的 Quality Gates #96 五项全绿；PR #11 已转为 Ready for review。
 
 ## Surprises & Discoveries
 
@@ -67,13 +67,24 @@ authority: normative-process
 
 真实 Caddy 测试发现默认指令排序会让静态回退先改写路径，现使用显式 route 顺序并验证工作台/CONNECT/MCP/Git/Influx 均不可被访客访问。全量 Node 测试发现语言目录的格式与既有提取器不匹配，已改为仓库惯例并登记经批准的新文案；未修改测试断言或放宽门禁。
 
+另补充下载槽位（四个，保持至 I/O 结束且响应完成/关闭）和断连请求错误处理；13 项服务端回归覆盖慢连接、配额及上传中断后的恢复。链接在同标签页仅改变 fragment 时需要重新启动兑换流程，该浏览器缺陷已修正并回归。
+
 ## Decision Log
 
 2026-09-29：用户明确批准上一轮方案并要求实施至功能可用、写入 docs 和创建 PR。OD-001 仅落地私有化演示子范围，不关闭组织平台的剩余决策。
 
 ## Validation
 
-governance/static/node/browser/build；真实 Caddy + 控制面 + 浏览器发布/访问/撤销；CSRF、会话伪造、跨资源、路径/Range、到期/禁用、重启/恢复、限速/配额/错误行为；公共构建和 CI。
+2026-09-29 本地证据：
+
+- `./scripts/verify.sh governance`、`./scripts/verify.sh static`、`./scripts/verify.sh build` 通过；没有修改锁文件或安装新依赖。
+- `./scripts/verify.sh node`：75 个文件、769 项通过，7 项既有条件跳过；新增慢下载和中断上传后，`vitest run --config vitest.node.config.ts tests/access-control.node.test.ts` 的 13 项全部通过。最终功能版本的 CI Node Gate 通过 769 项，9 项为既有条件跳过（CI Node job 不预构建 dist，故比本机额外跳过 2 项产物检查）。
+- `node scripts/test-protected-presentations.mjs`：真实 Caddy 2.11.4 HTTPS + Node/SQLite + Chromium 通过发布、匿名/指定账户、同标签页换链接、刷新恢复、伪造 Cookie/localStorage、资源与运维隔离、Range、水印截图、撤销和断网清场；证据 `test-results/access/result.json` 及 PNG，由 CI 上传。
+- 浏览器全量门禁的 1–7/8 分片通过；最后分片发现旧登录遮罩的 blur 样式被移除，已恢复兼容样式。宿主随后以 SIGTERM 中断了该次执行，按相同 Harness 环境恢复运行第 8 分片并通过 1398 项；独立性能用例在本地和最终 CI 均通过 11 项，没有修改测试门槛。
+
+功能提交 `05e2bab4318f18ddd9e2a0fda1d8639ae5a9c782` 的 [Quality Gates #96](https://github.com/OwnDing/realvirtual-WEB/actions/runs/36526377326) 五项全部通过。Browser Gate 包含隔离离线旅程、真实受保护演示 HTTPS 场景、八个全量分片和独立性能测试，共 10941 项浏览器测试通过；12 项 skip、2 项 todo 为仓库既有状态，没有新增跳过。运行产物 `protected-presentation-evidence` 与 `offline-gate-evidence` 提供真实入口证据。2026-09-30 完成 PR 描述与计划归档，归档不改功能代码。
+
+验收矩阵与运维步骤见 [RUNBOOK-ACCESS-001](../../runbooks/PROTECTED_PRESENTATIONS.md)。实际部署、Windows 安装、客户真实大模型、移动浏览器和真实 PLC 不在这次验证中。
 
 ## Rollback
 
@@ -81,4 +92,6 @@ governance/static/node/browser/build；真实 Caddy + 控制面 + 浏览器发�
 
 ## Outcomes & Retrospective
 
-草稿 PR [#11](https://github.com/OwnDing/realvirtual-WEB/pull/11) 已建立。真实 Caddy HTTPS + Node + Chromium 已验证发布、匿名访问、资源隔离、截图水印、撤销和清场；完整仓库门禁与追加的账户/弱网场景复验中。未部署客户环境。
+已交付并打开可评审 [PR #11](https://github.com/OwnDing/realvirtual-WEB/pull/11)，未合并或部署。账户、发布、分享、逐请求授权、水印、审计、撤销/禁用/到期、断网清场、安装/恢复及迁移文档组成可验证闭环，功能提交五项 CI 门禁全绿。
+
+偏差与边界：首版按批准范围只接受自包含 GLB，拒绝外部资源与脚本，不提供组织/多租户/SSO、离线远程撤销或 DRM。已下载字节无法收回。Windows/真实客户大模型/移动端与生产网络留给部署方验收；权限状态的回滚和恢复限制见上节及运行手册。

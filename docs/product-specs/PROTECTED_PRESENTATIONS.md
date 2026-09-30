@@ -9,7 +9,7 @@ authority: normative
 
 # L2-1 受保护演示访问控制
 
-批准来源：2026-09-29 用户同意方案并要求写入文档、实施和创建 PR。实施计划为 [EP-ACCESS-001](../exec-plans/active/EP-ACCESS-001-protected-presentations.md)。
+批准来源：2026-09-29 用户同意方案并要求写入文档、实施和创建 PR。实施计划为 [EP-ACCESS-001](../exec-plans/completed/EP-ACCESS-001-protected-presentations.md)。
 
 管理员能够在客户 Appliance 发布固定版本演示、创建带到期时间的链接、指定访客账户或允许持链接访问、撤销链接并查询访问记录。访客只能查看该链接授权的资源，不能访问工作台、其它演示或工业/运维接口。
 
