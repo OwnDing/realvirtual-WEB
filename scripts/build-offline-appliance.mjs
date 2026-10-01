@@ -245,6 +245,7 @@ export async function buildOfflineAppliance(options) {
   const validation = validateDependencyLock(dependencyLock, target, modes);
   const webDist = resolve(options.webDist);
   if (!existsSync(join(webDist, 'index.html'))) throw new Error(`WEB build does not contain index.html: ${webDist}`);
+  if (!existsSync(join(webDist, 'present', 'index.html'))) throw new Error('Protected presentation payload is missing; run the complete WEB build.');
   const output = resolve(options.output);
   if (existsSync(output)) throw new Error(`Output already exists: ${output}`);
   mkdirSync(dirname(output), { recursive: true });
