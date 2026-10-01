@@ -4,7 +4,7 @@ title: L2-1 受保护演示访问控制
 status: approved
 plan_status: completed
 owner: engineering
-last_reviewed: 2026-09-30
+last_reviewed: 2026-10-01
 authority: normative-process
 ---
 
@@ -61,6 +61,8 @@ authority: normative-process
 - [x] 部署/恢复集成：私有卷、安装生成配置、格式登记和恢复失效。
 - [x] 门禁、审查和 PR：功能提交 05e2bab 的 Quality Gates #96 五项全绿；PR #11 已转为 Ready for review。
 
+- [x] 2026-10-01 PR 后续审查：复现并修复登录门禁卸载遗留的待定加载；新增取消/重装/迟到响应回归通过，后续门禁结果见 Validation。
+
 ## Surprises & Discoveries
 
 已有 RVEmbedViewer 提供公开引擎和固定步长仿真，且不依赖工作台/工业接口，可用作访客展示入口。首版资源闭环限制为自包含 GLB，外部依赖拒绝符合已批准预检行为。
@@ -68,6 +70,8 @@ authority: normative-process
 真实 Caddy 测试发现默认指令排序会让静态回退先改写路径，现使用显式 route 顺序并验证工作台/CONNECT/MCP/Git/Influx 均不可被访客访问。全量 Node 测试发现语言目录的格式与既有提取器不匹配，已改为仓库惯例并登记经批准的新文案；未修改测试断言或放宽门禁。
 
 另补充下载槽位（四个，保持至 I/O 结束且响应完成/关闭）和断连请求错误处理；13 项服务端回归覆盖慢连接、配额及上传中断后的恢复。链接在同标签页仅改变 fragment 时需要重新启动兑换流程，该浏览器缺陷已修正并回归。
+
+2026-10-01 PR 审查发现旧登录适配器在销毁时丢弃 loadGate resolver，导致已等待的 loadModel 永久挂起；重复安装同样会遗留旧门禁。新增取消路径以 AbortError 拒绝等待，既结束加载又不在未认证时进入解析；预注册 rejection handler 处理消费者尚未开始等待的情况，且保留原 Promise 的拒绝。认证结果同时检查生命周期代次，阻止迟到响应放行新门禁。
 
 ## Decision Log
 
@@ -83,6 +87,8 @@ authority: normative-process
 - 浏览器全量门禁的 1–7/8 分片通过；最后分片发现旧登录遮罩的 blur 样式被移除，已恢复兼容样式。宿主随后以 SIGTERM 中断了该次执行，按相同 Harness 环境恢复运行第 8 分片并通过 1398 项；独立性能用例在本地和最终 CI 均通过 11 项，没有修改测试门槛。
 
 功能提交 `05e2bab4318f18ddd9e2a0fda1d8639ae5a9c782` 的 [Quality Gates #96](https://github.com/OwnDing/realvirtual-WEB/actions/runs/36526377326) 五项全部通过。Browser Gate 包含隔离离线旅程、真实受保护演示 HTTPS 场景、八个全量分片和独立性能测试，共 10941 项浏览器测试通过；12 项 skip、2 项 todo 为仓库既有状态，没有新增跳过。运行产物 `protected-presentation-evidence` 与 `offline-gate-evidence` 提供真实入口证据。2026-09-30 完成 PR 描述与计划归档，归档不改功能代码。
+
+2026-10-01 审查后续：新增 `tests/login-gate-lifecycle.test.tsx`，修复前 6 项失败、1 项通过；修复后 7 项全通过，包含真实 RVViewer 的插件移除/Viewer 销毁取消、管理员放行、访客及分享作用域拒绝、门禁替换/迟到响应、提前取消与销毁后拒绝复用。与 `tests/i18n-shell.test.tsx` 合跑共 13 项通过；本次修复的 `./scripts/verify.sh static`（含 governance、Lint 和公共类型检查）与 `./scripts/verify.sh build` 均通过。此前归档提交 `907a788` 的 [Quality Gates #97](https://github.com/OwnDing/realvirtual-WEB/actions/runs/36649199846) 五项通过；本次修复的最终远程门禁记录于 PR #11。
 
 验收矩阵与运维步骤见 [RUNBOOK-ACCESS-001](../../runbooks/PROTECTED_PRESENTATIONS.md)。实际部署、Windows 安装、客户真实大模型、移动浏览器和真实 PLC 不在这次验证中。
 

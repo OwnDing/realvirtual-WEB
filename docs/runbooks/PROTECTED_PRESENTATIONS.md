@@ -3,7 +3,7 @@ doc_id: RUNBOOK-ACCESS-001
 title: 受保护演示部署与使用 / Protected presentations
 status: approved
 owner: engineering
-last_reviewed: 2026-09-29
+last_reviewed: 2026-10-01
 authority: normative-process
 ---
 
@@ -41,6 +41,8 @@ authority: normative-process
 
 旧 LoginGatePlugin 的 userB64/passB64 配置现在显示明确迁移错误，不再认证。移除这两个字段，创建服务器账户，并使用受保护发布流程；仅换登录界面不能保护仍在公开静态目录中的旧模型。既有 AES 加密模型和外部 share API 不变。
 
+使用 LoginGatePlugin 集成时，插件移除、Viewer 销毁或门禁替换会以 `AbortError` 拒绝尚未放行的 `loadGate`，等待中的 `loadModel()` 随之取消，不继续解析模型。调用方应处理加载 Promise 的取消；已销毁的插件不能再次安装，替换门禁前发出的认证响应不能放行新门禁。
+
 ## 验收入口与证据
 
 | 行为 | 自动化入口 |
@@ -49,6 +51,7 @@ authority: normative-process
 | 到期/撤销、禁用/重置密码/退出、慢请求期间退出、最后管理员保护 | 同上 |
 | 发布幂等性、脚本/外部依赖拒绝、配额/大小、限速、损坏存储和审计保留 | 同上 |
 | 停机备份恢复后链接失效、禁止不兼容旧版直接回滚 | `tests/appliance-lifecycle.node.test.ts`、`tests/appliance-compatibility.node.test.ts` |
+| 登录门禁移除/销毁取消真实模型加载、重复安装、迟到认证响应及授权正反例 | `tests/login-gate-lifecycle.test.tsx` |
 | 真 HTTPS 发布、指定账户、同标签页切换、刷新恢复、水印截图、撤销和断网清场、运维接口隔离 | `node scripts/test-protected-presentations.mjs`（先运行完整构建，需 Docker 和 Playwright Chromium） |
 
 HTTPS 场景使用真实 Caddy 模板、生产前端产物和真实 Node/SQLite，只创建合成模型及临时账户，容器仅监听本机。证据位于忽略提交的 `test-results/access`；CI Browser Gate 上传对应 artifact，管理截图遮盖分享凭据。完整交付还要求 governance/static/node/browser/build 门禁。Linux 上的自动化不替代 Windows 安装、客户真实大模型、移动浏览器或生产网络的验收。

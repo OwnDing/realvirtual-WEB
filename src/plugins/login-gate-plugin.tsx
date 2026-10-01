@@ -33,6 +33,7 @@ export class LoginGatePlugin implements RVViewerPlugin {
   private root: Root | null = null;
   private element: HTMLElement | null = null;
   private release: (() => void) | null = null;
+  private cancel: (() => void) | null = null;
   private disposed = false;
   private generation = 0;
   private readonly legacy: boolean;
@@ -72,17 +73,26 @@ export class LoginGatePlugin implements RVViewerPlugin {
   }
   private async check(): Promise<boolean> {
     if (this.legacy || this.disposed) return false;
+    const generation = this.generation;
     const session = await accessRequest<AccessSession>('/session');
-    return session.role === 'admin' && !session.shareId;
+    return !this.disposed && generation === this.generation && session.role === 'admin' && !session.shareId;
   }
   private unlock(): void {
     if (this.disposed || this.legacy) return;
-    this.release?.(); this.release = null;
+    this.release?.(); this.release = null; this.cancel = null;
     this.teardown();
   }
   installGate(viewer: RVViewer): void {
+    if (this.disposed) throw new DOMException('Login gate has been disposed', 'AbortError');
+    this.cancel?.();
     const generation = ++this.generation;
-    viewer.loadGate = new Promise<void>(resolve => { this.release = resolve; });
+    viewer.loadGate = new Promise<void>((resolve, reject) => {
+      this.release = resolve;
+      this.cancel = () => reject(new DOMException('Login gate was cancelled', 'AbortError'));
+    });
+    // Teardown can precede loadModel's await. Mark the original rejection as
+    // handled without turning cancellation into permission to parse the model.
+    void viewer.loadGate.catch(() => {});
     void this.check().then(ok => { if (ok && !this.disposed && generation === this.generation) this.unlock(); }).catch(() => {});
     if (typeof document === 'undefined' || this.root) return;
     this.element = document.createElement('div'); this.element.id = 'rv-login-gate-root';
@@ -94,5 +104,9 @@ export class LoginGatePlugin implements RVViewerPlugin {
     const root = this.root, element = this.element; this.root = null; this.element = null;
     if (root) queueMicrotask(() => { root.unmount(); element?.remove(); });
   }
-  dispose(): void { this.disposed = true; this.generation++; this.release = null; this.teardown(); }
+  dispose(): void {
+    this.disposed = true; this.generation++;
+    this.cancel?.(); this.cancel = null; this.release = null;
+    this.teardown();
+  }
 }
