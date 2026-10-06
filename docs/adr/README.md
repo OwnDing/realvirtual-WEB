@@ -29,3 +29,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0011-offline-runtime-gate.md](ADR-0011-offline-runtime-gate.md)：Accepted，离线部署预设与生产网络验收。
 
 - [ADR-0012-protected-presentations.md](ADR-0012-protected-presentations.md)：Accepted，客户 Appliance 演示资源访问控制。
+
+- [ADR-0013-single-file-demo-package.md](ADR-0013-single-file-demo-package.md)：Accepted，单文件演示快照与声明式离线导览。

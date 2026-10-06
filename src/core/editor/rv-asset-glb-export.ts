@@ -32,7 +32,8 @@ import { Matrix4, Scene } from 'three';
 import type { Mesh, Object3D } from 'three';
 import { objectToGlb } from '../import/rv-import-object';
 import { isGltfWrapperName } from '../engine/rv-gltf-unwrap';
-import { isUnresolvedReferenceNode } from '../engine/rv-asset-reference';
+import { isUnresolvedReferenceNode, getAssetReference, setAssetReference } from '../engine/rv-asset-reference';
+import type { ComposedFrame } from '../engine/rv-glb-compose';
 import {
   RV_CHAIN_PROXY,
   RV_CHAIN_SKIN,
@@ -383,6 +384,7 @@ export async function exportAssetGlb(
   assetName?: string,
   shareMeta?: RvShareMeta | null,
   classification?: DocumentClassification | null,
+  options?: { embedReferences: readonly ComposedFrame[] },
 ): Promise<ArrayBuffer> {
   // clone(true) deep-copies the tree; userData is JSON-cloned by three — which
   // is why the live engine objects come off it first (and go straight back on).
@@ -392,6 +394,15 @@ export async function exportAssetGlb(
     clone = assetRoot.clone(true);
   } finally {
     restoreLiveUserData();
+  }
+  if (options) {
+    const frames = new Map(options.embedReferences.map(frame => [frame.referenceNode, frame]));
+    const embedClone = (live: Object3D, copy: Object3D): void => {
+      const frame = frames.get(live), ref = getAssetReference(copy);
+      if (frame && ref && !ref.embedded) setAssetReference(copy, { ...ref, sha256: frame.sha256 || ref.sha256, embedded: true });
+      live.children.forEach((child, index) => embedClone(child, copy.children[index]));
+    };
+    embedClone(assetRoot, clone);
   }
   restoreAuthoredLampMaterials(assetRoot, clone);
   restoreEnergyChainSources(clone);

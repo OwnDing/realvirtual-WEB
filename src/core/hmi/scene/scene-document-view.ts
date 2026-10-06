@@ -177,6 +177,7 @@ export function sceneDocumentView(
       undo: () => store.undo(),
       redo: () => store.redo(),
       menu,
+      exportDemo: store.demoExportIdentity ? { identity: store.demoExportIdentity, run: () => store.exportDemoGlb() } : undefined,
       exportGlb: {
         estimate: () => store.estimateFlatExport(),
         run: (opts) => store.exportSceneGlb(opts),

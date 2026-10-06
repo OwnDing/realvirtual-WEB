@@ -25,3 +25,5 @@ authority: normative-registry
 后续契约应逐步覆盖：项目清单、配置层级、插件 API、信号/接口、事件、持久化和迁移。契约变化遵循 [`../governance/CHANGE_MANAGEMENT.md`](../governance/CHANGE_MANAGEMENT.md)。
 
 - [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Protected Presentations API v1 与持久化边界。
+
+- [DEMO_PACKAGE.md](DEMO_PACKAGE.md)：单文件演示与导览配方 v1。

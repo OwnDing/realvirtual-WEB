@@ -26,6 +26,8 @@
  * exportLayoutJSON) remain for callers still on the old API.
  */
 
+import { exportAssetGlb } from '../../editor/rv-asset-glb-export';
+import { DemoPackageError } from '../../demo-package/recipe';
 import { runtimeFetch } from '../../deployment/runtime-egress';
 import type { RVViewer } from '../../rv-viewer';
 import { debug } from '../../engine/rv-debug'; // TEMP open-perf instrumentation
@@ -2312,6 +2314,15 @@ export class SceneStore {
       source.byteLength,
       this._viewer.lastLoadResult?.composition?.frames ?? [],
     );
+  }
+
+  /** Model load identity changes independently of the reused operation-log document. */
+  get demoExportIdentity(): object | null { return this._viewer.currentModelRoot; }
+
+  async exportDemoGlb(): Promise<ArrayBuffer> {
+    const root = this._viewer.currentModelRoot;
+    if (!root) throw new DemoPackageError('model');
+    return exportAssetGlb(root, undefined, undefined, undefined, { embedReferences: this._viewer.lastLoadResult?.composition?.frames ?? [] });
   }
 
   /**
