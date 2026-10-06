@@ -73,6 +73,11 @@ jobs:
       - name: Verify offline production journeys in an isolated network
         run: node scripts/run-offline-gate.mjs
         timeout-minutes: 10
+      - name: Verify protected presentations through real HTTPS
+        run: |
+          docker pull caddy:2.11.4-alpine
+          node scripts/test-protected-presentations.mjs
+        timeout-minutes: 10
       - name: Run browser tests
         env:
           RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
@@ -84,6 +89,13 @@ jobs:
         with:
           name: offline-gate-evidence
           path: test-results/offline/
+          if-no-files-found: ignore
+      - name: Upload protected presentation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: protected-presentation-evidence
+          path: test-results/access/
           if-no-files-found: ignore
 
   build:

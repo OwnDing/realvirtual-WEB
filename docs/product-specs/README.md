@@ -29,3 +29,5 @@ authority: normative-registry
 规格必须引用相关 OD/ADR、正式契约和 [`../acceptance/ACCEPTANCE_MATRIX.md`](../acceptance/ACCEPTANCE_MATRIX.md)。
 
 - [OFFLINE_RUNTIME.md](OFFLINE_RUNTIME.md)：Approved WEB 离线运行与生产零外呼验收。
+
+- [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Approved，L2-1 受保护演示与访客访问控制。

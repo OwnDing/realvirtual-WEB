@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
 import { backupAppliance, installOrUpgrade, restoreAppliance, uninstallAppliance } from '../appliance/runtime/manager.mjs';
+import { AccessStore, digest as accessDigest } from '../appliance/runtime/access/store.mjs';
 
 const cleanups: string[] = [];
 
@@ -32,6 +33,8 @@ async function bundle(root: string, name: string, connectVersion: string) {
   const output = join(root, name);
   mkdirSync(web, { recursive: true });
   writeFileSync(join(web, 'index.html'), '<!doctype html><title>appliance</title>');
+  mkdirSync(join(web, 'present'), { recursive: true });
+  writeFileSync(join(web, 'present', 'index.html'), '<!doctype html><title>presentation fixture</title>');
   writeFileSync(join(web, 'settings.json'), '{"schemaVersion":2}\n');
   const rows = [
     ['node', 'node', 'runtime/node/bin/node'],
@@ -144,10 +147,20 @@ describe('appliance lifecycle', () => {
 
     const sentinel = join(first.roots.stateRoot, 'data', 'connect', 'sentinel.txt');
     writeFileSync(sentinel, 'before-backup');
+    const accessRoot = join(first.roots.stateRoot, 'data', 'access');
+    const access = new AccessStore(accessRoot);
+    access.run('INSERT INTO presentations VALUES(?,?,?,?,?,?)', 'model', 'Test', 0, '', 'operation', Date.now());
+    access.run('INSERT INTO shares VALUES(?,?,?,?,?,?,?)', 'share', 'model', accessDigest('token'), null, Date.now() + 60000, 0, Date.now());
+    access.mintSession(null, 'share');
+    access.close();
     const backup = await backupAppliance({ ...installOptions, noStop: true }, deps);
     writeFileSync(sentinel, 'after-backup');
     await restoreAppliance({ ...installOptions, backupPath: backup, confirmRestore: installId, noStop: true }, deps);
     expect(readFileSync(sentinel, 'utf8')).toBe('before-backup');
+    const restoredAccess = new AccessStore(accessRoot);
+    expect(restoredAccess.get('SELECT revoked FROM shares WHERE id=?', 'share').revoked).toBe(1);
+    expect(restoredAccess.all('SELECT * FROM sessions')).toHaveLength(0);
+    restoredAccess.close();
 
     writeFileSync(join(backup, 'undeclared.txt'), 'tamper');
     await expect(restoreAppliance({ ...installOptions, backupPath: backup, confirmRestore: installId, noStop: true }, deps)).rejects.toThrow(/count mismatch|Unexpected backup/);
