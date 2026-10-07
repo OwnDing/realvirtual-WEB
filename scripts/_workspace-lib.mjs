@@ -122,7 +122,7 @@ const GENERATED_GIT_ATTRIBUTES = [
 const REQUIRED_NODE_MAJOR = 22;
 const CORE_FILES = [
   'index.html', 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts',
-  'vitest.config.ts', 'vitest.node.config.ts', 'LICENSE', 'README.md', 'webviewer.mcp.md',
+  'vitest.config.ts', 'vitest.node.config.ts', 'vite.access.config.ts', 'vite.demo-player.config.ts', 'LICENSE', 'README.md', 'webviewer.mcp.md',
 ];
 const ALWAYS_DELIVERED_DOCS = [
   'doc-webviewer.md', 'doc-extending-webviewer.md', 'doc-scripting.md', 'doc-behaviors.md',
@@ -186,6 +186,7 @@ const LIBRARY_CONSUMER_DIR = 'src/plugins/layout-planner';
 const CORE_SCRIPT_FILES = [
   'install-private-dependencies.mjs', 'patch-occt-memory.mjs',
   'build-local-library-catalog.mjs', 'inject-ga-settings.mjs',
+  'apply-deployment-profile.mjs', 'offline-profile.mjs', 'build-demo-player.mjs',
 ];
 // Directories outside src/ and public/ that staged source imports (schema/v1/rv-odt.json
 // via src/core/engine/rv-component-registry.ts) — the build fails without them.

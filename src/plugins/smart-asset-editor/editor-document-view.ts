@@ -95,6 +95,14 @@ export function installEditorDocumentView(
             return exportAssetGlb(root, doc.name, meta as never);
           },
         },
+        exportDemo: {
+          identity: doc,
+          run: async () => {
+            const root = viewer.currentModelRoot;
+            if (!root) throw new Error(rvT('assets', 'smartEditor.noAsset'));
+            return exportAssetGlb(root, doc.name, undefined, undefined, { embedReferences: viewer.lastLoadResult?.composition?.frames ?? [] });
+          },
+        },
         exportGlb: {
           fileName: `${sanitizeAssetFileName(doc.name)}.glb`,
           run: async () => {

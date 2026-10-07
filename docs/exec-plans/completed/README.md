@@ -9,6 +9,8 @@ authority: normative-registry
 
 # 已完成 ExecPlan 索引
 
+- [EP-DEMO-005-single-file-demo.md](EP-DEMO-005-single-file-demo.md)：L2-2 单 HTML 演示导出、镜头配方与离线播放器；2026-10-06 完成本地生产闭环与全量门禁。
+
 - [`EP-ACCESS-001-protected-presentations.md`](EP-ACCESS-001-protected-presentations.md)：交付 L2-1 服务端账户、资源授权、限时/可撤销分享、水印审计和私有部署恢复；PR #11，2026-10-01 补齐审查发现的登录门禁取消与迟到响应回归。
 
 - [`EP-OFFLINE-002-ci-webgl.md`](EP-OFFLINE-002-ci-webgl.md)：修复隔离 CI 浏览器的用户身份与 WebGL2 初始化、模式断言调度误判及失败诊断；PR #10 的 Quality Gates #89 五项通过，2026-09-09 完成。

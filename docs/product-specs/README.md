@@ -31,3 +31,5 @@ authority: normative-registry
 - [OFFLINE_RUNTIME.md](OFFLINE_RUNTIME.md)：Approved WEB 离线运行与生产零外呼验收。
 
 - [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Approved，L2-1 受保护演示与访客访问控制。
+
+- [DEMO_PACKAGE_EXPORT.md](DEMO_PACKAGE_EXPORT.md)：L2-2 单文件离线演示包。

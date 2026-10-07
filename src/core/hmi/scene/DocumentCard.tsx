@@ -37,7 +37,7 @@
  * shadows.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Box,
   Button,
@@ -87,6 +87,8 @@ import { DocumentCrumbs } from './DocumentCrumbs';
 import { ShareDialog } from '../../share/ShareDialog';
 import type { RvShareMeta, RvShareLevel } from '../../share/rv-share-meta';
 import { useRvTranslation } from '../../i18n';
+
+const DemoExportPanel = lazy(() => import('../../demo-package/DemoExportPanel'));
 
 export type DocumentCardVariant = 'compact' | 'hero';
 
@@ -156,6 +158,7 @@ export function DocumentCard({
   previewVisible = true,
 }: DocumentCardProps) {
   const { t } = useRvTranslation('authoring');
+  const { t: shellT } = useRvTranslation('shell');
   const viewer = useOptionalViewer();
   const version = useSyncExternalStore(
     subscribeActiveDocumentView,
@@ -174,6 +177,8 @@ export function DocumentCard({
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [demoIdentity, setDemoIdentity] = useState<object | null>(null);
+  useEffect(() => { setDemoIdentity(null); }, [view?.actions.exportDemo?.identity, activeMode]);
   const [exportDialog, setExportDialog] = useState<
     { embed: boolean; estimate: Awaited<ReturnType<NonNullable<NonNullable<ActiveDocumentView['actions']['exportGlb']>['estimate']>>> | null } | null
   >(null);
@@ -389,7 +394,7 @@ export function DocumentCard({
   const hero = variant === 'hero';
   const saveLabel = view.saveVerb === 'save-into-project' ? 'Save into project' : 'Save';
   const menu = view.actions.menu ?? [];
-  const hasMenu = menu.length > 0 || !!view.actions.share || !!view.actions.exportGlb;
+  const hasMenu = menu.length > 0 || !!view.actions.share || !!view.actions.exportGlb || !!view.actions.exportDemo;
 
   const saveButton = view.stale ? (
     <Typography
@@ -736,6 +741,10 @@ export function DocumentCard({
               <ListItemText primaryTypographyProps={{ fontSize: 13 }}>{t('doc.share')}</ListItemText>
             </MenuItem>
           )}
+          {view.actions.exportDemo && viewer && <MenuItem data-testid="document-card-verb-export-demo" disabled={view.busy} onClick={() => { closeMenu(); setDemoIdentity(view.actions.exportDemo!.identity); }}>
+            <ListItemIcon sx={{ minWidth: 28 }}><FileDownload sx={{ fontSize: 16 }} /></ListItemIcon>
+            <ListItemText>{shellT('demoExport.title')}</ListItemText>
+          </MenuItem>}
           {view.actions.exportGlb && [
             <Divider key="export-divider" />,
             <MenuItem
@@ -750,6 +759,9 @@ export function DocumentCard({
         </Menu>
       )}
 
+      {demoIdentity && viewer && view?.actions.exportDemo?.identity === demoIdentity && <Suspense fallback={null}>
+        <DemoExportPanel viewer={viewer} capability={view.actions.exportDemo} name={view.name} mode={view.sourceMode} onClose={() => setDemoIdentity(null)} />
+      </Suspense>}
       {/* One name dialog for every verb that needs one. */}
       <Dialog open={Boolean(nameDialog)} onClose={() => setNameDialog(null)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>

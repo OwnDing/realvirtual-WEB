@@ -17,6 +17,8 @@
  * translated (PS-I18N-001 §2, ADR-0001 §6) and therefore never appear here.
  */
 
+import { demoPackageChinese } from './demo-package';
+
 export const zhCN = {
   common: {
     externalAccessBlocked: '部署策略已禁止外部访问。',
@@ -777,6 +779,7 @@ export const zhCN = {
    * visible to everyone rather than to whoever opened one tab.
    */
   shell: {
+    demoExport: demoPackageChinese,
     access: {
       title: '受保护演示',
       admin: '演示管理',

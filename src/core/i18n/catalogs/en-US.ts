@@ -23,6 +23,8 @@
  * runtime by `ensureEnglishCatalog()` (ADR-0001 R1) — see that file for why the
  * split is English-only.
  */
+import { demoPackageEnglish } from './demo-package';
+
 export const enUS = {
   common: {
     externalAccessBlocked: 'External access is blocked by the deployment policy.',
@@ -60,6 +62,7 @@ export const enUS = {
    * visible to everyone rather than to whoever opened one tab.
    */
   shell: {
+    demoExport: demoPackageEnglish,
     access: {
       title: 'Protected presentations',
       admin: 'Presentation management',

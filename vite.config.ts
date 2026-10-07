@@ -754,6 +754,20 @@ function stripImpeccableLivePlugin() {
 export default defineConfig(({ command }) => ({
   base: process.env.VITE_BASE || './',
   plugins: [
+    {
+      name: 'demo-player-dev-artifacts',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const name = req.url?.split('?')[0]?.match(/\/demo-player\/(demo-player\.(?:js|json)|demo-player-source\.zip)$/)?.[1];
+          if (!name) return next();
+          const path = resolve(__dirname, 'dist/demo-player', name);
+          if (!existsSync(path)) { res.statusCode = 404; res.end('Run npm run build:demo-player'); return; }
+          res.setHeader('Content-Type', name.endsWith('.json') ? 'application/json' : name.endsWith('.js') ? 'text/javascript' : 'application/zip');
+          res.setHeader('Cache-Control', 'no-store');
+          createReadStream(path).pipe(res);
+        });
+      },
+    },
     privateResolverPlugin(),
     missingStubResolverPlugin(),
     privateModelsPlugin(),

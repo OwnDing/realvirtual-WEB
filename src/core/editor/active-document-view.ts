@@ -129,6 +129,8 @@ export interface ActiveDocumentActions {
   openPreview?: () => void | Promise<void>;
   share?: ActiveDocumentShare;
   exportGlb?: ActiveDocumentExport;
+  /** Snapshot capability: stable document identity, clone-only resolved references. */
+  exportDemo?: { identity: object; run(): Promise<ArrayBuffer> };
 }
 
 export interface ActiveDocumentView {
