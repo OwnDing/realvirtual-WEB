@@ -590,6 +590,7 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['shell.demoExport.load', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.close', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.cancel', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
+  ['shell.demoExport.cancelling', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.working', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.ready', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.savedStart', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],

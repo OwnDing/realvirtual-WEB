@@ -2376,9 +2376,9 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       continuousRunner: runner,
       // Pass the viewer as the bind-context host so the DESRunner can discover
       // and bind placed material-flow components on start() (Plan 194 P5b).
-      // Root is the WHOLE scene (not just currentModel): Planner-placed
-      // LayoutObjects live under `_layoutRoot`, a sibling of currentModel, so the
-      // DES scene-binding traversal must cover the full scene to find them. The
+      // Root is the WHOLE scene: Planner placements normally live under
+      // currentModel; `_layoutRoot` is the fallback when no model is loaded.
+      // The DES scene-binding traversal covers both parent locations. The
       // bind pass filters on the `LayoutObject` marker, so fixtures (lights,
       // ground, gizmos) are ignored. `scene` is also a stable reference across
       // model switches (currentModel is reassigned on load).

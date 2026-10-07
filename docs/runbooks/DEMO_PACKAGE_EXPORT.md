@@ -3,7 +3,7 @@ doc_id: RUNBOOK-DEMO-EXPORT-001
 title: 单 HTML 演示制作与离线交付
 status: approved
 owner: engineering
-last_reviewed: 2026-10-06
+last_reviewed: 2026-10-07
 authority: normative
 ---
 
@@ -15,7 +15,7 @@ authority: normative
 2. 打开当前文档卡片的更多菜单，选择 **演示打包**。右侧面板保留画布操作，可以旋转、缩放和调整视角。
 3. 使用透视相机，点击 **设为初始视角**。点击 **添加当前镜头**，填写标题和说明，设置转场/停留时间；可预览、上移、下移、删除镜头并选择循环。没有镜头也能导出自由浏览演示。
 4. 使用 **保存导览配方** 保存 `.demo.json`，以后通过 **打开导览配方** 继续编辑。配方只包含镜头和演示信息，不包含模型；重开时应先打开对应模型。
-5. 选择演示语言，点击 **导出演示 HTML**。打包失败会显示原因；取消、关闭面板或切换文档会阻止迟到下载。
+5. 选择演示语言，点击 **导出演示 HTML**。打包失败会显示原因；取消、关闭面板或切换文档会阻止迟到下载。已开始的模型编码会继续到结束，期间重试（包括关闭再重开）会等待它结束，以避免并行编码占用过多内存。
 6. 把下载的 `.html` 复制给接收者。断网后用支持 WebGL 2 的桌面浏览器直接打开，播放导览或手动旋转/缩放。拖动画布会停止导览，重新播放从首镜头开始。页面隐藏时暂停，返回后继续。
 
 离线 HTML 含完整模型数据，接收者可以复制；文件不具备账号校验、到期、撤销和服务端审计。需要这些能力时使用 [受保护演示](PROTECTED_PRESENTATIONS.md)。首版只包含公开 embed 渲染与内建连续仿真，不包含工作台、HMI、任意脚本导览、PDF、工业连接或 DES。材质光照使用独立播放器的固定场景光，不导出工作台环境贴图和后处理设置。
@@ -42,4 +42,4 @@ authority: normative
 
 ## English quick guide
 
-Open and edit a model, then choose **Demo package** in the current document card menu. Use a perspective camera, capture the initial view, add/reorder/preview shots and save the `.demo.json` recipe. Choose the demo language and **Export demo HTML**. Copy the HTML to another machine and open it directly while offline. Dragging the canvas stops the tour; replay starts from the first shot. The file contains model data and cannot be remotely revoked. Full HMI, arbitrary script tours and industrial connections are outside this player. Build with `npm run build`; for development build the player first with `npm run build:demo-player`.
+Open and edit a model, then choose **Demo package** in the current document card menu. Use a perspective camera, capture the initial view, add/reorder/preview shots and save the `.demo.json` recipe. Choose the demo language and **Export demo HTML**. Cancellation prevents download; retrying, including after reopening the panel, waits for any existing model encoding to finish. Copy the HTML to another machine and open it directly while offline. Dragging the canvas stops the tour; replay starts from the first shot. The file contains model data and cannot be remotely revoked. Full HMI, arbitrary script tours and industrial connections are outside this player. Build with `npm run build`; for development build the player first with `npm run build:demo-player`.

@@ -35,12 +35,31 @@ try {
   await page.goto(`${origin}/demo-base/?model=fixture.glb&mode=planner`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.viewer?.currentModelRoot?.getObjectByName('DemoTriangle'), undefined, { timeout: 60000 });
   await page.getByRole('button', { name: 'OK', exact: true }).click();
+  await page.waitForFunction(() => window.viewer?.getPlugin('layout-planner')?.isActive, undefined, { timeout: 60000 });
+  // Exercise the actual Planner placement path before the document-card export.
+  const placement = await page.evaluate(async () => {
+    const viewer = window.viewer, planner = viewer.getPlugin('layout-planner');
+    // The minimal GLB fixture has no plugin declarations; use the public
+    // scene attachment entry point before calling the programmatic placement API.
+    planner.ensureAttached(viewer);
+    viewer.leftPanelManager.close('layout-planner');
+    const id = await planner.placeComponent({ id: 'demo-export-fixture', name: 'PlacedDemoDevice', glbUrl: new URL('fixture.glb', location.href).href }, [2, 0, 1]);
+    const node = planner.getPlacedRootById(id);
+    return { name: node.name, position: node.position.toArray(), underModel: node.parent === viewer.currentModelRoot };
+  });
+  assert.equal(placement.underModel, true);
   await page.getByRole('button', { name: 'Hierarchy', exact: true }).click();
   await page.screenshot({ animations: 'disabled', path: resolve(evidence, 'authoring-boot.png') });
   const menu = page.getByRole('button', { name: /More actions|更多操作/ }).first();
   await expect(menu).toBeVisible({ timeout: 30000 }); await menu.click();
   await page.getByTestId('document-card-verb-export-demo').click();
-  const panel = page.getByTestId('demo-export-panel'); await expect(panel).toBeVisible();
+  const panel = page.getByTestId('demo-export-panel');
+  try { await expect(panel).toBeVisible(); }
+  catch (err) {
+    await page.screenshot({ animations: 'disabled', path: resolve(evidence, 'authoring-panel-error.png') });
+    console.error('Authoring errors:', errors);
+    throw err;
+  }
   await panel.getByLabel(/Demo name|演示名称/, { exact: true }).fill('Production UI demo');
   await panel.getByRole('button', { name: /Add current view|添加当前镜头/, exact: true }).click();
   await panel.getByLabel(/1\. Shot title|1\. 镜头标题/).fill('Production shot');
@@ -52,6 +71,13 @@ try {
   const html = await readFile(file, 'utf8'); const payload = JSON.parse(html.match(/id="rv-demo-data" type="application\/json">(.*?)<\/script>/s)[1]);
   assert.equal(payload.recipe.steps[0].title, 'Production shot');
   assert.equal(payload.build.version, data.build.version);
+  const exportedModel = Buffer.from(payload.modelBase64, 'base64');
+  const gltf = JSON.parse(exportedModel.subarray(20, 20 + exportedModel.readUInt32LE(12)).toString('utf8'));
+  const placedNodes = gltf.nodes.filter(node => node.extras?.realvirtual?.LayoutObject?.CatalogId === 'demo-export-fixture');
+  assert.equal(placedNodes.length, 1, 'the newly placed device must be exported exactly once');
+  assert.equal(placedNodes[0].name, placement.name);
+  assert.deepEqual(placedNodes[0].translation ?? placedNodes[0].matrix?.slice(12, 15) ?? [0, 0, 0], placement.position);
+  assert.ok(placedNodes[0].mesh !== undefined || placedNodes[0].children?.length, 'the placed device must retain its geometry');
   await context.close();
   const offline = await browser.newContext({ offline: true, viewport: { width: 1280, height: 900 } });
   const receiver = await offline.newPage(); const network = [];
@@ -63,7 +89,7 @@ try {
   await expect(receiver.locator('#caption')).toContainText('Production shot');
   await receiver.screenshot({ path: resolve(evidence, 'ui-exported-player.png') });
   assert.deepEqual(network, []); assert.deepEqual(errors, []);
-  await writeFile(resolve(evidence, 'authoring-result.json'), JSON.stringify({ productionUI: true, deploymentBase: '/demo-base/', fileName: download.suggestedFilename(), modelBytes: Buffer.from(payload.modelBase64, 'base64').length, receiverNetworkAttempts: network.length, browserErrors: errors }, null, 2));
+  await writeFile(resolve(evidence, 'authoring-result.json'), JSON.stringify({ productionUI: true, plannerPlacement: placement, exportedPlacements: placedNodes.length, deploymentBase: '/demo-base/', fileName: download.suggestedFilename(), modelBytes: exportedModel.length, receiverNetworkAttempts: network.length, browserErrors: errors }, null, 2));
   console.log('PASS: production document card -> HTML download -> offline file:// playback under a deployment subpath');
   await offline.close();
 } finally { await browser.close(); await new Promise(r => server.close(r)); }

@@ -71,6 +71,55 @@ describe('demo authoring and export lifecycle', () => {
     expect(click).not.toHaveBeenCalled();
     if (reason === 'switch') await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('current document changed'));
   });
+  it('keeps a canceled encoder busy until it settles, then allows a retry', async () => {
+    let finish!: (value: ArrayBuffer) => void;
+    const pending = new Promise<ArrayBuffer>(resolve => { finish = resolve; });
+    const run = vi.fn().mockReturnValueOnce(pending).mockResolvedValue(new ArrayBuffer(0));
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    mount(run);
+    const button = screen.getByRole('button', { name: 'Export demo HTML' });
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel export' }));
+    fireEvent.click(button);
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(button.matches(':disabled')).toBe(true);
+    await act(async () => { finish(new ArrayBuffer(0)); await pending; });
+    await waitFor(() => expect(button.matches(':disabled')).toBe(false));
+    expect(click).not.toHaveBeenCalled();
+    fireEvent.click(button);
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('valid self-contained GLB'));
+  });
+  it('serializes encodes even after closing and reopening the panel', async () => {
+    let fail!: (reason: Error) => void;
+    const pending = new Promise<ArrayBuffer>((_, reject) => { fail = reject; });
+    const run = vi.fn().mockReturnValueOnce(pending).mockResolvedValue(new ArrayBuffer(0));
+    const mounted = mount(run);
+    fireEvent.click(screen.getByRole('button', { name: 'Export demo HTML' }));
+    mounted.unmount();
+    render(<DemoExportPanel viewer={mounted.viewer} capability={mounted.view.actions.exportDemo!} name="Fixture" mode="editor" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Export demo HTML' }));
+    expect(run).toHaveBeenCalledTimes(1);
+    await act(async () => { fail(new Error('encoding failed')); await pending.catch(() => {}); });
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('valid self-contained GLB'));
+  });
+  it('does not start a queued snapshot that was canceled before the encoder became free', async () => {
+    let finish!: (value: ArrayBuffer) => void;
+    const pending = new Promise<ArrayBuffer>(resolve => { finish = resolve; });
+    const run = vi.fn().mockReturnValue(pending);
+    const mounted = mount(run);
+    fireEvent.click(screen.getByRole('button', { name: 'Export demo HTML' }));
+    mounted.unmount();
+    render(<DemoExportPanel viewer={mounted.viewer} capability={mounted.view.actions.exportDemo!} name="Fixture" mode="editor" onClose={vi.fn()} />);
+    const button = screen.getByRole('button', { name: 'Export demo HTML' });
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel export' }));
+    await act(async () => { finish(new ArrayBuffer(0)); await pending; });
+    await waitFor(() => expect(button.matches(':disabled')).toBe(false));
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
   it('shows invalid recipe durations and preflight failures without downloading', async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {}); mount();
     fireEvent.click(screen.getByRole('button', { name: 'Add current view' }));

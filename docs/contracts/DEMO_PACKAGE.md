@@ -3,7 +3,7 @@ doc_id: CONTRACT-DEMO-PACKAGE-001
 title: 单文件演示与导览配方 v1
 status: approved
 owner: architecture
-last_reviewed: 2026-10-06
+last_reviewed: 2026-10-07
 authority: normative
 ---
 
@@ -17,4 +17,4 @@ HTML 内 rv-demo-data JSON 数据块包含 schemaVersion=1、recipe、modelBase6
 
 构建输出 demo-player.js、demo-player-source.zip 和 demo-player.json（schemaVersion/version/revision/sha256/sourceSha256）。导出端校验版本与摘要，限制构建产物大小，仅从部署基路径加载。导出文件名使用净化后的标题与 .html 扩展名。
 
-取消、页面/文档切换使当前导出结果失效；已开始的底层编码可结束，但不得触发迟到下载。导览播放中用户拖动相机退出自动播放，重新开始从第一镜头开始；隐藏页面暂停，恢复时继续，尊重减少动态效果偏好。
+取消、页面/文档切换使当前导出结果失效；已开始的底层编码可结束，但不得触发迟到下载。同一 Viewer 的快照编码串行执行，取消或关闭/重开面板不能启动重叠编码；原编码结束后可重试。导览播放中用户拖动相机退出自动播放，重新开始从第一镜头开始；隐藏页面暂停，恢复时继续，尊重减少动态效果偏好。

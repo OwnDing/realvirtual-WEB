@@ -11,6 +11,23 @@ import { createDemoHtml } from './html';
 import { loadDemoArtifacts } from './artifacts';
 import { preflightDemoGlb } from './preflight';
 
+// An encoder cannot be aborted. Keep its slot across panel unmounts so a
+// close/reopen or document switch cannot overlap large snapshots in one viewer.
+const encoders = new WeakMap<RVViewer, Promise<ArrayBuffer>>();
+async function encodeSnapshot(viewer: RVViewer, run: () => Promise<ArrayBuffer>, signal: AbortSignal): Promise<ArrayBuffer> {
+  let previous = encoders.get(viewer);
+  while (previous) {
+    await previous.catch(() => {});
+    signal.throwIfAborted();
+    previous = encoders.get(viewer);
+  }
+  signal.throwIfAborted();
+  const pending = run();
+  encoders.set(viewer, pending);
+  try { return await pending; }
+  finally { if (encoders.get(viewer) === pending) encoders.delete(viewer); }
+}
+
 export function captureDemoCamera(viewer: Pick<RVViewer, 'camera' | 'controls'>): DemoCamera {
   if (!(viewer.camera instanceof PerspectiveCamera)) throw new DemoPackageError('camera');
   return parseDemoCamera({ position: viewer.camera.position.toArray(), target: viewer.controls.target.toArray(), fov: viewer.camera.fov });
@@ -44,7 +61,11 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
     // The parent unmounts this panel when document identity or mode changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer, capability.identity]);
-  const cancel = () => { job.current?.abort(); job.current = null; setBusy(false); };
+  const cancel = () => {
+    if (!job.current) return;
+    job.current.abort();
+    setNotice(m.cancelling);
+  };
   const capture = (add: boolean) => {
     try {
       const camera = captureDemoCamera(viewer); setError(undefined);
@@ -79,7 +100,10 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
     setBusy(true); setError(undefined); setNotice(undefined);
     try {
       if (!captured) throw new DemoPackageError('camera'); const valid = parseDemoRecipe(recipe);
-      const bytes = new Uint8Array(await capability.run());
+      const bytes = new Uint8Array(await encodeSnapshot(viewer, () => {
+        if (!current()) throw new DemoPackageError('changed');
+        return capability.run();
+      }, controller.signal));
       if (!current()) throw new DemoPackageError('changed');
       preflightDemoGlb(bytes);
       const artifacts = await loadDemoArtifacts(controller.signal);
@@ -88,7 +112,7 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
       if (!current()) throw new DemoPackageError('changed');
       download(html, `${demoFileName(valid.title)}.html`, 'text/html'); setNotice(m.ready);
     } catch (err) { if (active.current && !controller.signal.aborted) report(err); }
-    finally { if (job.current === controller) { job.current = null; if (active.current) setBusy(false); } }
+    finally { if (job.current === controller) { job.current = null; if (active.current) { setBusy(false); if (controller.signal.aborted) setNotice(undefined); } } }
   };
   return <Portal><Paper role="region" aria-label={m.title} data-testid="demo-export-panel" elevation={8}
     sx={{ position: 'fixed', right: 16, top: 76, bottom: 28, width: 380, maxWidth: 'calc(100vw - 32px)', zIndex: 1250, overflowY: 'auto', p: 2 }}>
@@ -96,7 +120,7 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
       <Stack direction="row" justifyContent="space-between"><Typography component="h2" variant="h6">{m.title}</Typography><Button onClick={() => { cancel(); onClose(); }}>{m.close}</Button></Stack>
       <Typography variant="body2">{m.intro}</Typography><Alert severity="info" role="note">{m.boundary}</Alert>
       {error && <Alert severity="error">{error}</Alert>}
-      <Typography role="status" variant="body2">{busy ? m.working : notice}</Typography>
+      <Typography role="status" variant="body2">{busy ? notice ?? m.working : notice}</Typography>
       <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Stack spacing={1.5}>
         <TextField label={m.name} value={recipe.title} size="small" inputProps={{ maxLength: 120 }} onChange={e => setRecipe(r => ({ ...r, title: e.target.value }))} />
         <TextField select label={m.language} value={recipe.locale} size="small" onChange={e => setRecipe(r => ({ ...r, locale: e.target.value as DemoRecipe['locale'] }))}><MenuItem value="zh-CN">{new Intl.DisplayNames(['zh-CN'], { type: 'language' }).of('zh-Hans')}</MenuItem><MenuItem value="en-US">{new Intl.DisplayNames(['en-US'], { type: 'language' }).of('en')}</MenuItem></TextField>
