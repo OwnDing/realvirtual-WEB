@@ -10,6 +10,8 @@ import { prepareModel } from './prepare-model.mjs';
 const out = resolve('test-results/loading-performance');
 await mkdir(out, { recursive: true });
 const benchmarking = process.argv.includes('--benchmark');
+const only = process.argv.find(arg => arg.startsWith('--only='))?.slice(7);
+if (only && (benchmarking || process.env.CI)) throw new Error('CI and benchmarks require the full journey suite');
 const source = resolve('dist/_perf/model.glb');
 const fixture = await createPerformanceFixture(
     source,
@@ -28,6 +30,7 @@ const args = process.argv.includes('--hardware')
   : ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args });
 const report = {
+  scope: only ?? 'full',
   environment: {
     platform: process.platform,
     arch: process.arch,
@@ -47,6 +50,7 @@ const report = {
   salesClaimVerified: false,
 };
 async function journey(name, run) {
+  if (only && only !== name) return;
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     serviceWorkers: 'block',
@@ -241,6 +245,11 @@ try {
     await ready(page);
   });
   await journey('quality-and-repeated-loads', async (page) => {
+    // Force each real load through the preview/LOD path, including on a fast loopback server.
+    await page.route('**/_perf/model.glb', async route => {
+      await page.waitForFunction(() => window.viewer?.loading?.getSnapshot().preview, null, {timeout:30000});
+      await route.continue();
+    });
     await boot(page);
     await ready(page);
     const result = await page.evaluate(async () => {
@@ -250,15 +259,20 @@ try {
       for (let t = 40; t < 7000; t += 40) v.adaptiveQuality.sample(t, true);
       const tier = v.adaptiveQuality.getSnapshot().tier;
       v.adaptiveQuality.setMode('high');
-      const counts = [];
+      const counts = [], textures = [], lod = [];
       for (let i = 0; i < 4; i++) {
         await v.loadModelWithProgress('/_perf/model.glb');
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         v.renderFrameForCapture();
         counts.push(v.renderer.info.memory.geometries);
+        textures.push(v.renderer.info.memory.textures);
+        lod.push(v._runtimeLod?.size ?? 0);
       }
       return {
         tier,
         counts,
+        textures,
+        lod,
         unchanged: preferences === localStorage.getItem('rv-visual-settings'),
         quality: v.adaptiveQuality.getSnapshot(),
       };
@@ -267,11 +281,17 @@ try {
     assert.equal(result.quality.mode, 'high');
     assert(result.unchanged);
     assert.equal(result.counts.at(-1), result.counts[0]);
+    assert.equal(result.textures.at(-1), result.textures[0]);
+    assert(result.lod.every(count => count > 0));
     report.resources = result;
   });
   await journey('manual-quality-ui', async (page) => {
     await boot(page);
     await ready(page);
+    // Fresh software-GPU profiles show the existing first-run quality notice.
+    await page.addLocatorHandler(page.getByTestId('auto-quality-ok'), async () => {
+      await page.getByTestId('auto-quality-ok').click();
+    });
     await page
       .getByRole('button', { name: /^Settings/ })
       .first()
@@ -335,6 +355,7 @@ try {
     await ready(page);
     await page.evaluate(() => window.perfRelease());
   });
+  if (only && !report.journeys.length) throw new Error(`Unknown journey: ${only}`);
   const rounds = benchmarking ? 30 : 0;
   for (let i = 0; i < rounds; i++)
     await journey(`cold-${i + 1}`, async (page, context) => {
