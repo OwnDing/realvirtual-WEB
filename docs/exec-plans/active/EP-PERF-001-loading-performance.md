@@ -36,7 +36,7 @@ authority: normative
 
 ## Allowed Paths
 
-src/core/engine、src/core/hmi、src/core/i18n、src/core/rv-viewer.ts、src/core/rv-viewer-events.ts、src/main.ts、src/embed、scripts、tests、e2e、schema、docs、package.json/package-lock.json、Vite/Playwright 配置。
+src/core/engine、src/core/hmi、src/core/i18n、src/core/rv-viewer.ts、src/core/rv-viewer-events.ts、src/main.ts、src/embed、scripts、tests、e2e、schema、docs、package.json/package-lock.json、Vite/Playwright 配置、.github/workflows/quality-gates.yml。
 
 ## Forbidden Paths
 
@@ -49,15 +49,19 @@ M0：文档、基线、Draft PR。M1：普通 GLB 加载反馈黄金切片。M2�
 ## Progress
 
 - [x] M0 方案批准、仓库检查、文档建立。
-- [ ] M1 真实反馈与取消。
-- [ ] M2 性能包、渐进加载与 LOD。
-- [ ] M3 自适应画质。
+- [x] M1 真实反馈与取消。
+- [x] M2 性能包、渐进加载与 LOD。
+- [x] M3 自适应画质。
 - [ ] M4 门禁、基准与 PR。
 
 ## Surprises & Discoveries
 
 - 现有性能烟测不强制30 FPS；新性能指标须在独立固定环境评估，不能冒充真实设备。
 - 现有 boot auto-quality 明确不运行时调整；本次通过用户批准的显式自动模式扩展，手动设置保持优先。
+- 可选包不能阻塞已下载的源模型；准备未完成时取消包，保留完整加载优先级。
+- 对无法完整表示的几何/引用场景拒绝发布包；不静默删除 primitive。PNG 解码前校验尺寸。
+- 原有信任包装和 clearModel() 守卫保持不变，加载会话用内部清理方法延续所有权。
+- 软件 GPU 环境不具备销售延迟/FPS 承诺的硬件证据；提供合成基准、可复现脚本和明确发布条件。
 
 ## Decision Log
 
@@ -74,3 +78,5 @@ verify.sh governance/static/node/browser/build，专项 E2E（生产构建、弱
 ## Outcomes & Retrospective
 
 开发中；尚未声明性能承诺或完成。
+
+Draft PR：[OwnDing/realvirtual-WEB#13](https://github.com/OwnDing/realvirtual-WEB/pull/13)。操作与回退见 [交付指南](../../delivery/LOADING_PERFORMANCE_OPERATIONS.md)。当前本地 Node 810 通过、7 条既有跳过；取消/信任/异步批处理专项 Browser 62 通过。全量 Browser 与生产基准继续执行，最终证据将在交付快照记录。

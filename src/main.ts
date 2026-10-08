@@ -12,6 +12,10 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
+import { readPerformanceQuality } from './core/hmi/performance-quality';
+import { bindLoadFeedback } from './core/hmi/load-feedback';
+import { downloadModel } from './core/engine/rv-model-download';
+import type { ModelLoadSession } from './core/engine/rv-load-session';
 import { canInitializeTeams } from './core/deployment/teams-egress';
 import { applyConfiguredLocale, ensureEnglishCatalog, getLocale, initI18n, rvT } from './core/i18n';
 import { RVViewer, type RendererKind } from './core/rv-viewer';
@@ -414,77 +418,21 @@ async function guardHeavyRestore(sceneId: string, displayName?: string): Promise
  *
  * Throws after the final attempt; the caller surfaces a visible error overlay.
  */
-async function downloadGlb(
-  url: string,
-  opts: {
-    attempts: number;
-    timeoutMs: number;
-    onRetry: (attempt: number, total: number) => void;
-    egressPurpose?: EgressPurpose;
-  },
-): Promise<ArrayBuffer> {
-  const allowedUrl = allowRuntimeEgressUrl(url, opts.egressPurpose ?? 'remote-model');
-  if (!allowedUrl) throw new Error('Model URL is blocked by the deployment egress policy');
-  let lastErr: unknown;
-  for (let attempt = 1; attempt <= opts.attempts; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
-    try {
-      const resp = await runtimeFetch(allowedUrl.href, opts.egressPurpose ?? 'remote-model', { signal: controller.signal });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-      const len = parseInt(resp.headers.get('content-length') || '0', 10);
-
-      // Streamed path: single pre-sized buffer + byte-accurate progress.
-      if (resp.body && len > 0) {
-        const buf = new Uint8Array(len);
-        const reader = resp.body.getReader();
-        let offset = 0;
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (offset + value.byteLength > len) {
-            // Actual bytes exceed content-length (compressed transfer-encoding) —
-            // switch to a growable collector seeded with what we already have.
-            const parts: Uint8Array[] = [buf.slice(0, offset), value];
-            let extraLen = offset + value.byteLength;
-            for (;;) {
-              const r = await reader.read();
-              if (r.done) break;
-              parts.push(r.value);
-              extraLen += r.value.byteLength;
-            }
-            clearTimeout(timer);
-            const out = new Uint8Array(extraLen);
-            let o = 0;
-            for (const c of parts) { out.set(c, o); o += c.byteLength; }
-            return out.buffer;
-          }
-          buf.set(value, offset);
-          offset += value.byteLength;
-          setLoadingProgress(offset, len);
-        }
-        clearTimeout(timer);
-        if (offset === len) return buf.buffer;
-        throw new Error(`incomplete download (${offset}/${len} bytes)`);
-      }
-
-      // No content-length / no readable stream → single buffer, indeterminate bar.
-      setLoadingPreparing();
-      const data = await resp.arrayBuffer();
-      clearTimeout(timer);
-      return data;
-    } catch (e) {
-      clearTimeout(timer);
-      lastErr = controller.signal.aborted
-        ? new Error(`Timed out after ${Math.round(opts.timeoutMs / 1000)}s`)
-        : e;
-      if (attempt < opts.attempts) {
-        opts.onRetry(attempt, opts.attempts);
-        await new Promise(r => setTimeout(r, 700 * attempt));
-      }
-    }
-  }
-  throw lastErr ?? new Error('download failed');
+async function downloadGlb(url: string, opts: {
+  attempts: number; timeoutMs: number;
+  onRetry: (attempt: number, total: number) => void;
+  egressPurpose?: EgressPurpose;
+  session: ModelLoadSession;
+}): Promise<ArrayBuffer> {
+  return downloadModel(url, {
+    attempts: opts.attempts, timeoutMs: opts.timeoutMs,
+    purpose: opts.egressPurpose, signal: opts.session.signal,
+    retry: opts.onRetry,
+    progress: (loaded, total) => {
+      opts.session.bytes(loaded, total);
+      if (total !== null) setLoadingProgress(loaded, total);
+    },
+  });
 }
 
 /**
@@ -625,7 +573,8 @@ async function init() {
   // the user once. No-op once the user has saved visual settings. Must run
   // after loadPublishedPresets() (needs the preset list) and before the first
   // loadVisualSettings() below.
-  if (!hasStoredVisualSettings()) {
+  const hadVisualPreferences = hasStoredVisualSettings();
+  if (!hadVisualPreferences) {
     const initialQuality = chooseInitialQualityPreset();
     const seeded = seedInitialVisualPreset(initialQuality.name);
     if (seeded && initialQuality.name === FAST_PRESET_NAME && initialQuality.reason) {
@@ -693,6 +642,7 @@ async function init() {
 
   // --- Create Viewer ---
   const viewer = await RVViewer.create(container, { renderer: rendererKind, antialias: wantAntialias, plannerSignalLinking: true });
+  bindLoadFeedback(viewer.loading, () => loadingRetryBtn.click());
 
   // Apply persisted DPR cap (runtime-changeable, no reload needed)
   viewer.maxDpr = initialSettings.maxDpr;
@@ -713,6 +663,7 @@ async function init() {
   // idempotent for the same values and serves as a fallback if settings
   // change between boot and HMI mount.
   viewer.applyVisualSettings(initialSettings);
+  viewer.adaptiveQuality.setMode(readPerformanceQuality(hadVisualPreferences ? 'manual' : 'auto'));
 
   // Expose viewer globally for console debugging
   (window as unknown as { viewer: RVViewer }).viewer = viewer;
@@ -1243,12 +1194,16 @@ async function init() {
     const modelName = matchedEntry?.filename.replace(/\.glb$/i, '')
       ?? (identityUrl.split('/').pop() ?? identityUrl).split('?')[0].replace(/\.glb$/i, '');
     lastLoadRequest = { url, options, egressPurpose };
+    const loadSession = viewer.loading.begin();
+    const visualController = new AbortController();
+    const visualSignal = AbortSignal.any([loadSession.signal, visualController.signal]);
     const cleanIdentity = identityUrl.split('?')[0]!;
     const profileDocument = documentsOf(getProjectStore().getProject()).find(document => (
       cleanIdentity === document.path || cleanIdentity.endsWith(`/${document.path}`)
     ));
     setUnifiedProjectProfile(profileDocument?.id ?? null);
     await applyResolvedUnifiedConfig();
+    if (loadSession.signal.aborted) return { ok: false, error: 'cancelled' } as const;
     if (!connectEmbedEnabled) {
       showLoadingOverlay(modelName);
       localStorage.setItem(LS_KEY_MODEL, identityUrl);
@@ -1270,12 +1225,37 @@ async function init() {
       // Bytes handed in by the caller skip the download entirely (plan-709
       // §2.5): a project asset resolved straight out of the backend has nothing
       // to fetch, and its `rvproject:` name is not a fetchable URL at all.
+      if (!options?.data) {
+        void import('./core/engine/rv-performance-assets')
+          .then(m => m.preparePerformanceAssets(url, loadSession, visualSignal))
+          .then(assets => {
+            if (assets && loadSession.active && !visualSignal.aborted) {
+              loadSession.visualAssets = assets;
+              loadSession.assetsReady();
+            } else assets?.dispose();
+          })
+          .catch(() => { if (!visualSignal.aborted) loadSession.warn(); });
+      }
       let data = options?.data ?? await downloadGlb(modelFetchUrl(url), {
         attempts: 3,
         timeoutMs: 90_000,
         onRetry: setLoadingRetrying,
         egressPurpose,
+        session: loadSession,
       });
+
+      // Optional derived assets must never hold up a fully downloaded source.
+      const visualAssets = loadSession.visualAssets;
+      if (!visualAssets) visualController.abort();
+      loadSession.assertCurrent();
+      if (visualAssets) {
+        try {
+          visualAssets.verifySource(data);
+          visualAssets.freeze();
+          loadSession.visualAssets = visualAssets;
+          loadSession.assetsReady();
+        } catch { visualAssets.dispose(); loadSession.visualAssets = null; loadSession.warn(); }
+      }
 
       // plan-267: an encrypted deploy ships the GLB as an RVE1 envelope under its
       // normal .glb name (self-describing via magic). Show the password gate and
@@ -1293,7 +1273,7 @@ async function init() {
       // byte progress. Show the preparing state.
       if (!connectEmbedEnabled) setLoadingPreparing();
 
-      const result = await viewer.loadModel(url, { ...options, data, modelName: modelIdentity, identityUrl });
+      const result = await viewer.loadModel(url, { ...options, data, modelName: modelIdentity, identityUrl, loadSession });
 
       // Keep the original URL (model selector matches against it).
       viewer.currentModelUrl = identityUrl;
@@ -1313,6 +1293,9 @@ async function init() {
       if (getConnectEmbedSnapshot().state === 'loading') completeConnectEmbedDemoLoad();
       return { ok: true } as const;
     } catch (e) {
+      if (!loadSession.visualAssets) visualController.abort();
+      if (loadSession.signal.aborted) return { ok: false, error: 'cancelled' } as const;
+      loadSession.fail();
       // Surface the failure instead of leaving a silent empty scene. On mobile the
       // console is invisible, so without this the user just sees a blank viewer.
       console.error(`[main] Failed to load model: ${url}`, e);

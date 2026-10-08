@@ -17,6 +17,7 @@
  * translated (PS-I18N-001 §2, ADR-0001 §6) and therefore never appear here.
  */
 
+import { loadingPerformanceChinese } from './loading-performance';
 import { demoPackageChinese } from './demo-package';
 
 export const zhCN = {
@@ -31,6 +32,7 @@ export const zhCN = {
     remove: '移除',
   },
   preboot: {
+    performance: loadingPerformanceChinese,
     loading: '正在加载 ',
     slogan: '开放、轻量、工业级、随处可用。',
     errorTitle: '无法加载模型',

@@ -13,9 +13,9 @@
  * `RVViewer.create`, because antialias is a constructor-only param), hence the
  * standalone probe instead of `viewer.getGPUAnalysis()`.
  *
- * There is deliberately NO runtime FPS watchdog: quality never changes by
- * itself while the user is working. Once booted, the visual preset is the
- * user's to choose in Settings → Visual.
+ * Runtime adaptation is owned separately by rv-adaptive-quality (ADR-0014).
+ * Existing saved visual choices default to manual; explicit automatic mode
+ * uses session overrides without overwriting this boot preset.
  *
  * The seed notifies the user through the AutoQualityDialog modal (dismissed
  * with OK) and acts AT MOST ONCE per device: the localStorage flag

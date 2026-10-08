@@ -162,6 +162,7 @@ export function isBatchSafe(
   mesh: Mesh,
   root: Object3D,
 ): boolean {
+  if (mesh.userData._rvLodSource) return false;
   if (!mesh.geometry?.attributes?.position) return false;
   if (!mesh.material || Array.isArray(mesh.material)) return false;
   if (isSkinnedOrMorphed(mesh)) return false;

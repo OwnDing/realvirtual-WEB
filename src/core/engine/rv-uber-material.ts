@@ -335,7 +335,7 @@ export function applyUberMaterial(
   // SkinnedMesh renders and a dispose() has to hand back untouched.
   const rigGeometries = new Set<BufferGeometry>();
   traverseMeshes(root, (mesh) => {
-    if (isRuntimeRigMesh(mesh)) {
+    if (isRuntimeRigMesh(mesh) || mesh.userData._rvLodSource) {
       if (mesh.geometry) rigGeometries.add(mesh.geometry);
       return;
     }
@@ -358,6 +358,7 @@ export function applyUberMaterial(
   const cloneCache = new Map<BufferGeometry, Map<Material, BufferGeometry>>();
 
   traverseMeshes(root, (mesh) => {
+    if (mesh.userData._rvLodSource) return;
     // Skip multi-material meshes — baking per-submesh would require splitting
     // the geometry by groups and is out of scope for Phase 2. They continue to
     // use the deduped (but not uber-collapsed) materials.
@@ -470,6 +471,10 @@ export function applyUberMaterial(
   // shared uber reference. This keeps `clearModel()` dispose logic honest
   // (it iterates uniqueMaterials) and keeps getRendererStats() accurate.
   for (const m of eligible) dedupedMaterials.delete(m);
+  // LOD sources retain their original materials for accurate picking/export and near rendering.
+  traverseMeshes(root, (mesh) => {
+    if (mesh.userData._rvLodSource && !Array.isArray(mesh.material)) dedupedMaterials.add(mesh.material);
+  });
   dedupedMaterials.add(sharedUber);
 
   debug('loader',

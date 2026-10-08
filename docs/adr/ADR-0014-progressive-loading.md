@@ -41,3 +41,7 @@ authority: normative
 ## Rollback or Supersession
 
 移除派生包并关闭会话画质即可回到普通加载；原始资产和保存文件不变。
+
+## 构建依赖审查
+
+meshoptimizer 1.1.1 已在锁文件作为 Three 类型依赖存在，现明确为构建端 devDependency；MIT，使用独立 simplifier，Wasm 在本地 CLI 执行。sharp 0.34.5 为构建端纹理缩放，Apache-2.0，安装采用锁定版本与平台二进制，不加载到浏览器。两者不持有外部服务凭据，工具只读取显式本地源并写入派生输出。未采用云端优化器。
