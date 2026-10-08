@@ -104,6 +104,22 @@ export class ModelLoadSession {
     if (this.owner.current !== this || this.signal.aborted)
       throw new DOMException('Model load cancelled', 'AbortError');
   }
+  /** Stop waiting for plugin/shader work without letting a stale waiter drain the next load. */
+  async waitFor<T>(work: Promise<T>): Promise<T> {
+    this.assertCurrent();
+    let abort: () => void = () => {};
+    const cancelled = new Promise<never>((_resolve, reject) => {
+      abort = () => reject(new DOMException('Model load cancelled', 'AbortError'));
+      this.signal.addEventListener('abort', abort, { once: true });
+    });
+    try {
+      const result = await Promise.race([work, cancelled]);
+      this.assertCurrent();
+      return result;
+    } finally {
+      this.signal.removeEventListener('abort', abort);
+    }
+  }
   private update(patch: Partial<LoadSnapshot>): void {
     if (!this.active) return;
     const previous = this.owner.getSnapshot();
@@ -128,6 +144,9 @@ export class ModelLoadSession {
   }
   assetsReady(): void {
     this.update({});
+  }
+  hidePreview(): void {
+    this.update({ preview: false });
   }
   showPreview(): void {
     this.update({

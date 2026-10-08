@@ -24,6 +24,21 @@ const response = (chunks: number[][], headers: Record<string, string> = {}) =>
     { headers },
   );
 describe('loading ownership and honest byte accounting', () => {
+  it('abandons deferred work on cancellation without blocking the next load', async () => {
+    const state = new ModelLoadState(),
+      first = state.begin();
+    let release!: () => void;
+    const work = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const waiting = first.waitFor(work);
+    first.cancel();
+    await expect(waiting).rejects.toThrow('cancelled');
+    const second = state.begin();
+    await expect(second.waitFor(Promise.resolve(42))).resolves.toBe(42);
+    release();
+    expect(state.current).toBe(second);
+  });
   it('rejects stale loads and keeps newer progress isolated', () => {
     const state = new ModelLoadState(),
       first = state.begin(),
@@ -153,6 +168,7 @@ describe('performance resources', () => {
     ])
       view.setUint32(offset, value);
     expect(() => validatePerformanceTexture(bytes)).not.toThrow();
+    expect(() => validatePerformanceTexture(bytes, 128)).toThrow('DIMENSIONS');
     view.setUint32(16, 100000);
     expect(() => validatePerformanceTexture(bytes)).toThrow('DIMENSIONS');
     expect(() => validatePerformanceTexture(new ArrayBuffer(4))).toThrow('HEADER');

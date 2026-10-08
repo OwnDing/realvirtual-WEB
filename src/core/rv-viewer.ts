@@ -1006,10 +1006,11 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * in batches so tasks queued by other tasks (cascades) are awaited too.
    * Idempotent when the queue is empty.
    */
-  async whenLoadingIdle(): Promise<void> {
+  async whenLoadingIdle(session?: ModelLoadSession): Promise<void> {
     while (this._loadingTasks.length > 0) {
       const batch = this._loadingTasks.splice(0);
-      await Promise.allSettled(batch);
+      const work = Promise.allSettled(batch);
+      if (session) await session.waitFor(work); else await work;
     }
   }
 
@@ -3654,6 +3655,12 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
   }): Promise<LoadResult> {
     const session = options?.loadSession ?? this.loading.begin();
     session.assertCurrent();
+    const abort = () => {
+      if (this.loading.current !== session) return;
+      this._loadingTasks.length = 0;
+      this._clearModelData();
+    };
+    session.signal.addEventListener('abort', abort, { once: true });
     try {
       const result = await this._loadModelPrepared(url, { ...options, loadSession: session });
       session.assertCurrent();
@@ -3666,13 +3673,20 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
         this.controls.update();
       }
       session.phase('render');
+      // Compile only after the viewer owns the loaded resources, so cancellation can release them.
+      if ('compileAsync' in this.renderer) {
+        try { await session.waitFor(this.renderer.compileAsync(this.scene, this.camera, this.scene)); }
+        catch { session.assertCurrent(); /* shader compilation is otherwise non-critical */ }
+      }
       this._renderDirty = true;
       this.renderFrameForCapture();
       session.phase('ready');
       return result;
     } catch (error) {
-      if (session.signal.aborted) session.cancel(); else session.fail();
+      if (session.signal.aborted) { abort(); session.cancel(); } else session.fail();
       throw error;
+    } finally {
+      session.signal.removeEventListener('abort', abort);
     }
   }
 
@@ -3756,14 +3770,6 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // Profile the expensive post-loadGLB steps separately (gated on ?debug=perf).
     const prof = createLoadProfiler('loadModel');
     prof.mark('loadGLB');
-
-    // Pre-compile shaders to avoid first-frame stutter (available on WebGPURenderer)
-    if ('compileAsync' in this.renderer) {
-      try {
-        await this.renderer.compileAsync(this.scene, this.camera, this.scene);
-      } catch { /* non-critical */ }
-    }
-    prof.mark('compileAsync');
 
     // GLB root is reported deterministically by loadGLB (LoadResult.root) —
     // no diffing scene.children. The `_rvModelRoot` userData tag stays as
@@ -4062,11 +4068,13 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
 
     // --- Auto-load model sidecar settings (first visit only) ---
     // --- Load and merge model-specific plugin configuration ---
-    const [modelJsonConfig, glbConfig] = await Promise.all([
+    const configWork = Promise.all([
       loadModelJsonConfig(url).catch(() => ({} as ModelConfig)),
       Promise.resolve(extractGlbPluginConfig(this.scene)),
       loadModelSettingsConfig(url),
     ]);
+    const [modelJsonConfig, glbConfig] = options?.loadSession
+      ? await options.loadSession.waitFor(configWork) : await configWork;
     const settingsConfig: ModelConfig = {};
     const appConfig = getAppConfig();
     if (appConfig.plugins) settingsConfig.plugins = appConfig.plugins;
@@ -4092,7 +4100,9 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // boot window BEFORE main.ts applies the workspace mode) must not receive
     // onModelLoaded. Selective rv_plugins eligibility is enforced before a
     // plugin is recorded as having missed the lifecycle callback.
-    await this._notifyPluginsModelLoaded(result);
+    options?.loadSession?.assertCurrent();
+    const pluginsLoaded = this._notifyPluginsModelLoaded(result);
+    if (options?.loadSession) await options.loadSession.waitFor(pluginsLoaded); else await pluginsLoaded;
 
     // Re-evaluate _physicsPluginActive — plugins may have changed handlesTransport in onModelLoaded
     this._recomputePhysicsPluginActive();
@@ -4133,7 +4143,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // and plugins (env-map IBL, deferred asset prefetch, …) so the caller's
     // `await viewer.loadModel(...)` only resolves once the scene is fully
     // ready to be revealed.
-    await this.whenLoadingIdle();
+    await this.whenLoadingIdle(options?.loadSession);
     prof.mark('whenLoadingIdle');
     prof.report();
     return result;

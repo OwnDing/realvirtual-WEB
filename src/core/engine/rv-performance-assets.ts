@@ -66,15 +66,16 @@ export class PerformanceAssets {
   private async load(index: number, level: number): Promise<void> {
     const resource = this.manifest.parts[index].levels[level];
     const bytes = resource.byteLength + (resource.texture?.byteLength ?? 0);
-    // Includes decoded normals/positions and decoded 512² texture rather than just transfer bytes.
-    const cost = bytes * 3 + (resource.texture ? 512 * 512 * 4 : 0);
+    // Include decoded geometry and both bitmap/GPU texture storage, with the level's size limit.
+    const textureSize = level === 0 ? 128 : 512;
+    const cost = bytes * 3 + (resource.texture ? textureSize * textureSize * 8 : 0);
     const previous = this.assets.get(index);
     if (this.resident + cost > PERFORMANCE_LIMITS.resident) throw new Error('PERF_RESIDENT_BUDGET');
     this.resident += cost;
     try {
       const data = await this.resource(resource);
       const texture = resource.texture ? await this.resource(resource.texture) : null;
-      if (texture) validatePerformanceTexture(texture);
+      if (texture) validatePerformanceTexture(texture, textureSize);
       this.signal.throwIfAborted();
       if (this.frozen && level > 0) throw new DOMException('Refinement stopped', 'AbortError');
       const geometry = decodePerformanceGeometry(data);

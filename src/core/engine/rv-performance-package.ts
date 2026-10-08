@@ -128,7 +128,7 @@ export function verifyPerformanceBytes(
   if (actual !== expected.sha256) throw new Error('PERF_RESOURCE_HASH');
 }
 /** Bound decoded image allocation before handing untrusted PNG bytes to the browser. */
-export function validatePerformanceTexture(bytes: ArrayBuffer): void {
+export function validatePerformanceTexture(bytes: ArrayBuffer, maxDimension = 512): void {
   if (bytes.byteLength < 33) throw new Error('PERF_TEXTURE_HEADER');
   const view = new DataView(bytes);
   if (
@@ -140,7 +140,8 @@ export function validatePerformanceTexture(bytes: ArrayBuffer): void {
     throw new Error('PERF_TEXTURE_HEADER');
   const width = view.getUint32(16),
     height = view.getUint32(20);
-  if (!width || !height || width > 512 || height > 512) throw new Error('PERF_TEXTURE_DIMENSIONS');
+  if (!width || !height || width > maxDimension || height > maxDimension)
+    throw new Error('PERF_TEXTURE_DIMENSIONS');
 }
 /** Small non-executable vertex format; never passed through the component/GLTF loader. */
 export function decodePerformanceGeometry(bytes: ArrayBuffer): BufferGeometry {

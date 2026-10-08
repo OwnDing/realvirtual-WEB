@@ -1254,7 +1254,7 @@ async function init() {
           visualAssets.freeze();
           loadSession.visualAssets = visualAssets;
           loadSession.assetsReady();
-        } catch { visualAssets.dispose(); loadSession.visualAssets = null; loadSession.warn(); }
+        } catch { visualAssets.dispose(); loadSession.visualAssets = null; loadSession.hidePreview(); loadSession.warn(); }
       }
 
       // plan-267: an encrypted deploy ships the GLB as an RVE1 envelope under its

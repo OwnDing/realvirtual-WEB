@@ -23,12 +23,9 @@ assert(
   'Derived fixture must reduce overview transfer by at least 80%',
 );
 const server = await startOfflineServer(resolve('dist'));
-const args = [
-  '--no-sandbox',
-  '--use-gl=angle',
-  '--use-angle=swiftshader',
-  '--enable-unsafe-swiftshader',
-];
+const args = process.argv.includes('--hardware')
+  ? ['--no-sandbox']
+  : ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args });
 const report = {
   environment: {
@@ -37,7 +34,9 @@ const report = {
     cpu: cpus()[0]?.model,
     memory: totalmem(),
     browser: browser.version(),
-    gpu: 'SwiftShader (functional evidence, not a physical low-end device)',
+    gpu: process.argv.includes('--hardware')
+      ? 'Hardware requested; inspect actual renderer below'
+      : 'SwiftShader (functional evidence, not a physical low-end device)',
     viewport: '1920x1080',
   },
   fixture: { ...fixture, ...prepared.report },
@@ -112,11 +111,20 @@ try {
     assert(metrics.lod > 0);
     assert(metrics.meshes >= 8);
     report.firstLoad = metrics;
+    report.environment.actualRenderer = await page.evaluate(() => {
+      const gl = window.viewer.renderer.getContext(),
+        info = gl.getExtension('WEBGL_debug_renderer_info');
+      return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    });
     await expect(page.getByTestId('model-load-feedback')).toBeHidden();
   });
   await journey('cancel-retry', async (page) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
     await page.route('**/_perf/model.glb', async (route) => {
-      await new Promise((r) => setTimeout(r, 5000));
+      await gate;
       await route.continue().catch(() => {});
     });
     await boot(page);
@@ -128,10 +136,19 @@ try {
     await page.getByRole('button', { name: 'Cancel loading', exact: true }).click();
     assert.equal(await page.evaluate(() => window.viewer.loading.getSnapshot().phase), 'cancelled');
     await page.unroute('**/_perf/model.glb');
+    release();
     await page.evaluate(() => window.viewer.loadModelWithProgress('/_perf/model.glb'));
     await ready(page);
   });
   await journey('bad-package-falls-back', async (page) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/_perf/model.glb', async (route) => {
+      await gate;
+      await route.continue().catch(() => {});
+    });
     await page.route('**/_perf/model.glb.perf.json', (route) =>
       route.fulfill({
         status: 200,
@@ -140,6 +157,10 @@ try {
       }),
     );
     await boot(page);
+    await page.waitForFunction(() => window.viewer?.loading?.getSnapshot().warning, null, {
+      timeout: 30000,
+    });
+    release();
     await ready(page);
     assert.equal(await page.evaluate(() => window.viewer.loading.getSnapshot().warning), true);
     assert.equal(await page.evaluate(() => window.viewer.loading.getSnapshot().preview), false);
@@ -161,12 +182,53 @@ try {
       release();
     }
   });
-  await journey('failed-source-keeps-preview', async (page) => {
+  await journey('stale-source-hash-falls-back', async (page) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
     await page.route('**/_perf/model.glb', async (route) => {
-      await new Promise((r) => setTimeout(r, 3000));
+      await gate;
+      await route.continue().catch(() => {});
+    });
+    await page.route('**/_perf/model.glb.perf.json', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...prepared.manifest,
+          source: { ...prepared.manifest.source, sha256: '0'.repeat(64) },
+        }),
+      }),
+    );
+    await boot(page);
+    await page.waitForFunction(() => window.viewer?.loading?.getSnapshot().preview, null, {
+      timeout: 30000,
+    });
+    release();
+    await ready(page);
+    const actual = await page.evaluate(() => ({
+      state: window.viewer.loading.getSnapshot(),
+      lod: window.viewer._runtimeLod?.size ?? 0,
+    }));
+    assert.equal(actual.state.warning, true);
+    assert.equal(actual.state.preview, false);
+    assert.equal(actual.lod, 0);
+  });
+  await journey('failed-source-keeps-preview', async (page) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/_perf/model.glb', async (route) => {
+      await gate;
       await route.fulfill({ status: 404, body: 'Missing source' });
     });
     await boot(page);
+    await page.waitForFunction(() => window.viewer?.loading?.getSnapshot().preview, null, {
+      timeout: 30000,
+    });
+    release();
     await page.waitForFunction(
       () => window.viewer?.loading?.getSnapshot().phase === 'error',
       null,
@@ -210,12 +272,21 @@ try {
   await journey('manual-quality-ui', async (page) => {
     await boot(page);
     await ready(page);
-    await page.getByRole('button', { name: /^Settings/ }).first().click();
+    await page
+      .getByRole('button', { name: /^Settings/ })
+      .first()
+      .click();
     await page.getByRole('tab', { name: 'Visual', exact: true }).click();
     await page.getByRole('combobox', { name: 'Performance and quality', exact: true }).click();
     await page.getByRole('option', { name: 'Fast', exact: true }).click();
-    assert.equal(await page.evaluate(() => window.viewer.adaptiveQuality.getSnapshot().mode), 'fast');
-    const resolution = page.getByText('Resolution', { exact: true }).locator('..').getByRole('slider');
+    assert.equal(
+      await page.evaluate(() => window.viewer.adaptiveQuality.getSnapshot().mode),
+      'fast',
+    );
+    const resolution = page
+      .getByText('Resolution', { exact: true })
+      .locator('..')
+      .getByRole('slider');
     await resolution.focus();
     await resolution.press('Home');
     const actual = await page.evaluate(() => ({
@@ -226,9 +297,43 @@ try {
     }));
     assert.equal(actual.mode, 'manual');
     assert.equal(actual.preference, 'manual');
-    assert.equal(actual.ratio, .5);
-    assert.equal(actual.saved, .5);
+    assert.equal(actual.ratio, 0.5);
+    assert.equal(actual.saved, 0.5);
     report.manualSettings = actual;
+  });
+  await journey('cancel-deferred-work', async (page) => {
+    await boot(page);
+    await ready(page);
+    await page.evaluate(() => {
+      const v = window.viewer;
+      window.perfOldRoot = v.currentModelRoot.uuid;
+      v.trackLoadingWork(
+        new Promise((resolve) => {
+          window.perfRelease = resolve;
+        }),
+      );
+      window.perfPending = v.loadModelWithProgress('/_perf/model.glb');
+    });
+    await page.waitForFunction(
+      () => {
+        const v = window.viewer;
+        return (
+          v.currentModelRoot &&
+          v.currentModelRoot.uuid !== window.perfOldRoot &&
+          v.loading.getSnapshot().phase === 'batch'
+        );
+      },
+      null,
+      { timeout: 30000 },
+    );
+    await page.getByRole('button', { name: 'Cancel loading', exact: true }).click();
+    await page.waitForFunction(() => !window.viewer.currentModelRoot, null, { timeout: 5000 });
+    const result = await page.evaluate(() => window.perfPending);
+    assert.equal(result.ok, false);
+    // The abandoned promise remains unresolved while the next model finishes.
+    await page.evaluate(() => window.viewer.loadModelWithProgress('/_perf/model.glb'));
+    await ready(page);
+    await page.evaluate(() => window.perfRelease());
   });
   const rounds = benchmarking ? 30 : 0;
   for (let i = 0; i < rounds; i++)
@@ -245,7 +350,10 @@ try {
       const started = Date.now();
       await boot(page);
       await ready(page);
-      const load = await page.evaluate(() => ({...window.viewer.loading.getSnapshot(),feedbackMs:performance.getEntriesByName('first-contentful-paint')[0]?.startTime??null}));
+      const load = await page.evaluate(() => ({
+        ...window.viewer.loading.getSnapshot(),
+        feedbackMs: performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? null,
+      }));
       report.benchmarks.push({
         navigationMs: Date.now() - started,
         overviewFromNavigationMs: load.previewMs === null ? null : load.startedAt + load.previewMs,

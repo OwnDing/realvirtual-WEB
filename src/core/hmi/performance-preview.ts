@@ -4,7 +4,9 @@ import {
   Color,
   DoubleSide,
   Mesh,
-  MeshBasicMaterial,
+  MeshLambertMaterial,
+  AmbientLight,
+  DirectionalLight,
   PerspectiveCamera,
   Scene,
   SRGBColorSpace,
@@ -33,6 +35,10 @@ export class PreviewViewport {
   ) {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
     this.renderer.setClearColor(0x101820);
+    this.scene.add(new AmbientLight(0xffffff, 1.4));
+    const light = new DirectionalLight(0xffffff, 2.2);
+    light.position.set(1, 2, 3);
+    this.scene.add(light);
     element.append(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     const b = assets.manifest.bounds,
@@ -69,7 +75,7 @@ export class PreviewViewport {
       if (mesh?.geometry === asset.geometry) continue;
       const part = this.assets.manifest.parts[i];
       if (!mesh) {
-        const material = new MeshBasicMaterial({
+        const material = new MeshLambertMaterial({
           color: new Color().fromArray(part.color),
           opacity: part.color[3],
           transparent: part.color[3] < 1,
@@ -99,7 +105,7 @@ export class PreviewViewport {
             texture.flipY = false;
             texture.needsUpdate = true;
             this.textures.set(i, texture);
-            const material = mesh!.material as MeshBasicMaterial;
+            const material = mesh!.material as MeshLambertMaterial;
             material.map = texture;
             material.needsUpdate = true;
             this.draw();
@@ -133,7 +139,7 @@ export class PreviewViewport {
     this.unsubscribe();
     this.resize.disconnect();
     this.controls.dispose();
-    for (const mesh of this.meshes.values()) (mesh.material as MeshBasicMaterial).dispose();
+    for (const mesh of this.meshes.values()) (mesh.material as MeshLambertMaterial).dispose();
     for (const texture of this.textures.values()) {
       texture.dispose();
       (texture.image as ImageBitmap).close();

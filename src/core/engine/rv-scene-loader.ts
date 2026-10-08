@@ -480,6 +480,12 @@ export async function loadAndPrepareGLTF(url: string, scene: Scene, data?: Array
   const fetchBytes = async (): Promise<ArrayBuffer> => {
     const allowedUrl = allowRuntimeEgressUrl(url, 'remote-model');
     if (!allowedUrl) throw new Error('GLB URL is blocked by the deployment egress policy');
+    // Preserve the established direct-loader API; viewer loads supply a cancellable session.
+    if (!session) {
+      const response = await runtimeFetch(url, 'remote-model');
+      if (!response.ok) throw new Error(`GLB fetch failed (${response.status} ${response.statusText}): ${url}`);
+      return response.arrayBuffer();
+    }
     return downloadModel(url, { signal: session?.signal, progress: (loaded, total) => session?.bytes(loaded, total) });
   };
   const initialBuffer = data ?? await fetchBytes();
@@ -2563,6 +2569,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
     console.warn('[loadGLB] BVH setup failed (three-mesh-bvh):', e);
   }
   prof.mark('bvh-setup');
+  if (shouldAbort()) abortLoad();
 
   // Phase 13b: Build grouped raycast geometries (static + per-Drive
   // kinematic). The geometry MERGE stays synchronous; the merged BVHs are
