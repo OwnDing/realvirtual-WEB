@@ -378,6 +378,7 @@ try {
       report.benchmarks.push({
         navigationMs: Date.now() - started,
         overviewFromNavigationMs: load.previewMs === null ? null : load.startedAt + load.previewMs,
+        readyFromNavigationMs: load.startedAt + load.elapsedMs,
         ...load,
       });
     });
@@ -446,6 +447,8 @@ try {
           averageFps: (intervals.length * 1000) / elapsed,
           p95FrameMs: intervals.sort((a, b) => a - b)[Math.ceil(intervals.length * 0.95) - 1],
           renderedTriangles: v.renderer.info.render.triangles,
+          lodParts: v._runtimeLod?.size ?? 0,
+          quality: v.adaptiveQuality.getSnapshot(),
         };
       });
     });
@@ -455,6 +458,7 @@ try {
       overviewMs: p95(report.benchmarks.map((x) => x.overviewFromNavigationMs ?? Infinity)),
       completeMs: p95(report.benchmarks.map((x) => x.elapsedMs)),
       navigationMs: p95(report.benchmarks.map((x) => x.navigationMs)),
+      readyFromNavigationMs: p95(report.benchmarks.map((x) => x.readyFromNavigationMs)),
       baselineCompleteMs: p95(report.baseline.map((x) => x.completeMs)),
       warmLoadMs: p95(report.warm.map((x) => x.elapsedMs)),
       feedbackMs: p95(report.benchmarks.map((x) => x.feedbackMs ?? Infinity)),
