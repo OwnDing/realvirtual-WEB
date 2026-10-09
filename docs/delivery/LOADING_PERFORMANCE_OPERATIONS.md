@@ -3,7 +3,7 @@ doc_id: DELIVERY-PERF-OPERATIONS
 title: L2-3 性能包制作、验证与回退
 status: approved
 owner: engineering
-last_reviewed: 2026-10-08
+last_reviewed: 2026-10-09
 authority: normative-process
 ---
 
@@ -42,11 +42,15 @@ npm run verify:performance
 npm run benchmark:performance
 ```
 
-生产验证以本机 dist 启动 loopback 服务，生成公开合成模型，验证总览先出现、取消重试、损坏包回退、慢包不阻塞完整源、加载错误与重试、画质和重复加载释放。硬门禁要求夹具总览 ≤ 3 MiB、传输体积减少至少 80%、真实可见预览先于完整就绪。该检查在 required Browser Gate 内执行，失败保留截图和 Playwright trace；不修改既有性能烟测阈值。
+生产验证以本机 dist 启动 loopback 服务，生成公开合成模型，执行 9 项流程：总览先出现、取消重试、损坏包回退、慢包不阻塞完整源、源摘要不匹配回退、源加载错误保留总览、画质与重复加载释放、设置界面手动覆盖、取消未完成的延迟工作后重新加载。硬门禁要求夹具总览 ≤ 3 MiB、传输体积减少至少 80%、真实可见预览先于完整就绪。该检查在 required Browser Gate 内执行，失败保留截图和 Playwright trace；不修改既有性能烟测阈值。
 
 `benchmark:performance` 使用约 50 MB / 175 万三角形夹具，分别测量 30 次冷启动、30 次关闭性能包的基线和 30 次同页面重复加载，并记录 10 秒固定环绕路线。冷启动固定 1080p、100 Mbps、20 ms；基线为同一构建关闭可选包。重复加载测量已启动的应用/模块/渲染器，服务为 `no-store`，不代表 HTTP 热缓存。
 
 输出位于 `test-results/loading-performance/`：环境、夹具统计、阶段耗时、导航到总览、导航到完整就绪、重复加载资源计数及路线帧率。只使用合成模型，不记录客户资产或生产数据。软件 GPU 仅证明功能与该环境的基准；`salesClaimVerified` 保持 false。正式销售延迟/FPS 承诺必须另在产品规格要求的真实参考机上执行并留证。
+
+报告中的 `feedbackMs` 使用浏览器 FCP；`overviewMs` 从页面导航计到预览首次渲染提交；`readyFromNavigationMs` 从导航计到原模型首次渲染提交；`completeMs` 只计模型加载会话。`navigationMs` 还包含 Playwright 等待观察就绪的时间，不与基线的浏览器时钟直接相减。基线 `baselineCompleteMs` 与 `readyFromNavigationMs` 使用相同边界。首次渲染提交不等于显示器实际扫描完成。P95 使用排序后第 ceil(样本数 × 0.95) 项。
+
+同页面重复加载可能在派生资源准备前完成源下载，此时按完整加载优先原则跳过包和 LOD。环绕指标同时记录实际 LOD 数量、画质档位和三角形数，不能把没有启用 LOD 的路线当成 LOD 提速证据。资源释放计数来自另一个明确等待总览准备的流程：每轮先分别渲染原始几何与 LOD 代理，再比较相同 GPU 驻留范围，避免按需上传的首次帧时序影响计数。
 
 参考机可运行 `npm run benchmark:performance -- --hardware` 以取消强制软件 GPU；检查报告的 `actualRenderer` 确认实际驱动，另记录设备型号、浏览器与网络条件。该选项不会自动批准销售承诺，仍需对照规格审核证据。
 

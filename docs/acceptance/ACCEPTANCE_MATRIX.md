@@ -3,7 +3,7 @@ doc_id: ACCEPTANCE-MATRIX
 title: 全局验收追踪矩阵
 status: draft
 owner: qa
-last_reviewed: 2026-09-09
+last_reviewed: 2026-10-09
 authority: proposed
 ---
 
@@ -11,6 +11,7 @@ authority: proposed
 
 | Requirement | Rule/Contract | Automated Test | Runtime Evidence | Status |
 | --- | --- | --- | --- | --- |
+| L2-3 加载性能与首屏 | Approved [PS-PERF-001](../product-specs/LOADING_PERFORMANCE.md)、Accepted [ADR-0014](../adr/ADR-0014-progressive-loading.md)、[性能包契约](../contracts/PERFORMANCE_PACKAGE.md) | 流式字节/未知长度/取消与过期会话、包路径/摘要/预算/不支持输入、确定性预处理、LOD 原始几何保留、画质迟滞/手动所有权、总览视角投影；9 项生产流程进入 required Browser Gate | [交付快照](../delivery/snapshots/loading-performance-2026-10-09.md)记录提交、全量本地/远程门禁、30 次冷启动 + 30 次无包基线 + 30 次同页重复加载、资源计数与原始 JSON。175 万三角形合成模型的总览资源 1.74 MB，较 49.81 MB 源减少 96.5%。软件 GPU 数据不构成真实低端性能承诺；实机首屏/FPS、客户模型与长期显存压力尚未验收 | functionality-delivered-hardware-performance-pending |
 | 文档治理 | `DOC-INDEX`、`GOV-DOC-PRIORITY` | Governance Harness 自检、元数据/索引/链接/状态扫描 | `./scripts/verify.sh governance`；远程 run 32151338635 的 Governance Gate 通过 | automated-local-and-remote |
 | AI 文件/Git/进程安全 | `GOV-AI-SAFETY` | Agent 可执行指令面扫描 + Claude deny 配置校验 | `./scripts/verify.sh governance` | automated-partial |
 | Engine 导入边界 | `GOV-CONSTITUTION` AR-1 | ESLint boundaries +现有 Node guard | `./scripts/verify.sh static` | existing-automated |

@@ -2,9 +2,9 @@
 doc_id: EP-PERF-001
 title: L2-3 加载性能与首屏实施
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-10-08
+last_reviewed: 2026-10-09
 authority: normative
 ---
 
@@ -52,7 +52,7 @@ M0：文档、基线、Draft PR。M1：普通 GLB 加载反馈黄金切片。M2�
 - [x] M1 真实反馈与取消。
 - [x] M2 性能包、渐进加载与 LOD。
 - [x] M3 自适应画质。
-- [ ] M4 门禁、基准与 PR。
+- [x] M4 门禁、基准与 PR；实机销售性能目标另行验收。
 
 ## Surprises & Discoveries
 
@@ -62,6 +62,9 @@ M0：文档、基线、Draft PR。M1：普通 GLB 加载反馈黄金切片。M2�
 - 对无法完整表示的几何/引用场景拒绝发布包；不静默删除 primitive。PNG 解码前校验尺寸。
 - 原有信任包装和 clearModel() 守卫保持不变，加载会话用内部清理方法延续所有权。
 - 软件 GPU 环境不具备销售延迟/FPS 承诺的硬件证据；提供合成基准、可复现脚本和明确发布条件。
+- 生产流程用请求门闩等待实际状态，避免固定延时在繁忙机器上错过取消窗口。CI 和完整基准禁止使用单流程筛选。
+- 最终截图检查发现细长模型总览取景裁切；按包围球与横/纵视角留白，新增 6 种尺寸/宽高比投影断言。
+- CI #107 的全部 10,967 条 Browser 单测通过，但生产 GPU 资源计数比较失败。本地复现首次帧按需上传导致的 9/14 两种驻留量；检查改为每轮都渲染原始几何和 LOD 代理，并对四轮逐一断言相等，保留失败证据。
 
 ## Decision Log
 
@@ -69,7 +72,7 @@ M0：文档、基线、Draft PR。M1：普通 GLB 加载反馈黄金切片。M2�
 
 ## Validation
 
-verify.sh governance/static/node/browser/build，专项 E2E（生产构建、弱网、取消、预览、LOD、资源释放、手动画质）。原始性能基准和优化后数据留档，正式承诺需真实参考机30次测量。适用路径：保存重开、拾取/高亮/运动、离线、旧演示包。
+已执行 verify.sh governance/static/node/browser/build。Node 811 通过；本地完整 Browser 10,961 通过，最终运行时代码的远程 Browser 单测 10,967 通过；最终视角/取消专项 7 通过。生产构建与 9 项流程通过，30 次冷启动、30 次无包基线、30 次同页加载及环绕测量已归档。修正 GPU 驻留采样后，再次完整执行 9 项生产流程通过；每轮分别渲染原始几何和 LOD 后，几何 17、纹理 5，四轮一致。命令、版本、CI #107 的采样偏差、原始报告与最终 PR Checks 入口见 [交付快照](../../delivery/snapshots/loading-performance-2026-10-09.md)。真实参考机性能承诺尚未验收。
 
 ## Rollback
 
@@ -77,6 +80,8 @@ verify.sh governance/static/node/browser/build，专项 E2E（生产构建、弱
 
 ## Outcomes & Retrospective
 
-开发中；尚未声明性能承诺或完成。
+L2-3 本轮功能、验证工具与 PR 交付完成：可选性能包的总览/渐进细化/LOD、真实字节和阶段进度、取消重试、会话自动画质与手动覆盖均有正反例和生产流程验证。源 GLB、原始几何、身份/签名与工业逻辑保持权威，未涉及 L2-4 或发布部署。
 
-Draft PR：[OwnDing/realvirtual-WEB#13](https://github.com/OwnDing/realvirtual-WEB/pull/13)。操作与回退见 [交付指南](../../delivery/LOADING_PERFORMANCE_OPERATIONS.md)。当前本地 Node 810 通过、7 条既有跳过；取消/信任/异步批处理专项 Browser 62 通过。全量 Browser 与生产基准继续执行，最终证据将在交付快照记录。
+[PR #13](https://github.com/OwnDing/realvirtual-WEB/pull/13)；[交付快照与原始基准](../../delivery/snapshots/loading-performance-2026-10-09.md)；[制作、复现与回退指南](../../delivery/LOADING_PERFORMANCE_OPERATIONS.md)。最终提交的 required CI 结论见 PR Checks。
+
+175 万三角形合成模型的总览资源 1.74 MB，较 49.81 MB 源模型减少 96.5%。本机软件 GPU 的冷启动总览 P95 7.165 s、完整就绪 P95 12.624 s、固定路线 1.49 FPS；无包完整就绪 P95 11.910 s。总览与 FPS 未达规格目标，不能将本计划完成解读为实机性能承诺通过。`salesClaimVerified` 仍为 false；参考设备、客户模型、移动浏览器与长期显存压力属于明确未验证项。

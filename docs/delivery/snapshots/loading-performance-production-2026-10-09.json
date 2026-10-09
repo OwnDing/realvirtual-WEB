@@ -1,0 +1,169 @@
+{
+  "scope": "full",
+  "environment": {
+    "platform": "linux",
+    "arch": "arm64",
+    "cpu": "Neoverse-N1",
+    "memory": 24060334080,
+    "browser": "145.0.7632.0",
+    "gpu": "SwiftShader (functional evidence, not a physical low-end device)",
+    "viewport": "1920x1080",
+    "actualRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "fixture": {
+    "nodes": 8,
+    "triangles": 72192,
+    "sourceBytes": 2090456,
+    "parts": 8,
+    "previewBytes": 225256,
+    "previewBudgetBytes": 3145728,
+    "withinPreviewBudget": true,
+    "sourceTriangles": 72192,
+    "skipped": []
+  },
+  "journeys": [
+    {
+      "name": "preview-before-completion",
+      "status": "passed",
+      "ms": 13995
+    },
+    {
+      "name": "cancel-retry",
+      "status": "passed",
+      "ms": 8602
+    },
+    {
+      "name": "bad-package-falls-back",
+      "status": "passed",
+      "ms": 6669
+    },
+    {
+      "name": "slow-package-does-not-block-source",
+      "status": "passed",
+      "ms": 6668
+    },
+    {
+      "name": "stale-source-hash-falls-back",
+      "status": "passed",
+      "ms": 7717
+    },
+    {
+      "name": "failed-source-keeps-preview",
+      "status": "passed",
+      "ms": 8871
+    },
+    {
+      "name": "quality-and-repeated-loads",
+      "status": "passed",
+      "ms": 18277
+    },
+    {
+      "name": "manual-quality-ui",
+      "status": "passed",
+      "ms": 15173
+    },
+    {
+      "name": "cancel-deferred-work",
+      "status": "passed",
+      "ms": 9053
+    }
+  ],
+  "benchmarks": [],
+  "baseline": [],
+  "warm": [],
+  "salesClaimVerified": false,
+  "firstLoad": {
+    "load": {
+      "id": 1,
+      "phase": "ready",
+      "loaded": 2090456,
+      "total": 2090456,
+      "preview": true,
+      "warning": false,
+      "startedAt": 6207.800000190735,
+      "elapsedMs": 6027.799999713898,
+      "previewMs": 3322.0999999046326,
+      "timings": {
+        "download": 4758.699999809265,
+        "verify": 8.5,
+        "decode": 214.80000019073486,
+        "compose": 1.3999996185302734,
+        "construct": 24.5,
+        "batch": 143.2000002861023,
+        "render": 876.6999998092651
+      }
+    },
+    "meshes": 9,
+    "lod": 8
+  },
+  "resources": {
+    "tier": 1,
+    "counts": [
+      17,
+      17,
+      17,
+      17
+    ],
+    "textures": [
+      5,
+      5,
+      5,
+      5
+    ],
+    "lod": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "renderStates": [
+      {
+        "camera": [
+          38.511965281336416,
+          26.084618053669665,
+          34.75446528848898
+        ],
+        "low": 8,
+        "originalOnly": true
+      },
+      {
+        "camera": [
+          38.511965281336416,
+          26.084618053669665,
+          34.75446528848898
+        ],
+        "low": 8,
+        "originalOnly": true
+      },
+      {
+        "camera": [
+          38.511965281336416,
+          26.084618053669665,
+          34.75446528848898
+        ],
+        "low": 8,
+        "originalOnly": true
+      },
+      {
+        "camera": [
+          38.511965281336416,
+          26.084618053669665,
+          34.75446528848898
+        ],
+        "low": 8,
+        "originalOnly": true
+      }
+    ],
+    "unchanged": true,
+    "quality": {
+      "mode": "high",
+      "tier": 2
+    }
+  },
+  "manualSettings": {
+    "mode": "manual",
+    "ratio": 0.5,
+    "saved": 0.5,
+    "preference": "manual"
+  }
+}

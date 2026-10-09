@@ -259,31 +259,48 @@ try {
       for (let t = 40; t < 7000; t += 40) v.adaptiveQuality.sample(t, true);
       const tier = v.adaptiveQuality.getSnapshot().tier;
       v.adaptiveQuality.setMode('high');
-      const counts = [], textures = [], lod = [];
+      const counts = [], textures = [], lod = [], renderStates = [];
       for (let i = 0; i < 4; i++) {
         await v.loadModelWithProgress('/_perf/model.glb');
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        // Three uploads geometry lazily. Depending on the first frame, only some source
+        // meshes (or only their LOD proxies) have reached the GPU. Exercise both paths
+        // before comparing residency: orthographic renders originals, distant perspective
+        // renders every proxy. No timing-dependent mixture of uploaded representations.
+        v.projection = 'orthographic';
+        v.renderFrameForCapture();
+        const originalOnly = v._runtimeLod.entries.every(entry => !entry.low);
+        v.projection = 'perspective';
+        v.camera.position.sub(v.controls.target).multiplyScalar(4).add(v.controls.target);
+        v.controls.update();
         v.renderFrameForCapture();
         counts.push(v.renderer.info.memory.geometries);
         textures.push(v.renderer.info.memory.textures);
         lod.push(v._runtimeLod?.size ?? 0);
+        renderStates.push({
+          camera: v.camera.position.toArray(),
+          low: v._runtimeLod?.entries.filter(entry => entry.low).length ?? 0,
+          originalOnly,
+        });
       }
       return {
         tier,
         counts,
         textures,
         lod,
+        renderStates,
         unchanged: preferences === localStorage.getItem('rv-visual-settings'),
         quality: v.adaptiveQuality.getSnapshot(),
       };
     });
+    report.resources = result;
     assert.equal(result.tier, 1);
     assert.equal(result.quality.mode, 'high');
     assert(result.unchanged);
-    assert.equal(result.counts.at(-1), result.counts[0]);
-    assert.equal(result.textures.at(-1), result.textures[0]);
+    assert(result.counts.every(count => count === result.counts[0]));
+    assert(result.textures.every(count => count === result.textures[0]));
     assert(result.lod.every(count => count > 0));
-    report.resources = result;
+    assert(result.renderStates.every((state, i) => state.originalOnly && state.low === result.lod[i]));
   });
   await journey('manual-quality-ui', async (page) => {
     await boot(page);
