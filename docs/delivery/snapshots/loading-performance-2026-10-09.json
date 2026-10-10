@@ -1,0 +1,1900 @@
+{
+  "scope": "full",
+  "environment": {
+    "platform": "linux",
+    "arch": "arm64",
+    "cpu": "Neoverse-N1",
+    "memory": 24060334080,
+    "browser": "145.0.7632.0",
+    "gpu": "SwiftShader (functional evidence, not a physical low-end device)",
+    "viewport": "1920x1080",
+    "actualRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "fixture": {
+    "nodes": 48,
+    "triangles": 1751040,
+    "sourceBytes": 49810648,
+    "parts": 48,
+    "previewBytes": 1744284,
+    "previewBudgetBytes": 3145728,
+    "withinPreviewBudget": true,
+    "sourceTriangles": 1751040,
+    "skipped": []
+  },
+  "journeys": [
+    {
+      "name": "preview-before-completion",
+      "status": "passed",
+      "ms": 13541
+    },
+    {
+      "name": "cancel-retry",
+      "status": "passed",
+      "ms": 9468
+    },
+    {
+      "name": "bad-package-falls-back",
+      "status": "passed",
+      "ms": 7958
+    },
+    {
+      "name": "slow-package-does-not-block-source",
+      "status": "passed",
+      "ms": 6912
+    },
+    {
+      "name": "stale-source-hash-falls-back",
+      "status": "passed",
+      "ms": 9989
+    },
+    {
+      "name": "failed-source-keeps-preview",
+      "status": "passed",
+      "ms": 13253
+    },
+    {
+      "name": "quality-and-repeated-loads",
+      "status": "passed",
+      "ms": 27164
+    },
+    {
+      "name": "manual-quality-ui",
+      "status": "passed",
+      "ms": 17747
+    },
+    {
+      "name": "cancel-deferred-work",
+      "status": "passed",
+      "ms": 12903
+    },
+    {
+      "name": "cold-1",
+      "status": "passed",
+      "ms": 11815
+    },
+    {
+      "name": "cold-2",
+      "status": "passed",
+      "ms": 11851
+    },
+    {
+      "name": "cold-3",
+      "status": "passed",
+      "ms": 11752
+    },
+    {
+      "name": "cold-4",
+      "status": "passed",
+      "ms": 11789
+    },
+    {
+      "name": "cold-5",
+      "status": "passed",
+      "ms": 12587
+    },
+    {
+      "name": "cold-6",
+      "status": "passed",
+      "ms": 11858
+    },
+    {
+      "name": "cold-7",
+      "status": "passed",
+      "ms": 12318
+    },
+    {
+      "name": "cold-8",
+      "status": "passed",
+      "ms": 14422
+    },
+    {
+      "name": "cold-9",
+      "status": "passed",
+      "ms": 12096
+    },
+    {
+      "name": "cold-10",
+      "status": "passed",
+      "ms": 11893
+    },
+    {
+      "name": "cold-11",
+      "status": "passed",
+      "ms": 11852
+    },
+    {
+      "name": "cold-12",
+      "status": "passed",
+      "ms": 13667
+    },
+    {
+      "name": "cold-13",
+      "status": "passed",
+      "ms": 11831
+    },
+    {
+      "name": "cold-14",
+      "status": "passed",
+      "ms": 12785
+    },
+    {
+      "name": "cold-15",
+      "status": "passed",
+      "ms": 11963
+    },
+    {
+      "name": "cold-16",
+      "status": "passed",
+      "ms": 11936
+    },
+    {
+      "name": "cold-17",
+      "status": "passed",
+      "ms": 11967
+    },
+    {
+      "name": "cold-18",
+      "status": "passed",
+      "ms": 11835
+    },
+    {
+      "name": "cold-19",
+      "status": "passed",
+      "ms": 12581
+    },
+    {
+      "name": "cold-20",
+      "status": "passed",
+      "ms": 11749
+    },
+    {
+      "name": "cold-21",
+      "status": "passed",
+      "ms": 11905
+    },
+    {
+      "name": "cold-22",
+      "status": "passed",
+      "ms": 11605
+    },
+    {
+      "name": "cold-23",
+      "status": "passed",
+      "ms": 12063
+    },
+    {
+      "name": "cold-24",
+      "status": "passed",
+      "ms": 12016
+    },
+    {
+      "name": "cold-25",
+      "status": "passed",
+      "ms": 11810
+    },
+    {
+      "name": "cold-26",
+      "status": "passed",
+      "ms": 11824
+    },
+    {
+      "name": "cold-27",
+      "status": "passed",
+      "ms": 11651
+    },
+    {
+      "name": "cold-28",
+      "status": "passed",
+      "ms": 12071
+    },
+    {
+      "name": "cold-29",
+      "status": "passed",
+      "ms": 12118
+    },
+    {
+      "name": "cold-30",
+      "status": "passed",
+      "ms": 11785
+    },
+    {
+      "name": "baseline-1",
+      "status": "passed",
+      "ms": 11062
+    },
+    {
+      "name": "baseline-2",
+      "status": "passed",
+      "ms": 11642
+    },
+    {
+      "name": "baseline-3",
+      "status": "passed",
+      "ms": 11567
+    },
+    {
+      "name": "baseline-4",
+      "status": "passed",
+      "ms": 12361
+    },
+    {
+      "name": "baseline-5",
+      "status": "passed",
+      "ms": 11167
+    },
+    {
+      "name": "baseline-6",
+      "status": "passed",
+      "ms": 11132
+    },
+    {
+      "name": "baseline-7",
+      "status": "passed",
+      "ms": 11551
+    },
+    {
+      "name": "baseline-8",
+      "status": "passed",
+      "ms": 12572
+    },
+    {
+      "name": "baseline-9",
+      "status": "passed",
+      "ms": 11559
+    },
+    {
+      "name": "baseline-10",
+      "status": "passed",
+      "ms": 11353
+    },
+    {
+      "name": "baseline-11",
+      "status": "passed",
+      "ms": 11210
+    },
+    {
+      "name": "baseline-12",
+      "status": "passed",
+      "ms": 11419
+    },
+    {
+      "name": "baseline-13",
+      "status": "passed",
+      "ms": 12303
+    },
+    {
+      "name": "baseline-14",
+      "status": "passed",
+      "ms": 11555
+    },
+    {
+      "name": "baseline-15",
+      "status": "passed",
+      "ms": 11281
+    },
+    {
+      "name": "baseline-16",
+      "status": "passed",
+      "ms": 11040
+    },
+    {
+      "name": "baseline-17",
+      "status": "passed",
+      "ms": 11334
+    },
+    {
+      "name": "baseline-18",
+      "status": "passed",
+      "ms": 11204
+    },
+    {
+      "name": "baseline-19",
+      "status": "passed",
+      "ms": 10987
+    },
+    {
+      "name": "baseline-20",
+      "status": "passed",
+      "ms": 11449
+    },
+    {
+      "name": "baseline-21",
+      "status": "passed",
+      "ms": 11069
+    },
+    {
+      "name": "baseline-22",
+      "status": "passed",
+      "ms": 11227
+    },
+    {
+      "name": "baseline-23",
+      "status": "passed",
+      "ms": 11283
+    },
+    {
+      "name": "baseline-24",
+      "status": "passed",
+      "ms": 11431
+    },
+    {
+      "name": "baseline-25",
+      "status": "passed",
+      "ms": 11230
+    },
+    {
+      "name": "baseline-26",
+      "status": "passed",
+      "ms": 11220
+    },
+    {
+      "name": "baseline-27",
+      "status": "passed",
+      "ms": 11535
+    },
+    {
+      "name": "baseline-28",
+      "status": "passed",
+      "ms": 11203
+    },
+    {
+      "name": "baseline-29",
+      "status": "passed",
+      "ms": 11422
+    },
+    {
+      "name": "baseline-30",
+      "status": "passed",
+      "ms": 11318
+    },
+    {
+      "name": "warm-repeat",
+      "status": "passed",
+      "ms": 78823
+    }
+  ],
+  "benchmarks": [
+    {
+      "navigationMs": 11805,
+      "overviewFromNavigationMs": 6144.199999809265,
+      "readyFromNavigationMs": 11272.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3573.300000190735,
+      "elapsedMs": 7699.099999904633,
+      "previewMs": 2570.8999996185303,
+      "timings": {
+        "download": 6911.39999961853,
+        "verify": 5.700000286102295,
+        "decode": 92.5,
+        "compose": 1,
+        "construct": 38.09999990463257,
+        "batch": 215,
+        "render": 435.40000009536743
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11847,
+      "overviewFromNavigationMs": 5997.099999904633,
+      "readyFromNavigationMs": 11360.5,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3532.2999997138977,
+      "elapsedMs": 7828.200000286102,
+      "previewMs": 2464.800000190735,
+      "timings": {
+        "download": 6898.800000190735,
+        "verify": 6.699999809265137,
+        "decode": 99.5,
+        "compose": 1,
+        "construct": 45,
+        "batch": 231.5,
+        "render": 545.6000003814697
+      },
+      "feedbackMs": 148
+    },
+    {
+      "navigationMs": 11747,
+      "overviewFromNavigationMs": 6096.400000095367,
+      "readyFromNavigationMs": 11235.5,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3581.4000000953674,
+      "elapsedMs": 7654.099999904633,
+      "previewMs": 2515,
+      "timings": {
+        "download": 6761.39999961853,
+        "verify": 5.600000381469727,
+        "decode": 99.69999980926514,
+        "compose": 1.0999999046325684,
+        "construct": 45.5,
+        "batch": 251.30000019073486,
+        "render": 489.5
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11785,
+      "overviewFromNavigationMs": 6100.099999904633,
+      "readyFromNavigationMs": 11303.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3495.5,
+      "elapsedMs": 7807.900000095367,
+      "previewMs": 2604.5999999046326,
+      "timings": {
+        "download": 6952.299999713898,
+        "verify": 7.200000286102295,
+        "decode": 106.09999990463257,
+        "compose": 1.0999999046325684,
+        "construct": 46.80000019073486,
+        "batch": 230.59999990463257,
+        "render": 463.80000019073486
+      },
+      "feedbackMs": 164
+    },
+    {
+      "navigationMs": 12583,
+      "overviewFromNavigationMs": 6728.89999961853,
+      "readyFromNavigationMs": 12131.299999713898,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3994.3999996185303,
+      "elapsedMs": 8136.900000095367,
+      "previewMs": 2734.5,
+      "timings": {
+        "download": 7303.200000286102,
+        "verify": 6.5,
+        "decode": 135.19999980926514,
+        "compose": 1.3000001907348633,
+        "construct": 38.40000009536743,
+        "batch": 215.69999980926514,
+        "render": 436.59999990463257
+      },
+      "feedbackMs": 160
+    },
+    {
+      "navigationMs": 11853,
+      "overviewFromNavigationMs": 6153,
+      "readyFromNavigationMs": 11378.5,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3561.5,
+      "elapsedMs": 7817,
+      "previewMs": 2591.5,
+      "timings": {
+        "download": 7042.800000190735,
+        "verify": 6.099999904632568,
+        "decode": 111.7000002861023,
+        "compose": 1,
+        "construct": 29.899999618530273,
+        "batch": 212.7000002861023,
+        "render": 412.7999997138977
+      },
+      "feedbackMs": 148
+    },
+    {
+      "navigationMs": 12314,
+      "overviewFromNavigationMs": 6240,
+      "readyFromNavigationMs": 11875.700000286102,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3685.4000000953674,
+      "elapsedMs": 8190.300000190735,
+      "previewMs": 2554.5999999046326,
+      "timings": {
+        "download": 7376.400000095367,
+        "verify": 6.299999713897705,
+        "decode": 89.7000002861023,
+        "compose": 1,
+        "construct": 37.59999990463257,
+        "batch": 234.69999980926514,
+        "render": 444.6000003814697
+      },
+      "feedbackMs": 148
+    },
+    {
+      "navigationMs": 14417,
+      "overviewFromNavigationMs": 7589.299999713898,
+      "readyFromNavigationMs": 13477,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3609.4000000953674,
+      "elapsedMs": 9867.599999904633,
+      "previewMs": 3979.8999996185303,
+      "timings": {
+        "download": 8041.299999713898,
+        "verify": 5.700000286102295,
+        "decode": 99,
+        "compose": 1.0999999046325684,
+        "construct": 38.5,
+        "batch": 308.7999997138977,
+        "render": 1373.2000002861023
+      },
+      "feedbackMs": 148
+    },
+    {
+      "navigationMs": 12090,
+      "overviewFromNavigationMs": 6101.700000286102,
+      "readyFromNavigationMs": 11647.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3545.7000002861023,
+      "elapsedMs": 8101.699999809265,
+      "previewMs": 2556,
+      "timings": {
+        "download": 7217.099999904633,
+        "verify": 7.599999904632568,
+        "decode": 124.09999990463257,
+        "compose": 1.3000001907348633,
+        "construct": 48,
+        "batch": 211,
+        "render": 492.59999990463257
+      },
+      "feedbackMs": 152
+    },
+    {
+      "navigationMs": 11889,
+      "overviewFromNavigationMs": 6171.300000190735,
+      "readyFromNavigationMs": 11438.5,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3679.800000190735,
+      "elapsedMs": 7758.699999809265,
+      "previewMs": 2491.5,
+      "timings": {
+        "download": 7006.5,
+        "verify": 5.599999904632568,
+        "decode": 94.5,
+        "compose": 1,
+        "construct": 39.700000286102295,
+        "batch": 215.89999961853027,
+        "render": 395.5
+      },
+      "feedbackMs": 200
+    },
+    {
+      "navigationMs": 11847,
+      "overviewFromNavigationMs": 6166.300000190735,
+      "readyFromNavigationMs": 11374.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3595.4000000953674,
+      "elapsedMs": 7779,
+      "previewMs": 2570.9000000953674,
+      "timings": {
+        "download": 6960.099999904633,
+        "verify": 5.800000190734863,
+        "decode": 85.30000019073486,
+        "compose": 1,
+        "construct": 38.59999990463257,
+        "batch": 233.7999997138977,
+        "render": 454.40000009536743
+      },
+      "feedbackMs": 140
+    },
+    {
+      "navigationMs": 13662,
+      "overviewFromNavigationMs": 6384.599999904633,
+      "readyFromNavigationMs": 12623.599999904633,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3738.9000000953674,
+      "elapsedMs": 8884.699999809265,
+      "previewMs": 2645.699999809265,
+      "timings": {
+        "download": 7162.599999904633,
+        "verify": 5.599999904632568,
+        "decode": 94.90000009536743,
+        "compose": 1.1999998092651367,
+        "construct": 41.200000286102295,
+        "batch": 299.09999990463257,
+        "render": 1280
+      },
+      "feedbackMs": 156
+    },
+    {
+      "navigationMs": 11823,
+      "overviewFromNavigationMs": 6184.099999904633,
+      "readyFromNavigationMs": 11378.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3524,
+      "elapsedMs": 7854.400000095367,
+      "previewMs": 2660.0999999046326,
+      "timings": {
+        "download": 7067.5,
+        "verify": 5.5,
+        "decode": 89.09999990463257,
+        "compose": 1.1000003814697266,
+        "construct": 37.89999961853027,
+        "batch": 230.40000009536743,
+        "render": 422.90000009536743
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 12782,
+      "overviewFromNavigationMs": 7164.5,
+      "readyFromNavigationMs": 12327.800000190735,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3832.800000190735,
+      "elapsedMs": 8495,
+      "previewMs": 3331.699999809265,
+      "timings": {
+        "download": 7697.5,
+        "verify": 7.099999904632568,
+        "decode": 91.80000019073486,
+        "compose": 1,
+        "construct": 38.39999961853027,
+        "batch": 216.40000009536743,
+        "render": 442.7000002861023
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11958,
+      "overviewFromNavigationMs": 6197.199999809265,
+      "readyFromNavigationMs": 11519.799999713898,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3591.9000000953674,
+      "elapsedMs": 7927.89999961853,
+      "previewMs": 2605.2999997138977,
+      "timings": {
+        "download": 7039.800000190735,
+        "verify": 5.5,
+        "decode": 122.40000009536743,
+        "compose": 3.6999998092651367,
+        "construct": 67.7000002861023,
+        "batch": 235.5,
+        "render": 453.3999996185303
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11932,
+      "overviewFromNavigationMs": 6066.900000095367,
+      "readyFromNavigationMs": 11407,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3582.5,
+      "elapsedMs": 7824.5,
+      "previewMs": 2484.4000000953674,
+      "timings": {
+        "download": 7035.599999904633,
+        "verify": 5.600000381469727,
+        "decode": 94.59999990463257,
+        "compose": 1,
+        "construct": 37.799999713897705,
+        "batch": 229.10000038146973,
+        "render": 420.8999996185303
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11964,
+      "overviewFromNavigationMs": 6119.5,
+      "readyFromNavigationMs": 11515.300000190735,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3581,
+      "elapsedMs": 7934.300000190735,
+      "previewMs": 2538.5,
+      "timings": {
+        "download": 7035.800000190735,
+        "verify": 5.599999904632568,
+        "decode": 91.09999990463257,
+        "compose": 1.0999999046325684,
+        "construct": 37.60000038146973,
+        "batch": 224.19999980926514,
+        "render": 538.9000000953674
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 11827,
+      "overviewFromNavigationMs": 6299.099999904633,
+      "readyFromNavigationMs": 11391.39999961853,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3717.5999999046326,
+      "elapsedMs": 7673.799999713898,
+      "previewMs": 2581.5,
+      "timings": {
+        "download": 6896.400000095367,
+        "verify": 6.299999713897705,
+        "decode": 94,
+        "compose": 1,
+        "construct": 44.30000019073486,
+        "batch": 218.5,
+        "render": 413.2999997138977
+      },
+      "feedbackMs": 152
+    },
+    {
+      "navigationMs": 12578,
+      "overviewFromNavigationMs": 6705.799999713898,
+      "readyFromNavigationMs": 12077.599999904633,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3631.0999999046326,
+      "elapsedMs": 8446.5,
+      "previewMs": 3074.699999809265,
+      "timings": {
+        "download": 7640.599999904633,
+        "verify": 5.599999904632568,
+        "decode": 96.5,
+        "compose": 1,
+        "construct": 39.80000019073486,
+        "batch": 232,
+        "render": 431
+      },
+      "feedbackMs": 172
+    },
+    {
+      "navigationMs": 11745,
+      "overviewFromNavigationMs": 6022.900000095367,
+      "readyFromNavigationMs": 11255,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3507.0999999046326,
+      "elapsedMs": 7747.900000095367,
+      "previewMs": 2515.800000190735,
+      "timings": {
+        "download": 6910.900000095367,
+        "verify": 5.800000190734863,
+        "decode": 91.59999990463257,
+        "compose": 0.9000000953674316,
+        "construct": 38,
+        "batch": 244.5,
+        "render": 456.19999980926514
+      },
+      "feedbackMs": 156
+    },
+    {
+      "navigationMs": 11899,
+      "overviewFromNavigationMs": 6159.199999809265,
+      "readyFromNavigationMs": 11450.799999713898,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3635.2999997138977,
+      "elapsedMs": 7815.5,
+      "previewMs": 2523.9000000953674,
+      "timings": {
+        "download": 6915.200000286102,
+        "verify": 5.799999713897705,
+        "decode": 104.30000019073486,
+        "compose": 1.1999998092651367,
+        "construct": 55.200000286102295,
+        "batch": 251.89999961853027,
+        "render": 481.90000009536743
+      },
+      "feedbackMs": 152
+    },
+    {
+      "navigationMs": 11601,
+      "overviewFromNavigationMs": 5892,
+      "readyFromNavigationMs": 11152.400000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3338.300000190735,
+      "elapsedMs": 7814.099999904633,
+      "previewMs": 2553.699999809265,
+      "timings": {
+        "download": 6981.599999904633,
+        "verify": 6.900000095367432,
+        "decode": 89,
+        "compose": 1.0999999046325684,
+        "construct": 38.19999980926514,
+        "batch": 236.5,
+        "render": 460.80000019073486
+      },
+      "feedbackMs": 184
+    },
+    {
+      "navigationMs": 12057,
+      "overviewFromNavigationMs": 6199.700000286102,
+      "readyFromNavigationMs": 11523,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3652.9000000953674,
+      "elapsedMs": 7870.099999904633,
+      "previewMs": 2546.800000190735,
+      "timings": {
+        "download": 6994.099999904633,
+        "verify": 6,
+        "decode": 92.5,
+        "compose": 1,
+        "construct": 45.09999990463257,
+        "batch": 228.5,
+        "render": 502.90000009536743
+      },
+      "feedbackMs": 144
+    },
+    {
+      "navigationMs": 12011,
+      "overviewFromNavigationMs": 6290.200000286102,
+      "readyFromNavigationMs": 11551.60000038147,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3714.4000000953674,
+      "elapsedMs": 7837.200000286102,
+      "previewMs": 2575.800000190735,
+      "timings": {
+        "download": 7035.800000190735,
+        "verify": 6.5,
+        "decode": 103.90000009536743,
+        "compose": 1,
+        "construct": 38.799999713897705,
+        "batch": 216,
+        "render": 435.2000002861023
+      },
+      "feedbackMs": 164
+    },
+    {
+      "navigationMs": 11806,
+      "overviewFromNavigationMs": 6066.400000095367,
+      "readyFromNavigationMs": 11258.700000286102,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3624.2000002861023,
+      "elapsedMs": 7634.5,
+      "previewMs": 2442.199999809265,
+      "timings": {
+        "download": 6858.599999904633,
+        "verify": 5.800000190734863,
+        "decode": 90.19999980926514,
+        "compose": 1.0999999046325684,
+        "construct": 45.80000019073486,
+        "batch": 226.40000009536743,
+        "render": 406.59999990463257
+      },
+      "feedbackMs": 140
+    },
+    {
+      "navigationMs": 11818,
+      "overviewFromNavigationMs": 6205,
+      "readyFromNavigationMs": 11376.39999961853,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3650.699999809265,
+      "elapsedMs": 7725.699999809265,
+      "previewMs": 2554.300000190735,
+      "timings": {
+        "download": 6956.699999809265,
+        "verify": 5.600000381469727,
+        "decode": 94.5,
+        "compose": 1.299999713897705,
+        "construct": 42.5,
+        "batch": 213.40000009536743,
+        "render": 411.59999990463257
+      },
+      "feedbackMs": 140
+    },
+    {
+      "navigationMs": 11647,
+      "overviewFromNavigationMs": 5967,
+      "readyFromNavigationMs": 11098.10000038147,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3584.2000002861023,
+      "elapsedMs": 7513.900000095367,
+      "previewMs": 2382.7999997138977,
+      "timings": {
+        "download": 6723.900000095367,
+        "verify": 7.199999809265137,
+        "decode": 95.40000009536743,
+        "compose": 0.9000000953674316,
+        "construct": 40.299999713897705,
+        "batch": 218.30000019073486,
+        "render": 427.90000009536743
+      },
+      "feedbackMs": 152
+    },
+    {
+      "navigationMs": 12067,
+      "overviewFromNavigationMs": 6162.799999713898,
+      "readyFromNavigationMs": 11598.099999904633,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3659.699999809265,
+      "elapsedMs": 7938.400000095367,
+      "previewMs": 2503.0999999046326,
+      "timings": {
+        "download": 7047,
+        "verify": 5.800000190734863,
+        "decode": 94.5,
+        "compose": 1,
+        "construct": 39.5,
+        "batch": 225.2999997138977,
+        "render": 525.3000001907349
+      },
+      "feedbackMs": 140
+    },
+    {
+      "navigationMs": 12110,
+      "overviewFromNavigationMs": 6378.200000286102,
+      "readyFromNavigationMs": 11621.900000095367,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 4002.6000003814697,
+      "elapsedMs": 7619.299999713898,
+      "previewMs": 2375.5999999046326,
+      "timings": {
+        "download": 6793.39999961853,
+        "verify": 5.5,
+        "decode": 94.7000002861023,
+        "compose": 1,
+        "construct": 38.59999990463257,
+        "batch": 226.19999980926514,
+        "render": 459.90000009536743
+      },
+      "feedbackMs": 180
+    },
+    {
+      "navigationMs": 11781,
+      "overviewFromNavigationMs": 6181,
+      "readyFromNavigationMs": 11300,
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 3554.2999997138977,
+      "elapsedMs": 7745.700000286102,
+      "previewMs": 2626.7000002861023,
+      "timings": {
+        "download": 6924.200000286102,
+        "verify": 5.899999618530273,
+        "decode": 91.5,
+        "compose": 1,
+        "construct": 37.90000009536743,
+        "batch": 221.2000002861023,
+        "render": 463.8999996185303
+      },
+      "feedbackMs": 144
+    }
+  ],
+  "baseline": [
+    {
+      "completeMs": 10702.200000286102,
+      "loadMs": 7034.800000190735
+    },
+    {
+      "completeMs": 11080.199999809265,
+      "loadMs": 7108.300000190735
+    },
+    {
+      "completeMs": 11203.300000190735,
+      "loadMs": 7260.900000095367
+    },
+    {
+      "completeMs": 10997.900000095367,
+      "loadMs": 7248.599999904633
+    },
+    {
+      "completeMs": 10812.5,
+      "loadMs": 7114.10000038147
+    },
+    {
+      "completeMs": 10748.89999961853,
+      "loadMs": 7158.699999809265
+    },
+    {
+      "completeMs": 10893.60000038147,
+      "loadMs": 7168.400000095367
+    },
+    {
+      "completeMs": 12160.099999904633,
+      "loadMs": 8324.099999904633
+    },
+    {
+      "completeMs": 11143.300000190735,
+      "loadMs": 7285.900000095367
+    },
+    {
+      "completeMs": 10973.699999809265,
+      "loadMs": 7190.199999809265
+    },
+    {
+      "completeMs": 10844.400000095367,
+      "loadMs": 7071.900000095367
+    },
+    {
+      "completeMs": 10984.5,
+      "loadMs": 7190.5
+    },
+    {
+      "completeMs": 11910.300000190735,
+      "loadMs": 7343.099999904633
+    },
+    {
+      "completeMs": 11174.699999809265,
+      "loadMs": 7080.599999904633
+    },
+    {
+      "completeMs": 10895,
+      "loadMs": 7165.099999904633
+    },
+    {
+      "completeMs": 10663.199999809265,
+      "loadMs": 7226.5
+    },
+    {
+      "completeMs": 10951.299999713898,
+      "loadMs": 7130.799999713898
+    },
+    {
+      "completeMs": 10829.400000095367,
+      "loadMs": 7026.300000190735
+    },
+    {
+      "completeMs": 10617.599999904633,
+      "loadMs": 7121.5
+    },
+    {
+      "completeMs": 11054.900000095367,
+      "loadMs": 7166.900000095367
+    },
+    {
+      "completeMs": 10662.900000095367,
+      "loadMs": 7155.900000095367
+    },
+    {
+      "completeMs": 10871.10000038147,
+      "loadMs": 7262.700000286102
+    },
+    {
+      "completeMs": 10883.400000095367,
+      "loadMs": 7135.900000095367
+    },
+    {
+      "completeMs": 11060.300000190735,
+      "loadMs": 7298.199999809265
+    },
+    {
+      "completeMs": 10866.599999904633,
+      "loadMs": 7121.699999809265
+    },
+    {
+      "completeMs": 10857.5,
+      "loadMs": 7172.299999713898
+    },
+    {
+      "completeMs": 11095.39999961853,
+      "loadMs": 7392.099999904633
+    },
+    {
+      "completeMs": 10816.700000286102,
+      "loadMs": 7101.800000190735
+    },
+    {
+      "completeMs": 11050.900000095367,
+      "loadMs": 7247
+    },
+    {
+      "completeMs": 10959.099999904633,
+      "loadMs": 7243.400000095367
+    }
+  ],
+  "warm": [
+    {
+      "id": 2,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 6922,
+      "elapsedMs": 2550.199999809265,
+      "previewMs": null,
+      "timings": {
+        "download": 587.1999998092651,
+        "verify": 8.300000190734863,
+        "decode": 104.09999990463257,
+        "compose": 0.7000002861022949,
+        "construct": 6,
+        "batch": 519.2999997138977,
+        "render": 1324.5999999046326
+      }
+    },
+    {
+      "id": 3,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 9559.800000190735,
+      "elapsedMs": 1955.5999999046326,
+      "previewMs": null,
+      "timings": {
+        "download": 451.2999997138977,
+        "verify": 4.099999904632568,
+        "decode": 87.7000002861023,
+        "compose": 0.6999998092651367,
+        "construct": 6.200000286102295,
+        "batch": 486.09999990463257,
+        "render": 919.5
+      }
+    },
+    {
+      "id": 4,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 11583.5,
+      "elapsedMs": 1917.3000001907349,
+      "previewMs": null,
+      "timings": {
+        "download": 454.90000009536743,
+        "verify": 3.299999713897705,
+        "decode": 94.80000019073486,
+        "compose": 0.8000001907348633,
+        "construct": 3.5,
+        "batch": 404.5,
+        "render": 955.5
+      }
+    },
+    {
+      "id": 5,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 13563.699999809265,
+      "elapsedMs": 2496.5,
+      "previewMs": null,
+      "timings": {
+        "download": 454.7000002861023,
+        "verify": 3.4000000953674316,
+        "decode": 93.19999980926514,
+        "compose": 0.6999998092651367,
+        "construct": 3.4000000953674316,
+        "batch": 409.90000009536743,
+        "render": 1531.1999998092651
+      }
+    },
+    {
+      "id": 6,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 16133.5,
+      "elapsedMs": 2450.5,
+      "previewMs": null,
+      "timings": {
+        "download": 544.4000000953674,
+        "verify": 4.599999904632568,
+        "decode": 104.09999990463257,
+        "compose": 0.7000002861022949,
+        "construct": 4.299999713897705,
+        "batch": 481,
+        "render": 1311.4000000953674
+      }
+    },
+    {
+      "id": 7,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 18714.5,
+      "elapsedMs": 2021.1999998092651,
+      "previewMs": null,
+      "timings": {
+        "download": 531.8000001907349,
+        "verify": 4.799999713897705,
+        "decode": 91.59999990463257,
+        "compose": 0.6000003814697266,
+        "construct": 4.799999713897705,
+        "batch": 430.2000002861023,
+        "render": 957.3999996185303
+      }
+    },
+    {
+      "id": 8,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 20826.099999904633,
+      "elapsedMs": 1882.0999999046326,
+      "previewMs": null,
+      "timings": {
+        "download": 451.5,
+        "verify": 3.6999998092651367,
+        "decode": 100.30000019073486,
+        "compose": 0.5999999046325684,
+        "construct": 3.700000286102295,
+        "batch": 407.19999980926514,
+        "render": 915.0999999046326
+      }
+    },
+    {
+      "id": 9,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 22808.199999809265,
+      "elapsedMs": 2076,
+      "previewMs": null,
+      "timings": {
+        "download": 369.2000002861023,
+        "verify": 3.3999996185302734,
+        "decode": 164.2000002861023,
+        "compose": 0.7999997138977051,
+        "construct": 2.700000286102295,
+        "batch": 380.69999980926514,
+        "render": 1155.0999999046326
+      }
+    },
+    {
+      "id": 10,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 24967.400000095367,
+      "elapsedMs": 1826,
+      "previewMs": null,
+      "timings": {
+        "download": 391.69999980926514,
+        "verify": 8.300000190734863,
+        "decode": 79.19999980926514,
+        "compose": 0.7000002861022949,
+        "construct": 5.099999904632568,
+        "batch": 418.59999990463257,
+        "render": 922.4000000953674
+      }
+    },
+    {
+      "id": 11,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 26862.699999809265,
+      "elapsedMs": 1870.9000000953674,
+      "previewMs": null,
+      "timings": {
+        "download": 394.40000009536743,
+        "verify": 3.3000001907348633,
+        "decode": 91,
+        "compose": 1.1999998092651367,
+        "construct": 4.699999809265137,
+        "batch": 344.5,
+        "render": 1031.8000001907349
+      }
+    },
+    {
+      "id": 12,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 28821.599999904633,
+      "elapsedMs": 1863.7000002861023,
+      "previewMs": null,
+      "timings": {
+        "download": 403.59999990463257,
+        "verify": 3.1000003814697266,
+        "decode": 137.7999997138977,
+        "compose": 0.7000002861022949,
+        "construct": 2,
+        "batch": 381.3999996185303,
+        "render": 935.1000003814697
+      }
+    },
+    {
+      "id": 13,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 30769.599999904633,
+      "elapsedMs": 1879.4000000953674,
+      "previewMs": null,
+      "timings": {
+        "download": 460.7000002861023,
+        "verify": 3.0999999046325684,
+        "decode": 98,
+        "compose": 0.6999998092651367,
+        "construct": 3.5999999046325684,
+        "batch": 345.30000019073486,
+        "render": 968
+      }
+    },
+    {
+      "id": 14,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 32728,
+      "elapsedMs": 1876.6999998092651,
+      "previewMs": null,
+      "timings": {
+        "download": 403.69999980926514,
+        "verify": 4.5,
+        "decode": 91.10000038146973,
+        "compose": 0.5999999046325684,
+        "construct": 1.9000000953674316,
+        "batch": 368.8999996185303,
+        "render": 1006
+      }
+    },
+    {
+      "id": 15,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 34693.800000190735,
+      "elapsedMs": 1938.5,
+      "previewMs": null,
+      "timings": {
+        "download": 387.5,
+        "verify": 3.0999999046325684,
+        "decode": 117,
+        "compose": 0.7999997138977051,
+        "construct": 2.5,
+        "batch": 408.7000002861023,
+        "render": 1018.9000000953674
+      }
+    },
+    {
+      "id": 16,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 36712.800000190735,
+      "elapsedMs": 1961,
+      "previewMs": null,
+      "timings": {
+        "download": 386.2999997138977,
+        "verify": 4.800000190734863,
+        "decode": 87.69999980926514,
+        "compose": 1.0999999046325684,
+        "construct": 2.200000286102295,
+        "batch": 412.69999980926514,
+        "render": 1066.2000002861023
+      }
+    },
+    {
+      "id": 17,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 38772.40000009537,
+      "elapsedMs": 1918.1999998092651,
+      "previewMs": null,
+      "timings": {
+        "download": 382.2999997138977,
+        "verify": 3.4000000953674316,
+        "decode": 70.80000019073486,
+        "compose": 0.7999997138977051,
+        "construct": 1.8000001907348633,
+        "batch": 473.40000009536743,
+        "render": 985.7999997138977
+      }
+    },
+    {
+      "id": 18,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 40783,
+      "elapsedMs": 1843.8000001907349,
+      "previewMs": null,
+      "timings": {
+        "download": 400.30000019073486,
+        "verify": 3.5,
+        "decode": 94.39999961853027,
+        "compose": 1,
+        "construct": 1.8000001907348633,
+        "batch": 367.19999980926514,
+        "render": 975.6000003814697
+      }
+    },
+    {
+      "id": 19,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 42715.300000190735,
+      "elapsedMs": 1866.5,
+      "previewMs": null,
+      "timings": {
+        "download": 398.2999997138977,
+        "verify": 3.200000286102295,
+        "decode": 75.5,
+        "compose": 1,
+        "construct": 2.8999996185302734,
+        "batch": 379.40000009536743,
+        "render": 1006.2000002861023
+      }
+    },
+    {
+      "id": 20,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 44647.5,
+      "elapsedMs": 1918.1999998092651,
+      "previewMs": null,
+      "timings": {
+        "download": 415.59999990463257,
+        "verify": 3.0999999046325684,
+        "decode": 88.30000019073486,
+        "compose": 0.6999998092651367,
+        "construct": 1.700000286102295,
+        "batch": 374.90000009536743,
+        "render": 1033.8999996185303
+      }
+    },
+    {
+      "id": 21,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 46648.59999990463,
+      "elapsedMs": 1940.8000001907349,
+      "previewMs": null,
+      "timings": {
+        "download": 452.2000002861023,
+        "verify": 4.199999809265137,
+        "decode": 100.90000009536743,
+        "compose": 0.5999999046325684,
+        "construct": 2.3000001907348633,
+        "batch": 391.69999980926514,
+        "render": 988.8000001907349
+      }
+    },
+    {
+      "id": 22,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 48691.5,
+      "elapsedMs": 1889.9000000953674,
+      "previewMs": null,
+      "timings": {
+        "download": 471.80000019073486,
+        "verify": 3.3999996185302734,
+        "decode": 89.60000038146973,
+        "compose": 0.5,
+        "construct": 1.8999996185302734,
+        "batch": 366.80000019073486,
+        "render": 955.9000000953674
+      }
+    },
+    {
+      "id": 23,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 50682.59999990463,
+      "elapsedMs": 1922,
+      "previewMs": null,
+      "timings": {
+        "download": 418.80000019073486,
+        "verify": 5.199999809265137,
+        "decode": 95.30000019073486,
+        "compose": 0.5999999046325684,
+        "construct": 1.6999998092651367,
+        "batch": 356.6000003814697,
+        "render": 1043.7999997138977
+      }
+    },
+    {
+      "id": 24,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 52665.59999990463,
+      "elapsedMs": 2019.2000002861023,
+      "previewMs": null,
+      "timings": {
+        "download": 430.7000002861023,
+        "verify": 3.3999996185302734,
+        "decode": 107.80000019073486,
+        "compose": 0.5,
+        "construct": 1.9000000953674316,
+        "batch": 400.90000009536743,
+        "render": 1073.8999996185303
+      }
+    },
+    {
+      "id": 25,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 54750.699999809265,
+      "elapsedMs": 1888.5,
+      "previewMs": null,
+      "timings": {
+        "download": 480.6000003814697,
+        "verify": 3.299999713897705,
+        "decode": 83.59999990463257,
+        "compose": 0.6000003814697266,
+        "construct": 1.6999998092651367,
+        "batch": 341.59999990463257,
+        "render": 977.0999999046326
+      }
+    },
+    {
+      "id": 26,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 56729.199999809265,
+      "elapsedMs": 1844.3000001907349,
+      "previewMs": null,
+      "timings": {
+        "download": 437.40000009536743,
+        "verify": 3.8000001907348633,
+        "decode": 78.40000009536743,
+        "compose": 1.1999998092651367,
+        "construct": 1.8000001907348633,
+        "batch": 371.19999980926514,
+        "render": 950.5
+      }
+    },
+    {
+      "id": 27,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 58653.800000190735,
+      "elapsedMs": 1958.1999998092651,
+      "previewMs": null,
+      "timings": {
+        "download": 520.5,
+        "verify": 5.099999904632568,
+        "decode": 95.59999990463257,
+        "compose": 0.6999998092651367,
+        "construct": 7.5,
+        "batch": 364,
+        "render": 964.7000002861023
+      }
+    },
+    {
+      "id": 28,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 60711.699999809265,
+      "elapsedMs": 1898.3000001907349,
+      "previewMs": null,
+      "timings": {
+        "download": 448,
+        "verify": 3.6000003814697266,
+        "decode": 80.89999961853027,
+        "compose": 0.5,
+        "construct": 2,
+        "batch": 435,
+        "render": 928.3000001907349
+      }
+    },
+    {
+      "id": 29,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 62699.40000009537,
+      "elapsedMs": 1907.9000000953674,
+      "previewMs": null,
+      "timings": {
+        "download": 433.09999990463257,
+        "verify": 3.0999999046325684,
+        "decode": 100.90000009536743,
+        "compose": 0.5999999046325684,
+        "construct": 2.200000286102295,
+        "batch": 414.69999980926514,
+        "render": 953.3000001907349
+      }
+    },
+    {
+      "id": 30,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 64706.40000009537,
+      "elapsedMs": 1865.4000000953674,
+      "previewMs": null,
+      "timings": {
+        "download": 405,
+        "verify": 3.1999998092651367,
+        "decode": 73.40000009536743,
+        "compose": 0.5,
+        "construct": 2.0999999046325684,
+        "batch": 335.5,
+        "render": 1045.5999999046326
+      }
+    },
+    {
+      "id": 31,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": false,
+      "warning": false,
+      "startedAt": 66658.30000019073,
+      "elapsedMs": 1966.0999999046326,
+      "previewMs": null,
+      "timings": {
+        "download": 449.59999990463257,
+        "verify": 4.299999713897705,
+        "decode": 93.30000019073486,
+        "compose": 0.5999999046325684,
+        "construct": 1.700000286102295,
+        "batch": 383.5,
+        "render": 1033.0999999046326
+      }
+    }
+  ],
+  "salesClaimVerified": false,
+  "firstLoad": {
+    "load": {
+      "id": 1,
+      "phase": "ready",
+      "loaded": 49810648,
+      "total": 49810648,
+      "preview": true,
+      "warning": false,
+      "startedAt": 5188.599999904633,
+      "elapsedMs": 6847.5,
+      "previewMs": 2878.1000003814697,
+      "timings": {
+        "download": 5889.60000038147,
+        "verify": 7.799999713897705,
+        "decode": 75.09999990463257,
+        "compose": 1.1000003814697266,
+        "construct": 34.299999713897705,
+        "batch": 181.59999990463257,
+        "render": 658
+      }
+    },
+    "meshes": 49,
+    "lod": 48
+  },
+  "resources": {
+    "tier": 1,
+    "counts": [
+      49,
+      49,
+      49,
+      49
+    ],
+    "textures": [
+      5,
+      5,
+      5,
+      5
+    ],
+    "lod": [
+      48,
+      48,
+      48,
+      48
+    ],
+    "unchanged": true,
+    "quality": {
+      "mode": "high",
+      "tier": 2
+    }
+  },
+  "manualSettings": {
+    "mode": "manual",
+    "ratio": 0.5,
+    "saved": 0.5,
+    "preference": "manual"
+  },
+  "orbit": {
+    "durationMs": 10079.299999809271,
+    "frames": 15,
+    "averageFps": 1.4881985852473727,
+    "p95FrameMs": 2079.5999998092593,
+    "renderedTriangles": 1751044,
+    "lodParts": 0,
+    "quality": {
+      "mode": "auto",
+      "tier": 2
+    }
+  },
+  "p95": {
+    "overviewMs": 7164.5,
+    "completeMs": 8884.699999809265,
+    "navigationMs": 13662,
+    "readyFromNavigationMs": 12623.599999904633,
+    "baselineCompleteMs": 11910.300000190735,
+    "warmLoadMs": 2496.5,
+    "feedbackMs": 184
+  }
+}

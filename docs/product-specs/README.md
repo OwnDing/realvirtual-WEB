@@ -33,3 +33,5 @@ authority: normative-registry
 - [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Approved，L2-1 受保护演示与访客访问控制。
 
 - [DEMO_PACKAGE_EXPORT.md](DEMO_PACKAGE_EXPORT.md)：L2-2 单文件离线演示包。
+
+- [LOADING_PERFORMANCE.md](LOADING_PERFORMANCE.md)：L2-3 加载性能与首屏。

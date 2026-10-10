@@ -65,6 +65,7 @@ export const EDITOR_LAST_ASSET_KEY = 'rv-editor-last-asset';
 export const LANGUAGE_PREFERENCE_KEY = 'rv-language';
 
 export const ALL_RV_STORAGE_KEYS = [
+  'rv-performance-quality-v1',
   'rv-visual-settings',
   'rv-visual-presets',
   'rv-search-settings',
@@ -237,3 +238,6 @@ export function clearAllRVStorage(): void {
     localStorage.removeItem(key);
   }
 }
+
+/** Explicit performance mode; automatic changes never write visual settings. */
+export const PERFORMANCE_QUALITY_KEY = 'rv-performance-quality-v1';

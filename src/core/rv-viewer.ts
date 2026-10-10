@@ -15,6 +15,9 @@
  *   viewer.on('object-hover', (data) => console.log(data?.path));
  */
 
+import { AdaptiveQuality, qualityOverrides, type QualityBaseline } from './engine/rv-adaptive-quality';
+import type { RuntimeLod } from './engine/rv-runtime-lod';
+import { ModelLoadState, type ModelLoadSession } from './engine/rv-load-session';
 import { runtimeFetch, requireRuntimeEgressUrl } from './deployment/runtime-egress';
 import {
   Scene,
@@ -1003,10 +1006,11 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * in batches so tasks queued by other tasks (cascades) are awaited too.
    * Idempotent when the queue is empty.
    */
-  async whenLoadingIdle(): Promise<void> {
+  async whenLoadingIdle(session?: ModelLoadSession): Promise<void> {
     while (this._loadingTasks.length > 0) {
       const batch = this._loadingTasks.splice(0);
-      await Promise.allSettled(batch);
+      const work = Promise.allSettled(batch);
+      if (session) await session.waitFor(work); else await work;
     }
   }
 
@@ -3592,7 +3596,23 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * around the real load — putting the `try`/`finally` here rather than around
    * the 400-line body keeps the reset impossible to fall out of.
    */
+  readonly loading = new ModelLoadState();
+  private _qualityBaseline: QualityBaseline | null = null;
+  readonly adaptiveQuality = new AdaptiveQuality((tier) => {
+    if (!this._visualSettings) return;
+    if (!this._qualityBaseline && tier !== null) this._qualityBaseline = { dpr: this.renderer.getPixelRatio(), shadows: this.shadowEnabled, ao: this.aoMode, bloom: this.bloomEnabled };
+    if (!this._qualityBaseline) return;
+    const value = tier === null ? this._qualityBaseline : qualityOverrides(this._qualityBaseline,tier);
+    this.renderer.setPixelRatio(value.dpr);
+    this.shadowEnabled = value.shadows; this.aoMode = value.ao; this.bloomEnabled = value.bloom;
+    this._renderDirty = true;
+    if (tier === null) this._qualityBaseline = null;
+  });
+
+  private _runtimeLod: RuntimeLod | null = null;
+
   async loadModel(url: string, options?: {
+    loadSession?: ModelLoadSession;
     overlay?: RVExtrasOverlay;
     data?: ArrayBuffer;
     preserveHierarchy?: boolean;
@@ -3624,6 +3644,54 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
   }
 
   private async _loadModelInner(url: string, options?: {
+    loadSession?: ModelLoadSession;
+    overlay?: RVExtrasOverlay;
+    data?: ArrayBuffer;
+    preserveHierarchy?: boolean;
+    modelName?: string;
+    trust?: LoadTrustContext;
+    provenance?: ModelProvenance;
+    identityUrl?: string;
+  }): Promise<LoadResult> {
+    const session = options?.loadSession ?? this.loading.begin();
+    session.assertCurrent();
+    const abort = () => {
+      if (this.loading.current !== session) return;
+      this._loadingTasks.length = 0;
+      this._clearModelData();
+    };
+    session.signal.addEventListener('abort', abort, { once: true });
+    try {
+      const result = await this._loadModelPrepared(url, { ...options, loadSession: session });
+      session.assertCurrent();
+      this._runtimeLod = result.runtimeLod ?? null;
+      this._runtimeLod?.attach(this.scene);
+      const previewCamera = session.visualAssets?.previewCamera;
+      if (previewCamera) {
+        this.camera.position.fromArray(previewCamera.position);
+        this.controls.target.fromArray(previewCamera.target);
+        this.controls.update();
+      }
+      session.phase('render');
+      // Compile only after the viewer owns the loaded resources, so cancellation can release them.
+      if ('compileAsync' in this.renderer) {
+        try { await session.waitFor(this.renderer.compileAsync(this.scene, this.camera, this.scene)); }
+        catch { session.assertCurrent(); /* shader compilation is otherwise non-critical */ }
+      }
+      this._renderDirty = true;
+      this.renderFrameForCapture();
+      session.phase('ready');
+      return result;
+    } catch (error) {
+      if (session.signal.aborted) { abort(); session.cancel(); } else session.fail();
+      throw error;
+    } finally {
+      session.signal.removeEventListener('abort', abort);
+    }
+  }
+
+  private async _loadModelPrepared(url: string, options?: {
+    loadSession?: ModelLoadSession;
     overlay?: RVExtrasOverlay;
     data?: ArrayBuffer;
     preserveHierarchy?: boolean;
@@ -3638,7 +3706,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // `shouldAbort` below: a newer load/clear makes the stale loadGLB dispose
     // its constructed chunks + root and reject with LoadAbortedError.
     this._loadGeneration++;
-    this.clearModel();
+    this._clearModelData();
     // Snapshot AFTER clearModel() — it bumps the generation once more; the
     // snapshot must reflect the generation THIS load runs under.
     const loadGeneration = this._loadGeneration;
@@ -3692,23 +3760,16 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       events: this,
       overlay: options?.overlay,
       data: options?.data,
+      loadSession: options?.loadSession,
       preserveHierarchy: options?.preserveHierarchy,
       allowUntrustedLogic: isSignatureUnlocked(this._signatureModelName),
       // Async batch phases — stale-load abort (plan-274 pattern).
-      shouldAbort: () => this._loadGeneration !== loadGeneration,
+      shouldAbort: () => this._loadGeneration !== loadGeneration || !!options?.loadSession?.signal.aborted,
     });
 
     // Profile the expensive post-loadGLB steps separately (gated on ?debug=perf).
     const prof = createLoadProfiler('loadModel');
     prof.mark('loadGLB');
-
-    // Pre-compile shaders to avoid first-frame stutter (available on WebGPURenderer)
-    if ('compileAsync' in this.renderer) {
-      try {
-        await this.renderer.compileAsync(this.scene, this.camera, this.scene);
-      } catch { /* non-critical */ }
-    }
-    prof.mark('compileAsync');
 
     // GLB root is reported deterministically by loadGLB (LoadResult.root) —
     // no diffing scene.children. The `_rvModelRoot` userData tag stays as
@@ -4007,11 +4068,13 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
 
     // --- Auto-load model sidecar settings (first visit only) ---
     // --- Load and merge model-specific plugin configuration ---
-    const [modelJsonConfig, glbConfig] = await Promise.all([
+    const configWork = Promise.all([
       loadModelJsonConfig(url).catch(() => ({} as ModelConfig)),
       Promise.resolve(extractGlbPluginConfig(this.scene)),
       loadModelSettingsConfig(url),
     ]);
+    const [modelJsonConfig, glbConfig] = options?.loadSession
+      ? await options.loadSession.waitFor(configWork) : await configWork;
     const settingsConfig: ModelConfig = {};
     const appConfig = getAppConfig();
     if (appConfig.plugins) settingsConfig.plugins = appConfig.plugins;
@@ -4037,7 +4100,9 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // boot window BEFORE main.ts applies the workspace mode) must not receive
     // onModelLoaded. Selective rv_plugins eligibility is enforced before a
     // plugin is recorded as having missed the lifecycle callback.
-    await this._notifyPluginsModelLoaded(result);
+    options?.loadSession?.assertCurrent();
+    const pluginsLoaded = this._notifyPluginsModelLoaded(result);
+    if (options?.loadSession) await options.loadSession.waitFor(pluginsLoaded); else await pluginsLoaded;
 
     // Re-evaluate _physicsPluginActive — plugins may have changed handlesTransport in onModelLoaded
     this._recomputePhysicsPluginActive();
@@ -4078,7 +4143,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // and plugins (env-map IBL, deferred asset prefetch, …) so the caller's
     // `await viewer.loadModel(...)` only resolves once the scene is fully
     // ready to be revealed.
-    await this.whenLoadingIdle();
+    await this.whenLoadingIdle(options?.loadSession);
     prof.mark('whenLoadingIdle');
     prof.report();
     return result;
@@ -4136,6 +4201,14 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
 
   /** Remove the current model and reset all simulation state. */
   clearModel(): void {
+    this.loading.cancel();
+    this._clearModelData();
+  }
+
+  /** Internal load replacement retains the new load session's ownership. */
+  private _clearModelData(): void {
+    this._runtimeLod?.dispose();
+    this._runtimeLod = null;
     // Load-generation guard (plan-240 F9) — abort any BVH build still running
     // against the model being torn down (its geometries get disposed below).
     this._loadGeneration++;
@@ -4654,6 +4727,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
 
   /** Clean up all resources. */
   dispose(): void {
+    this.loading.dispose();
+    this.adaptiveQuality.dispose();
     // Plugin lifecycle: dispose (before everything else)
     for (const p of this._plugins) {
       callPlugin(p, 'dispose');
@@ -5402,6 +5477,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * Delegates to individual setters on VisualSettingsManager.
    */
   applyVisualSettings(settings: import('./hmi/visual-settings-store').VisualSettings): void {
+    const quality = this.adaptiveQuality.getSnapshot();
+    if (quality.mode !== 'manual') this.adaptiveQuality.setMode('manual');
     const ms = settings.modeSettings[settings.renderMode];
     // Capability gating — features the active render mode doesn't support are
     // forced off so the first frame (e.g. in 'simple') is already minimal.
@@ -5495,6 +5572,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
 
     // 12. Drive axis gizmo overlay (plan-249)
     this.showDriveAxisGizmo = settings.showDriveAxisGizmo ?? true;
+    if (quality.mode !== 'manual') this.adaptiveQuality.setMode(quality.mode, quality.tier);
   }
 
   // ─── Individual Rendering Settings (pure-delegation proxies) ───────────
@@ -6143,6 +6221,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     const glXR = (this.renderer as unknown as WebGLRenderer).xr;
     if (glXR?.isPresenting) this._renderDirty = true;
 
+    if (this._runtimeLod?.update(this.camera, this.adaptiveQuality.getSnapshot().tier)) { this._renderDirty = true; this._shadowsDirty = true; }
+
     // Render-on-demand: skip expensive GPU render when scene is static
     const didMainRender = this._renderDirty;
     const isXRPresentingNow = (this.renderer as unknown as WebGLRenderer).xr?.isPresenting;
@@ -6253,6 +6333,8 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       this._lastFrameStats.triangles = r.triangles;
       this._renderDirty = false;
     }
+
+    this.adaptiveQuality.sample(performance.now(), didMainRender && !document.hidden && this.loading.getSnapshot().phase === 'ready' && !isXRPresentingNow);
 
     // ── Plugins Render ──
     for (const p of this._renderPlugins) {

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { PerformanceQualitySection } from './PerformanceQualitySection';
+import { selectPerformanceQuality } from '../performance-quality';
 import { useState, useRef } from 'react';
 import {
   Typography, Box, Button, ToggleButton, ToggleButtonGroup, Select, MenuItem, Switch,
@@ -136,8 +138,14 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
   };
 
   const persist = (patch: Partial<VisualSettings>) => {
+    const wasAutomatic = viewer.adaptiveQuality.getSnapshot().mode !== 'manual';
+    selectPerformanceQuality(viewer.adaptiveQuality, 'manual');
     Object.assign(settingsRef.current, patch);
     saveVisualSettings(settingsRef.current);
+    if (wasAutomatic) {
+      viewer.applyVisualSettings(settingsRef.current);
+      viewer.maxDpr = settingsRef.current.maxDpr;
+    }
   };
 
   const updateDriveAxisGizmo = (_: unknown, v: boolean): void => {
@@ -380,6 +388,7 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
   const applyPreset = (name: string) => {
     const p = presets.find((x) => x.name === name);
     if (!p) return;
+    selectPerformanceQuality(viewer.adaptiveQuality, 'manual');
     applyVisualPreset(viewer, p);
     onPresetApplied(); // remount body so every control reflects the applied preset
   };
@@ -404,6 +413,8 @@ function VisualTabBody({ onPresetApplied }: { onPresetApplied: () => void }) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+
+      <PerformanceQualitySection />
 
       {/* Language sits FIRST and outside the preset machinery: it is a user
           preference about the whole interface, not a look that a visual preset

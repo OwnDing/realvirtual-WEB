@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { Scene, Object3D, Box3, BufferAttribute, Mesh, BufferGeometry, Material } from 'three';
+import { RuntimeLod } from './rv-runtime-lod';
+import { downloadModel } from './rv-model-download';
+import type { ModelLoadSession } from './rv-load-session';
+import { Scene, Object3D, Box3, BufferAttribute, Mesh, BufferGeometry, Material, Texture } from 'three';
 import { RVDrive } from './rv-drive';
 import { AABB } from './rv-aabb';
 import { registerSignal, constructDrive, SIGNAL_TYPES, DRIVE_BEHAVIOR_MAP } from './rv-signal-construction';
@@ -171,6 +174,7 @@ export interface RecorderSettings {
 import type { ModelConfig } from './rv-model-config';
 
 export interface LoadResult {
+  runtimeLod?: RuntimeLod;
   /** The GLB root Object3D added to `scene` by `loadGLB`. Lets the caller
    *  track the new model deterministically without diffing `scene.children`
    *  before/after the load (which is fragile when overlays/gizmos attach
@@ -287,6 +291,7 @@ function createAABBFromExtras(node: Object3D, rv: Record<string, unknown>): AABB
 // DRIVE_BEHAVIOR_MAP and SIGNAL_TYPES moved to ./rv-signal-construction.ts
 
 export interface LoadGLBOptions {
+  loadSession?: ModelLoadSession;
   /** When true, apply WebGPU-specific geometry fixes (e.g., Uint16 index conversion). Default: false.
    *  Semantics (plan-271): feed this from `viewer.isWebGPU`, which is true for
    *  BOTH WebGPURenderer variants ('webgpu' AND 'webgpu-gl' / forceWebGL) —
@@ -408,6 +413,32 @@ export class LoadAbortedError extends Error {
   }
 }
 
+/** Release a parsed tree that never reached component ownership. */
+function disposeUnownedLoadRoot(root: Object3D): void {
+  root.removeFromParent();
+  const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>();
+  root.traverse(node => {
+    const mesh = node as Mesh;
+    if (mesh.geometry && !geometries.has(mesh.geometry)) { geometries.add(mesh.geometry); mesh.geometry.dispose(); }
+    for (const material of Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []) {
+      if (materials.has(material) || material.userData?._rvShared) continue;
+      materials.add(material);
+      for (const value of Object.values(material)) if (value instanceof Texture && !textures.has(value)) {
+        textures.add(value); value.dispose();
+        if (typeof ImageBitmap !== 'undefined' && value.image instanceof ImageBitmap) value.image.close();
+      }
+      material.dispose();
+    }
+  });
+}
+function checkEarlyLoadCancellation(options: LoadGLBOptions | undefined, root: Object3D, composition?: ComposeResult | null): void {
+  if (options?.loadSession?.signal.aborted || options?.shouldAbort?.()) {
+    composition?.dispose();
+    disposeUnownedLoadRoot(root);
+    throw new LoadAbortedError('cancelled');
+  }
+}
+
 /** Pending component awaiting resolveComponentRefs + init() in Step 2 */
 export interface PendingComponent {
   component: RVComponent;
@@ -443,24 +474,33 @@ export interface PreparedGLTF {
  * crucially, avoids the blob-URL double-buffering that doubled peak memory and
  * caused out-of-memory blank scenes for large models on mobile.
  */
-export async function loadAndPrepareGLTF(url: string, scene: Scene, data?: ArrayBuffer): Promise<PreparedGLTF> {
+export async function loadAndPrepareGLTF(url: string, scene: Scene, data?: ArrayBuffer, session?: ModelLoadSession): Promise<PreparedGLTF> {
   debug('loader', `Loading ${url}...`);
   resetParityValidator(); // Clear any previous load's parity data
   const fetchBytes = async (): Promise<ArrayBuffer> => {
     const allowedUrl = allowRuntimeEgressUrl(url, 'remote-model');
     if (!allowedUrl) throw new Error('GLB URL is blocked by the deployment egress policy');
-    const response = await runtimeFetch(url, "remote-model");
-    if (!response.ok) throw new Error(`GLB fetch failed (${response.status} ${response.statusText}): ${url}`);
-    return response.arrayBuffer();
+    // Preserve the established direct-loader API; viewer loads supply a cancellable session.
+    if (!session) {
+      const response = await runtimeFetch(url, 'remote-model');
+      if (!response.ok) throw new Error(`GLB fetch failed (${response.status} ${response.statusText}): ${url}`);
+      return response.arrayBuffer();
+    }
+    return downloadModel(url, { signal: session?.signal, progress: (loaded, total) => session?.bytes(loaded, total) });
   };
   const initialBuffer = data ?? await fetchBytes();
   // Every caller — main.ts, plugins, scene loader and asset editor — passes
   // through this raw-byte verification point. Large buffers make a transferable
   // worker round-trip; its detached-buffer failures get one geometry-only fetch.
+  session?.assertCurrent();
+  session?.phase('verify');
   const verified = await verifyRvSigBuffer(initialBuffer, fetchBytes);
+  session?.assertCurrent();
+  session?.phase('decode');
   // Self-contained GLB (textures + buffers embedded) → empty resource path is
   // correct; external-resource glTF is not produced by the Unity exporter.
   const gltf = await gltfLoader.parseAsync(verified.buffer, '');
+  if (session?.signal.aborted) { disposeUnownedLoadRoot(gltf.scene); session.assertCurrent(); }
   debug('loader', `GLTF parsed, adding to scene`);
   const root = gltf.scene;
   scene.add(root);
@@ -2098,7 +2138,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
     signatureState,
     signaturePresent,
     signerOrganization,
-  } = await loadAndPrepareGLTF(url, scene, options?.data);
+  } = await loadAndPrepareGLTF(url, scene, options?.data, options?.loadSession);
   const allowUntrustedLogic = options?.allowUntrustedLogic ?? false;
   const logicGated =
     (signatureState === 'invalid' || signatureState === 'unverifiable')
@@ -2140,6 +2180,9 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
     }
   }
 
+  checkEarlyLoadCancellation(options, root);
+  options?.loadSession?.phase('compose');
+
   // Phase 1.5: COMPOSITION (plan-397). Referenced GLBs are resolved into ONE
   // tree HERE — before processMeshes, the naming scan and the traverse — so a
   // referenced subtree goes through every phase the root file goes through
@@ -2147,6 +2190,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
   // model in the existing corpus.
   let composition: ComposeResult | null = null;
   if (hasReferences(root)) {
+    try {
     composition = await compose(root, {
       baseUrl: url,
       sha256: options?.sourceSha256,
@@ -2155,7 +2199,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
       signaturePresent,
       resolve: options?.referenceResolver ?? createReferenceResolver(),
       cache: options?.composeCache,
-      shouldAbort: options?.shouldAbort,
+      shouldAbort: () => !!options?.loadSession?.signal.aborted || !!options?.shouldAbort?.(),
     });
     // Each referenced file's OWN sidecar, scoped to its own occurrence and
     // skipped for a signed file — the same rule the root just followed, applied
@@ -2164,8 +2208,14 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
       await applyFrameSidecars(composition);
     }
     prof.mark('compose');
+    } catch (error) {
+      checkEarlyLoadCancellation(options, root, composition);
+      throw error;
+    }
   }
 
+  checkEarlyLoadCancellation(options, root, composition);
+  options?.loadSession?.phase('construct');
   // Phase 2: Process meshes (shadow classification, triangle counting, drive/transport node sets)
   const { triangleCount, driveNodeSet } = processMeshes(root);
   prof.mark('processMeshes');
@@ -2345,12 +2395,16 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
   if (!logicGated) runOnSceneReady(trusted, componentContext);
   prof.mark('buildGroups+kinematicParenting');
 
+  const runtimeLod = !preserveHierarchy && options?.loadSession?.visualAssets && !options.isWebGPU
+    ? new RuntimeLod(root, gltfNodeIndices, options.loadSession.visualAssets) : undefined;
+
   // Phase 9: WebGPU compatibility fixes
   applyWebGPUFixes(root, options?.isWebGPU ?? false);
 
   // Phase 10: Material deduplication (must run before static merge)
   const dedupResult = deduplicateMaterials(root);
   prof.mark('deduplicateMaterials');
+  options?.loadSession?.phase('batch');
 
   // Phase 10b: Uber-material pass — collapse every untextured
   // MeshStandardMaterial onto a single shared reference with per-vertex
@@ -2390,6 +2444,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
   // free its GPU resources. Shared fixtures (`_rvShared`, e.g. the uber
   // material singleton) survive — mirrors clearModel().
   const abortLoad = (): never => {
+    runtimeLod?.dispose();
     scene.remove(root);
     batchTable?.dispose();
     // Composed occurrences SHARE their geometry and materials with the parse
@@ -2514,6 +2569,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
     console.warn('[loadGLB] BVH setup failed (three-mesh-bvh):', e);
   }
   prof.mark('bvh-setup');
+  if (shouldAbort()) abortLoad();
 
   // Phase 13b: Build grouped raycast geometries (static + per-Drive
   // kinematic). The geometry MERGE stays synchronous; the merged BVHs are
@@ -2573,6 +2629,7 @@ export async function loadGLB(url: string, scene: Scene, options?: LoadGLBOption
 
   return {
     root,
+    runtimeLod,
     drives: traverseResult.drives,
     transportManager: manager,
     signalStore,

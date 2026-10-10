@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-01
+last_reviewed: 2026-10-09
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [EP-PERF-001-loading-performance.md](EP-PERF-001-loading-performance.md)：L2-3 总览/渐进加载/LOD、真实进度与自适应画质；2026-10-09 完成功能和合成基准交付，实机销售性能目标尚未验收。
 
 - [EP-DEMO-005-single-file-demo.md](EP-DEMO-005-single-file-demo.md)：L2-2 单 HTML 演示导出、镜头配方与离线播放器；2026-10-06 完成本地生产闭环与全量门禁。
 

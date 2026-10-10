@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xyvirtual:performance-package:1",
+  "title": "Derived performance package v1",
+  "type": "object",
+  "required": ["schemaVersion", "source", "bounds", "parts"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "source": {
+      "type": "object",
+      "required": ["byteLength", "sha256"],
+      "properties": {
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 536870912 },
+        "sha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "bounds": { "$ref": "#/$defs/bounds" },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "required": [
+          "nodeIndex",
+          "primitiveIndex",
+          "matrix",
+          "bounds",
+          "color",
+          "levels",
+          "runtimeLod"
+        ],
+        "properties": {
+          "nodeIndex": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+          "primitiveIndex": { "type": "integer", "minimum": 0, "maximum": 100000 },
+          "matrix": {
+            "type": "array",
+            "minItems": 16,
+            "maxItems": 16,
+            "items": { "type": "number", "minimum": -1000000000000, "maximum": 1000000000000 }
+          },
+          "bounds": { "$ref": "#/$defs/bounds" },
+          "color": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "runtimeLod": { "type": "boolean" },
+          "levels": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "allOf": [
+                { "$ref": "#/$defs/resource" },
+                {
+                  "type": "object",
+                  "required": ["triangles"],
+                  "properties": {
+                    "triangles": { "type": "integer", "minimum": 1, "maximum": 10000000 },
+                    "texture": { "$ref": "#/$defs/resource" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "bounds": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "type": "number", "minimum": -1000000000000, "maximum": 1000000000000 }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["uri", "byteLength", "sha256"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1023,
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_./-]*$"
+        },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 33554432 },
+        "sha256": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

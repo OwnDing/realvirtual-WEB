@@ -27,3 +27,5 @@ authority: normative-registry
 - [PROTECTED_PRESENTATIONS.md](PROTECTED_PRESENTATIONS.md)：Protected Presentations API v1 与持久化边界。
 
 - [DEMO_PACKAGE.md](DEMO_PACKAGE.md)：单文件演示与导览配方 v1。
+
+- [PERFORMANCE_PACKAGE.md](PERFORMANCE_PACKAGE.md)：Performance Package v1。

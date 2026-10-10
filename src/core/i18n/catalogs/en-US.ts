@@ -23,6 +23,7 @@
  * runtime by `ensureEnglishCatalog()` (ADR-0001 R1) — see that file for why the
  * split is English-only.
  */
+import { loadingPerformanceEnglish } from './loading-performance';
 import { demoPackageEnglish } from './demo-package';
 
 export const enUS = {
@@ -37,6 +38,7 @@ export const enUS = {
     remove: 'Remove',
   },
   preboot: {
+    performance: loadingPerformanceEnglish,
     loading: 'Loading ',
     slogan: 'Open. Light. Industrial. Anywhere.',
     errorTitle: 'Could not load the model',
