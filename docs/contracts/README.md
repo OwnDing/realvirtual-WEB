@@ -29,3 +29,5 @@ authority: normative-registry
 - [DEMO_PACKAGE.md](DEMO_PACKAGE.md)：单文件演示与导览配方 v1。
 
 - [PERFORMANCE_PACKAGE.md](PERFORMANCE_PACKAGE.md)：Performance Package v1。
+
+- [VISUAL_PRESENTATION.md](VISUAL_PRESENTATION.md)：展示配方与媒体输出 v1。

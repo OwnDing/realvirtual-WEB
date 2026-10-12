@@ -3035,6 +3035,7 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     // --- Resize (ResizeObserver on container — handles soft keyboard, orientation) ---
     if (autoResize) {
       this.resizeHandler = () => {
+        if (this._mediaCaptureActive) return;
         const w = container.clientWidth || window.innerWidth;
         const h = container.clientHeight || window.innerHeight;
         const aspect = w / h;
@@ -3314,6 +3315,10 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
       // never darkens their color.
       gl.clearDepth();
       setOverlayLayersOnly(camera);
+      if (this._mediaCaptureActive) {
+        camera.layers.disable(HIGHLIGHT_OVERLAY_LAYER);
+        if (!this._mediaCaptureAnnotations) camera.layers.mask = 0;
+      }
       gl.render(this.scene, camera);
     } finally {
       this.scene.background = savedBackground;
@@ -6111,6 +6116,10 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
     this.scene.background = null;
     try {
       setOverlayLayersOnly(this.camera);
+      if (this._mediaCaptureActive) {
+        this.camera.layers.disable(HIGHLIGHT_OVERLAY_LAYER);
+        if (!this._mediaCaptureAnnotations) this.camera.layers.mask = 0;
+      }
       gl.clearDepth();
       gl.render(this.scene, this.camera);
     } finally {
@@ -6132,12 +6141,46 @@ export class RVViewer extends EventEmitter<ViewerEvents> {
    * The renderer has no preserveDrawingBuffer, so callers must read the
    * drawing buffer in the same tick after this returns.
    */
+  private _mediaCaptureActive = false;
+  private _mediaCaptureFrameRequested = false;
+  private _mediaCaptureAnnotations = false;
+  /** Scoped drawing-buffer override. UI CSS and simulation timing remain unchanged. */
+  beginMediaCaptureSize(width: number, height: number, annotations = false): () => void {
+    if (this._mediaCaptureActive) throw new Error('Media capture already active');
+    const size = (this.renderer as unknown as WebGLRenderer).getSize(new Vector2());
+    const dpr = this.renderer.getPixelRatio();
+    this._mediaCaptureActive = true;
+    this._mediaCaptureAnnotations = annotations;
+    const resize = (w: number, h: number, ratio: number) => {
+      this.renderer.setPixelRatio(ratio);
+      this.renderer.setSize(w, h, false);
+      this._postProcessing.composer?.setPixelRatio(ratio);
+      this._postProcessing.setSize(w, h);
+      this.outlineManager.setSize(w, h);
+      this._toon.setSize(w, h);
+      this.markRenderDirty();
+    };
+    const restore = () => {
+      if (!this._mediaCaptureActive) return;
+      this._mediaCaptureActive = false;
+      resize(size.x, size.y, dpr);
+      this.resizeHandler?.();
+    };
+    try { resize(width, height, 1); }
+    catch (error) { restore(); throw error; }
+    return restore;
+  }
+
   renderFrameForCapture(): void {
     this._renderDirty = true;
-    this.render();
+    this._mediaCaptureFrameRequested = true;
+    try { this.render(); } finally { this._mediaCaptureFrameRequested = false; }
   }
 
   private render(): void {
+    // A media session schedules its own full frames. Avoid a second GPU render
+    // on the live RAF; the separate fixed-step simulation keeps running.
+    if (this._mediaCaptureActive && !this._mediaCaptureFrameRequested) return;
     // Render-pause / non-Three backend (plan-256): skip ALL Three GPU work and
     // the per-frame plugin `onRender` dispatch below. This is the render-loop
     // side of the backend switch — `fixedUpdate` (drives, sensors, logic) and

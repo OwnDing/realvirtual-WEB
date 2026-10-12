@@ -3,11 +3,13 @@ doc_id: DELIVERY-SNAPSHOT-INDEX
 title: 阶段交付快照索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-09
+last_reviewed: 2026-10-11
 authority: normative-registry
 ---
 
 # 阶段交付快照索引
+
+- [L2-4 视觉呈现](visual-presentation-2026-10-11.md)：功能范围、本地门禁、图片与录像闭环、兼容限制和回退。
 
 - [L2-3 加载性能功能与基准](loading-performance-2026-10-09.md)：提交、门禁、合成模型基准、销售口径边界与回退。
 

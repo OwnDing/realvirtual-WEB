@@ -35,3 +35,5 @@ authority: normative-registry
 - [DEMO_PACKAGE_EXPORT.md](DEMO_PACKAGE_EXPORT.md)：L2-2 单文件离线演示包。
 
 - [LOADING_PERFORMANCE.md](LOADING_PERFORMANCE.md)：L2-3 加载性能与首屏。
+
+- [VISUAL_PRESENTATION.md](VISUAL_PRESENTATION.md)：L2-4 视觉呈现产品化。

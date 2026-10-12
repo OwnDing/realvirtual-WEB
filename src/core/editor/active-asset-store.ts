@@ -77,6 +77,12 @@ export function getActiveAssetVersion(): number {
  * editor opens when the scene holds nothing.
  */
 let _openDocument: AssetBase | null = null;
+const _openDocumentListeners = new Set<() => void>();
+/** Observe document identity after its loader has published it. */
+export function subscribeOpenDocumentBase(listener: () => void): () => void {
+  _openDocumentListeners.add(listener);
+  return () => { _openDocumentListeners.delete(listener); };
+}
 
 /**
  * Record what the viewer now shows. Called by whoever loads a document —
@@ -84,7 +90,9 @@ let _openDocument: AssetBase | null = null;
  * itself, so neither mode has to know about the other.
  */
 export function setOpenDocumentBase(base: AssetBase | null): void {
+  const changed = !sameDocumentBase(_openDocument, base);
   _openDocument = base;
+  if (changed) for (const listener of _openDocumentListeners) listener();
 }
 
 /** What the viewer shows, for a mode that is about to take over. */

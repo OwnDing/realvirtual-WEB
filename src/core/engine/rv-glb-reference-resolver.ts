@@ -96,6 +96,10 @@ async function resolveThroughLibrary(ref: AssetReference): Promise<{ resolved: R
  * exception.
  */
 async function resolveThroughProjectManifest(assetId: string): Promise<string | null> {
+  // The standalone embed has no workspace project. Prune this app-only import
+  // at build time so the lightweight engine cannot pull React/HMI into its
+  // async chunks. Library and relative-path resolution below still apply.
+  if (typeof __RV_EMBED_LIBRARY__ !== 'undefined' && __RV_EMBED_LIBRARY__) return null;
   try {
     const [{ getProjectStore }, { findDocumentById }] = await Promise.all([
       import('../project/project-store'),

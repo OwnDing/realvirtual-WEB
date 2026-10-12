@@ -33,3 +33,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0013-single-file-demo-package.md](ADR-0013-single-file-demo-package.md)：Accepted，单文件演示快照与声明式离线导览。
 
 - [ADR-0014-progressive-loading.md](ADR-0014-progressive-loading.md)：派生性能包与会话自适应画质。
+
+- [ADR-0015-visual-presentation.md](ADR-0015-visual-presentation.md)：视觉呈现与有界媒体导出。

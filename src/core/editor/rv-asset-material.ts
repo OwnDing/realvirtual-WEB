@@ -47,14 +47,13 @@ function isRuntimeHelper(node: Object3D): boolean {
  */
 export function collectPaintableMeshes(node: Object3D): Mesh[] {
   const out: Mesh[] = [];
-  node.traverse((child) => {
+  const visit = (child: Object3D) => {
     if (isRuntimeHelper(child)) return;
     const mesh = child as Mesh;
-    if (!(mesh as { isMesh?: boolean }).isMesh) return;
-    if (Array.isArray(mesh.material)) return;
-    if (!mesh.material) return;
-    out.push(mesh);
-  });
+    if (mesh.isMesh && mesh.material && !Array.isArray(mesh.material)) out.push(mesh);
+    for (const descendant of child.children) visit(descendant);
+  };
+  visit(node);
   return out;
 }
 

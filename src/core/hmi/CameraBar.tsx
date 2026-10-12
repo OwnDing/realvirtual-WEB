@@ -39,7 +39,7 @@ export function CameraBookmarks() {
     setCameras(next);
     const s = loadVisualSettings();
     s.cameras = next;
-    saveVisualSettings(s);
+    saveVisualSettings(s, { preservePresentation: true });
     setSavedIdx(idx);
     setTimeout(() => setSavedIdx(null), FLASH_MS);
   }, [viewer, cameras]);

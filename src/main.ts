@@ -787,6 +787,10 @@ async function init() {
     viewer.use(new SmartAssetEditorPlugin(), 'core');
   }
 
+  // L2-4 public presentation workflow, loaded outside the engine boundary.
+  const { VisualPresentationPlugin } = await import('./plugins/visual-presentation');
+  viewer.use(new VisualPresentationPlugin(), 'core');
+
   // --- Unified CAD import (plan-238): "Import" button + provider registry.
   // The public GLB provider feeds the public editor sink; optional providers
   // registered above continue to feed the same ImportResultItem contract.

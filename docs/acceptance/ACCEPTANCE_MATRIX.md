@@ -3,7 +3,7 @@ doc_id: ACCEPTANCE-MATRIX
 title: 全局验收追踪矩阵
 status: draft
 owner: qa
-last_reviewed: 2026-10-09
+last_reviewed: 2026-10-12
 authority: proposed
 ---
 
@@ -11,13 +11,14 @@ authority: proposed
 
 | Requirement | Rule/Contract | Automated Test | Runtime Evidence | Status |
 | --- | --- | --- | --- | --- |
+| L2-4 视觉呈现产品化 | Approved [PS-VISUAL-001](../product-specs/VISUAL_PRESENTATION.md)、Accepted [ADR-0015](../adr/ADR-0015-visual-presentation.md)、[展示契约](../contracts/VISUAL_PRESENTATION.md) | 配方校验；实际透明 PNG/4K JPEG；可播放手动/环绕/导览录像；取消/后台/编码失败/状态恢复；材质隔离与撤销；CAS/实际浏览器后端重开；公开 UI Playwright 1/1 | [交付记录](../delivery/snapshots/visual-presentation-2026-10-11.md)：五种风格、十四种基础材质、项目及个人模板、图片/无声录像闭环。治理/静态、Node 822、完整 Browser 10,986、聚焦 Browser 19、E2E 及生产构建通过；外层进程终止与独立构建复核见记录。WebGL 正式默认、WebGPU 可选 Beta。硬件 GPU、多浏览器、混合 Splats 与人工美术尚未验收 | functionality-delivered-hardware-visual-acceptance-pending |
 | L2-3 加载性能与首屏 | Approved [PS-PERF-001](../product-specs/LOADING_PERFORMANCE.md)、Accepted [ADR-0014](../adr/ADR-0014-progressive-loading.md)、[性能包契约](../contracts/PERFORMANCE_PACKAGE.md) | 流式字节/未知长度/取消与过期会话、包路径/摘要/预算/不支持输入、确定性预处理、LOD 原始几何保留、画质迟滞/手动所有权、总览视角投影；9 项生产流程进入 required Browser Gate | [交付快照](../delivery/snapshots/loading-performance-2026-10-09.md)记录提交、全量本地/远程门禁、30 次冷启动 + 30 次无包基线 + 30 次同页重复加载、资源计数与原始 JSON。175 万三角形合成模型的总览资源 1.74 MB，较 49.81 MB 源减少 96.5%。软件 GPU 数据不构成真实低端性能承诺；实机首屏/FPS、客户模型与长期显存压力尚未验收 | functionality-delivered-hardware-performance-pending |
 | 文档治理 | `DOC-INDEX`、`GOV-DOC-PRIORITY` | Governance Harness 自检、元数据/索引/链接/状态扫描 | `./scripts/verify.sh governance`；远程 run 32151338635 的 Governance Gate 通过 | automated-local-and-remote |
 | AI 文件/Git/进程安全 | `GOV-AI-SAFETY` | Agent 可执行指令面扫描 + Claude deny 配置校验 | `./scripts/verify.sh governance` | automated-partial |
 | Engine 导入边界 | `GOV-CONSTITUTION` AR-1 | ESLint boundaries +现有 Node guard | `./scripts/verify.sh static` | existing-automated |
 | rv-ODT 一致性 | `schema/v1` | schema/spec/conformance 现有测试 | `npm run test:node` / focused tests | existing-needs-formal-mapping |
 | MCP 文档漂移 | MCP decorators/generated fences | 现有 MCP docs drift tests | `npm run gen:mcp-docs` + focused tests | existing-automated |
-| rv-embed 依赖隔离 | `GOV-CONSTITUTION` AR-5/AR-6、KD-003 | `embed-spike.node.test.ts`（仅已有 `dist-embed/` 时运行） | 正式 embed build 当前会触发 React/MUI forbidden marker | known-deviation-not-ci-enforced |
+| rv-embed 依赖隔离 | `GOV-CONSTITUTION` AR-5/AR-6、KD-003、Accepted [ADR-0015](../adr/ADR-0015-visual-presentation.md) | `embed-spike.node.test.ts`（仅已有 `dist-embed/` 时运行） | 2026-10-11 正式 embed build 与现有依赖守卫 4/4 通过；独立库裁掉不存在的工作区项目查询，保留库与相对路径解析。干净 Node CI 的强制构建证据仍待补齐 | local-verified-not-ci-enforced |
 | 多语言 | Closed OD-002、Approved `PS-I18N-001`、Accepted `ADR-0001`、Completed `EP-I18N-001`；`zh-CN`/`en-US`、默认中文、AI 直接翻译 | 零库存盘点与 locale pin Node 门禁；运行时/目录/pre-boot/分包 Node 套件；全迁移面 Browser 回归；`scripts/i18n-verbatim-check.mjs`；入口预算断言 | 批次 1–14 覆盖 Projects、Settings、Shell、CONNECT、Operator、Authoring、Assets、DES/物料流、Demo、Agents/Planner、AAS、运行时指令、信号绑定、插件注册、pre-boot、FPV 与 WebXR DOM/CanvasTexture。八类受门禁散落文案从 1944 / 231 文件降为 **0 / 0**，硬零守卫防止刷新非零基线；2415 条 `en-US` 值逐字追溯，22 个 Intl 格式化站点全部显式传 locale。工业型号、协议名、单位、稳定 ID、资源键与线上值按 ADR-0001 §6 保持原样。入口预算未放宽（**3_466_216 / 3_520_000 B**，余 **53_784 B / 52.5 KiB**），`zh-CN` 全量留在入口，8 个非启动 `en-US` namespace 位于 **87_532 B** deferred chunk。本地 static、Node、build 与聚焦 Browser 通过；GitHub Actions run [`32507825623`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/32507825623) 五项全绿，Browser 合计 962 文件 / 10,491 例。本机全量仍受 WebGL 上下文耗尽限制；真实 PLC/客户模型/生产连接、精简 kiosk 字体镜像和人工全界面 UX 巡检未验证 | completed-automated-remote |
 | 分层配置 | Closed `OD-003`；Approved `PS-CONFIG-001/002`；Accepted `ADR-0006/0008`；`CONTRACT-DEPLOYMENT-CONFIG-001`、`CONTRACT-UNIFIED-CONFIG-001`；Completed `EP-CONFIG-001/002` | Deployment v1→v2 幂等迁移、四层 resolver/provenance/rejection、项目 profile、用户 read-old/write-new、会话 allowlist、locale/mode/plugin policy、legacy bundle 无污染、客户交付 profile 与密钥路径门禁 | 2026-08-29 本地 governance/static/build 通过；Node 702 通过 / 7 跳过 / 1 个既有范围外失败（`bundle-chunk.node.test.ts` 只认 `assets/index-*`，实际入口 `assets/app-*`），范围内复测 24/24；客户生成器完整 50 通过 / 1 跳过。Browser 八分片合计 10,909 通过，独立性能 11/11；一次 avatar 16 ms 微基准抖动至 22.7 ms，单测与整个第 5 分片复跑均通过。未验证真实客户内网、生产部署/PLC、组织远程策略服务与人工多浏览器 UX | completed-local-with-existing-node-deviation |
 | 可手工组装涂装线与稳定端口 | Closed OD-004、Accepted `ADR-0003`、`CONTRACT-ASSEMBLY-PORTS-001`、rv-ODT 1.1、Approved `PS-PLANNER-001` | 稳定端口、目录、16 个 Paint Line 资产、拓扑/工艺行为共 109 个聚焦单元与 Node 用例；Playwright 黄金流程 1 例 | 本部署显式订阅目录；真实 Library HTML5 拖入喷房，PortId 组装四段闭环，运行后位置递增、`PaintedPieces > 0` 且实际工件材质变色；真实 `rv-layout-autosave` 经启动同路径冷重建后 5 个布局 ID、闭环、运行和喷涂恢复；生成器双跑 SHA-256 一致。物理页面刷新与全量 Browser 受本机 SwiftShader 上下文耗尽限制，正式项目文档保存、真实 PLC/GPU 性能和人工视觉未验证 | completed-local-with-environment-deviation |
