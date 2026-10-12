@@ -77,6 +77,10 @@ Playwright `e2e/visual-presentation.spec.ts --project=chromium --trace on` 于20
 
 2026-10-12独立`./scripts/verify.sh build`退出码0，主应用/access/demo-player构建完成；最终产物`tests/bundle-splitting.test.ts`14/14通过，预算未改变。入口计数为3,519,046个UTF-16代码单元（现有门禁使用string.length，阈值3,520,000）；实际UTF-8大小3,560,538字节，剩余门禁余量较小。
 
+2026-10-12提交`32d68f0`已推送至[PR #14](https://github.com/OwnDing/realvirtual-WEB/pull/14)，[Quality Gates #110](https://github.com/OwnDing/realvirtual-WEB/actions/runs/38187056548)五项通过，包含离线/HTTPS/单文件演示及生产加载流程。合并前审查发现首次安装settingsRef的回调在CAS重试时会覆盖另一标签页的新引用。先新增三个回归复现原实现失败，再在每次回调中校验最新引用：不同路径拒绝为changed，相同路径保留整个引用及扩展字段。修复后展示Browser四文件22例通过；更新提交继续等待对应远程Checks，不用初版绿色替代修复后的门禁。
+
+并发修复后的`./scripts/verify.sh static`（治理、Lint、网络边界、TypeScript）及补充文档治理检查通过。
+
 
 ## Rollback
 

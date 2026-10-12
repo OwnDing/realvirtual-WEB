@@ -31,6 +31,12 @@ export async function saveProjectLook(look: PresentationLook): Promise<void> {
     if (store.getBackend() !== backend || store.getProject()?.id !== project.id) throw new PresentationError('changed');
     if (!project.settingsRef) await store.applyManifestDelta(current => {
       if (current.id !== project.id || store.getBackend() !== backend) throw new PresentationError('changed');
+      // Manifest CAS can replay this callback after another tab installs its
+      // own settings file. Never redirect that reference to our stale path.
+      if (current.settingsRef) {
+        if (current.settingsRef.ref !== path) throw new PresentationError('changed');
+        return current; // Preserve extension fields on an equivalent reference.
+      }
       return { ...current, settingsRef: { ref: path } };
     });
     if (store.getBackend() !== backend || store.getProject()?.id !== project.id) throw new PresentationError('changed');

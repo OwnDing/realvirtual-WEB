@@ -44,11 +44,17 @@ E2E 的模型选取通过中央 selection API，重开通过公共 pending-asset
 
 首轮同时执行两个 embed 构建共用 staging 目录，造成 ENOENT，并伴随 Node 限流测试超时；后续串行构建及完整 Node 套件通过。正式 embed 构建还检出既有 resolver → project-store → React/MUI 依赖泄漏：独立库中静态排除不存在的工作区项目查询，保留库与相对路径解析，主应用不变。KD-003 的本地隔离已验证，但独立 CI 强制构建仍待后续任务，不关闭该治理偏差。
 
-没有删除、跳过或放宽既有断言及预算。尚未验证真实硬件 GPU 性能、移动端/Safari/Firefox、Gaussian Splats 混合场景及人工美术验收；目标 30 FPS 不是恒定帧率保证。没有远程 CI、真实 PLC 或生产连接验证。
+没有删除、跳过或放宽既有断言及预算。尚未验证真实硬件 GPU 性能、移动端/Safari/Firefox、Gaussian Splats 混合场景及人工美术验收；目标 30 FPS 不是恒定帧率保证。本地验收时未运行远程 CI，后续远程验证见下文；没有真实 PLC 或生产连接验证。
 
 全量测试在 2026-10-11 完成；2026-10-12 继续收尾时读取外层任务退出码为 143，虽然日志已经记录所有测试及三项生产构建完成，也不把该进程标为成功。已单独重跑生产构建确认退出码 0。完整 Browser 的最低临时盘余量 46.57 GiB、最低可用内存 8.92 GiB。
 
 入口实际 UTF-8 大小为 3,560,538 B；现有预算测试用 `string.length` 计数，值为 3,519,046，低于未调整的 3,520,000 阈值。该门禁剩余 954 个 UTF-16 代码单元，后续功能需要继续注意入口体积，不应把该计数误称为传输字节。
+
+## PR 与并发保存审查修复
+
+2026-10-12，初版提交 `32d68f0` 的 [PR #14](https://github.com/OwnDing/realvirtual-WEB/pull/14) 在 [Quality Gates #110](https://github.com/OwnDing/realvirtual-WEB/actions/runs/38187056548) 五项全绿；Browser Gate 还通过真实隔离网络、HTTPS 访问、单文件演示包及生产渐进加载验证。
+
+合并前处理审查指出的 settingsRef 竞争：首次写入设置文件后，另一标签页可能先为项目建立不同设置引用；清单 CAS 重试不得将其改回本次捕获的默认路径。新增三个 Browser 回归，在原实现均失败，覆盖首次安装前竞争、真实清单 CAS 重试和同路径引用的未知字段保留。修复后四个展示测试文件共 22 例通过。竞争失败保留另一方引用与文件，不报告保存成功；本次先写出的未引用设置文件不自动删除，避免误删其他会话可能正在使用的文件。修复提交的最终远程结果以 [PR Checks](https://github.com/OwnDing/realvirtual-WEB/pull/14/checks) 为准。
 
 ## 回退
 

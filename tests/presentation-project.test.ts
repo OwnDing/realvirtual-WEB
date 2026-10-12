@@ -7,6 +7,8 @@ import { setAppConfig } from '../src/core/rv-app-config';
 import { BrowserBackend } from '../src/core/project/backends/browser-backend';
 import { setSessionLook } from '../src/core/presentation/session-look';
 import { loadVisualSettings, saveVisualSettings } from '../src/core/hmi/visual-settings-store';
+import { getProjectStore } from '../src/core/project/project-store';
+import { FakeDir, asDirHandle } from './helpers/fake-fs-handles';
 let f: FakeDocumentProject | null = null;
 afterEach(() => { f?.restore(); f = null; setAppConfig({}); setSessionLook(null); vi.restoreAllMocks(); localStorage.clear(); });
 describe('presentation project persistence', () => {
@@ -34,6 +36,44 @@ describe('presentation project persistence', () => {
     vi.spyOn(first.backend, 'readBlobBytes').mockImplementation(async () => { first.restore(); return null; });
     await expect(saveProjectLook(defaultLook())).rejects.toMatchObject({ code: 'changed' });
     expect(first.writes).toHaveLength(0);
+  });
+  it.each([false, true])('keeps a concurrently installed settings reference (CAS retry: %s)', async retry => {
+    f = installFakeDocumentProject();
+    const root = new FakeDir('presentation-race'), store = getProjectStore();
+    const foreignPath = 'settings/other-tab.json', foreignBytes = JSON.stringify({ $schema: 'rv-project-config/1.0', presentation: defaultLook('warehouse') });
+    const foreign = { ...f.project(), settingsRef: { ref: foreignPath } };
+    f.writeForeign(foreignPath, foreignBytes);
+    root.seedText('project.json', JSON.stringify(f.project()));
+    const state = store as unknown as { _dir: FileSystemDirectoryHandle | null }, previousDir = state._dir;
+    state._dir = asDirHandle(root);
+    const originalApply = store.applyManifestDelta.bind(store), originalWrite = f.backend.writeBlob.bind(f.backend);
+    let attempts = 0;
+    vi.spyOn(f.backend, 'writeBlob').mockImplementation(async (...args) => {
+      const result = await originalWrite(...args);
+      if (!retry) root.seedText('project.json', JSON.stringify(foreign));
+      return result;
+    });
+    vi.spyOn(store, 'applyManifestDelta').mockImplementation((apply, opts) => originalApply(current => {
+      attempts++;
+      if (retry && attempts === 1) root.seedText('project.json', JSON.stringify(foreign));
+      return apply(current);
+    }, opts));
+    try {
+      await expect(saveProjectLook(defaultLook('dark'))).rejects.toMatchObject({ code: 'changed' });
+      expect(attempts).toBe(retry ? 2 : 1);
+      expect(JSON.parse((await root.readText('project.json'))!)).toEqual(foreign);
+      expect(new TextDecoder().decode(f.files.get(foreignPath))).toBe(foreignBytes);
+      expect(f.writes).toHaveLength(1);
+      expect(f.project().settingsRef).toBeUndefined();
+    } finally { state._dir = previousDir; }
+  });
+  it('preserves a concurrently installed reference to the same path, including future fields', async () => {
+    f = installFakeDocumentProject();
+    const settingsRef = { ref: 'settings/project-settings.json', futureReferenceField: 'keep' };
+    vi.spyOn(f.backend, 'readManifest').mockResolvedValue({ ...f.project(), settingsRef });
+    await saveProjectLook(defaultLook('dark'));
+    expect(f.project().settingsRef).toEqual(settingsRef);
+    expect(await loadProjectLook(null)).toMatchObject({ style: 'dark' });
   });
   it('real browser backend reads saved settings across backend recreation and keeps legacy inline settings', async () => {
     const id = 'prj_presentation_test', path = 'settings/project-settings.json';
