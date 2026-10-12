@@ -65,6 +65,8 @@ export const EDITOR_LAST_ASSET_KEY = 'rv-editor-last-asset';
 export const LANGUAGE_PREFERENCE_KEY = 'rv-language';
 
 export const ALL_RV_STORAGE_KEYS = [
+  'rv-presentation-templates-v1',
+  'rv-presentation-output-v1',
   'rv-performance-quality-v1',
   'rv-visual-settings',
   'rv-visual-presets',

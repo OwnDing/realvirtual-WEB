@@ -192,6 +192,7 @@ export default defineConfig({
     },
   },
   define: {
+    __RV_EMBED_LIBRARY__: 'true',
     // Engine closure does not reference the __RV_* flags today (verified in
     // AP1), but define them anyway so a future engine-side gate cannot break
     // the lib build silently.

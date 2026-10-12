@@ -44,3 +44,6 @@ declare const __RV_SERVE_INFO__: {
   slug: string | null;
   vitePort: number | null;
 } | null;
+
+/** Standalone embed artifact, without the workbench project store or HMI. */
+declare const __RV_EMBED_LIBRARY__: boolean;

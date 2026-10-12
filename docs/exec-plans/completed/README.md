@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-09
+last_reviewed: 2026-10-12
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [EP-VISUAL-001-visual-presentation.md](EP-VISUAL-001-visual-presentation.md)：L2-4 五种场景风格、基础材质、项目/个人模板及图片/无声录像；2026-10-12 完成本地自动化交付，硬件 GPU、多浏览器与人工美术另行验收。
 
 - [EP-PERF-001-loading-performance.md](EP-PERF-001-loading-performance.md)：L2-3 总览/渐进加载/LOD、真实进度与自适应画质；2026-10-09 完成功能和合成基准交付，实机销售性能目标尚未验收。
 

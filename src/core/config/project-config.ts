@@ -12,7 +12,8 @@ export const PROJECT_CONFIG_SCHEMA = 'rv-project-config/1.0';
 export interface ProjectConfiguration {
   $schema: typeof PROJECT_CONFIG_SCHEMA;
   defaults?: UnifiedConfigValues;
-  modelProfiles?: Record<string, { defaults?: UnifiedConfigValues }>;
+  presentation?: unknown;
+  modelProfiles?: Record<string, { defaults?: UnifiedConfigValues; presentation?: unknown }>;
 }
 
 export interface ParsedProjectConfiguration {
@@ -52,7 +53,7 @@ export function parseProjectConfiguration(raw: unknown, profileId?: string | nul
   if (raw.$schema !== PROJECT_CONFIG_SCHEMA) {
     return { issues: ['project config schema is unsupported'], kind: 'unsupported' };
   }
-  reportUnknownKeys(raw, ['$schema', 'defaults', 'modelProfiles'], issues, 'project');
+  reportUnknownKeys(raw, ['$schema', 'defaults', 'modelProfiles', 'presentation'], issues, 'project');
   const defaults = parseUnifiedConfigValues(raw.defaults, issues, 'project.defaults');
   let profileValues: UnifiedConfigValues | undefined;
   if (raw.modelProfiles !== undefined && !isRecord(raw.modelProfiles)) {
@@ -61,7 +62,7 @@ export function parseProjectConfiguration(raw: unknown, profileId?: string | nul
     const profile = raw.modelProfiles[profileId];
     if (profile !== undefined && !isRecord(profile)) issues.push(`project.modelProfiles.${profileId} must be an object`);
     else if (isRecord(profile)) {
-      reportUnknownKeys(profile, ['defaults'], issues, `project.modelProfiles.${profileId}`);
+      reportUnknownKeys(profile, ['defaults', 'presentation'], issues, `project.modelProfiles.${profileId}`);
       profileValues = parseUnifiedConfigValues(profile.defaults, issues, `project.modelProfiles.${profileId}.defaults`);
     }
   }

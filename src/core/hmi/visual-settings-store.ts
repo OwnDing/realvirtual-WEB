@@ -3,8 +3,10 @@
 
 /** Persists visual settings and camera bookmarks to localStorage. */
 
+import { getSessionLook, setSessionLook } from '../presentation/session-look';
+import { settingsForLook } from '../presentation/look';
 import { useSyncExternalStore } from 'react';
-import { getAppConfig, isSettingsLocked } from '../rv-app-config';
+import { getAppConfig, isSettingsLocked, isTabLocked } from '../rv-app-config';
 import { lsSave } from './ls-store-utils';
 import { getLegacySettingsOverlay } from '../config/legacy-settings-overlay';
 import { applyUIBlurScale, clampUIBlurScale, DEFAULT_UI_BLUR_SCALE } from './rv-ui-blur';
@@ -311,7 +313,9 @@ function parseModeSettings(raw: unknown): Record<RenderMode, LightingModeSetting
 }
 
 export function loadVisualSettings(): VisualSettings {
-  const fromStorage = loadFromLocalStorage();
+  const base = loadFromLocalStorage();
+  const look = getSessionLook();
+  const fromStorage = look && !isTabLocked('visual') ? settingsForLook(base, look) : base;
   // Deployment/project defaults were already parsed below the user layer.
   // Only an explicit deployment settings lock re-applies them as policy.
   const override = isSettingsLocked() ? getAppConfig().visual : undefined;
@@ -615,8 +619,19 @@ function loadFromLocalStorage(): VisualSettings {
   }
 }
 
-export function saveVisualSettings(settings: VisualSettings): void {
-  lsSave(STORAGE_KEY, settings);
+export function saveVisualSettings(settings: VisualSettings, options?: { preservePresentation?: boolean }): void {
+  const look = getSessionLook();
+  let persisted = settings;
+  if (look && options?.preservePresentation) {
+    // Camera bookmarks/navigation are user preferences. Do not accidentally
+    // persist the project appearance merely because their UI read the overlay.
+    const base = loadFromLocalStorage(), applied = settingsForLook(base, look);
+    persisted = structuredClone(settings);
+    for (const key of Object.keys(base) as (keyof VisualSettings)[]) {
+      if (JSON.stringify(base[key]) !== JSON.stringify(applied[key])) Object.assign(persisted, { [key]: base[key] });
+    }
+  } else setSessionLook(null); // explicit advanced appearance edits take over
+  lsSave(STORAGE_KEY, persisted);
   // Every settings change funnels through here (preset apply, Visual tab,
   // auto-quality watchdog), so pushing the blur factor to the CSS custom
   // property at this one point is what makes the token reactive — no new

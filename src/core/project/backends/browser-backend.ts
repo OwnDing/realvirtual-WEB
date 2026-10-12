@@ -254,8 +254,15 @@ export class BrowserBackend implements ProjectBackend {
     return glbSceneRecord(glb, { id, name: meta?.name ?? '', ...meta, path: id });
   }
 
-  async readSettings(): Promise<unknown | null> {
-    return (this._readStoredManifest()?.settings as unknown) ?? null;
+  async readSettings(relPath?: string): Promise<unknown | null> {
+    const manifest = this._readStoredManifest();
+    const path = relPath ?? manifest?.settingsRef?.ref;
+    if (path) {
+      const bytes = await this.readBlobBytes(path);
+      if (bytes) return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+    }
+    // Pre-file browser projects kept settings inline; preserve that read path.
+    return (manifest?.settings as unknown) ?? null;
   }
 
   // ─── Listing ──────────────────────────────────────────────────────────

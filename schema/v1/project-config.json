@@ -4,46 +4,132 @@
   "title": "XYvirtual WEB Project Config v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema"],
+  "required": [
+    "$schema"
+  ],
   "properties": {
-    "$schema": { "const": "rv-project-config/1.0" },
-    "defaults": { "$ref": "#/$defs/values" },
+    "$schema": {
+      "const": "rv-project-config/1.0"
+    },
+    "defaults": {
+      "$ref": "#/$defs/values"
+    },
     "modelProfiles": {
       "type": "object",
       "maxProperties": 500,
-      "propertyNames": { "type": "string", "minLength": 1, "maxLength": 128 },
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "properties": { "defaults": { "$ref": "#/$defs/values" } }
+        "properties": {
+          "defaults": {
+            "$ref": "#/$defs/values"
+          },
+          "presentation": {
+            "$ref": "#/$defs/presentation"
+          }
+        }
       }
+    },
+    "presentation": {
+      "$ref": "#/$defs/presentation"
     }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
     "values": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "locale": { "enum": ["zh-CN", "en-US"] },
+        "locale": {
+          "enum": [
+            "zh-CN",
+            "en-US"
+          ]
+        },
         "workspace": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "default": { "$ref": "#/$defs/id" },
+            "default": {
+              "$ref": "#/$defs/id"
+            },
             "allowed": {
               "type": "array",
               "maxItems": 100,
               "uniqueItems": true,
-              "items": { "$ref": "#/$defs/id" }
+              "items": {
+                "$ref": "#/$defs/id"
+              }
             }
           }
         },
         "features": {
           "type": "object",
           "maxProperties": 200,
-          "propertyNames": { "$ref": "#/$defs/id" },
-          "additionalProperties": { "type": "boolean" }
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schemaVersion",
+        "style",
+        "brightness",
+        "background",
+        "shadow",
+        "ground",
+        "reflection"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "style": {
+          "enum": [
+            "showroom",
+            "product",
+            "dark",
+            "warehouse",
+            "technical"
+          ]
+        },
+        "ground": {
+          "type": "boolean"
+        },
+        "brightness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "background": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "shadow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "reflection": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       }
     }

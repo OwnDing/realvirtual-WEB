@@ -41,7 +41,7 @@ export function MouseTab() {
 
   const persist = (patch: Partial<VisualSettings>) => {
     Object.assign(settingsRef.current, patch);
-    saveVisualSettings(settingsRef.current);
+    saveVisualSettings(settingsRef.current, { preservePresentation: true });
   };
 
   const updateOrbitRotateSpeed = (_: unknown, v: number | number[]) => {
