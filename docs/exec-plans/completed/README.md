@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-13
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [EP-BRAND-001-deployment-white-label.md](EP-BRAND-001-deployment-white-label.md)：L2-5 部署白标、资源交付及独立入口一致性；2026-10-13 完成本地门禁与生产旅程，PR #15，真实 PWA 安装/移动设备/生产交付另验。
 
 - [EP-VISUAL-001-visual-presentation.md](EP-VISUAL-001-visual-presentation.md)：L2-4 五种场景风格、基础材质、项目/个人模板及图片/无声录像；2026-10-12 完成本地自动化交付，硬件 GPU、多浏览器与人工美术另行验收。
 

@@ -2,7 +2,7 @@
 doc_id: EP-BRAND-001
 title: L2-5 部署白标
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-10-13
 authority: normative
@@ -56,7 +56,7 @@ authority: normative
 - [x] M1：共享解析器、v2 branding 段、Schema、迁移与反例。
 - [x] M2：首屏、HMI、品牌署名、manifest 与分享元数据。
 - [x] M3：独立访问页、Appliance、单 HTML 导出、内容哈希资源和新目录交付。
-- [ ] M4
+- [x] M4：本地门禁、生产旅程、文档、功能分支及 PR #15。
 
 ## Surprises & Discoveries
 
@@ -85,7 +85,7 @@ governance/static/node/browser/build，聚焦白标生产 E2E、受保护访问�
 - `node scripts/test-protected-presentations.mjs`：实际本地 Caddy HTTPS + Node + Chromium 认证/分享旅程通过。
 - `node scripts/test-demo-package.mjs`：单 HTML 在 file://、offline Chromium 下真实渲染通过，52,003 几何像素、零外部请求。`node scripts/test-demo-package-authoring.mjs`：实际文档卡片导出、新增设备及坐标保留、复制后离线播放通过；此前并发浏览器下截图超时，隔离运行后通过，未修改原有测试。
 - OS 网络隔离离线旅程九个场景通过，零外部请求（`test-results/offline/report.json`）。
-- Browser Gate 已加入白标旅程及截图/结果上传；远程 PR CI 待创建后触发。
+- Browser Gate 已加入白标旅程及截图/结果上传；远程 PR CI 由 [PR #15](https://github.com/OwnDing/realvirtual-WEB/pull/15) 触发，状态以 PR 检查为准。
 - 无真实设备/PLC、生产系统、私有 sibling、移动设备或真实 PWA 安装验证；不把 SwiftShader 结果作为硬件 GPU 性能结论。
 
 ## Rollback
@@ -94,4 +94,4 @@ governance/static/node/browser/build，聚焦白标生产 E2E、受保护访问�
 
 ## Outcomes & Retrospective
 
-实现、交付说明和适用本地门禁已完成；等待提交推送及 PR。没有真实设备、生产系统或私有 sibling 操作。
+实现、交付说明和适用本地门禁已完成；功能分支 `codex/deployment-white-label` 已提交推送并创建 [PR #15](https://github.com/OwnDing/realvirtual-WEB/pull/15)，目标 `develop`，未合并或部署。没有真实设备、生产系统或私有 sibling 操作。

@@ -19,4 +19,4 @@ authority: normative
 | 受保护入口不暴露 settings | Access 边界回归 | 真实生产认证未验证 |
 | 单 HTML 品牌离线 | 导出 tests + file 旅程 | 不改变离线保护能力 |
 
-实施证据记录在 [ExecPlan](../exec-plans/active/EP-BRAND-001-deployment-white-label.md)。
+实施证据记录在 [ExecPlan](../exec-plans/completed/EP-BRAND-001-deployment-white-label.md)。
