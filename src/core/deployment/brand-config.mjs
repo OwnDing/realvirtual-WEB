@@ -11,7 +11,8 @@ export function brandAssetPath(value) {
 function link(value) {
   const local = brandAssetPath(value);
   if (local) return local;
-  if (typeof value !== 'string' || value.length > 1000) return undefined;
+  // Match the public schema: explicit HTTP(S), no credentials, whitespace or backslashes.
+  if (typeof value !== 'string' || value.length > 1000 || !/^https?:\/\/[^@/?#\\\s\u0000-\u001f]+(?:[/?#][^\\\s\u0000-\u001f]*)?$/i.test(value)) return undefined;
   try { const url = new URL(value); return /^https?:$/.test(url.protocol) && !url.username && !url.password ? url.href : undefined; }
   catch { return undefined; }
 }

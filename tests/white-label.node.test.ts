@@ -71,6 +71,25 @@ describe('deployment white-label contract', () => {
       expect(pattern.test(value), value).toBe(brandAssetPath(value) !== undefined);
     }
   });
+  it('keeps attribution URL schema constraints aligned with runtime and delivery inputs', () => {
+    const schema = JSON.parse(readFileSync('schema/v1/branding.json', 'utf8')).properties.attribution.properties.url;
+    for (const [value, accepted] of [
+      ['about', true], ['/brand/about', true], ['品牌/支持', true],
+      ['https://docs.example.test/about?q=a%20b#help', true], ['HTTP://localhost:8080/about', true],
+      ['https://[::1]:8080/', true], ['javascript:alert(1)', false], ['data:text/html,x', false],
+      ['relative path', false], ['../about', false], ['//elsewhere.test/about', false],
+      ['https://user:password@host.test/', false], ['https://host.test/a b', false],
+      ['https:host.test', false], ['https://host.test/\\\\evil', false], ['x'.repeat(501), false],
+    ] as const) {
+      const valid = (schema.anyOf ?? [schema]).some((branch: { maxLength: number; pattern?: string }) =>
+        value.length <= branch.maxLength && (!branch.pattern || new RegExp(branch.pattern).test(value)));
+      expect(valid, `schema: ${value}`).toBe(accepted);
+      const issues: string[] = [];
+      const brand = parseBranding({ schemaVersion: 1, attribution: { url: value } }, issues);
+      expect(brand?.attribution?.url !== undefined, `runtime: ${value}`).toBe(accepted);
+      expect(issues.length === 0).toBe(accepted);
+    }
+  });
   it('builds two brands without changing app JS and keeps public projection free of private settings', async () => {
     const source = await fixture(); const outputParent = directory();
     for (const [name, primary] of [['Plant A', '#1667CC'], ['Plant B', '#DD5500']]) {

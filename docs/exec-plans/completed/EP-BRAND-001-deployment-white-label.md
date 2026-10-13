@@ -64,6 +64,8 @@ branding-store 项目展开覆盖部署违反 ADR-0008，由本 ADR 限制旧 AP
 
 完整浏览器回归发现登录插件原有 footer 被误替换，已恢复为独立附加文案。生产离线演示发现播放器覆盖部署浏览器标题，现保留品牌页签标题与演示页内标题。截图复核发现新 E2E 夹具必须位于 `models/`；已修正并要求首次加载/刷新均进入真实 ready 状态，防止只见品牌而漏检加载失败。最终截图还发现署名与右下工具栏重叠；署名移入随 UI 缩放的 HMI 布局，预留桌面/移动工具区，并添加生产几何位置断言。
 
+PR #15 自动审查指出默认诊断页把浅底文字改成浅色，以及署名 URL 的 Schema 只检查长度。已用失败回归复现：诊断页同步背景、卡片和辅助文字配色，保留状态边框与证书提示语义；Schema 与解析器统一限定本地路径或无凭据、无字面空白/反斜杠的显式 HTTP(S) URL。
+
 ## Decision Log
 
 2026-10-12 用户批准方案；保留 identity v1 封闭定义，在 v2 加独立版本 branding；不新增依赖。
@@ -88,10 +90,14 @@ governance/static/node/browser/build，聚焦白标生产 E2E、受保护访问�
 - Browser Gate 已加入白标旅程及截图/结果上传；远程 PR CI 由 [PR #15](https://github.com/OwnDing/realvirtual-WEB/pull/15) 触发，状态以 PR 检查为准。
 - 无真实设备/PLC、生产系统、私有 sibling、移动设备或真实 PWA 安装验证；不把 SwiftShader 结果作为硬件 GPU 性能结论。
 
+### 合并前审查修复
+
+2026-10-13 用户明确授权合并 PR #15 并删除功能分支。合并前修复两条 P2 审查意见；Node 白标/部署配置 2 文件 / 29 项、浏览器白标/诊断对比度 2 文件 / 12 项通过。合并以静态、构建和最终提交的远程 CI 全部通过为条件，不绕过分支保护或失败门禁。
+
 ## Rollback
 
 恢复上一完整应用/配置/品牌目录；无项目数据迁移。开发用提交可 revert，不重写历史。
 
 ## Outcomes & Retrospective
 
-实现、交付说明和适用本地门禁已完成；功能分支 `codex/deployment-white-label` 已提交推送并创建 [PR #15](https://github.com/OwnDing/realvirtual-WEB/pull/15)，目标 `develop`，未合并或部署。没有真实设备、生产系统或私有 sibling 操作。
+实现、交付说明和适用本地门禁已完成；功能分支 `codex/deployment-white-label` 已提交推送并创建 [PR #15](https://github.com/OwnDing/realvirtual-WEB/pull/15)，目标 `develop`；初次交付时未合并或部署，后续合并授权见上节。没有真实设备、生产系统或私有 sibling 操作。

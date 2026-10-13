@@ -2,5 +2,9 @@
 
 /* Deployment-owned brand tokens; diagnostic status colors stay semantic. */
 .eyebrow,a{color:var(--rv-brand-primary,#4fc3f7)}
-body{color:var(--rv-brand-text,#eee)}
-section{background:var(--rv-brand-surface,#1e1e1e);border-color:var(--rv-brand-border,#333)}
+:root{color-scheme:dark;background:var(--rv-brand-splash-background,#1a1a1a)}
+body{background:var(--rv-brand-splash-background,#1a1a1a);color:var(--rv-brand-text,#eee)}
+.toolbar,.result{background:var(--rv-brand-surface,#1e1e1e);border-color:var(--rv-brand-border,#333)}
+.pill{background:var(--rv-brand-splash-background,#1a1a1a)}
+.result p,.code,footer{color:var(--rv-brand-muted,#aaa)}
+aside{color:#13222b}

@@ -63,7 +63,7 @@ authority: normative-process
 }
 ```
 
-第二套客户可复用完全相同的应用构建，例如把名称设为 `Cobalt Works`、主色设为 `#1667CC`，换一套图片，并设 `attribution.visible=false`。没有配置时保持默认品牌与隐藏署名。`attribution.url` 可为部署根内路径；外部链接必须由现有 `egress.allow` 授予 `documentation` 用途，否则仅显示文字。Appliance 页和离线演示仅显示署名文字。
+第二套客户可复用完全相同的应用构建，例如把名称设为 `Cobalt Works`、主色设为 `#1667CC`，换一套图片，并设 `attribution.visible=false`。没有配置时保持默认品牌与隐藏署名。`attribution.url` 可为部署根内路径；外部链接必须由现有 `egress.allow` 授予 `documentation` 用途，否则仅显示文字。HTTP(S) 链接使用完整协议前缀，禁止凭据、字面空白和反斜杠，路径中的空格需编码。Appliance 页和离线演示仅显示署名文字。
 
 ## 准备资源与生成完整交付目录
 

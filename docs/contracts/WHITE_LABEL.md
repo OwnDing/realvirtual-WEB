@@ -18,7 +18,7 @@ Deployment Config v2 可选 branding 段，schemaVersion=1；原 identity 的名
 - browserTitle：非空纯文本，最长 200。
 - theme：surfaceColor/textColor/mutedTextColor/borderColor，均 #RRGGBB。
 - splash：logoUrl、backgroundColor、textColor、tagline、animation（orbit/none）。
-- attribution：visible（默认 false）、text、url（同源路径或 http(s)，外部导航必须通过已有 purpose 策略）。
+- attribution：visible（默认 false）、text、url（同源路径或 http(s)，HTTP(S) URL 必须显式包含 //，不含凭据、字面空白或反斜杠；外部导航必须通过已有 purpose 策略）。
 - icons：appleTouchUrl、pwa192Url、pwa512Url、maskable512Url。分别为 180/192/512/512 方形 PNG；maskable 由交付者提供带安全留白版本。
 - social：imageUrl（PNG/JPEG/WebP）、title（200 字）、description（500 字）。公开绝对 URL 由交付参数 pageUrl 推导；私有部署默认不公开页面地址。
 - tagline/text 可为纯文本或 zh-CN/en-US 对象；回退为当前语言 → zh-CN → 默认文案；空 tagline 可显式隐藏。
