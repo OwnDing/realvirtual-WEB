@@ -13,7 +13,7 @@
     "build": "vite build",
     "build:offline": "node scripts/build-offline-web.mjs",
     "build:embed": "vite build --config vite.embed.config.ts",
-    "postbuild": "node scripts/inject-ga-settings.mjs && node scripts/apply-deployment-profile.mjs && npm run build:access && npm run build:demo-player",
+    "postbuild": "node scripts/inject-ga-settings.mjs && node scripts/apply-deployment-profile.mjs && npm run build:access && npm run build:demo-player && node scripts/finalize-brand-build.mjs",
     "viewer:chrome": "node scripts/launch-viewer-chrome.mjs",
     "preview": "vite preview",
     "preview:embed": "vite preview --outDir dist-embed --port 4178 --strictPort",
@@ -51,7 +51,8 @@
     "build:demo-player": "node scripts/build-demo-player.mjs",
     "prepare:performance": "node scripts/performance/prepare-model.mjs",
     "verify:performance": "node scripts/performance/verify-production.mjs",
-    "benchmark:performance": "node scripts/performance/verify-production.mjs --benchmark"
+    "benchmark:performance": "node scripts/performance/verify-production.mjs --benchmark",
+    "build:brand": "node scripts/prepare-brand-delivery.mjs"
   },
   "engines": {
     "node": ">=18"

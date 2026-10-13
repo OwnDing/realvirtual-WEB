@@ -8,6 +8,7 @@
   "properties": {
     "schemaVersion": { "const": 2 },
     "identity": { "$ref": "../v1/deployment-config.json#/$defs/identity" },
+    "branding": { "$ref": "../v1/branding.json" },
     "legal": { "$ref": "../v1/deployment-config.json#/$defs/legal" },
     "egress": { "$ref": "../v1/deployment-config.json#/$defs/egress" },
     "services": { "$ref": "../v1/deployment-config.json#/$defs/services" },

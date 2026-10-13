@@ -78,7 +78,7 @@
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: #1a1a1a;
+      background: var(--rv-brand-splash-background, #1a1a1a);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -103,7 +103,7 @@
       width: min(120px, 30vw);
       height: min(120px, 30vw);
       animation: logo-pulse 2s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(45, 212, 191, 0.6));
+      filter: drop-shadow(0 0 20px rgba(var(--rv-brand-splash-primary-rgb, 45, 212, 191), 0.6));
     }
 
     /* Orbiting dot */
@@ -111,7 +111,7 @@
       position: absolute;
       inset: -30px;
       border-radius: 50%;
-      border: 1px solid rgba(45, 212, 191, 0.14);
+      border: 1px solid rgba(var(--rv-brand-splash-primary-rgb, 45, 212, 191), 0.14);
     }
     .orbit-dot {
       position: absolute;
@@ -126,15 +126,15 @@
       transform: translateX(-50%);
       width: 6px;
       height: 6px;
-      background: #2DD4BF;
+      background: var(--rv-brand-splash-primary, #2DD4BF);
       border-radius: 50%;
-      box-shadow: 0 0 8px rgba(45, 212, 191, 0.85), -6px 0 5px rgba(79, 70, 229, 0.35);
+      box-shadow: 0 0 8px rgba(var(--rv-brand-splash-primary-rgb, 45, 212, 191), 0.85), -6px 0 5px rgba(var(--rv-brand-splash-secondary-rgb, 79, 70, 229), 0.35);
     }
 
     /* Brand name — prominent */
     .loader-brand {
       margin-top: 48px;
-      color: #ccc;
+      color: var(--rv-brand-splash-text, #ccc);
       font-family: 'Segoe UI', sans-serif;
       font-size: 15px;
       font-weight: 500;
@@ -197,7 +197,7 @@
     .loader-progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #2DD4BF, #4F46E5);
+      background: linear-gradient(90deg, var(--rv-brand-splash-primary, #2DD4BF), var(--rv-brand-splash-secondary, #4F46E5));
       border-radius: 3px;
       transition: width 0.3s ease-out;
     }
@@ -262,7 +262,7 @@
       appearance: none;
       border: 1px solid #444;
       background: transparent;
-      color: #ccc;
+      color: var(--rv-brand-splash-text, #ccc);
       font-family: 'Segoe UI', sans-serif;
       font-size: 13px;
       letter-spacing: 0.4px;
@@ -273,15 +273,15 @@
     }
     .loader-btn:hover { border-color: #666; color: #fff; }
     .loader-btn-primary {
-      border-color: #2DD4BF;
-      background: linear-gradient(90deg, #2DD4BF, #4F46E5);
+      border-color: var(--rv-brand-splash-primary, #2DD4BF);
+      background: linear-gradient(90deg, var(--rv-brand-splash-primary, #2DD4BF), var(--rv-brand-splash-secondary, #4F46E5));
       color: #fff;
     }
     .loader-btn-primary:hover { filter: brightness(1.08); color: #fff; }
 
     @keyframes logo-pulse {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(45, 212, 191, 0.5)); }
-      50% { transform: scale(1.04); filter: drop-shadow(0 0 28px rgba(79, 70, 229, 0.8)); }
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(var(--rv-brand-splash-primary-rgb, 45, 212, 191), 0.5)); }
+      50% { transform: scale(1.04); filter: drop-shadow(0 0 28px rgba(var(--rv-brand-splash-secondary-rgb, 79, 70, 229), 0.8)); }
     }
 
     @keyframes orbit-spin {
@@ -358,6 +358,13 @@
   -->
   <script>
     (function () {
+      document.addEventListener('error', function (event) {
+        var image = event.target;
+        if (image && image.tagName === 'IMG' && image.hasAttribute('data-rv-logo')) {
+          image.hidden = true;
+          console.warn('[branding] Logo unavailable; product name remains visible');
+        }
+      }, true);
       var useEnglish = document.documentElement.getAttribute('data-rv-default-locale') === 'en-US';
       try {
         var raw = localStorage.getItem('rv-language');
@@ -371,13 +378,19 @@
       } catch (err) {
         // Storage refused or contains junk — keep the deployment default.
       }
-      if (!useEnglish) return;
+      if (!useEnglish) {
+        document.documentElement.lang = 'zh-CN';
+        var chineseSlogan = document.querySelector('.loader-slogan');
+        if (chineseSlogan && chineseSlogan.hasAttribute('data-rv-zh-cn')) chineseSlogan.textContent = chineseSlogan.getAttribute('data-rv-zh-cn');
+        return;
+      }
       document.documentElement.lang = 'en-US';
       var set = function (selector, text) {
         var el = document.querySelector(selector);
         if (el) el.textContent = text;
       };
-      set('.loader-slogan', 'Open. Light. Industrial. Anywhere.');
+      var slogan = document.querySelector('.loader-slogan');
+      set('.loader-slogan', slogan && slogan.hasAttribute('data-rv-en-us') ? slogan.getAttribute('data-rv-en-us') : 'Open. Light. Industrial. Anywhere.');
       set('#loading-label', 'Loading ');
       set('.loader-error-title', 'Could not load the model');
       set('#loading-retry-btn', 'Retry');

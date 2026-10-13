@@ -43,6 +43,7 @@
  * reader "3 of 24" on a list of 22 signals.
  */
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import {
   useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState,
 } from 'react';
@@ -76,7 +77,7 @@ export interface SignalSearchItem {
 }
 
 /** Instrument Blue — the one accent of the product (DESIGN.md). */
-const INSTRUMENT_BLUE = '#4fc3f7';
+const INSTRUMENT_BLUE = BRAND_ACCENT;
 
 const LIST_HEIGHT = 260;
 const LIST_WIDTH = 300;
@@ -478,9 +479,9 @@ export function SignalSearchOverlay({
                         // Blocked options stay READABLE and hoverable (the title
                         // carries the reason); only their activation is gone.
                         pointerEvents: s.conflict ? 'none' : undefined,
-                        bgcolor: isActive ? 'rgba(79,195,247,0.14)' : undefined,
-                        boxShadow: isActive ? 'inset 2px 0 0 #4fc3f7' : undefined,
-                        '&:hover': { bgcolor: 'rgba(79,195,247,0.10)' },
+                        bgcolor: isActive ? brandAccentAlpha(0.14) : undefined,
+                        boxShadow: isActive ? 'inset 2px 0 0 var(--rv-brand-primary, #4fc3f7)' : undefined,
+                        '&:hover': { bgcolor: brandAccentAlpha(0.10) },
                       }}
                     />
                     {blocked && (
@@ -513,7 +514,7 @@ export function SignalSearchOverlay({
               mt: 0.5, px: 0.5, py: 0.25, borderRadius: 0.5, width: '100%',
               justifyContent: 'flex-start', fontSize: 11,
               color: showAll ? INSTRUMENT_BLUE : 'rgba(255,255,255,0.5)',
-              '&:hover': { color: INSTRUMENT_BLUE, bgcolor: 'rgba(79,195,247,0.10)' },
+              '&:hover': { color: INSTRUMENT_BLUE, bgcolor: brandAccentAlpha(0.10) },
               '&:focus-visible': { outline: `1px solid ${INSTRUMENT_BLUE}`, outlineOffset: 1 },
             }}
           >

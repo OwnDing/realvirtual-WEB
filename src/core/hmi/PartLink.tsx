@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import { Chip, Link } from '@mui/material';
 import { MyLocation } from '@mui/icons-material';
 import { useViewer } from '../../hooks/use-viewer';
@@ -50,10 +51,10 @@ export function PartLink({ path, label, variant, onNavigate, onDelete }: PartLin
         onClick={navigate}
         onDelete={onDelete}
         sx={{
-          color: '#4fc3f7',
-          borderColor: 'rgba(79,195,247,0.5)',
-          '& .MuiChip-icon': { color: '#4fc3f7' },
-          '& .MuiChip-deleteIcon': { color: 'rgba(79,195,247,0.7)' },
+          color: BRAND_ACCENT,
+          borderColor: brandAccentAlpha(0.5),
+          '& .MuiChip-icon': { color: BRAND_ACCENT },
+          '& .MuiChip-deleteIcon': { color: brandAccentAlpha(0.7) },
         }}
       />
     );
@@ -72,7 +73,7 @@ export function PartLink({ path, label, variant, onNavigate, onDelete }: PartLin
         gap: 0.25,
         p: 0,
         border: 0,
-        color: '#4fc3f7',
+        color: BRAND_ACCENT,
         font: 'inherit',
         lineHeight: 'inherit',
         verticalAlign: 'baseline',

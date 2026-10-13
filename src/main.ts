@@ -25,7 +25,7 @@ import { initTestRunner } from './rv-test-runner';
 import { installRuntimeCsp } from './core/deployment/runtime-csp';
 import { fetchAppConfig, getAppConfig, setAppConfig, initAnalytics, trackAnalyticsEvent } from './core/rv-app-config';
 import { applyDeploymentIdentityToDocument } from './core/deployment/deployment-identity';
-import { setDeploymentBranding } from './core/hmi/branding-store';
+import { setDeploymentBranding, clearCustomBranding } from './core/hmi/branding-store';
 import { allowRuntimeEgressUrl, runtimeFetch } from './core/deployment/runtime-egress';
 import type { EgressPurpose } from './core/deployment/deployment-config';
 import { initFragmentSecret, decryptModelData } from './core/hmi/password-gate';
@@ -240,7 +240,8 @@ function applyPrebootText(): void {
     const el = document.querySelector(selector);
     if (el) el.textContent = value;
   };
-  set('.loader-slogan', rvT('preboot', 'slogan'));
+  const slogan = document.querySelector('.loader-slogan');
+  set('.loader-slogan', slogan?.getAttribute(`data-rv-${getLocale().toLowerCase()}`) ?? rvT('preboot', 'slogan'));
   set('.loader-error-title', rvT('preboot', 'errorTitle'));
   set('#loading-retry-btn', rvT('preboot', 'retry'));
   set('#loading-reload-btn', rvT('preboot', 'reloadPage'));
@@ -517,7 +518,7 @@ async function init() {
   // React mounts. A missing chunk degrades to the bundled Chinese source catalog.
   if (getLocale() === 'en-US') await ensureEnglishCatalog();
   applyDeploymentIdentityToDocument(appConfig);
-  setDeploymentBranding(appConfig.identity);
+  setDeploymentBranding(appConfig.identity, appConfig.branding);
   // Deliberately NOT awaited. A licence is contract evidence, not permission to
   // boot: an operator must never wait on it, and a deployment that did not ask
   // for one does not even fetch. It settles into the store and the UI follows.
@@ -642,6 +643,7 @@ async function init() {
 
   // --- Create Viewer ---
   const viewer = await RVViewer.create(container, { renderer: rendererKind, antialias: wantAntialias, plannerSignalLinking: true });
+  viewer.on('model-cleared', clearCustomBranding);
   bindLoadFeedback(viewer.loading, () => loadingRetryBtn.click());
 
   // Apply persisted DPR cap (runtime-changeable, no reload needed)

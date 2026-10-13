@@ -1,3 +1,4 @@
+document.querySelectorAll('img[data-rv-brand-image]').forEach(image => { image.addEventListener('error', () => { image.hidden = true; console.warn('[branding] Logo unavailable; product name remains visible'); }); });
 const summary = document.querySelector('#summary');
 const checks = document.querySelector('#checks');
 const links = document.querySelector('#links');

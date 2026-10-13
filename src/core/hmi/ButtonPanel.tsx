@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { BrandImage } from './BrandImage';
+import { brandAssetHref } from '../deployment/brand-config.mjs';
 import { Box, Paper } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useViewer } from '../../hooks/use-viewer';
@@ -32,15 +33,14 @@ function BrandingContent() {
   const custom = useCustomBranding();
 
   // No branding, or branding that doesn't override the activity-bar mark →
-  // keep the default XYvirtual logo. A project sets `logoUrl` only when it
-  // wants its own mark here; Mauser leaves it so the platform logo stays.
+  // keep the default XYvirtual logo. Only deployment identity can replace it.
   if (!custom?.logoUrl) {
-    return <img src={logoUrl} alt={custom?.shortName ?? DEFAULT_PRODUCT_SHORT_NAME} style={{ height: 24, width: 24 }} />;
+    return <BrandImage src={logoUrl} name={custom?.shortName ?? DEFAULT_PRODUCT_SHORT_NAME} style={{ height: 24, width: 24 }} />;
   }
   return (
-    <img
-      src={allowRuntimeEgressUrl(custom.logoUrl, 'remote-model')?.href}
-      alt={custom.name ?? 'Logo'}
+    <BrandImage
+      src={brandAssetHref(custom.logoUrl, import.meta.env.BASE_URL)}
+      name={custom.name ?? DEFAULT_PRODUCT_SHORT_NAME}
       style={{ height: 24, width: 'auto', maxWidth: 38, objectFit: 'contain' }}
     />
   );

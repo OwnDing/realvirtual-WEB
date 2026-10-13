@@ -15,3 +15,5 @@ authority: normative-registry
 已完成计划见 [`../completed/`](../completed/README.md)。
 
 只有 `status: approved, plan_status: active` 的计划可以驱动实现。Proposed 计划必须留在评审状态，不得通过移动文件自动获得批准。
+
+- [EP-BRAND-001：L2-5 部署白标](EP-BRAND-001-deployment-white-label.md)

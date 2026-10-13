@@ -21,6 +21,7 @@
  * behind it must not show through). Non-interactive by design.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useEffect, useSyncExternalStore } from 'react';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 import {
@@ -79,7 +80,7 @@ export function SceneTransitionOverlay() {
           textAlign: 'center',
         }}
       >
-        <CircularProgress size={44} thickness={4} sx={{ color: '#4fc3f7' }} />
+        <CircularProgress size={44} thickness={4} sx={{ color: BRAND_ACCENT }} />
         <Typography sx={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}>
           {snap.label}
         </Typography>

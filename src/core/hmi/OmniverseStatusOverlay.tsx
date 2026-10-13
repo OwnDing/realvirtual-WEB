@@ -9,6 +9,7 @@
  * only surfaces transient/loading state. Purely informational (pointer-events none).
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useEffect, useState } from 'react';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 import { ErrorOutline, Bolt } from '@mui/icons-material';
@@ -79,13 +80,13 @@ export function OmniverseStatusOverlay() {
           <Bolt sx={{ fontSize: 40, color: '#ffca28' }} />
         ) : pct != null ? (
           <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress variant="determinate" value={pct} size={52} thickness={4} sx={{ color: '#4fc3f7' }} />
+            <CircularProgress variant="determinate" value={pct} size={52} thickness={4} sx={{ color: BRAND_ACCENT }} />
             <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{pct}%</Typography>
             </Box>
           </Box>
         ) : (
-          spinning && <CircularProgress size={44} thickness={4} sx={{ color: '#4fc3f7' }} />
+          spinning && <CircularProgress size={44} thickness={4} sx={{ color: BRAND_ACCENT }} />
         )}
 
         <Box sx={{ minWidth: 0 }}>

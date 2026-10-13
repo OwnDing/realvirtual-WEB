@@ -12,6 +12,7 @@
  * the docked-left HMI panels. Visibility follows the plugin's `active` flag.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useSyncExternalStore, useCallback } from 'react';
 import {
   Box,
@@ -140,7 +141,7 @@ export function ClippingPanel() {
             fontSize: 12,
             color: 'text.secondary',
             borderColor: 'rgba(255,255,255,0.15)',
-            '&:hover': { borderColor: '#4fc3f7', color: '#4fc3f7' },
+            '&:hover': { borderColor: BRAND_ACCENT, color: BRAND_ACCENT },
           }}
         >
           {t('clip.resetAll')}

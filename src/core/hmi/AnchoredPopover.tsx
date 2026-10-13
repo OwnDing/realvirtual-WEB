@@ -12,6 +12,7 @@
  * Reusable for any component panel.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useEffect, useRef, useSyncExternalStore, createElement } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
@@ -125,7 +126,7 @@ export function AnchoredPopover() {
         {req.title ? (
           <>
             <DragIndicatorIcon sx={{ fontSize: 13, transform: 'rotate(90deg)', flexShrink: 0 }} />
-            <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#4fc3f7', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <Typography sx={{ fontSize: 11, fontWeight: 700, color: BRAND_ACCENT, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {req.title}
             </Typography>
             <IconButton

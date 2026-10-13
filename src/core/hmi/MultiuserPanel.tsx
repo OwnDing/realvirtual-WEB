@@ -9,6 +9,7 @@
  * Advanced "Direct Connection" section is collapsible for power users.
  */
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import {
   Box,
@@ -298,7 +299,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
                     fontSize: 11, textTransform: 'none',
                     borderColor: 'rgba(255,255,255,0.15)',
                     color: 'rgba(255,255,255,0.65)',
-                    '&:hover': { borderColor: '#4fc3f7', color: '#4fc3f7', bgcolor: 'rgba(79,195,247,0.06)' },
+                    '&:hover': { borderColor: BRAND_ACCENT, color: BRAND_ACCENT, bgcolor: brandAccentAlpha(0.06) },
                   }}
                 >
                   {mu.status === 'connecting' ? 'Connecting…' : 'Connect Direct'}
@@ -344,7 +345,7 @@ export function MultiuserPanel({ onClose }: MultiuserPanelProps) {
               fontSize: 11, textTransform: 'none', mb: 0.5,
               borderColor: 'rgba(255,255,255,0.15)',
               color: 'rgba(255,255,255,0.65)',
-              '&:hover': { borderColor: '#4fc3f7', color: '#4fc3f7', bgcolor: 'rgba(79,195,247,0.06)' },
+              '&:hover': { borderColor: BRAND_ACCENT, color: BRAND_ACCENT, bgcolor: brandAccentAlpha(0.06) },
             }}
           >
             {copied ? 'Link Copied!' : 'Share Session Link'}

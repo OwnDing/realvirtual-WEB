@@ -9,6 +9,8 @@ authority: normative-registry
 
 # 交付证据索引
 
+- [`WHITE_LABEL_OPERATIONS.md`](WHITE_LABEL_OPERATIONS.md)：白标配置、资源校验、同一构建的客户交付、缓存与回滚。
+
 - [`VISUAL_PRESENTATION_OPERATIONS.md`](VISUAL_PRESENTATION_OPERATIONS.md)：展示风格、材质、媒体导出、WebGPU 边界和资源来源。
 
 - [`OFFLINE_OPERATIONS.md`](OFFLINE_OPERATIONS.md)：离线构建、启动配置、宿主响应头和 CI 门禁。

@@ -20,6 +20,7 @@
  * background call keeps burning the CONNECT rate limit.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -352,7 +353,7 @@ function renderLinkedText(
           sx={{
             p: 0,
             border: 0,
-            color: '#4fc3f7',
+            color: BRAND_ACCENT,
             font: 'inherit',
             lineHeight: 'inherit',
             verticalAlign: 'baseline',
@@ -396,7 +397,7 @@ function renderAnswerText(
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="subtitle2" sx={{ color: '#4fc3f7', fontWeight: 700, mb: 0.5 }}>
+      <Typography variant="subtitle2" sx={{ color: BRAND_ACCENT, fontWeight: 700, mb: 0.5 }}>
         {title}
       </Typography>
       {children}

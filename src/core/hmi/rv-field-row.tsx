@@ -8,6 +8,7 @@
  * a reference badge, or a read-only display value.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import {
   Box,
   Typography,
@@ -128,7 +129,7 @@ export function FieldRow({ fieldName, value, status, isOverridden, onEdit, onRes
         <IconButton
           size="small"
           onClick={(e) => { e.stopPropagation(); onReset(); }}
-          sx={{ width: HIT_MIN, height: HIT_MIN, p: 0, color: '#4fc3f7' }}
+          sx={{ width: HIT_MIN, height: HIT_MIN, p: 0, color: BRAND_ACCENT }}
           title={t('component.resetToDefault')}
           aria-label={t('component.resetToDefaultFor', { name: fieldName })}
         >

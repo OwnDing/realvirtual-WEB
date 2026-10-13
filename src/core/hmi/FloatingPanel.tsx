@@ -11,6 +11,7 @@
  * expand/collapse toggle, MUI Paper glassmorphism styling.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, IconButton, Typography, Paper } from '@mui/material';
@@ -217,7 +218,7 @@ export function FloatingPanel({
   open,
   onClose,
   title,
-  titleColor = '#4fc3f7',
+  titleColor = BRAND_ACCENT,
   subtitle,
   defaultWidth = 700,
   defaultHeight = 340,

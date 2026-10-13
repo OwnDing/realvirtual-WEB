@@ -5,6 +5,10 @@
 import { useState, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Box, Typography, TextField, Button, Paper } from '@mui/material';
+import { BrandAttribution } from '../core/hmi/BrandAttribution';
+import { BrandImage } from '../core/hmi/BrandImage';
+import { getDeploymentBrand } from '../core/hmi/branding-store';
+import { brandAssetHref } from '../core/deployment/brand-config.mjs';
 import { RVViewerProvider } from '../hooks/use-viewer';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
@@ -15,6 +19,7 @@ import { accessRequest, accessWrite, type AccessSession } from '../access/client
 export interface LoginGateConfig {
   title?: string;
   subtitle?: string;
+  /** @deprecated Accent colors belong to deployment identity.primaryColor. */
   accentColor?: string;
   footer?: string;
   /** @deprecated Client-side credentials are rejected; migrate to Appliance access accounts. */
@@ -42,6 +47,7 @@ export class LoginGatePlugin implements RVViewerPlugin {
     this.legacy = config.userB64 !== undefined || config.passB64 !== undefined;
     const plugin = this;
     function Overlay() {
+      const brand = getDeploymentBrand();
       const { t } = useRvTranslation('shell');
       const [user, setUser] = useState(''), [pass, setPass] = useState('');
       const [busy, setBusy] = useState(false), [done, setDone] = useState(false);
@@ -59,13 +65,16 @@ export class LoginGatePlugin implements RVViewerPlugin {
           try { await accessWrite('/login', { username: user, password: pass }); if (!await plugin.check()) throw new Error('denied'); setDone(true); plugin.unlock(); }
           catch { setError('invalid'); } finally { setPass(''); setBusy(false); }
         }}>
-          {config.title && <Typography variant="h6">{config.title}</Typography>}
+          <BrandImage src={brandAssetHref(brand.logoUrl, import.meta.env.BASE_URL)} name={brand.shortName} style={{ height: 36, maxWidth: 240, objectFit: 'contain' }} />
+          <Typography variant="h6">{brand.productName}</Typography>
+          {config.title && <Typography>{config.title}</Typography>}
           {config.subtitle && <Typography>{config.subtitle}</Typography>}
           <TextField fullWidth margin="normal" label={t('login.username')} autoComplete="username" value={user} onChange={e => setUser(e.target.value)}/>
           <TextField fullWidth margin="normal" label={t('login.password')} type="password" autoComplete="current-password" value={pass} onChange={e => setPass(e.target.value)}/>
           {error && <Typography role="alert" color="error">{error === 'migration' ? t('access.migration') : t('access.invalid')}</Typography>}
-          <Button type="submit" fullWidth disabled={busy || plugin.legacy} variant="contained" sx={{ bgcolor: config.accentColor }}>{t('login.signIn')}</Button>
-          {config.footer && <Typography variant="caption">{config.footer}</Typography>}
+          <Button type="submit" fullWidth disabled={busy || plugin.legacy} variant="contained" sx={{ bgcolor: 'var(--rv-brand-primary, #4fc3f7)' }}>{t('login.signIn')}</Button>
+          {config.footer && <Typography variant="caption" component="p">{config.footer}</Typography>}
+          <BrandAttribution />
         </form></Paper>
       </Box>;
     }

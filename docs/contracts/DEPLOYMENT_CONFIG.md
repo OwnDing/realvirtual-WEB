@@ -44,6 +44,8 @@ Origin 必须是绝对 `http:`/`https:`/`ws:`/`wss:` origin，不包含路径、
 
 本契约不重命名现有字段、GLB/rv-ODT、`rv_extras`、NodeId、项目文档、资产引用、插件 ID 或存储 key。旧客户端忽略新增字段；新客户端在旧配置下使用安全默认值。
 
+[ADR-0016](../adr/ADR-0016-deployment-white-label.md) 增加 v2 可选白标段并统一 identity 资源路径约束：资源属于部署根目录，前导单斜杠按部署根解析；不接受 `./`、`../`、编码路径、query 或 fragment。旧资源地址需按[白标交付说明](../delivery/WHITE_LABEL_OPERATIONS.md)规范化，普通名称/颜色字段与默认值保持兼容。
+
 ## 6. 离线运行投影
 
 [ADR-0011](../adr/ADR-0011-offline-runtime-gate.md) 规定 `RV_DEPLOYMENT_PROFILE=offline` 仅投影本契约既有 `egress/services` 字段；没有新的项目可覆盖开关。构建和启动共享 origin/purpose 解析与 CSP 生成，启动 CSP 只能收紧。配置更新通过页面重新加载生效。

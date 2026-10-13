@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { readDocumentBrand, applyBrandDocument, documentBrandBase } from '../core/deployment/brand-document';
+import { brandAssetHref, localizeBrandText } from '../core/deployment/brand-config.mjs';
+import { BrandImage } from '../core/hmi/BrandImage';
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initI18n, rvT, setLocale, useRvTranslation, getLocale } from '../core/i18n';
+import { initI18n, rvT, setLocale, useRvTranslation, getLocale, readStoredLocale, normalizeLocale } from '../core/i18n';
 import { fetchWithEgress } from '../core/deployment/egress-io';
 import { accessRequest, accessWrite, consumeAccessLink, accessRoot, AccessFailure, type AccessSession, type Presentation, type Share, type Visitor, type Audit, type ShareInfo } from './client';
 import type { RVEmbedViewer } from '../embed/rv-embed-viewer';
@@ -9,7 +12,7 @@ import './style.css';
 
 // Scrub secrets before importing the engine or starting any network request.
 let pendingLink = consumeAccessLink();
-initI18n();
+initI18n(readStoredLocale() ?? normalizeLocale(document.documentElement.lang));
 type Key = keyof typeof import('../core/i18n/catalogs/zh-CN').zhCN.shell.access;
 const t = (key: Key) => rvT('shell', `access.${key}`);
 function errorText(error: unknown): string {
@@ -25,6 +28,9 @@ function errorText(error: unknown): string {
 }
 const date = (time: number) => new Date(time).toLocaleString(getLocale());
 
+const brand = readDocumentBrand();
+applyBrandDocument(brand);
+
 function App() {
   useRvTranslation('shell');
   const [session, setSession] = useState<AccessSession | null>(null);
@@ -38,7 +44,7 @@ function App() {
     setSession(await accessRequest<AccessSession>('/session'));
   };
   useEffect(() => {
-    document.title = t('title');
+    document.title = brand.browserTitle;
     // Following another share in this tab may be a fragment-only navigation.
     // Restart the flow so the previous viewer/session UI cannot consume the new link.
     const openLink = () => { if (new URLSearchParams(location.hash.slice(1)).has('share')) location.reload(); };
@@ -59,12 +65,14 @@ function App() {
       else setError(errorText(e));
     } finally { setBusy(false); }
   };
-  return <><header><strong>{t('title')}</strong><nav><button onClick={() => void setLocale(getLocale() === 'zh-CN' ? 'en-US' : 'zh-CN')}>{t('language')}</button>{session && <button disabled={busy} onClick={() => void logout()}>{t('logout')}</button>}</nav></header>
+  const attributionText = localizeBrandText(brand.attribution.text, getLocale());
+  const attributionHref = brand.attribution.url ? (/^https?:/.test(brand.attribution.url) ? brand.attribution.url : brandAssetHref(brand.attribution.url, documentBrandBase())) : undefined;
+  return <><header><BrandImage src={brandAssetHref(brand.logoUrl, documentBrandBase())} name={brand.shortName} /><strong>{brand.productName}</strong><nav><button onClick={() => void setLocale(getLocale() === 'zh-CN' ? 'en-US' : 'zh-CN')}>{t('language')}</button>{session && <button disabled={busy} onClick={() => void logout()}>{t('logout')}</button>}</nav></header>
     {error && <p role="alert" className="error">{error}</p>}
     {loading ? <p role="status">{t('loading')}</p> : !session ? <main className="signin"><h1>{t('login')}</h1><p>{t('noLink')}</p><form onSubmit={login}><label>{t('username')}<input name="username" autoComplete="username" required maxLength={64}/></label><label>{t('password')}<input name="password" type="password" autoComplete="current-password" required maxLength={256}/></label><button disabled={busy}>{t('login')}</button></form></main>
       : session.shareId ? <Viewer shareId={session.shareId} onExpired={message => { setError(message); setSession(null); }}/>
       : session.role === 'admin' ? <Admin session={session} report={setError}/> : <p>{t('noLink')}</p>}
-    <footer>{t('warning')}</footer></>;
+    <footer>{brand.attribution.visible && <p>{attributionHref ? <a href={attributionHref} target="_blank" rel="noopener noreferrer">{attributionText}</a> : attributionText}</p>}{t('warning')}</footer></>;
 }
 
 function Admin({ session, report }: { session: AccessSession; report: (message: string) => void }) {

@@ -12,6 +12,7 @@
  * the list refreshes on `groups-changed` and `model-loaded`.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Box, IconButton, Typography, List,
@@ -515,7 +516,7 @@ export function GroupsListContent({
                         userSelect: 'none',
                         fontSize: 13,
                         fontWeight: isIso ? 700 : 400,
-                        color: isIso ? '#4fc3f7' : 'inherit',
+                        color: isIso ? BRAND_ACCENT : 'inherit',
                       },
                     }}
                     sx={{ minWidth: 0, my: 0 }}
@@ -533,8 +534,8 @@ export function GroupsListContent({
                     title={t(isIso ? 'groups.stopIsolating' : 'groups.isolate', { name: af.label })}
                     sx={{
                       p: 0.3,
-                      color: isIso ? '#4fc3f7' : 'rgba(255,255,255,0.25)',
-                      '&:hover': { color: '#4fc3f7' },
+                      color: isIso ? BRAND_ACCENT : 'rgba(255,255,255,0.25)',
+                      '&:hover': { color: BRAND_ACCENT },
                     }}
                   >
                     <FilterCenterFocus sx={{ fontSize: 16 }} />
@@ -602,7 +603,7 @@ export function GroupsListContent({
                         userSelect: 'none',
                         fontSize: 13,
                         fontWeight: isIsolated ? 700 : 400,
-                        color: isIsolated ? '#4fc3f7' : 'inherit',
+                        color: isIsolated ? BRAND_ACCENT : 'inherit',
                       },
                     }}
                     sx={{ minWidth: 0, my: 0 }}
@@ -613,8 +614,8 @@ export function GroupsListContent({
                     title={t(isIsolated ? 'groups.stopIsolating' : 'groups.isolate', { name: group.name })}
                     sx={{
                       p: 0.3,
-                      color: isIsolated ? '#4fc3f7' : 'rgba(255,255,255,0.25)',
-                      '&:hover': { color: '#4fc3f7' },
+                      color: isIsolated ? BRAND_ACCENT : 'rgba(255,255,255,0.25)',
+                      '&:hover': { color: BRAND_ACCENT },
                     }}
                   >
                     <FilterCenterFocus sx={{ fontSize: 16 }} />
