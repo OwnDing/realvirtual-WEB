@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
 import { useEditorPlugin } from '../../hooks/use-editor-plugin';
 import { Typography, Box, Paper } from '@mui/material';
@@ -359,7 +360,7 @@ function VRModal({ onClose }: { onClose: () => void }) {
         sx={{ borderRadius: 2, width: 420, maxWidth: '95vw', p: { xs: 2.5, sm: 4 }, display: 'flex', flexDirection: 'column', gap: 2.5, alignItems: 'center', maxHeight: '90dvh', overflow: 'auto' }}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#4fc3f7' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: BRAND_ACCENT }}>
           {t('vr.open')}
         </Typography>
 
@@ -386,7 +387,7 @@ function VRModal({ onClose }: { onClose: () => void }) {
             alignItems: 'center',
             gap: 1,
             cursor: 'pointer',
-            '&:hover': { bgcolor: 'rgba(79,195,247,0.1)' },
+            '&:hover': { bgcolor: brandAccentAlpha(0.1) },
           }}
           onClick={() => navigator.clipboard.writeText(vrUrl)}
           title={t('vr.copyUrl')}
@@ -394,7 +395,7 @@ function VRModal({ onClose }: { onClose: () => void }) {
           <Typography
             variant="body2"
             sx={{
-              color: '#4fc3f7',
+              color: BRAND_ACCENT,
               fontFamily: 'monospace',
               fontSize: '0.85rem',
               flex: 1,
@@ -431,10 +432,10 @@ function StepRow({ n, text }: { n: number; text: string }) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
       <Box sx={{
-        width: 22, height: 22, borderRadius: '50%', bgcolor: 'rgba(79,195,247,0.15)',
+        width: 22, height: 22, borderRadius: '50%', bgcolor: brandAccentAlpha(0.15),
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <Typography variant="caption" sx={{ color: '#4fc3f7', fontWeight: 700, fontSize: 11 }}>{n}</Typography>
+        <Typography variant="caption" sx={{ color: BRAND_ACCENT, fontWeight: 700, fontSize: 11 }}>{n}</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: 13 }}>{text}</Typography>
     </Box>

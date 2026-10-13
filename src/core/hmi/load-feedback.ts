@@ -7,12 +7,12 @@ export function bindLoadFeedback(state: ModelLoadState, retry: () => void): () =
   const root = document.createElement('section');
   root.dataset.testid = 'model-load-feedback';
   root.style.cssText =
-    'position:fixed;inset:0;z-index:22000;background:#101820;display:none;color:#e7edf2;font:14px Inter,system-ui,sans-serif;';
+    'position:fixed;inset:0;z-index:22000;background:var(--rv-brand-splash-background,#101820);display:none;color:var(--rv-brand-splash-text,#e7edf2);font:14px Inter,system-ui,sans-serif;';
   const viewport = document.createElement('div');
   viewport.style.cssText = 'position:absolute;inset:0;';
   const card = document.createElement('div');
   card.style.cssText =
-    'position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:min(540px,90vw);padding:20px;border:1px solid #405568;border-radius:12px;background:#14212ef0;box-sizing:border-box;';
+    'position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:min(540px,90vw);padding:20px;border:1px solid var(--rv-brand-border,#405568);border-radius:12px;background:var(--rv-brand-surface,#14212ef0);box-sizing:border-box;';
   const title = document.createElement('div'),
     detail = document.createElement('div'),
     hint = document.createElement('p'),
@@ -22,12 +22,13 @@ export function bindLoadFeedback(state: ModelLoadState, retry: () => void): () =
   const progress = document.createElement('progress');
   progress.max = 100;
   progress.style.width = '100%';
+  progress.style.accentColor = 'var(--rv-brand-primary,#4fc3f7)';
   const cancel = document.createElement('button'),
     again = document.createElement('button'),
     close = document.createElement('button');
   for (const button of [cancel, again, close])
     button.style.cssText =
-      'padding:8px 18px;margin:8px 8px 0 0;background:#244b62;color:white;border:1px solid #648398;border-radius:6px;cursor:pointer;';
+      'padding:8px 18px;margin:8px 8px 0 0;background:var(--rv-brand-surface,#244b62);color:var(--rv-brand-text,white);border:1px solid var(--rv-brand-primary,#648398);border-radius:6px;cursor:pointer;';
   cancel.onclick = () => state.cancel();
   again.onclick = retry;
   close.onclick = () => {

@@ -31,3 +31,5 @@ authority: normative-registry
 - [PERFORMANCE_PACKAGE.md](PERFORMANCE_PACKAGE.md)：Performance Package v1。
 
 - [VISUAL_PRESENTATION.md](VISUAL_PRESENTATION.md)：展示配方与媒体输出 v1。
+
+- [CONTRACT-BRAND-001：White Label v1 契约](WHITE_LABEL.md)

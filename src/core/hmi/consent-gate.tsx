@@ -15,6 +15,7 @@
  * resolves immediately and nothing is shown.
  */
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import { useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
@@ -81,10 +82,10 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
       }}>
         <Box sx={{
           width: 48, height: 48, borderRadius: '50%',
-          bgcolor: 'rgba(79,195,247,0.12)', border: '1px solid rgba(79,195,247,0.3)',
+          bgcolor: brandAccentAlpha(0.12), border: '1px solid rgba(var(--rv-brand-primary-rgb, 79,195,247),0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Cookie sx={{ fontSize: 24, color: '#4fc3f7' }} />
+          <Cookie sx={{ fontSize: 24, color: BRAND_ACCENT }} />
         </Box>
 
         <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.92)' }}>
@@ -100,7 +101,7 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
             href={privacyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ fontSize: 12, color: '#4fc3f7' }}
+            sx={{ fontSize: 12, color: BRAND_ACCENT }}
           >
             {t('consent.privacy')}
           </Link>
@@ -121,7 +122,7 @@ function ConsentGate({ onAccept }: { onAccept: () => void }) {
             fullWidth
             variant="contained"
             onClick={onAccept}
-            sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#4fc3f7', '&:hover': { bgcolor: '#4fc3f7cc' } }}
+            sx={{ textTransform: 'none', fontWeight: 700, bgcolor: BRAND_ACCENT, '&:hover': { bgcolor: 'color-mix(in srgb, var(--rv-brand-primary, #4fc3f7) 80%, transparent)' } }}
           >
             {t(declined ? 'consent.acceptContinue' : 'consent.accept')}
           </Button>

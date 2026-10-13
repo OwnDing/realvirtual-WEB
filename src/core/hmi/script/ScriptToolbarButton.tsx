@@ -9,6 +9,7 @@
  * inside the panel (node picker) or via the 'Edit Script' component action.
  */
 
+import { BRAND_ACCENT } from '../brand-colors';
 import { useSyncExternalStore } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import { Code } from '@mui/icons-material';
@@ -25,7 +26,7 @@ export function ScriptToolbarButton(_props: UISlotProps) {
       <IconButton
         size="small"
         onClick={toggleScriptEditor}
-        sx={{ color: state.open ? '#4fc3f7' : 'inherit', p: 0.75 }}
+        sx={{ color: state.open ? BRAND_ACCENT : 'inherit', p: 0.75 }}
         data-testid="script-toolbar-button"
       >
         <Code fontSize="small" />

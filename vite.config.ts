@@ -1008,6 +1008,9 @@ export default defineConfig(({ command }) => ({
         // modulepreloaded a PDF renderer on every cold start. Leave it to the
         // automatic split; verified by tests/bundle-splitting.test.ts.
         manualChunks: {
+          // One dependency-free brand runtime shared by bootstrap and lazy UI/export
+          // consumers. Keep it separately cacheable from the scene application.
+          'deployment-brand': ['./src/core/deployment/brand-config.mjs', './src/core/deployment/brand-document.ts'],
           three: ['three'],
           echarts: ['echarts'],
           'gaussian-splat': ['@mkkellogg/gaussian-splats-3d'],

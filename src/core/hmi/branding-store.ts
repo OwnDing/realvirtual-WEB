@@ -1,24 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-/**
- * branding-store.ts — Custom branding configuration.
- *
- * Allows project plugins to set a custom logo that replaces the default
- * XYvirtual branding in the LogoBadge. When a custom logo is set,
- * the badge shows: [Custom Logo] — powered by XYvirtual
- *
- * Usage from a project plugin:
- *   import { setCustomBranding } from '../core/hmi/branding-store';
- *   setCustomBranding({ logoUrl: '/private-assets/myproject/assets/logo.webp', name: 'My Company' });
- */
+/** Deployment owns product chrome; project plugins may add a title only. */
 
 import { useSyncExternalStore } from 'react';
 import type { DeploymentIdentityConfig } from '../deployment/deployment-config';
+import { resolveDeploymentBrand, type DeploymentBranding, type ResolvedBrand } from '../deployment/brand-config.mjs';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
 export interface CustomBranding {
+  resolved?: ResolvedBrand;
   /** Deployment product name used in product chrome and version labels. */
   productName?: string;
   /** Short product name used as the activity-bar logo accessible name. */
@@ -27,10 +19,7 @@ export interface CustomBranding {
   companyName?: string;
   /** Deployment description used by static/runtime metadata. */
   description?: string;
-  /** URL to the custom activity-bar logo (the top-left mark). Optional: when
-   *  omitted the activity bar keeps the default XYvirtual logo, so a project
-   *  can apply title-bar/colour branding while leaving the platform mark in
-   *  place (e.g. Mauser). Set it to let a customer swap in their own mark. */
+  /** Deployment-owned activity-bar logo. Ignored by setCustomBranding. */
   logoUrl?: string;
   /** Company/project name shown next to logo (optional, logo-only if omitted). */
   name?: string;
@@ -57,6 +46,11 @@ export interface CustomBranding {
 
 // ─── Store ──────────────────────────────────────────────────────────────
 
+let _resolved = resolveDeploymentBrand();
+let _issues: string[] = [];
+export const getDeploymentBrand = (): ResolvedBrand => _resolved;
+export const getBrandingDiagnostics = (): readonly string[] => _issues;
+
 let _branding: CustomBranding | null = null;
 let _deploymentBranding: CustomBranding | null = null;
 let _projectBranding: CustomBranding | null = null;
@@ -71,23 +65,28 @@ function notify(): void {
   for (const l of _listeners) l();
 }
 
-/** Set custom branding. Pass null to reset to default XYvirtual branding. */
+/** Set project title-bar presentation. Pass null to restore deployment-only branding. */
 export function setCustomBranding(branding: CustomBranding | null): void {
-  _projectBranding = branding;
+  _issues = [];
+  _projectBranding = null;
+  if (branding) {
+    _projectBranding = {};
+    for (const key of ['titleBar', 'title', 'titleLogoUrl', 'titleLogoHeight'] as const) {
+      if (branding[key] !== undefined) Object.assign(_projectBranding, { [key]: branding[key] });
+    }
+    if (Object.keys(branding).some(key => !['titleBar', 'title', 'titleLogoUrl', 'titleLogoHeight'].includes(key))) {
+      _issues.push('Project branding cannot override deployment identity');
+      console.warn('[branding] Project branding cannot override deployment identity');
+    }
+  }
   notify();
 }
 
 /** Install the deployment-owned base identity before React mounts. */
-export function setDeploymentBranding(identity: DeploymentIdentityConfig | null | undefined): void {
-  _deploymentBranding = identity ? {
-    productName: identity.productName,
-    shortName: identity.shortName,
-    companyName: identity.companyName,
-    description: identity.description,
-    logoUrl: identity.logoUrl,
-    name: identity.shortName ?? identity.productName,
-    primaryColor: identity.primaryColor,
-    secondaryColor: identity.secondaryColor,
+export function setDeploymentBranding(identity: DeploymentIdentityConfig | null | undefined, branding?: DeploymentBranding): void {
+  _resolved = resolveDeploymentBrand({ schemaVersion: 2, identity: identity ?? undefined, branding });
+  _deploymentBranding = _resolved.configured ? {
+    ..._resolved, name: _resolved.shortName, resolved: _resolved,
   } : null;
   notify();
 }

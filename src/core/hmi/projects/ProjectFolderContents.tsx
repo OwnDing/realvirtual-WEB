@@ -23,6 +23,7 @@
  * only announces which card is in flight (see `ProjectTree.externalDragPath`).
  */
 
+import { BRAND_ACCENT } from '../brand-colors';
 import { useCallback, useState } from 'react';
 import { Box, Slider, Tooltip, Typography } from '@mui/material';
 import { GridViewOutlined, ViewModuleOutlined } from '@mui/icons-material';
@@ -159,7 +160,7 @@ export function ProjectFolderContents({
             onChange={(_, v) => changeSize(Array.isArray(v) ? v[0]! : v)}
             sx={{
               width: 120,
-              color: '#4fc3f7',
+              color: BRAND_ACCENT,
               '& .MuiSlider-thumb': { width: 10, height: 10 },
               '& .MuiSlider-rail': { opacity: 0.25 },
             }}

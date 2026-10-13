@@ -17,6 +17,7 @@
  * Zero new runtime deps: Node built-ins + global fetch only (Node 18+).
  */
 
+import { resolveDeploymentBrand, brandAssetHref } from '../src/core/deployment/brand-config.mjs';
 import {
   readdirSync,
   statSync,
@@ -983,8 +984,11 @@ export function injectSeoTags(distDir, { pageUrl, dryRun = false }) {
   let html = readFileSync(indexPath, 'utf8');
   if (/rel="canonical"/i.test(html)) return false;
 
-  const hasOgImage = existsSync(join(distDir, 'og-image.png'));
-  const imageUrl = pageUrl + (hasOgImage ? 'og-image.png' : 'pwa-512x512.png');
+  const settings = join(distDir, 'settings.json');
+  const brand = resolveDeploymentBrand(existsSync(settings) ? JSON.parse(readFileSync(settings, 'utf8')) : {});
+  const configuredImage = brand.social.imageUrl;
+  const hasOgImage = !!configuredImage || existsSync(join(distDir, 'og-image.png'));
+  const imageUrl = new URL(brandAssetHref(configuredImage ?? (hasOgImage ? 'og-image.png' : brand.icons.pwa512Url), new URL(pageUrl).pathname), pageUrl).href;
   const card = hasOgImage ? 'summary_large_image' : 'summary';
   const tags = [
     `  <link rel="canonical" href="${pageUrl}" />`,

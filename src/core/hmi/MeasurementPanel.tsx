@@ -8,6 +8,7 @@
  * inline name editing, visibility toggle, and delete functionality.
  */
 
+import { BRAND_ACCENT, brandAccentAlpha } from './brand-colors';
 import { useSyncExternalStore, useCallback, useState } from 'react';
 import {
   Box,
@@ -160,7 +161,7 @@ export function MeasurementPanel() {
     >
       {/* Unified header (matches LeftPanel) */}
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1.25, gap: 0.5, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <Straighten sx={{ fontSize: 16, color: '#4fc3f7' }} />
+        <Straighten sx={{ fontSize: 16, color: BRAND_ACCENT }} />
         <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'text.primary', flexGrow: 1 }}>
           {t('measure.title', { count: snap.measurements.length })}
         </Typography>
@@ -172,7 +173,7 @@ export function MeasurementPanel() {
                 const allVisible = snap.measurements.every(m => m.visible);
                 for (const m of snap.measurements) plugin?.updateMeasurement(m.id, { visible: !allVisible });
               }}
-              sx={{ color: 'rgba(255,255,255,0.3)', p: 0.25, '&:hover': { color: '#4fc3f7' } }}
+              sx={{ color: 'rgba(255,255,255,0.3)', p: 0.25, '&:hover': { color: BRAND_ACCENT } }}
               title={t(snap.measurements.every(m => m.visible) ? 'measure.hideAll' : 'measure.showAll')}
             >
               {snap.measurements.every(m => m.visible)
@@ -205,7 +206,7 @@ export function MeasurementPanel() {
             '& .MuiToggleButton-root': {
               fontSize: 10, py: 0.15, px: 0.8, textTransform: 'none',
               color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.1)',
-              '&.Mui-selected': { color: '#4fc3f7', bgcolor: 'rgba(79,195,247,0.1)' },
+              '&.Mui-selected': { color: BRAND_ACCENT, bgcolor: brandAccentAlpha(0.1) },
             },
           }}
         >
@@ -225,7 +226,7 @@ export function MeasurementPanel() {
               '&.Mui-selected.axis-x': { color: '#ef5350', bgcolor: 'rgba(239,83,80,0.15)' },
               '&.Mui-selected.axis-y': { color: '#66bb6a', bgcolor: 'rgba(102,187,106,0.15)' },
               '&.Mui-selected.axis-z': { color: '#42a5f5', bgcolor: 'rgba(66,165,245,0.15)' },
-              '&.Mui-selected.axis-none': { color: '#4fc3f7', bgcolor: 'rgba(79,195,247,0.1)' },
+              '&.Mui-selected.axis-none': { color: BRAND_ACCENT, bgcolor: brandAccentAlpha(0.1) },
             },
           }}
         >
@@ -247,7 +248,7 @@ export function MeasurementPanel() {
           value={displayScale}
           onChange={handleScaleChange}
           sx={{
-            color: '#4fc3f7',
+            color: BRAND_ACCENT,
             '& .MuiSlider-thumb': { width: 10, height: 10 },
             '& .MuiSlider-track': { height: 2 },
             '& .MuiSlider-rail': { height: 2, opacity: 0.2 },
@@ -320,7 +321,7 @@ export function MeasurementPanel() {
                   {m.name}
                 </Typography>
               )}
-              <Typography sx={{ fontSize: 10, color: '#4fc3f7', fontWeight: 600 }}>
+              <Typography sx={{ fontSize: 10, color: BRAND_ACCENT, fontWeight: 600 }}>
                 {formatDistance(m.distance, unit)}
               </Typography>
               <Box sx={{ display: 'flex', gap: 0.5, mt: 0.2 }}>
@@ -341,14 +342,14 @@ export function MeasurementPanel() {
               <IconButton
                 size="small"
                 onClick={(e) => { e.stopPropagation(); handleToggleVisibility(m); }}
-                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: '#4fc3f7' } }}
+                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: BRAND_ACCENT } }}
               >
                 {m.visible ? <Visibility sx={{ fontSize: 12 }} /> : <VisibilityOff sx={{ fontSize: 12 }} />}
               </IconButton>
               <IconButton
                 size="small"
                 onClick={(e) => { e.stopPropagation(); handleFocus(m.id); }}
-                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: '#4fc3f7' } }}
+                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: BRAND_ACCENT } }}
               >
                 <CenterFocusStrong sx={{ fontSize: 12 }} />
               </IconButton>

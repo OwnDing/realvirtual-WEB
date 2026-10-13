@@ -14,6 +14,7 @@
  * secret from the URL (#k=, read + cleared at boot) and the password typed here.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useState, useCallback, type KeyboardEvent } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Box, Typography, TextField, Button, Paper, IconButton, InputAdornment } from '@mui/material';
@@ -98,10 +99,10 @@ const fieldSx = {
   '& .MuiInputBase-root': { bgcolor: 'rgba(255,255,255,0.05)' },
   '& .MuiInputBase-input': { color: 'rgba(255,255,255,0.92)' },
   '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.5)' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#4fc3f7' },
+  '& .MuiInputLabel-root.Mui-focused': { color: BRAND_ACCENT },
   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#4fc3f7' },
+  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: BRAND_ACCENT },
 } as const;
 
 function GateShell({ children }: { children: React.ReactNode }) {
@@ -116,7 +117,7 @@ function GateShell({ children }: { children: React.ReactNode }) {
         bgcolor: 'rgba(20,26,34,0.96)', border: '1px solid rgba(255,255,255,0.08)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
       }}>
-        <Lock sx={{ fontSize: 40, color: '#4fc3f7' }} />
+        <Lock sx={{ fontSize: 40, color: BRAND_ACCENT }} />
         {children}
       </Paper>
     </Box>
@@ -196,7 +197,7 @@ function PasswordOverlay({ onSubmit }: PasswordOverlayProps) {
       )}
       <Button
         variant="contained" fullWidth onClick={() => void submit()} disabled={busy || !pass}
-        sx={{ mt: 1, bgcolor: '#4fc3f7', '&:hover': { bgcolor: '#29b6f6' }, color: '#08121b', fontWeight: 700 }}
+        sx={{ mt: 1, bgcolor: BRAND_ACCENT, '&:hover': { bgcolor: '#29b6f6' }, color: '#08121b', fontWeight: 700 }}
       >
         {busy ? 'Unlocking…' : 'Unlock'}
       </Button>

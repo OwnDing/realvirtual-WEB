@@ -35,3 +35,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0014-progressive-loading.md](ADR-0014-progressive-loading.md)：派生性能包与会话自适应画质。
 
 - [ADR-0015-visual-presentation.md](ADR-0015-visual-presentation.md)：视觉呈现与有界媒体导出。
+
+- [ADR-0016：部署白标统一解析与交付投影](ADR-0016-deployment-white-label.md)

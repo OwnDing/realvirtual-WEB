@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Paper, Typography, Button } from '@mui/material';
@@ -135,7 +136,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
         onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#4fc3f7' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: BRAND_ACCENT }}>
             {productName}
           </Typography>
           <Box
@@ -145,7 +146,7 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
               px: 0.75,
               borderRadius: 1,
               border: '1px solid rgba(79,195,247,0.5)',
-              color: '#4fc3f7',
+              color: BRAND_ACCENT,
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: 1.5,
@@ -229,15 +230,15 @@ export function WelcomeModal({ open, onClose, onStartDemo }: WelcomeModalProps) 
             i18nKey="welcome.betaText"
             components={[
               <strong key="license" style={{ color: '#fff' }} />,
-              <a key="terms" href={termsUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
-              <a key="site" href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }} />,
+              <a key="terms" href={termsUrl} target="_blank" rel="noopener noreferrer" style={{ color: BRAND_ACCENT, textDecoration: 'none' }} />,
+              <a key="site" href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: BRAND_ACCENT, textDecoration: 'none' }} />,
             ]}
           />
         </Typography>
 
         {sourceUrl && (
           <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4fc3f7', textDecoration: 'none' }}>
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: BRAND_ACCENT, textDecoration: 'none' }}>
               {sourceUrl}
             </a>
           </Typography>

@@ -45,6 +45,7 @@
  * what keeps the rules in `rv-project-tree.ts`, where §9.14 can reach them.
  */
 
+import { BRAND_ACCENT } from '../brand-colors';
 import { useCallback, useMemo, useRef, useState, memo } from 'react';
 import { Box, IconButton, InputBase, Tooltip, Typography } from '@mui/material';
 import {
@@ -381,7 +382,7 @@ const ProjectTreeRowView = memo(function ProjectTreeRowView({
               fontWeight: node.kind === 'root' || selected || containsSelection ? 600 : 400,
               color: node.kind === 'system'
                 ? 'rgba(255,255,255,0.5)'
-                : selected ? '#4fc3f7'
+                : selected ? BRAND_ACCENT
                   : isCatalogRoot ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.92)',
             }}
           >

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { projectStandaloneBrand } from './prepare-brand-delivery.mjs';
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -253,6 +254,10 @@ export async function buildOfflineAppliance(options) {
   try {
     copyApplianceSource(temporary);
     cpSync(webDist, join(temporary, 'web'), { recursive: true, errorOnExist: true, force: false });
+    const brandSettings = join(webDist, 'settings.json');
+    const brandConfig = existsSync(brandSettings) ? JSON.parse(readFileSync(brandSettings, 'utf8')) : {};
+    projectStandaloneBrand(join(temporary, 'runtime/static/dashboard'), webDist, brandConfig, '/appliance/');
+    projectStandaloneBrand(join(temporary, 'runtime/static/diagnostics'), webDist, brandConfig, '/diagnostics/');
     mkdirSync(join(temporary, 'licenses'), { recursive: true });
     cpSync(join(repoRoot, 'LICENSE'), join(temporary, 'licenses', 'AGPL-3.0-only.txt'));
     mkdirSync(join(temporary, 'sbom'), { recursive: true });

@@ -8,6 +8,7 @@
  * consumedOnly filter support, and per-component reset.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useState, useMemo, useCallback, type KeyboardEvent } from 'react';
 import {
   Box,
@@ -175,7 +176,7 @@ function ReadOnlyLiveRow({ fieldName, value }: { fieldName: string; value: unkno
             minHeight: HIT_MIN,
             cursor: 'pointer',
             '&:hover': { textDecoration: 'underline' },
-            '&:focus-visible': { outline: '1px solid #4fc3f7', outlineOffset: 1, borderRadius: 0.5 },
+            '&:focus-visible': { outline: '1px solid var(--rv-brand-primary, #4fc3f7)', outlineOffset: 1, borderRadius: 0.5 },
           } : {}),
         }}
       >
@@ -357,7 +358,7 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
               cursor: 'pointer',
               userSelect: 'none',
               '&:hover .rv-comp-title': { textDecoration: 'underline' },
-              '&:focus-visible': { outline: '1px solid #4fc3f7', outlineOffset: 1, borderRadius: 0.5 },
+              '&:focus-visible': { outline: '1px solid var(--rv-brand-primary, #4fc3f7)', outlineOffset: 1, borderRadius: 0.5 },
             }}
           >
             {sectionExpanded
@@ -463,7 +464,7 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
             cursor: 'pointer',
             userSelect: 'none',
             '&:hover .rv-comp-title': { textDecoration: 'underline' },
-            '&:focus-visible': { outline: '1px solid #4fc3f7', outlineOffset: 1, borderRadius: 0.5 },
+            '&:focus-visible': { outline: '1px solid var(--rv-brand-primary, #4fc3f7)', outlineOffset: 1, borderRadius: 0.5 },
           }}
         >
           {sectionExpanded
@@ -509,11 +510,11 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
                 alignItems: 'center',
                 minHeight: HIT_MIN,
                 fontSize: 11,
-                color: '#4fc3f7',
+                color: BRAND_ACCENT,
                 ml: 'auto',
                 cursor: 'pointer',
                 '&:hover': { color: INK_HIGH, textDecoration: 'underline' },
-                '&:focus-visible': { outline: '1px solid #4fc3f7', outlineOffset: 1, borderRadius: 0.5 },
+                '&:focus-visible': { outline: '1px solid var(--rv-brand-primary, #4fc3f7)', outlineOffset: 1, borderRadius: 0.5 },
               }}
             >
               {overriddenFields.size} override{overriddenFields.size !== 1 ? 's' : ''}
@@ -675,7 +676,7 @@ export function ComponentSection({ nodePath, componentType, data, overriddenFiel
               py: 0.125,
               cursor: 'pointer',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' },
-              '&:focus-visible': { outline: '1px solid #4fc3f7', outlineOffset: -1 },
+              '&:focus-visible': { outline: '1px solid var(--rv-brand-primary, #4fc3f7)', outlineOffset: -1 },
             }}
           >
             <ExpandMore sx={{

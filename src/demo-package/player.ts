@@ -21,7 +21,8 @@ async function start(): Promise<void> {
   if (data.schemaVersion !== 1 || data.license !== 'AGPL-3.0-only') throw new DemoPackageError('recipe');
   const recipe = parseDemoRecipe(data.recipe); messages = demoMessages(recipe.locale);
   const bytes = fromBase64(data.modelBase64, MAX_DEMO_MODEL_BYTES); preflightDemoGlb(bytes);
-  document.title = recipe.title; document.querySelector('h1')!.textContent = recipe.title;
+  if (document.documentElement.dataset.rvBranded !== 'true') document.title = recipe.title;
+  document.querySelector('h1')!.textContent = recipe.title;
   const download = (id: string, bytes: Uint8Array, name: string, type: string) => {
     const url = URL.createObjectURL(new Blob([bytes.slice().buffer], { type })); urls.push(url);
     const link = document.getElementById(id) as HTMLAnchorElement; link.href = url; link.download = name;

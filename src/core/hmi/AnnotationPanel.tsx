@@ -8,6 +8,7 @@
  * inline text editing, color picker, and delete functionality.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { useSyncExternalStore, useCallback } from 'react';
 import {
   Box,
@@ -166,7 +167,7 @@ export function AnnotationPanel() {
               <IconButton
                 size="small"
                 onClick={(e) => { e.stopPropagation(); handleStartEdit(ann); }}
-                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: '#4fc3f7' } }}
+                sx={{ color: 'rgba(255,255,255,0.3)', p: 0.2, '&:hover': { color: BRAND_ACCENT } }}
               >
                 <EditNote sx={{ fontSize: 12 }} />
               </IconButton>

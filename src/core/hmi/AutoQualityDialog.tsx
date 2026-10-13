@@ -12,6 +12,7 @@
  * until it is actually shown and dismissed.
  */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { createPortal } from 'react-dom';
 import { Box, Paper, Typography, Button } from '@mui/material';
 import SpeedIcon from '@mui/icons-material/Speed';
@@ -72,7 +73,7 @@ export function AutoQualityDialog() {
         onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SpeedIcon sx={{ color: '#4fc3f7', fontSize: 22 }} />
+          <SpeedIcon sx={{ color: BRAND_ACCENT, fontSize: 22 }} />
           <Typography id="rv-auto-quality-title" variant="h6" sx={{ fontWeight: 700, fontSize: 16 }}>
             {t('autoQuality.title')}
           </Typography>

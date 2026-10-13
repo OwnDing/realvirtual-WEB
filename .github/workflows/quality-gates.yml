@@ -88,6 +88,9 @@ jobs:
           RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
         run: ./scripts/verify.sh browser
         timeout-minutes: 20
+      - name: Verify white-label production journeys
+        run: node scripts/test-white-label.mjs
+        timeout-minutes: 5
       - name: Verify progressive loading in production Chromium
         run: npm run verify:performance
         timeout-minutes: 5
@@ -119,6 +122,14 @@ jobs:
         with:
           name: demo-package-evidence
           path: test-results/demo-package/
+          if-no-files-found: ignore
+
+      - name: Upload white-label evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: white-label-evidence
+          path: test-results/white-label/
           if-no-files-found: ignore
 
   build:

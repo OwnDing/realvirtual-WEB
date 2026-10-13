@@ -62,7 +62,7 @@ export function GroupsOverlay() {
       open={open}
       onClose={handleClose}
       title={t('groups.displayTitle')}
-      titleColor="#4fc3f7"
+      titleColor="var(--rv-brand-primary, #4fc3f7)"
       subtitle={subtitle}
       defaultWidth={DEFAULT_W}
       defaultHeight={DEFAULT_H}

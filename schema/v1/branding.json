@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xyvirtual.local/schema/v1/branding.json",
+  "title": "Deployment White Label v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "browserTitle": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "surfaceColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "mutedTextColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "borderColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      }
+    },
+    "splash": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logoUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        },
+        "backgroundColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "tagline": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 500
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "zh-CN": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 500
+                },
+                "en-US": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 500
+                }
+              },
+              "minProperties": 1
+            }
+          ]
+        },
+        "animation": {
+          "enum": [
+            "orbit",
+            "none"
+          ]
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visible": {
+          "type": "boolean"
+        },
+        "text": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 500
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "zh-CN": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 500
+                },
+                "en-US": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 500
+                }
+              },
+              "minProperties": 1
+            }
+          ]
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s\\u0000-\\u001f]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+            },
+            {
+              "maxLength": 1000,
+              "pattern": "^[hH][tT][tT][pP][sS]?://[^@/?#\\\\\\s\\u0000-\\u001f]+(?:[/?#][^\\\\\\s\\u0000-\\u001f]*)?$"
+            }
+          ]
+        }
+      }
+    },
+    "icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appleTouchUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        },
+        "pwa192Url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        },
+        "pwa512Url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        },
+        "maskable512Url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        }
+      }
+    },
+    "social": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imageUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?![a-zA-Z][a-zA-Z0-9+.-]*:|//)(?!.*(?:[\\\\%?#\\s]|(?:^|/)\\.{1,2}(?:/|$))).+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500
+        }
+      }
+    }
+  },
+  "required": [
+    "schemaVersion"
+  ]
+}

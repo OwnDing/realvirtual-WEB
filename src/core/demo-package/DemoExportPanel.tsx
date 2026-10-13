@@ -7,6 +7,7 @@ import { getLocale, useRvTranslation } from '../i18n';
 import { demoMessages } from '../i18n/catalogs/demo-package';
 import { resolveActiveDocumentView, type ActiveDocumentActions } from '../editor/active-document-view';
 import { DemoPackageError, demoFileName, parseDemoCamera, parseDemoRecipe, MAX_DEMO_STEPS, type DemoCamera, type DemoRecipe, type DemoStep } from './recipe';
+import { loadDemoBrand } from './demo-brand';
 import { createDemoHtml } from './html';
 import { loadDemoArtifacts } from './artifacts';
 import { preflightDemoGlb } from './preflight';
@@ -108,7 +109,9 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
       preflightDemoGlb(bytes);
       const artifacts = await loadDemoArtifacts(controller.signal);
       if (!current()) throw new DemoPackageError('changed');
-      const html = createDemoHtml(valid, bytes, artifacts, __RV_VERSION__);
+      const brand = await loadDemoBrand(controller.signal);
+      if (!current()) throw new DemoPackageError('changed');
+      const html = createDemoHtml(valid, bytes, artifacts, __RV_VERSION__, brand);
       if (!current()) throw new DemoPackageError('changed');
       download(html, `${demoFileName(valid.title)}.html`, 'text/html'); setNotice(m.ready);
     } catch (err) { if (active.current && !controller.signal.aborted) report(err); }

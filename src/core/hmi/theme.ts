@@ -2,16 +2,20 @@
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 import { createTheme, type Theme } from '@mui/material/styles';
+import type { BrandTheme } from '../deployment/brand-config.mjs';
 import { CHIP_RADIUS } from './shared-sx';
 
 /** Create a branded theme with custom primary/secondary colors. */
-export function createBrandedTheme(primary?: string, secondary?: string): Theme {
+export function createBrandedTheme(primary?: string, secondary?: string, tokens: BrandTheme = {}): Theme {
   return createTheme({
     ...rvDarkTheme,
     palette: {
       ...rvDarkTheme.palette,
       ...(primary && { primary: { main: primary } }),
       ...(secondary && { secondary: { main: secondary } }),
+      background: { ...rvDarkTheme.palette.background, ...(tokens.surfaceColor && { paper: tokens.surfaceColor }) },
+      text: { ...rvDarkTheme.palette.text, ...(tokens.textColor && { primary: tokens.textColor }), ...(tokens.mutedTextColor && { secondary: tokens.mutedTextColor }) },
+      ...(tokens.borderColor && { divider: tokens.borderColor }),
     },
   });
 }
@@ -53,7 +57,7 @@ export const rvDarkTheme = createTheme({
         // element; MUI's ripple-based focus is invisible on glass surfaces.
         // :focus-visible keeps pointer clicks ring-free.
         ':focus-visible': {
-          outline: '2px solid #4fc3f7',
+          outline: '2px solid var(--rv-brand-primary, #4fc3f7)',
           outlineOffset: '1px',
         },
         // Increase base font size on touch devices so UI is readable on phones
@@ -74,7 +78,7 @@ export const rvDarkTheme = createTheme({
           // Popover in document.body) inherit it too.
           backdropFilter: 'blur(calc(16px * var(--rv-ui-blur-scale, 1)))',
           backgroundImage: 'none !important',
-          backgroundColor: 'rgba(30, 30, 30, 0.6) !important',
+          backgroundColor: 'var(--rv-brand-surface, rgba(30, 30, 30, 0.6)) !important',
           // Reduce blur on touch devices for GPU performance. This is a lower
           // BASE radius, not a bypass — it scales with the same factor.
           '@media (hover: none) and (pointer: coarse)': {
@@ -91,7 +95,7 @@ export const rvDarkTheme = createTheme({
           // through the elevation-0 Paper override. A hairline border keeps
           // the dialog separated from the scene behind the glass.
           boxShadow: 'none',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--rv-brand-border, rgba(255,255,255,0.08))',
         },
       },
     },
@@ -101,7 +105,7 @@ export const rvDarkTheme = createTheme({
           // ButtonBase resets `outline: 0` with the same specificity as the
           // global :focus-visible rule — restore the ring where it matters most.
           '&:focus-visible': {
-            outline: '2px solid #4fc3f7',
+            outline: '2px solid var(--rv-brand-primary, #4fc3f7)',
             outlineOffset: '1px',
           },
         },

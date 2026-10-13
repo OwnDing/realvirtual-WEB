@@ -26,7 +26,7 @@ authority: normative
 
 ## 2. Deployment Config v2
 
-v2 保留 v1 的 `identity`、`legal`、`egress`、`services`、`license`，增加：
+v2 保留 v1 的 `identity`、`legal`、`egress`、`services`、`license`，增加普通默认值、策略，以及可选的部署专属 [`branding`](WHITE_LABEL.md)（独立 schemaVersion=1）：
 
 ```json
 {
@@ -44,7 +44,7 @@ v2 保留 v1 的 `identity`、`legal`、`egress`、`services`、`license`，增�
 }
 ```
 
-`lockedPaths` 只接受 `locale`、`workspace.default`、`workspace.allowed` 和 `features.<valid-id>`。`policy.features` 当前只接受 `allow`/`deny`；`deny` 优先。部署 v1 和缺少版本的旧配置迁移为 v2 语义但不改写源文件；迁移保留普通扩展字段，但删除在 v1 中本来无效的 `defaults`/`policy`，避免升级版本号意外激活策略。未知未来版本的部署字段被忽略，egress 回到 deny。
+`lockedPaths` 只接受 `locale`、`workspace.default`、`workspace.allowed` 和 `features.<valid-id>`。`policy.features` 当前只接受 `allow`/`deny`；`deny` 优先。部署 v1 和缺少版本的旧配置迁移为 v2 语义但不改写源文件；迁移保留普通扩展字段，但删除在 v1 中本来无效的 `defaults`/`policy`/`branding`，避免升级版本号意外激活保留段。未知未来版本的部署字段被忽略，egress 回到 deny。`branding` 与 `identity` 都不参与项目、用户或会话层普通值合并。
 
 ## 3. Project Config v1
 

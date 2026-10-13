@@ -37,3 +37,5 @@ authority: normative-registry
 - [LOADING_PERFORMANCE.md](LOADING_PERFORMANCE.md)：L2-3 加载性能与首屏。
 
 - [VISUAL_PRESENTATION.md](VISUAL_PRESENTATION.md)：L2-4 视觉呈现产品化。
+
+- [PS-BRAND-001：部署白标](WHITE_LABEL.md)

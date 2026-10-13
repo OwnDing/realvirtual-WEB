@@ -63,6 +63,18 @@ function storePreference(value: unknown): void {
 }
 
 describe('pre-boot language swap', () => {
+  it('keeps the saved Chinese preference when a branded shell was generated in English', () => {
+    const previousDefault = document.documentElement.getAttribute('data-rv-default-locale');
+    document.documentElement.setAttribute('data-rv-default-locale', 'en-US');
+    const slogan = host.querySelector('.loader-slogan')!;
+    slogan.setAttribute('data-rv-zh-cn', '客户品牌'); slogan.setAttribute('data-rv-en-us', 'Customer brand'); slogan.textContent = 'Customer brand';
+    storePreference({ v: LANGUAGE_PREFERENCE_VERSION, locale: 'zh-CN' });
+    try { runPreboot(); expect(slogan.textContent).toBe('客户品牌'); expect(document.documentElement.lang).toBe('zh-CN'); }
+    finally {
+      if (previousDefault === null) document.documentElement.removeAttribute('data-rv-default-locale');
+      else document.documentElement.setAttribute('data-rv-default-locale', previousDefault);
+    }
+  });
   it('leaves the default language alone when nothing is stored', () => {
     document.documentElement.lang = 'zh-CN';
     runPreboot();

@@ -10,6 +10,8 @@ import {
   type UnifiedConfigValues,
 } from '../config/unified-config';
 
+import { parseBrandIdentity, parseBranding, type DeploymentBranding } from './brand-config.mjs';
+
 export const DEFAULT_PRODUCT_NAME = 'XYvirtual WEB';
 export const DEFAULT_PRODUCT_SHORT_NAME = 'XYvirtual';
 
@@ -91,6 +93,7 @@ export interface DeploymentLicenseConfig {
 export interface DeploymentConfigFields {
   schemaVersion?: 1 | 2;
   identity?: DeploymentIdentityConfig;
+  branding?: DeploymentBranding;
   legal?: DeploymentLegalConfig;
   egress?: DeploymentEgressConfig;
   services?: DeploymentServicesConfig;
@@ -106,7 +109,6 @@ export interface DeploymentConfigValidation<T extends Record<string, unknown>> {
   issues: string[];
 }
 
-const COLOR_RE = /^#[0-9a-f]{6}$/i;
 const RELATIVE_ASSET_RE = /^(?![a-z][a-z0-9+.-]*:|\/\/).+/i;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -145,32 +147,6 @@ function addInvalidIssue(
   if (original !== undefined && parsed === undefined) issues.push(`${path} is invalid and was ignored`);
 }
 
-function parseIdentity(value: unknown, issues: string[]): DeploymentIdentityConfig | undefined {
-  if (value === undefined) return undefined;
-  if (!isRecord(value)) {
-    issues.push('identity must be an object');
-    return undefined;
-  }
-  const result: DeploymentIdentityConfig = {};
-  result.productName = text(value.productName, 200);
-  result.shortName = text(value.shortName, 200);
-  result.companyName = text(value.companyName, 200);
-  result.description = typeof value.description === 'string' && value.description.length <= 500
-    ? value.description.trim()
-    : undefined;
-  result.logoUrl = relativeAssetUrl(value.logoUrl);
-  result.faviconUrl = relativeAssetUrl(value.faviconUrl);
-  result.primaryColor = typeof value.primaryColor === 'string' && COLOR_RE.test(value.primaryColor)
-    ? value.primaryColor
-    : undefined;
-  result.secondaryColor = typeof value.secondaryColor === 'string' && COLOR_RE.test(value.secondaryColor)
-    ? value.secondaryColor
-    : undefined;
-  for (const key of ['productName', 'shortName', 'companyName', 'description', 'logoUrl', 'faviconUrl', 'primaryColor', 'secondaryColor'] as const) {
-    addInvalidIssue(issues, `identity.${key}`, value[key], result[key]);
-  }
-  return result;
-}
 
 function parseLegal(value: unknown, issues: string[]): DeploymentLegalConfig | undefined {
   if (value === undefined) return undefined;
@@ -317,6 +293,7 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
     issues.push('schemaVersion is unsupported; deployment-owned fields were ignored');
     delete config.schemaVersion;
     delete config.identity;
+    delete config.branding;
     delete config.legal;
     delete config.services;
     delete config.license;
@@ -326,18 +303,20 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
     return { config, issues };
   }
   if (raw.schemaVersion === 1 || raw.schemaVersion === 2) config.schemaVersion = raw.schemaVersion;
-  config.identity = parseIdentity(raw.identity, issues);
+  config.identity = parseBrandIdentity(raw.identity, issues);
   config.legal = parseLegal(raw.legal, issues);
   config.egress = parseEgress(raw.egress, issues);
   config.services = parseServices(raw.services, issues);
   config.license = parseLicense(raw.license, issues);
   if (raw.schemaVersion === 2) {
+    config.branding = parseBranding(raw.branding, issues);
     config.defaults = parseUnifiedConfigValues(raw.defaults, issues);
     config.policy = parseUnifiedConfigPolicy(raw.policy, issues);
   } else {
     // Versioned add-only boundary: v1/legacy files cannot smuggle v2 policy.
     delete config.defaults;
     delete config.policy;
+    delete config.branding;
   }
   return { config, issues };
 }
@@ -351,7 +330,7 @@ export function migrateDeploymentConfigV1ToV2<T extends Record<string, unknown>>
     // `defaults` and `policy` are reserved v2 fields. A v1 file may preserve
     // unrelated extension fields, but migration must not activate data that a
     // v1 runtime was required to ignore.
-    const { defaults: _defaults, policy: _policy, ...legacy } = raw;
+    const { defaults: _defaults, policy: _policy, branding: _branding, ...legacy } = raw;
     return { ...legacy, schemaVersion: 2 } as T & { schemaVersion: 2 };
   }
   return { ...raw, schemaVersion: 2 };

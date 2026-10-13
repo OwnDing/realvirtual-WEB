@@ -12,3 +12,5 @@ authority: normative-process
 - [`ACCEPTANCE_MATRIX.md`](ACCEPTANCE_MATRIX.md)：需求到规则、测试和运行证据的全局追踪矩阵。
 
 每个正式产品规格都应有对应验收场景。数字孪生能力至少考虑正常、无效输入、不兼容连接、保存恢复、Undo/Redo、模型切换、断连重连、写入结果不确定、资源释放和浏览器行为。
+
+- [ACCEPT-BRAND-001：白标验收矩阵](WHITE_LABEL.md)

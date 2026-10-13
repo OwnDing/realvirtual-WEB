@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, IconButton, Tooltip } from '@mui/material';
+import { Box, CssBaseline, IconButton, Tooltip } from '@mui/material';
 
 // Inter is the product font (DESIGN.md); without these imports every non-MUI
 // element falls back to the browser default serif.
@@ -19,6 +19,7 @@ import { rvDarkTheme, createBrandedTheme } from './theme';
 import { createTheme } from '@mui/material/styles';
 import { enUS as muiEnUS, zhCN as muiZhCN } from '@mui/material/locale';
 import { useRvTranslation } from '../i18n';
+import { BrandAttribution } from './BrandAttribution';
 import { useCustomBranding } from './branding-store';
 import { HMIShell, SlotRenderer } from './HMIShell';
 import { TopBar } from './TopBar';
@@ -146,6 +147,17 @@ function HelpShortcut() {
   return null;
 }
 
+/** Inside HMIShell so the footer clears the controls at every UI zoom. */
+function BrandFooter() {
+  const visible = useHmiVisible();
+  return visible && <Box sx={{ position: 'fixed', right: 12,
+    bottom: { xs: 'calc(104px + env(safe-area-inset-bottom, 0px))', sm: 40 },
+    zIndex: 1199, maxWidth: 'min(320px, calc(100vw - 80px))',
+    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+    bgcolor: 'var(--rv-brand-surface)', borderRadius: 1, px: 0.5,
+  }}><BrandAttribution /></Box>;
+}
+
 /** Connect tooltip store to viewer for model-cleared cleanup. */
 function useTooltipStoreConnection() {
   const viewer = useViewer();
@@ -172,12 +184,12 @@ export function App() {
   const { locale } = useRvTranslation('common');
   const theme = useMemo(
     () => createTheme(
-      branding?.primaryColor || branding?.secondaryColor
-        ? createBrandedTheme(branding.primaryColor, branding.secondaryColor)
+      branding?.resolved || branding?.primaryColor || branding?.secondaryColor
+        ? createBrandedTheme(branding.primaryColor, branding.secondaryColor, branding.resolved?.theme)
         : rvDarkTheme,
       locale === 'zh-CN' ? muiZhCN : muiEnUS,
     ),
-    [branding?.primaryColor, branding?.secondaryColor, locale],
+    [branding?.primaryColor, branding?.secondaryColor, branding?.resolved, locale],
   );
 
   // Context-aware visibility: each area declares its default hiddenIn rule.
@@ -237,6 +249,7 @@ export function App() {
 function ConnectEmbedMinimalShell() {
   return (
     <HMIShell>
+      <BrandFooter />
       <ActivityBar entryAllowlist={CONNECT_EMBED_ACTIVITY_BAR_ALLOWLIST} />
       <ConnectPanel />
       {/* Same host as the full shell — one slot condition, so the Models panel
@@ -312,6 +325,7 @@ function FullHmiShell({
   return (
     <>
       <HMIShell>
+        <BrandFooter />
         {/* Keeps the WebGL canvas full-browser beneath the HMI overlays. */}
         <ViewportFrame />
         <TooltipLayer />

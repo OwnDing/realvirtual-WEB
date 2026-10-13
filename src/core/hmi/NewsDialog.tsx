@@ -3,6 +3,7 @@
 
 /** Presentational news dialog and the single queue-arbitrating shell host. */
 
+import { BRAND_ACCENT } from './brand-colors';
 import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
@@ -104,7 +105,7 @@ export function NewsDialog({ items, onSeen }: NewsDialogProps) {
                 width: 7,
                 height: 7,
                 borderRadius: '50%',
-                bgcolor: '#4fc3f7',
+                bgcolor: BRAND_ACCENT,
                 mt: 0.75,
                 flex: '0 0 auto',
               }}
@@ -169,7 +170,7 @@ export function NewsDialog({ items, onSeen }: NewsDialogProps) {
               size="small"
               onClick={remaining.length > 1 ? acknowledgeAndContinue : acknowledgeAndClose}
               sx={{
-                bgcolor: '#4fc3f7',
+                bgcolor: BRAND_ACCENT,
                 color: '#0b0f12',
                 borderRadius: '4px',
                 textTransform: 'none',
