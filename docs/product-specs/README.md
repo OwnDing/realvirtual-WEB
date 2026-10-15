@@ -39,3 +39,5 @@ authority: normative-registry
 - [VISUAL_PRESENTATION.md](VISUAL_PRESENTATION.md)：L2-4 视觉呈现产品化。
 
 - [PS-BRAND-001：部署白标](WHITE_LABEL.md)
+
+- [PS-DIAG-001：L3-1 本地诊断包](DIAGNOSTIC_BUNDLE.md)
