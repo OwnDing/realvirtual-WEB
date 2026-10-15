@@ -13,7 +13,7 @@ function Entry() { return <Suspense fallback={null}><Panel /></Suspense>; }
 export class DiagnosticsPlugin implements RVViewerPlugin {
   readonly id = 'diagnostics';
   readonly core = true;
-  readonly slots: UISlotEntry[] = [{ slot: 'settings-tab', component: Entry, label: () => rvT('shell', 'diagnostics.title'), order: 900, visibilityId: 'diagnostics', visibilityRule: { hiddenIn: ['kiosk', 'embed', 'guest'] } }];
+  readonly slots: UISlotEntry[] = [{ slot: 'settings-tab', component: Entry, label: () => rvT('shell', 'diagnostics.title'), order: 900, visibilityId: 'diagnostics', visibilityRule: { hiddenIn: ['kiosk', 'embedded', 'guest'] } }];
   private source: ViewerDiagnosticSource | null = null;
   private cleanup: (() => void)[] = [];
   init(viewer: RVViewer): void {

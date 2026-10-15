@@ -2,13 +2,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DiagnosticsPanel from '../src/plugins/diagnostics/DiagnosticsPanel';
+import { DiagnosticsPlugin } from '../src/plugins/diagnostics';
 import { bindDiagnosticErrorEntry } from '../src/core/diagnostics/error-entry';
 import { diagnosticSession } from '../src/core/diagnostics/session';
 import { diagnosticDownloads } from '../src/core/diagnostics/export';
 import { section } from '../src/core/diagnostics/types';
 import { initI18n, setLocale } from '../src/core/i18n';
 import { setAppConfig } from '../src/core/rv-app-config';
-import { _resetStore, activateContext, deactivateContext } from '../src/core/hmi/ui-context-store';
+import { _resetStore, activateContext, deactivateContext, evaluateVisibilityRule, getActiveContexts } from '../src/core/hmi/ui-context-store';
 import JSZip from 'jszip';
 let detach: (() => void) | null = null;
 beforeEach(async () => { _resetStore(); setAppConfig({}); initI18n(); await setLocale('zh-CN'); });
@@ -80,11 +81,36 @@ describe('diagnostics customer workflow', () => {
       await waitFor(() => expect(save).toHaveBeenCalledOnce());
       expect(host.textContent).toContain('下载已发起');
       act(() => activateContext('kiosk')); expect((host.firstElementChild as HTMLElement).hidden).toBe(true);
-    } finally { release(); host.remove(); }
+    } finally { release.dispose(); host.remove(); }
     save.mockRestore();
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     const revoke = vi.spyOn(URL, 'revokeObjectURL');
     diagnosticDownloads.save(new Blob(['test']), 'test.json'); diagnosticDownloads.dispose();
     expect(revoke).toHaveBeenCalledOnce();
+  });
+  it('hides the settings slot, panel and native recovery action in the real embedded context', () => {
+    const host = document.createElement('div'); document.body.append(host);
+    const release = bindDiagnosticErrorEntry(host);
+    try {
+      render(<DiagnosticsPanel />);
+      expect(screen.getByTestId('diagnostics-panel')).toBeTruthy();
+      act(() => activateContext('embedded'));
+      expect(screen.queryByTestId('diagnostics-panel')).toBeNull();
+      expect((host.firstElementChild as HTMLElement).hidden).toBe(true);
+      const slot = new DiagnosticsPlugin().slots[0];
+      expect(evaluateVisibilityRule(slot.visibilityRule!, getActiveContexts())).toBe(false);
+    } finally { release.dispose(); host.remove(); }
+  });
+  it('refreshes a preboot error action after deployment settings arrive without a context change', () => {
+    const host = document.createElement('div'); document.body.append(host);
+    const entry = bindDiagnosticErrorEntry(host);
+    try {
+      expect((host.firstElementChild as HTMLElement).hidden).toBe(false);
+      setAppConfig({ lockSettings: true }); entry.refresh();
+      expect((host.firstElementChild as HTMLElement).hidden).toBe(true);
+      expect(screen.queryByRole('button', { name: '导出诊断包' })).toBeNull();
+      setAppConfig({}); entry.refresh();
+      expect((host.firstElementChild as HTMLElement).hidden).toBe(false);
+    } finally { entry.dispose(); host.remove(); }
   });
 });

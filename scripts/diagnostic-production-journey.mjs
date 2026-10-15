@@ -91,3 +91,48 @@ export async function diagnosticProductionJourney(page, origin) {
     throw error;
   } finally { page.off('request', onRequest); page.off('websocket', onSocket); }
 }
+
+/** Exercise boot failures before React can mask a stale native visibility gate. */
+export async function diagnosticAccessJourney(page, origin) {
+  let locked = false;
+  let configRequests = 0;
+  const settingsUrl = url => url.origin === origin && url.pathname === '/settings.json';
+  const settingsRoute = async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...await response.json(), lockSettings: locked } });
+    configRequests++;
+  };
+  const iframePath = `${origin}/diagnostic-iframe-test.html`;
+  const viewerPath = '/?lang=zh-CN&renderer=webgl';
+  await page.route(settingsUrl, settingsRoute);
+  await page.route(iframePath, route => route.fulfill({ contentType: 'text/html', body: `<iframe src="${viewerPath}" style="width:100%;height:900px"></iframe>` }));
+  await page.addInitScript(() => {
+    localStorage.setItem('rv-connect-autoconnect-optout', '1');
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (kind, ...args) {
+      if (kind === 'webgl' || kind === 'webgl2' || kind === 'experimental-webgl') return null;
+      return original.call(this, kind, ...args);
+    };
+  });
+  try {
+    for (locked of [false, true]) {
+      const previousRequests = configRequests;
+      await page.goto(origin + viewerPath, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#loading-error')).toBeVisible({ timeout: 30000 });
+      assert(configRequests > previousRequests, 'Fixture must apply deployment settings, including cache-busting URLs');
+      assert.equal(await page.evaluate(() => Boolean(window.viewer)), false, 'Fixture must fail before Viewer creation');
+      const entry = page.getByTestId('diagnostics-error-entry');
+      if (locked) await expect(entry).toBeHidden();
+      else await expect(entry.getByRole('button', { name: '导出诊断包' })).toBeVisible();
+    }
+    locked = false;
+    await page.goto(iframePath, { waitUntil: 'domcontentloaded' });
+    const frame = page.frameLocator('iframe');
+    await expect(frame.locator('#loading-error')).toBeVisible({ timeout: 30000 });
+    await expect(frame.getByTestId('diagnostics-error-entry')).toBeHidden();
+    return { unlockedBootFailure: 'passed', lockedBootFailure: 'passed', embeddedBootFailure: 'passed' };
+  } finally {
+    await page.unroute(settingsUrl, settingsRoute);
+    await page.unroute(iframePath);
+  }
+}

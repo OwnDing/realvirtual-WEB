@@ -254,8 +254,8 @@ function applyPrebootText(): void {
   loadingLabel.textContent = rvT('preboot', 'loading');
 }
 applyPrebootText();
-const releaseDiagnosticErrorEntry = bindDiagnosticErrorEntry(loadingError);
-if (import.meta.hot) import.meta.hot.dispose(() => { releaseDiagnosticErrorEntry(); releaseDiagnosticCapture(); });
+const diagnosticErrorEntry = bindDiagnosticErrorEntry(loadingError);
+if (import.meta.hot) import.meta.hot.dispose(() => { diagnosticErrorEntry.dispose(); releaseDiagnosticCapture(); });
 
 function showLoadingOverlay(modelName: string) {
   loadingLabel.textContent = rvT('preboot', 'loading');
@@ -272,6 +272,7 @@ function showLoadingOverlay(modelName: string) {
 // surfacing the failure here — with a Retry — is the difference between a usable
 // error and a silent "empty scene". `detail` is a short, user-readable reason.
 function showLoadingError(detail: string) {
+  diagnosticErrorEntry.refresh();
   if (loadingProgressWrap) loadingProgressWrap.style.display = 'none';
   loadingStatus.style.display = 'none';
   loadingErrorDetail.textContent = detail;
@@ -489,6 +490,7 @@ async function init() {
 
   // Set singleton — from here all stores have access via getAppConfig()
   setAppConfig(appConfig);
+  diagnosticErrorEntry.refresh();
   installRuntimeCsp(getAppConfig() as unknown as Record<string, unknown>);
 
   // --- Microsoft Teams integration ---

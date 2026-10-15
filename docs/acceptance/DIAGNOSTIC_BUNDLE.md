@@ -26,4 +26,6 @@ authority: normative
 
 2026-10-14 已通过公共静态检查、Node 全量 852 项、浏览器八批及独立性能测试合计 11023 项、公共生产构建和隔离网络旅程。诊断实际导出六个文件，期间仅加载一个同源静态资源，无 Socket 或外部请求。浏览器证据来自 Linux ARM64 Chromium 145 / SwiftShader；真实 WebGPU、其他浏览器、移动设备、真实工业连接和远程 CI 未验证。
 
+2026-10-15 PR #16 补充可见性回归：真实 `embedded` 上下文下设置槽位、面板和原生入口均隐藏；部署配置加载后及显示启动错误前刷新原生入口。55 项诊断/上下文/模式测试及 15 项构建分块测试通过，生产构建验证普通、锁定、真实 iframe 三种启动失败场景。证据见 `test-results/diagnostics/access.json`，同一场景纳入隔离网络门禁。
+
 实施记录与失败修复复验见 [ExecPlan](../exec-plans/completed/EP-DIAG-001-local-diagnostics.md)。未运行验证不得标为通过。

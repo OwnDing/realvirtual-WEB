@@ -8,7 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium, expect } from 'playwright/test';
 import { startOfflineServer } from './offline-test-server.mjs';
-import { diagnosticProductionJourney } from './diagnostic-production-journey.mjs';
+import { diagnosticAccessJourney, diagnosticProductionJourney } from './diagnostic-production-journey.mjs';
 import { observeOfflineContext } from './offline-network-observer.mjs';
 
 assert(Object.values(networkInterfaces()).flat().every((iface) => iface.internal), 'Network gate must have only loopback interfaces');
@@ -216,6 +216,10 @@ try {
   await contextForJourney('diagnostic-export', async (page) => {
     const result = await diagnosticProductionJourney(page, server.origin);
     await writeFile(resolve('test-results/diagnostics/production.json'), JSON.stringify({ browser: browser.version(), isolation: report.isolation, ...result }, null, 2));
+  });
+  await contextForJourney('diagnostic-access', async (page) => {
+    const result = await diagnosticAccessJourney(page, server.origin);
+    await writeFile(resolve('test-results/diagnostics/access.json'), JSON.stringify(result, null, 2));
   });
   await contextForJourney('local-save-and-reopen', async (page) => {
     // Exercise real shipped library geometry here. Large-model decoding and

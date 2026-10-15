@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { startOfflineServer } from './offline-test-server.mjs';
-import { diagnosticProductionJourney } from './diagnostic-production-journey.mjs';
+import { diagnosticAccessJourney, diagnosticProductionJourney } from './diagnostic-production-journey.mjs';
 const server = await startOfflineServer('dist');
 let browser;
 try {
@@ -15,5 +15,8 @@ try {
   await mkdir('test-results/diagnostics', { recursive: true });
   await writeFile('test-results/diagnostics/production.json', JSON.stringify({ browser: browser.version(), ...result }, null, 2));
   console.log('[diagnostics] production download journey passed', result);
+  const access = await diagnosticAccessJourney(page, server.origin);
+  await writeFile('test-results/diagnostics/access.json', JSON.stringify(access, null, 2));
+  console.log('[diagnostics] production access journey passed', access);
   await context.close();
 } finally { await browser?.close(); await server.close(); }

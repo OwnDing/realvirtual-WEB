@@ -7,7 +7,7 @@ import { createDiagnosticDownload, diagnosticDownloads, finalizeReport } from '.
 import { diagnosticSession } from './session';
 import { abortIfNeeded } from './types';
 /** Native DOM fallback works before React / Viewer creation. JSON needs no extra chunk request. */
-export function bindDiagnosticErrorEntry(host: HTMLElement): () => void {
+export function bindDiagnosticErrorEntry(host: HTMLElement): { refresh: () => void; dispose: () => void } {
   const block = document.createElement('div'), button = document.createElement('button'), cancel = document.createElement('button'), note = document.createElement('p');
   block.dataset.testid = 'diagnostics-error-entry';
   button.type = cancel.type = 'button'; button.className = cancel.className = 'loader-btn';
@@ -41,5 +41,5 @@ export function bindDiagnosticErrorEntry(host: HTMLElement): () => void {
   cancel.onclick = () => diagnosticSession.cancel();
   block.append(button, cancel, note); host.append(block); render();
   const offs = [onLocaleChange(render), subscribeContexts(render)];
-  return () => { disposed = true; if (active) diagnosticSession.cancel(); offs.forEach(off => off()); block.remove(); };
+  return { refresh: render, dispose: () => { disposed = true; if (active) diagnosticSession.cancel(); offs.forEach(off => off()); block.remove(); } };
 }

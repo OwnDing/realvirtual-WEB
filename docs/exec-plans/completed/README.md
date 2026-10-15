@@ -9,7 +9,7 @@ authority: normative-registry
 
 # 已完成 ExecPlan 索引
 
-- [EP-DIAG-001-local-diagnostics.md](EP-DIAG-001-local-diagnostics.md)：L3-1 本地脱敏诊断包、设置与故障入口、ZIP/JSON 降级；2026-10-14 完成本地门禁与隔离网络下载验收，2026-10-15 依用户授权进入 PR 交付，真实 WebGPU/移动设备另验。
+- [EP-DIAG-001-local-diagnostics.md](EP-DIAG-001-local-diagnostics.md)：L3-1 本地脱敏诊断包、设置与故障入口、ZIP/JSON 降级；2026-10-14 完成本地门禁与隔离网络下载验收，2026-10-15 在 PR #16 补齐嵌入/启动锁定可见性回归，真实 WebGPU/移动设备另验。
 
 - [EP-BRAND-001-deployment-white-label.md](EP-BRAND-001-deployment-white-label.md)：L2-5 部署白标、资源交付及独立入口一致性；2026-10-13 完成本地门禁与生产旅程，PR #15，真实 PWA 安装/移动设备/生产交付另验。
 
