@@ -28,6 +28,7 @@
  * Dev-mode only — not included in production builds.
  */
 
+import { observeConsole } from '../core/diagnostics/console-observer';
 import { runtimeFetch } from '../core/deployment/runtime-egress';
 import { RVBehavior } from '../core/rv-behavior';
 import type { LoadResult } from '../core/engine/rv-scene-loader';
@@ -162,8 +163,7 @@ export class DebugEndpointPlugin extends RVBehavior {
 
   // Error capture
   private _errors: ErrorEntry[] = [];
-  private _origError: typeof console.error | null = null;
-  private _origWarn: typeof console.warn | null = null;
+  private _stopConsoleCapture: (() => void) | null = null;
   private static readonly MAX_ERRORS = 50;
 
   // Signal changelog
@@ -176,9 +176,6 @@ export class DebugEndpointPlugin extends RVBehavior {
   private _stateTrackingOff?: () => void;
   private _pushInFlight = false;
   private _tickTimer: ReturnType<typeof setInterval> | null = null;
-
-  // Console monkey-patch guard — prevents double-patching on model reload
-  private _intercepted = false;
 
   // ── Lifecycle ──
 
@@ -236,24 +233,10 @@ export class DebugEndpointPlugin extends RVBehavior {
   // ── Error Capture ──
 
   private _setupErrorCapture(): void {
-    if (this._intercepted) return;
-    this._origError = console.error;
-    this._origWarn = console.warn;
-
-    // Buffering must NEVER prevent the original console call — a throwing
-    // _bufferError would swallow the actual error (belt and braces on top of
-    // the per-argument try/catch in serializeConsoleArg).
-    console.error = (...args: unknown[]) => {
-      try { this._bufferError('error', args); } catch { /* never block the original */ }
-      this._origError!.apply(console, args);
-    };
-
-    console.warn = (...args: unknown[]) => {
-      try { this._bufferError('warning', args); } catch { /* never block the original */ }
-      this._origWarn!.apply(console, args);
-    };
-
-    this._intercepted = true;
+    if (this._stopConsoleCapture) return;
+    this._stopConsoleCapture = observeConsole((level, args) => {
+      this._bufferError(level === 'warn' ? 'warning' : 'error', [...args]);
+    });
     this.addCleanup(() => this._restoreConsole());
   }
 
@@ -272,9 +255,8 @@ export class DebugEndpointPlugin extends RVBehavior {
   }
 
   private _restoreConsole(): void {
-    if (this._origError) { console.error = this._origError; this._origError = null; }
-    if (this._origWarn) { console.warn = this._origWarn; this._origWarn = null; }
-    this._intercepted = false;
+    this._stopConsoleCapture?.();
+    this._stopConsoleCapture = null;
   }
 
   // ── Signal Changelog ──

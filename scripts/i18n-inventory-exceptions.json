@@ -258,6 +258,12 @@
       "category": "pre-boot",
       "match": "重新加载页面",
       "reason": "Required zero-JavaScript zh-CN action copy duplicated from preboot:reloadPage and parity-checked by tests/i18n-preboot.node.test.ts."
+    },
+    {
+      "file": "src/core/diagnostics/sanitize.ts",
+      "category": "plugin-registry",
+      "match": "[free text omitted]",
+      "reason": "Diagnostic Bundle v1 serialized log.message redaction marker, not a plugin label or UI sentence. It is intentionally locale-independent for support tooling; surrounding user-facing omission explanations are in the bilingual diagnostics catalog."
     }
   ]
 }

@@ -23,6 +23,7 @@
  * runtime by `ensureEnglishCatalog()` (ADR-0001 R1) — see that file for why the
  * split is English-only.
  */
+import { diagnosticsEnglish } from './diagnostics';
 import { loadingPerformanceEnglish } from './loading-performance';
 import { demoPackageEnglish } from './demo-package';
 
@@ -64,6 +65,7 @@ export const enUS = {
    * visible to everyone rather than to whoever opened one tab.
    */
   shell: {
+    diagnostics: diagnosticsEnglish,
     demoExport: demoPackageEnglish,
     access: {
       title: 'Protected presentations',

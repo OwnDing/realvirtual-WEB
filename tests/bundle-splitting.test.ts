@@ -341,6 +341,17 @@ describe('bundle splitting — panel chunks', () => {
     expect(entryText.length).toBeLessThan(ENTRY_BUDGET_BYTES);
   });
 
+  it('early diagnostic runtime has a bounded independent chunk', async () => {
+    const chunk = assetNames.find(name => name.startsWith('diagnostics-runtime-'));
+    expect(chunk).toBeTruthy();
+    const text = await distFiles[distKey(`/dist/assets/${chunk}`)!]();
+    expect(text).toContain('xyvirtual-diagnostic-bundle');
+    expect(text.length).toBeLessThan(32000);
+    // Baseline entry: 3,519,720 chars. Account for the full added startup cost,
+    // not just a transfer between chunks; leave the original entry gate intact.
+    expect(entryText.length + text.length).toBeLessThan(3545000);
+  });
+
   // ── i18n catalog split (ADR-0001 R1) ────────────────────────────────────
   //
   // Markers are catalog VALUES, because an identifier proves nothing: the entry

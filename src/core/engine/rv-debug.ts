@@ -76,6 +76,13 @@ let verboseEnabled = false;
 
 /** Ring buffer for structured log entries */
 const logBuffer = new RingBuffer<LogEntry>(LOG_BUFFER_SIZE);
+let overwrittenLogs = 0;
+function bufferLog(entry: LogEntry): void {
+  if (logBuffer.count === LOG_BUFFER_SIZE) overwrittenLogs++;
+  logBuffer.push(entry);
+}
+/** Coverage accounting for local diagnostic exports; no raw data leaves this module. */
+export function getLogBufferStats(): { overwritten: number } { return { overwritten: overwrittenLogs }; }
 
 /** Page load time for elapsed calculation */
 const startTime = performance.now();
@@ -120,6 +127,15 @@ function init(): void {
 
 init();
 
+// True only during this logger's synchronous console emission, so diagnostic
+// observation does not duplicate the structured entry already in the ring.
+let emittingStructuredLog = false;
+export function isStructuredLogEmission(): boolean { return emittingStructuredLog; }
+function outputLog(level: 'warn' | 'error', ...args: unknown[]): void {
+  const previous = emittingStructuredLog; emittingStructuredLog = true;
+  try { console[level](...args); } finally { emittingStructuredLog = previous; }
+}
+
 // ── Helpers ──
 
 function elapsed(): number {
@@ -161,7 +177,7 @@ export function setVerbose(on: boolean): void {
 
 /** Structured debug log — always buffers, only prints to console if category is active */
 export function debug(category: DebugCategory, message: string, ...args: unknown[]): void {
-  logBuffer.push({
+  bufferLog({
     level: 'debug',
     category,
     message,
@@ -182,7 +198,7 @@ export function debug(category: DebugCategory, message: string, ...args: unknown
  * with model size; use {@link debug} for the summary that follows it.
  */
 export function debugVerbose(category: DebugCategory, message: string, ...args: unknown[]): void {
-  logBuffer.push({
+  bufferLog({
     level: 'trace',
     category,
     message,
@@ -196,7 +212,7 @@ export function debugVerbose(category: DebugCategory, message: string, ...args: 
 
 /** Structured debug warning — always buffers, only prints to console if category is active */
 export function debugWarn(category: DebugCategory, message: string, ...args: unknown[]): void {
-  logBuffer.push({
+  bufferLog({
     level: 'warn',
     category,
     message,
@@ -206,12 +222,12 @@ export function debugWarn(category: DebugCategory, message: string, ...args: unk
     stack: captureStack(),
   });
   if (!activeCategories.has(category)) return;
-  console.warn(`[${category}] ${message}`, ...args);
+  outputLog('warn', `[${category}] ${message}`, ...args);
 }
 
 /** Structured debug error — always buffers, only prints to console if category is active */
 export function debugError(category: DebugCategory, message: string, ...args: unknown[]): void {
-  logBuffer.push({
+  bufferLog({
     level: 'error',
     category,
     message,
@@ -221,14 +237,14 @@ export function debugError(category: DebugCategory, message: string, ...args: un
     stack: captureStack(),
   });
   if (!activeCategories.has(category)) return;
-  console.error(`[${category}] ${message}`, ...args);
+  outputLog('error', `[${category}] ${message}`, ...args);
 }
 
 // ── Non-categorized logging (always prints to console) ──
 
 /** Log at info level (category 'system') — always buffers and prints */
 export function logInfo(message: string, data?: unknown): void {
-  logBuffer.push({
+  bufferLog({
     level: 'info',
     category: 'system',
     message,
@@ -241,7 +257,7 @@ export function logInfo(message: string, data?: unknown): void {
 
 /** Log at warn level (category 'system') — always buffers and prints */
 export function logWarn(message: string, data?: unknown): void {
-  logBuffer.push({
+  bufferLog({
     level: 'warn',
     category: 'system',
     message,
@@ -250,12 +266,12 @@ export function logWarn(message: string, data?: unknown): void {
     data,
     stack: captureStack(),
   });
-  console.warn(`[system] ${message}`, ...(data !== undefined ? [data] : []));
+  outputLog('warn', `[system] ${message}`, ...(data !== undefined ? [data] : []));
 }
 
 /** Log at error level (category 'system') — always buffers and prints */
 export function logError(message: string, data?: unknown): void {
-  logBuffer.push({
+  bufferLog({
     level: 'error',
     category: 'system',
     message,
@@ -264,7 +280,7 @@ export function logError(message: string, data?: unknown): void {
     data,
     stack: captureStack(),
   });
-  console.error(`[system] ${message}`, ...(data !== undefined ? [data] : []));
+  outputLog('error', `[system] ${message}`, ...(data !== undefined ? [data] : []));
 }
 
 // ── Buffer query API ──
@@ -300,6 +316,7 @@ export function queryLogs(opts: {
 /** Clear the log buffer. */
 export function clearLogBuffer(): void {
   logBuffer.clear();
+  overwrittenLogs = 0;
 }
 
 /** Get the number of buffered entries. */

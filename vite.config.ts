@@ -1008,6 +1008,16 @@ export default defineConfig(({ command }) => ({
         // modulepreloaded a PDF renderer on every cold start. Leave it to the
         // automatic split; verified by tests/bundle-splitting.test.ts.
         manualChunks: {
+          // Early capture / native error recovery must work before the viewer.
+          // A small cacheable runtime shared by boot and the lazy support panel;
+          // it shares the existing log, alarm and loading state primitives,
+          // never the scene registry or React. Store ownership stays per viewer.
+          'diagnostics-runtime': [
+            './src/core/diagnostics/collect.ts', './src/core/diagnostics/export.ts',
+            './src/core/diagnostics/session.ts', './src/core/diagnostics/viewer-source.ts',
+            './src/core/i18n/catalogs/diagnostics.ts',
+            './src/core/engine/rv-load-session.ts', './src/core/engine/rv-error-store.ts',
+          ],
           // One dependency-free brand runtime shared by bootstrap and lazy UI/export
           // consumers. Keep it separately cacheable from the scene application.
           'deployment-brand': ['./src/core/deployment/brand-config.mjs', './src/core/deployment/brand-document.ts'],

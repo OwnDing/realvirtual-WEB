@@ -17,6 +17,7 @@
  * translated (PS-I18N-001 §2, ADR-0001 §6) and therefore never appear here.
  */
 
+import { diagnosticsChinese } from './diagnostics';
 import { loadingPerformanceChinese } from './loading-performance';
 import { demoPackageChinese } from './demo-package';
 
@@ -781,6 +782,7 @@ export const zhCN = {
    * visible to everyone rather than to whoever opened one tab.
    */
   shell: {
+    diagnostics: diagnosticsChinese,
     demoExport: demoPackageChinese,
     access: {
       title: '受保护演示',
