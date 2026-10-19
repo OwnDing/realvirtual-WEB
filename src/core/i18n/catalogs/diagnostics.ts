@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 export const diagnosticsChinese = {
   title: '诊断与支持', export: '导出诊断包', refresh: '刷新预览', preview: '查看脱敏内容',
+  environmentCheck: '打开环境兼容性检查', environmentCheckNotice: '在独立页面主动检查所选用途；诊断包导出仍只采集已有信息。',
   notice: '仅保存到本机，不会自动上传。请查看内容后自行决定是否发送。',
   scope: '包含环境、版本和显卡能力；可选择附加最近日志与场景数量摘要。',
   excluded: '不包含模型、截图、项目内容、设备名称、连接地址、凭证或信号值。无法安全判断的文本会被省略。',
@@ -18,6 +19,7 @@ export const diagnosticsChinese = {
 };
 export const diagnosticsEnglish: Record<keyof typeof diagnosticsChinese, string> = {
   title: 'Diagnostics & support', export: 'Export diagnostic bundle', refresh: 'Refresh preview', preview: 'View redacted contents',
+  environmentCheck: 'Open environment compatibility checks', environmentCheckNotice: 'Actively check a workflow on a separate page. Diagnostic export still collects existing information only.',
   notice: 'Saved on this device only. Nothing is uploaded automatically. Review the contents before deciding whether to share.',
   scope: 'Includes environment, version and graphics capabilities. Recent logs and scene counts are optional.',
   excluded: 'Excludes models, screenshots, project contents, device names, connection addresses, credentials and signal values. Unclassified text is omitted.',

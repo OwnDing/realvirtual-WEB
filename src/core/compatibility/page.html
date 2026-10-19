@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Environment check</title>
+  <link rel="stylesheet" href="./page.css">
+</head>
+<body>
+  <main>
+    <header><p data-rv-product-name></p><h1 data-text="title">环境与兼容性检查 / Environment check</h1><p data-text="intro"></p></header>
+    <noscript>需要启用 JavaScript 才能检查。请按随版本交付的兼容性与信任手册验收。 JavaScript is required. Consult the release compatibility and trust guide.</noscript>
+    <p data-text="notice"></p>
+    <div class="controls">
+      <label><span data-text="language"></span><select id="locale"><option value="zh-CN">中文</option><option value="en-US">English</option></select></label>
+      <label><span data-text="workflow"></span><select id="workflow"></select></label>
+      <label><span data-text="renderer"></span><select id="renderer"></select></label>
+    </div>
+    <div class="actions"><button id="run" type="button" data-text="run" disabled></button><button id="cancel" type="button" data-text="cancel" disabled></button><button id="directory" type="button" data-text="directory" disabled></button><button id="download" type="button" data-text="download" disabled></button></div>
+    <p data-text="directoryNotice"></p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section id="assessment" aria-live="polite"></section>
+    <section id="results" class="results" aria-live="polite"></section>
+    <details><summary data-text="details"></summary><pre id="report"></pre></details>
+    <aside><p data-text="certificate"></p><p data-text="limits"></p></aside>
+    <p><a id="matrix-link" href="./SUPPORT_MATRIX.zh-CN.md" data-text="matrix"></a></p>
+    <footer><p data-rv-attribution></p></footer>
+  </main>
+  <script type="module" src="./page.mjs"></script>
+</body>
+</html>

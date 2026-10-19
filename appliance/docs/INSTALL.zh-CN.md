@@ -143,3 +143,5 @@ sudo ./restore.sh --backup /var/lib/xyvirtual-appliance/backups/<backup> --confi
 - `/health/live` 通过而 `/health/ready` 失败：入口活着但 release 或后端服务失败，按状态页稳定 code 定位。
 - HTTPS 页面无法连 CONNECT：确认使用同源 `/connect/` 或 `wss://`，并检查代理 Upgrade、认证和防火墙；不要退回 `ws://`。
 - 升级后浏览器项目看似消失：先检查 origin 是否变化。不要创建新项目覆盖原状态。
+
+浏览器、最低配置与信任验收见 [L3-2 手册](BROWSER_SUPPORT.zh-CN.md)。

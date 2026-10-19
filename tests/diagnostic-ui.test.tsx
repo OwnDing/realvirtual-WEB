@@ -17,10 +17,14 @@ afterEach(() => { cleanup(); detach?.(); detach = null; diagnosticSession.stop()
 describe('diagnostics customer workflow', () => {
   it('previews safe contents, switches language and excludes optional sections', async () => {
     render(<DiagnosticsPanel />);
+    const environmentLink = screen.getByRole('link', { name: '打开环境兼容性检查' });
+    expect(environmentLink.getAttribute('href')).toContain('compatibility/index.html?lang=zh-CN');
+    expect(environmentLink.getAttribute('rel')).toBe('noopener noreferrer');
     fireEvent.click(screen.getByRole('button', { name: '刷新预览' }));
     await waitFor(() => expect(screen.getByTestId('diagnostics-preview').textContent).toContain('manifest.json'));
     expect(screen.getByTestId('diagnostics-preview').textContent).not.toContain(location.origin);
     await act(() => setLocale('en-US'));
+    expect(screen.getByRole('link', { name: 'Open environment compatibility checks' }).getAttribute('href')).toContain('lang=en-US');
     expect(screen.getByRole('button', { name: 'Export diagnostic bundle' })).toBeTruthy();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Include recent logs' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Include scene summary' }));

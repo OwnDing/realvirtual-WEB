@@ -34,6 +34,7 @@ run_governance() {
     cd "$verify_repo_root"
     node scripts/verify-governance.mjs
     node scripts/assert-docs-publishable.mjs
+    node scripts/generate-compatibility.mjs --check
     git diff --check
     git diff --cached --check
   )

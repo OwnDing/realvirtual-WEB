@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+import { messages } from './messages.mjs';
+import { validateMatrix, workflowIds } from './evaluate.mjs';
+import { checkDirectoryPermission, runEnvironmentCheck } from './probes.mjs';
+const element = id => document.getElementById(id);
+const requestedLocale = new URLSearchParams(location.search).get('lang') ?? document.documentElement.dataset.rvDefaultLocale;
+let locale = requestedLocale === 'en-US' ? 'en-US' : 'zh-CN';
+let matrix = null, report = null, controller = null, directoryPermission, directoryBusy = false, alive = true, status = 'ready';
+const downloads = new Map();
+const t = key => messages[locale][key] ?? messages['zh-CN'][key] ?? key;
+function controls() {
+  const busy = Boolean(controller) || directoryBusy;
+  for (const key of ['run', 'directory', 'workflow', 'renderer']) element(key).disabled = busy || !matrix;
+  element('cancel').disabled = !controller;
+  element('download').disabled = busy || !report;
+}
+function render() {
+  document.documentElement.lang = locale;
+  document.title = t('title');
+  for (const node of document.querySelectorAll('[data-text]')) node.textContent = t(node.dataset.text);
+  element('locale').value = locale;
+  for (const [key, values] of [['workflow', workflowIds], ['renderer', ['webgl', 'webgpu']]]) {
+    const selected = element(key).value;
+    element(key).replaceChildren(...values.map(value => { const option = document.createElement('option'); option.value = value; option.textContent = t(value); return option; }));
+    if (values.includes(selected)) element(key).value = selected;
+  }
+  element('matrix-link').href = `./SUPPORT_MATRIX.${locale}.md`;
+  element('status').textContent = t(status);
+  element('assessment').textContent = report ? `${t('capability')}: ${t(report.assessment.capability)}. ${t('certification')}: ${t(report.assessment.certification)}.` : '';
+  element('results').replaceChildren(...Object.entries(report?.checks ?? {}).filter(([, result]) => result.code !== 'CHECK_NOT_REQUESTED').map(([key, result]) => {
+    const card = document.createElement('article'); card.className = result.status;
+    const title = document.createElement('h2'); title.textContent = `${t(key)} · ${t(result.status)}`;
+    const detail = document.createElement('p'); detail.textContent = t(result.code);
+    card.append(title, detail); return card;
+  }));
+  element('report').textContent = report ? JSON.stringify(report, null, 2) : '';
+  controls();
+}
+element('locale').addEventListener('change', event => { locale = event.target.value === 'en-US' ? 'en-US' : 'zh-CN'; render(); });
+for (const key of ['workflow', 'renderer']) element(key).addEventListener('change', () => { report = null; directoryPermission = undefined; status = 'ready'; render(); });
+element('run').addEventListener('click', async () => {
+  if (controller || directoryBusy || !matrix) return;
+  controller = new AbortController(); status = 'running'; report = null; render();
+  try {
+    const permission = directoryPermission; directoryPermission = undefined;
+    const result = await runEnvironmentCheck({ matrix, workflow: element('workflow').value, renderer: element('renderer').value, signal: controller.signal, directoryPermission: permission });
+    if (alive && !controller.signal.aborted) { report = result; status = 'completed'; }
+  } catch { if (alive) status = controller.signal.aborted ? 'cancelled' : 'failed'; }
+  finally { controller = null; if (alive) render(); }
+});
+element('cancel').addEventListener('click', () => controller?.abort());
+element('directory').addEventListener('click', async () => {
+  if (controller || directoryBusy) return;
+  directoryBusy = true; report = null; status = 'running'; render();
+  const result = await checkDirectoryPermission();
+  if (!alive) return;
+  directoryPermission = result; directoryBusy = false; status = result.code; render();
+});
+element('download').addEventListener('click', () => {
+  if (!report || controller || directoryBusy) return;
+  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2) + '\n'], { type: 'application/json' }));
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = `environment-${report.generatedAt.replace(/[:.]/g, '-')}.json`;
+  downloads.set(url, setTimeout(() => { URL.revokeObjectURL(url); downloads.delete(url); }, 30000));
+  document.body.append(anchor); anchor.click(); anchor.remove();
+});
+addEventListener('pagehide', () => { alive = false; controller?.abort(); for (const [url, timer] of downloads) { clearTimeout(timer); URL.revokeObjectURL(url); } downloads.clear(); });
+render();
+try {
+  const candidate = (await import('./matrix.mjs')).default;
+  if (validateMatrix(candidate).length) throw new Error('MATRIX_INVALID');
+  matrix = candidate;
+} catch { status = 'matrixInvalid'; }
+if (alive) render();

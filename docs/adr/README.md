@@ -39,3 +39,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0016：部署白标统一解析与交付投影](ADR-0016-deployment-white-label.md)
 
 - [ADR-0017：本地诊断采集与导出边界](ADR-0017-local-diagnostics.md)
+
+- [ADR-0018：兼容性规则与认证证据](ADR-0018-compatibility-evidence.md)

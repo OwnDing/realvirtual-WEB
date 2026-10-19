@@ -12,3 +12,12 @@ tests/fixtures/news-contract-v1.sample.json -text
 public/models/DemoRobotIK.glb filter=lfs diff=lfs merge=lfs -text
 public/models/EuropalletEmpty.glb filter=lfs diff=lfs merge=lfs -text
 public/models/tests.glb filter=lfs diff=lfs merge=lfs -text
+
+# L3-2 generated assets must compare byte-for-byte on Windows and Linux.
+src/core/compatibility/** text eol=lf
+src/core/i18n/catalogs/compatibility.mjs text eol=lf
+public/compatibility/** text eol=lf
+appliance/runtime/static/diagnostics/compatibility/** text eol=lf
+appliance/runtime/static/diagnostics/support-matrix.json text eol=lf
+appliance/docs/SUPPORT_MATRIX.*.md text eol=lf
+docs/generated/COMPATIBILITY_MATRIX.*.md text eol=lf

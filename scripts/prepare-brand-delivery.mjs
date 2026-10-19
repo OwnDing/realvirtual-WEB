@@ -121,6 +121,7 @@ export async function prepareBrandDelivery({ input, output, settings, assets, ba
     // Profile projection can tighten egress; publish against the effective settings.
     const effective = JSON.parse(readFileSync(join(stage, 'settings.json'), 'utf8'));
     projectStandaloneBrand(join(stage, 'present'), stage, effective, `${base}present/`);
+    projectStandaloneBrand(join(stage, 'compatibility'), stage, effective, `${base}compatibility/`);
     // Keep byte-for-byte application bundles; only these owned delivery surfaces change.
     renameSync(stage, destination);
     return destination;

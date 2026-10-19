@@ -41,3 +41,5 @@ authority: normative-registry
 - [PS-BRAND-001：部署白标](WHITE_LABEL.md)
 
 - [PS-DIAG-001：L3-1 本地诊断包](DIAGNOSTIC_BUNDLE.md)
+
+- [PS-COMPAT-001：L3-2 兼容性与最低配置](COMPATIBILITY.md)

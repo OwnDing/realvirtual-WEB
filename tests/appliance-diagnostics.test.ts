@@ -59,6 +59,8 @@ describe('appliance browser diagnostics', () => {
     expect(report.checks.find((check) => check.id === 'opfs')?.code).toBe('OPFS_ROUNDTRIP_OK');
     expect(report.checks.find((check) => check.id === 'webgl')?.level).toBe('required');
     expect(report.checks.find((check) => check.id === 'webgpu')?.level).toBe('feature');
+    // A legacy unbounded `full` declaration is not evidence for this environment.
+    expect(report.checks.find((check) => check.id === 'browser')?.code).toBe('BROWSER_NOT_CERTIFIED');
     expect(report.summary.pass + report.summary.warn + report.summary.fail).toBe(report.checks.length);
   });
 });
