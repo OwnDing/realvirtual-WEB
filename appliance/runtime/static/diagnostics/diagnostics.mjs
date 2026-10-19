@@ -18,8 +18,10 @@ async function browserCheck(matrix) {
   const identity = browserIdentity();
   const assessment = evaluateCompatibility(matrix, identity, {}, 'browser-project');
   const pass = assessment.certification === 'supported';
+  // Preserve the v1 report's family field while adding the reduced v2 identity.
+  const family = identity.browser === 'chrome' ? 'chromium' : identity.browser;
   return result('browser', '浏览器版本', 'required', pass ? 'pass' : 'warn', pass ? 'BROWSER_SUPPORTED' : 'BROWSER_NOT_CERTIFIED',
-    `${identity.browser} ${identity.major ?? 'unknown'}; ${assessment.certification}; ${assessment.matrixRevision ?? 'MATRIX_INVALID'}`, { ...identity, assessment });
+    `${identity.browser} ${identity.major ?? 'unknown'}; ${assessment.certification}; ${assessment.matrixRevision ?? 'MATRIX_INVALID'}`, { family, ...identity, assessment });
 }
 
 function secureContextCheck() {

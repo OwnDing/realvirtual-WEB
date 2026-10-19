@@ -61,6 +61,7 @@ describe('appliance browser diagnostics', () => {
     expect(report.checks.find((check) => check.id === 'webgpu')?.level).toBe('feature');
     // A legacy unbounded `full` declaration is not evidence for this environment.
     expect(report.checks.find((check) => check.id === 'browser')?.code).toBe('BROWSER_NOT_CERTIFIED');
+    expect(report.checks.find((check) => check.id === 'browser')?.data).toMatchObject({ family: 'chromium', major: expect.any(Number) });
     expect(report.summary.pass + report.summary.warn + report.summary.fail).toBe(report.checks.length);
   });
 });
