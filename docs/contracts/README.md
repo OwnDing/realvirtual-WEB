@@ -35,3 +35,5 @@ authority: normative-registry
 - [CONTRACT-BRAND-001：White Label v1 契约](WHITE_LABEL.md)
 
 - [Diagnostic Bundle v1](DIAGNOSTIC_BUNDLE.md)
+
+- [发布兼容性与环境检查契约](COMPATIBILITY.md)

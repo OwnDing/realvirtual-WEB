@@ -1,3 +1,4 @@
+import { browserIdentity as identifyBrowser, evaluateCompatibility } from './compatibility/evaluate.mjs';
 document.querySelectorAll('img[data-rv-brand-image]').forEach(image => { image.addEventListener('error', () => { image.hidden = true; console.warn('[branding] Logo unavailable; product name remains visible'); }); });
 const resultNode = document.querySelector('#results');
 const summaryNode = document.querySelector('#summary');
@@ -10,26 +11,17 @@ function result(id, label, level, status, code, detail, data = null) {
 }
 
 function browserIdentity() {
-  const ua = navigator.userAgent;
-  const edge = /Edg\/(\d+)/.exec(ua);
-  const chrome = /(?:Chrome|Chromium)\/(\d+)/.exec(ua);
-  const firefox = /Firefox\/(\d+)/.exec(ua);
-  const safari = /Version\/(\d+).+Safari\//.exec(ua);
-  if (edge) return { family: 'edge', major: Number(edge[1]) };
-  if (chrome) return { family: 'chromium', major: Number(chrome[1]) };
-  if (firefox) return { family: 'firefox', major: Number(firefox[1]) };
-  if (safari) return { family: 'safari', major: Number(safari[1]) };
-  return { family: 'unknown', major: null };
+  return identifyBrowser(navigator.userAgent, navigator.userAgentData?.brands ?? []);
 }
 
 async function browserCheck(matrix) {
   const identity = browserIdentity();
-  const support = matrix?.browsers?.[identity.family];
-  if (!support || support.level !== 'full') {
-    return result('browser', '浏览器版本', 'required', 'warn', 'BROWSER_DIAGNOSTIC_ONLY', `${identity.family} ${identity.major ?? 'unknown'} 不在完整创作支持矩阵内。`, identity);
-  }
-  const pass = Number.isInteger(identity.major) && identity.major >= support.minimumMajor;
-  return result('browser', '浏览器版本', 'required', pass ? 'pass' : 'fail', pass ? 'BROWSER_SUPPORTED' : 'BROWSER_TOO_OLD', `${identity.family} ${identity.major}; minimum ${support.minimumMajor}; tested ${support.testedMajor}.`, identity);
+  const assessment = evaluateCompatibility(matrix, identity, {}, 'browser-project');
+  const pass = assessment.certification === 'supported';
+  // Preserve the v1 report's family field while adding the reduced v2 identity.
+  const family = identity.browser === 'chrome' ? 'chromium' : identity.browser;
+  return result('browser', '浏览器版本', 'required', pass ? 'pass' : 'warn', pass ? 'BROWSER_SUPPORTED' : 'BROWSER_NOT_CERTIFIED',
+    `${identity.browser} ${identity.major ?? 'unknown'}; ${assessment.certification}; ${assessment.matrixRevision ?? 'MATRIX_INVALID'}`, { family, ...identity, assessment });
 }
 
 function secureContextCheck() {
@@ -178,7 +170,7 @@ function serviceWorkerCheck() {
 }
 
 export async function runDiagnostics({ supportMatrix, WebSocketImpl } = {}) {
-  const matrix = supportMatrix ?? await fetch('/diagnostics/support-matrix.json', { cache: 'no-store' }).then((response) => response.json()).catch(() => null);
+  const matrix = supportMatrix ?? await fetch(new URL('./compatibility/support-matrix.json', import.meta.url), { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).catch(() => null);
   const checks = [];
   checks.push(await browserCheck(matrix));
   checks.push(secureContextCheck());

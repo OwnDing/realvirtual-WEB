@@ -258,6 +258,7 @@ export async function buildOfflineAppliance(options) {
     const brandConfig = existsSync(brandSettings) ? JSON.parse(readFileSync(brandSettings, 'utf8')) : {};
     projectStandaloneBrand(join(temporary, 'runtime/static/dashboard'), webDist, brandConfig, '/appliance/');
     projectStandaloneBrand(join(temporary, 'runtime/static/diagnostics'), webDist, brandConfig, '/diagnostics/');
+    projectStandaloneBrand(join(temporary, 'runtime/static/diagnostics/compatibility'), webDist, brandConfig, '/diagnostics/compatibility/');
     mkdirSync(join(temporary, 'licenses'), { recursive: true });
     cpSync(join(repoRoot, 'LICENSE'), join(temporary, 'licenses', 'AGPL-3.0-only.txt'));
     mkdirSync(join(temporary, 'sbom'), { recursive: true });

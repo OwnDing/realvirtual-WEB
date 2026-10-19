@@ -18,3 +18,5 @@ authority: normative-registry
 - [DEMO_PACKAGE_EXPORT.md](DEMO_PACKAGE_EXPORT.md)：单 HTML 演示制作、配方保存、断网交付、构建与故障排查。
 
 - [DIAGNOSTIC_BUNDLE.md](DIAGNOSTIC_BUNDLE.md)：本地诊断包导出、脱敏边界、故障入口和支持人员排障。
+
+- [客户 IT 兼容性、最低配置与信任验收](COMPATIBILITY.md)

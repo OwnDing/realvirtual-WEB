@@ -16,3 +16,5 @@ authority: normative-process
 - [ACCEPT-BRAND-001：白标验收矩阵](WHITE_LABEL.md)
 
 - [诊断包验收矩阵](DIAGNOSTIC_BUNDLE.md)
+
+- [L3-2 兼容性验收矩阵](COMPATIBILITY.md)

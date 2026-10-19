@@ -50,6 +50,8 @@ export default function DiagnosticsPanel() {
     <Alert severity="info">{t('diagnostics.notice')}</Alert>
     <Typography variant="body2">{t('diagnostics.scope')}</Typography>
     <Typography variant="body2">{t('diagnostics.excluded')}</Typography>
+    <Button component="a" href={`${import.meta.env.BASE_URL}compatibility/index.html?lang=${getLocale()}`} target="_blank" rel="noopener noreferrer">{t('diagnostics.environmentCheck')}</Button>
+    <Typography variant="body2">{t('diagnostics.environmentCheckNotice')}</Typography>
     {(['logs', 'scene'] as const).map(key => <FormControlLabel key={key} control={<Checkbox checked={options[key]} disabled={busy} onChange={(_, checked) => { setOptions(previous => ({ ...previous, [key]: checked })); setReport(null); setMessage(null); }} />} label={t(`diagnostics.${key}`)} />)}
     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
       <Button variant="contained" disabled={busy} onClick={() => void run(true)}>{t('diagnostics.export')}</Button>

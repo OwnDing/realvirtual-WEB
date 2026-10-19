@@ -9,3 +9,4 @@ writeFileSync(join(root, 'settings.json'), JSON.stringify(config, null, 2) + '\n
 applyDeploymentProfile(root);
 const effective = JSON.parse(readFileSync(join(root, 'settings.json'), 'utf8'));
 projectStandaloneBrand(join(root, 'present'), root, effective, process.env.VITE_BASE && process.env.VITE_BASE !== './' ? `${process.env.VITE_BASE}present/` : './');
+projectStandaloneBrand(join(root, 'compatibility'), root, effective, './');

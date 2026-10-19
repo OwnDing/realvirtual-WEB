@@ -1,0 +1,58 @@
+{
+  "kind": "xyvirtual-compatibility-production-evidence",
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-19T03:15:29.918Z",
+  "productVersion": "6.3.27",
+  "matrixRevision": "2026-10-19.1",
+  "build": "16b9f0d56eba50f897d400ecf80704500acd803671e491df4a70720306de9f27",
+  "os": "linux",
+  "osRelease": "6.12.0-205.92.4.2.el10uek.aarch64",
+  "arch": "arm64",
+  "browser": "chromium",
+  "browserVersion": "145.0.7632.0",
+  "major": 145,
+  "channel": "chromium",
+  "cpu": "Neoverse-N1",
+  "memoryBytes": 24060334080,
+  "requestedRenderer": "webgl",
+  "hardwareRequested": false,
+  "gpu": "software",
+  "physicalDeviceVerified": false,
+  "salesClaimVerified": false,
+  "productionTlsVerified": false,
+  "status": "passed",
+  "workflows": [
+    "viewer"
+  ],
+  "journeys": [
+    {
+      "name": "explicit-check-and-download",
+      "status": "passed"
+    },
+    {
+      "name": "cancel-pending-storage",
+      "status": "passed"
+    },
+    {
+      "name": "missing-matrix-and-graphics",
+      "status": "passed"
+    },
+    {
+      "name": "production-viewer-and-support-entry",
+      "status": "passed"
+    },
+    {
+      "name": "webgpu-unavailable-fallback",
+      "status": "passed"
+    }
+  ],
+  "unverified": [
+    "physical reference hardware and minimum specification",
+    "enterprise HTTPS/WSS and policy",
+    "folder save/reopen and permission persistence",
+    "XR session/input/lifecycle",
+    "30-sample performance certification"
+  ],
+  "actualRenderer": "webgl",
+  "fallback": "webgl"
+}

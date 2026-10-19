@@ -21,3 +21,5 @@ Always run `backup` before `upgrade`. `rollback` switches to the retained releas
 shared data. `uninstall` preserves state unless the exact install id is supplied with the explicit
 purge flags. Never bypass a certificate warning, disable TLS validation, expose CONNECT/PLC ports,
 or change scheme/host/port during an ordinary upgrade.
+
+Browser, hardware and trust acceptance: [L3-2 guide](BROWSER_SUPPORT.md).

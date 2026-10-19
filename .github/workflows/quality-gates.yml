@@ -52,9 +52,15 @@ jobs:
 
   browser:
     name: Browser Gate
+    needs: compatibility-windows
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
+      - name: Require Windows compatibility success
+        env:
+          COMPATIBILITY_WINDOWS_RESULT: ${{ needs.compatibility-windows.result }}
+        run: test "$COMPATIBILITY_WINDOWS_RESULT" = success
       - uses: actions/checkout@v4
         with:
           lfs: true
@@ -70,6 +76,16 @@ jobs:
       - name: Install Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
         timeout-minutes: 10
+      - name: Verify compatibility production workflows
+        run: npm run verify:compatibility
+        timeout-minutes: 5
+      - name: Upload compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-evidence
+          path: test-results/compatibility/
+          if-no-files-found: ignore
       - name: Verify offline production journeys in an isolated network
         run: node scripts/run-offline-gate.mjs
         timeout-minutes: 10
@@ -130,6 +146,36 @@ jobs:
         with:
           name: white-label-evidence
           path: test-results/white-label/
+          if-no-files-found: ignore
+
+  compatibility-windows:
+    name: Windows browser compatibility
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Build public production artifacts
+        run: npm run build
+        env:
+          RV_DEPLOYMENT_PROFILE: offline
+      - name: Verify real Chrome and Edge channels
+        shell: bash
+        run: |
+          node scripts/verify-compatibility-production.mjs --channel=chrome
+          node scripts/verify-compatibility-production.mjs --channel=msedge
+      - name: Upload Windows compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-windows-evidence
+          path: test-results/compatibility/
           if-no-files-found: ignore
 
   build:
