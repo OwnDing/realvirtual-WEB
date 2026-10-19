@@ -3,11 +3,13 @@ doc_id: DELIVERY-SNAPSHOT-INDEX
 title: 阶段交付快照索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-11
+last_reviewed: 2026-10-19
 authority: normative-registry
 ---
 
 # 阶段交付快照索引
+
+- [L3-2 兼容性矩阵](compatibility-2026-10-19.md)：工程门禁、实际浏览器功能证据与待实机认证范围。
 
 - [L2-4 视觉呈现](visual-presentation-2026-10-11.md)：功能范围、本地门禁、图片与录像闭环、兼容限制和回退。
 

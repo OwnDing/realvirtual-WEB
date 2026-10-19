@@ -54,14 +54,16 @@ M1 规格/证据盘点与矩阵契约。M2 Chromium 的矩阵→检查→生产�
 
 - [x] 用户批准方案及开 PR 实施，建立干净特性分支。
 - [x] 创建规格、ADR、契约和验收定义。
-- [ ] M2 首个完整闭环。
-- [ ] M3 故障覆盖与门禁。
-- [ ] 本地门禁、生产证据、PR 和远程 CI。
+- [x] M2 首个完整闭环：矩阵源、独立主动检查、设置入口、生产 Viewer 流程和双语交付。
+- [x] M3 故障覆盖与门禁：范围/证据校验，权限/取消/清理测试，实际 Chrome/Edge runner 和生成漂移检查。
+- [x] 本地门禁与生产证据已记录、PR 已创建；首个功能提交远程六项 CI 通过，后续提交由同一门禁复核。
 - [ ] M4 Windows Chrome/Edge、真实 GPU/最低配置、企业 TLS/策略、XR 认证。
 
 ## Surprises & Discoveries
 
 现有 v1 矩阵无 OS 维度且上界无限，无法诚实表达支持范围；旧运行证据不能覆盖当前构建。L3-1 ADR 禁止主动 OPFS/GPU探测，因此使用独立页面。Appliance 计划仍 active，其未完成实机验收不能借本任务关闭。
+
+静态网络边界门禁要求独立资源也没有未经审计的请求入口，矩阵改为同源静态模块加载，未增加网络白名单。生产测试发现既有自动画质提示会遮挡设置入口，旅程通过正常点击确认继续；新页面默认品牌使用半透明 surface，补上不透明背景并验证文字对比度。Windows 依赖失败时，required Browser Gate 显式失败，避免依赖导致 skipped 被误当成通过。
 
 ## Decision Log
 
@@ -77,4 +79,4 @@ M1 规格/证据盘点与矩阵契约。M2 Chromium 的矩阵→检查→生产�
 
 ## Outcomes & Retrospective
 
-实施中；完成代码和自动验证后记录实际结果及未验证认证项。
+已开 [PR #17](https://github.com/OwnDing/realvirtual-WEB/pull/17)，工程实现、完整本地覆盖及首轮远程门禁见[交付快照](../../delivery/snapshots/compatibility-2026-10-19.md)。实际 Windows Chrome/Edge 生产流程通过，但托管软件 GPU 不支持晋升实机最低配置承诺；M4 保持未完成。没有发布、部署或迁移客户数据。

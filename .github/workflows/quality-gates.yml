@@ -53,9 +53,14 @@ jobs:
   browser:
     name: Browser Gate
     needs: compatibility-windows
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
+      - name: Require Windows compatibility success
+        env:
+          COMPATIBILITY_WINDOWS_RESULT: ${{ needs.compatibility-windows.result }}
+        run: test "$COMPATIBILITY_WINDOWS_RESULT" = success
       - uses: actions/checkout@v4
         with:
           lfs: true

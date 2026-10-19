@@ -14,7 +14,7 @@ export function matrixTable(matrix, locale) {
   const lines = [`# ${t.matrix}`, '', `Product ${matrix.productVersion} · matrix ${matrix.revision} · reviewed ${matrix.reviewedOn}`, '',
     chinese ? '能力检测与产品认证分别报告。未验证不表示已知不能运行；测试浏览器不能代替真实设备认证。' : 'Capabilities and product certification are separate. Unverified does not mean known to fail. Test browsers do not certify physical devices.', '',
     `| ${t.target} | ${t.versions} | ${t.certification} | ${t.scope} | ${t.evidence} |`, '| --- | --- | --- | --- | --- |'];
-  for (const target of matrix.targets) lines.push(`| ${target.id} (${[target.os, target.osRelease, target.arch].filter(Boolean).join(' ') || '—'}) | ${target.minMajor === null ? '—' : `${target.minMajor}–${target.maxMajor}`} | ${t[target.level]} | ${target.workflows.map(value => t[value]).join(' / ')} | ${target.evidence.join(', ') || t.none} |`);
+  for (const target of matrix.targets) lines.push(`| ${target.id} (${[target.os, target.osRelease, target.arch].filter(Boolean).join(' ') || '—'}) | ${target.minMajor === null ? '—' : `${target.minMajor}–${target.maxMajor}`} | ${t[target.level === 'limited' ? 'limitedSupport' : target.level]} | ${target.workflows.map(value => t[value]).join(' / ')} | ${target.evidence.join(', ') || t.none} |`);
   lines.push('', `| ${t.hardware} | ${t.certification} | ${t.minimum} |`, '| --- | --- | --- |');
   for (const profile of matrix.hardwareProfiles) lines.push(`| ${t[profile.id] ?? profile.id} | ${t[profile.status]} | ${profile.minimum === null ? t.notEstablished : JSON.stringify(profile.minimum)} |`);
   lines.push('', t.limits, '', t.certificate, '',

@@ -6,7 +6,7 @@ import { checkDirectoryPermission, runEnvironmentCheck } from './probes.mjs';
 const element = id => document.getElementById(id);
 const requestedLocale = new URLSearchParams(location.search).get('lang') ?? document.documentElement.dataset.rvDefaultLocale;
 let locale = requestedLocale === 'en-US' ? 'en-US' : 'zh-CN';
-let matrix = null, report = null, controller = null, directoryPermission, directoryBusy = false, alive = true, status = 'ready';
+let matrix = null, report = null, controller = null, directoryPermission, directoryBusy = false, alive = true, epoch = 0, status = 'ready';
 const downloads = new Map();
 const t = key => messages[locale][key] ?? messages['zh-CN'][key] ?? key;
 function controls() {
@@ -27,7 +27,7 @@ function render() {
   }
   element('matrix-link').href = `./SUPPORT_MATRIX.${locale}.md`;
   element('status').textContent = t(status);
-  element('assessment').textContent = report ? `${t('capability')}: ${t(report.assessment.capability)}. ${t('certification')}: ${t(report.assessment.certification)}.` : '';
+  element('assessment').textContent = report ? `${t('capability')}: ${t(report.assessment.capability)}. ${t('certification')}: ${t(report.assessment.certification === 'limited' ? 'limitedSupport' : report.assessment.certification)}.` : '';
   element('results').replaceChildren(...Object.entries(report?.checks ?? {}).filter(([, result]) => result.code !== 'CHECK_NOT_REQUESTED').map(([key, result]) => {
     const card = document.createElement('article'); card.className = result.status;
     const title = document.createElement('h2'); title.textContent = `${t(key)} · ${t(result.status)}`;
@@ -52,9 +52,10 @@ element('run').addEventListener('click', async () => {
 element('cancel').addEventListener('click', () => controller?.abort());
 element('directory').addEventListener('click', async () => {
   if (controller || directoryBusy) return;
+  const started = epoch;
   directoryBusy = true; report = null; status = 'running'; render();
   const result = await checkDirectoryPermission();
-  if (!alive) return;
+  if (!alive || started !== epoch) return;
   directoryPermission = result; directoryBusy = false; status = result.code; render();
 });
 element('download').addEventListener('click', () => {
@@ -64,7 +65,11 @@ element('download').addEventListener('click', () => {
   downloads.set(url, setTimeout(() => { URL.revokeObjectURL(url); downloads.delete(url); }, 30000));
   document.body.append(anchor); anchor.click(); anchor.remove();
 });
-addEventListener('pagehide', () => { alive = false; controller?.abort(); for (const [url, timer] of downloads) { clearTimeout(timer); URL.revokeObjectURL(url); } downloads.clear(); });
+addEventListener('pagehide', () => {
+  alive = false; epoch++; controller?.abort(); directoryBusy = false; directoryPermission = undefined; report = null;
+  for (const [url, timer] of downloads) { clearTimeout(timer); URL.revokeObjectURL(url); } downloads.clear();
+});
+addEventListener('pageshow', event => { if (event.persisted) { alive = true; status = controller ? 'running' : 'ready'; render(); } });
 render();
 try {
   const candidate = (await import('./matrix.mjs')).default;

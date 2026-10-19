@@ -18,4 +18,4 @@ authority: normative
 | 实际 GPU 与性能 | 生产脚本 hardware 模式、L2-3 hardware benchmark | SwiftShader 不算实机；30 次与场景统计仍必需 |
 | 文件夹保存重开、企业 TLS/策略、XR 会话/控制器 | 客户 IT 验收清单 | 手工证据，不因 Mock/API 探测通过而认证 |
 
-本计划交付时补充实际运行结果。未运行条目保持未验证，正式认证不得由 CI 缺失设备的 skip 推导。完整 Appliance 的缺口仍由 [EP-APPLIANCE-001](../exec-plans/active/EP-APPLIANCE-001-offline-appliance.md) 跟踪。
+实际结果记录在[交付快照](../delivery/snapshots/compatibility-2026-10-19.md)，CI 原始报告按 PR 的提交和运行编号保留。未运行条目保持未验证，正式认证不得由 CI 缺失设备的 skip 推导。完整 Appliance 的缺口仍由 [EP-APPLIANCE-001](../exec-plans/active/EP-APPLIANCE-001-offline-appliance.md) 跟踪。

@@ -81,7 +81,7 @@ export function browserIdentity(userAgent = '', brands = []) {
   const matches = [['edge', /Edg\/(\d+(?:\.\d+){0,3})/], ['firefox', /Firefox\/(\d+(?:\.\d+){0,3})/], ['chromium', /(?:Chrome|Chromium)\/(\d+(?:\.\d+){0,3})/], ['safari', /Version\/(\d+(?:\.\d+){0,3}).*Safari\//]];
   for (const [family, pattern] of matches) {
     const match = pattern.exec(ua);
-    if (match) return { os, osRelease: null, arch: null, browser: family === 'chromium' && brands.some(item => item?.brand === 'Google Chrome') ? 'chrome' : family, version: match[1], major: Number(match[1].split('.')[0]) };
+    if (match) return { os, osRelease: null, arch: null, browser: family === 'chromium' && Array.isArray(brands) && brands.some(item => item?.brand === 'Google Chrome') ? 'chrome' : family, version: match[1], major: Number(match[1].split('.')[0]) };
   }
   return { os, osRelease: null, arch: null, browser: 'unknown', version: null, major: null };
 }

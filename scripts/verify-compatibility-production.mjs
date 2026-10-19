@@ -6,7 +6,7 @@ import { resolve, join, isAbsolute } from 'node:path';
 import { cpus, totalmem, release } from 'node:os';
 import { chromium, expect } from 'playwright/test';
 import { startOfflineServer } from './offline-test-server.mjs';
-import { generateCompatibility } from './generate-compatibility.mjs';
+import { generateCompatibility, generatedCompatibilityFiles } from './generate-compatibility.mjs';
 
 const options = new Map(process.argv.slice(2).map(arg => { const index = arg.indexOf('='); return index < 0 ? [arg, true] : [arg.slice(0, index), arg.slice(index + 1)]; }));
 for (const key of options.keys()) assert(['--channel', '--executable', '--hardware', '--renderer'].includes(key), `Unknown option: ${key}`);
@@ -21,6 +21,9 @@ assert(renderer !== 'webgpu' || hardware, 'Real WebGPU acceptance requires --har
 generateCompatibility(true);
 const dist = resolve('dist'), out = resolve('test-results/compatibility');
 await mkdir(out, { recursive: true });
+for (const [path, content] of generatedCompatibilityFiles()) {
+  if (path.startsWith('public/compatibility/') && !path.endsWith('.html')) assert.equal(await readFile(join(dist, path.slice('public/'.length)), 'utf8'), content, `Production resource is stale: ${path}. Rebuild.`);
+}
 const matrix = JSON.parse(await readFile(join(dist, 'compatibility/support-matrix.json'), 'utf8'));
 const sourceMatrix = JSON.parse(await readFile('src/core/compatibility/support-matrix.json', 'utf8'));
 assert.equal(matrix.revision, sourceMatrix.revision, 'Rebuild production after changing the matrix');
@@ -106,6 +109,19 @@ try {
     const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#download').click()]);
     assert.deepEqual(JSON.parse(await readFile(await download.path(), 'utf8')), result);
     await page.locator('#locale').selectOption('zh-CN'); await expect(page.locator('h1')).toHaveText('环境与兼容性检查');
+    const contrast = await page.evaluate(() => {
+      const luminance = values => values.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+      const background = node => {
+        const rgba = getComputedStyle(node).backgroundColor.match(/[\d.]+/g).map(Number), alpha = rgba[3] ?? 1;
+        const behind = node.parentElement ? background(node.parentElement) : [255, 255, 255];
+        return rgba.slice(0, 3).map((value, index) => value * alpha + behind[index] * (1 - alpha));
+      };
+      return [...document.querySelectorAll('h1, article p, #run')].map(node => {
+        const ink = luminance(getComputedStyle(node).color.match(/[\d.]+/g).map(Number).slice(0, 3)), surface = luminance(background(node));
+        return (Math.max(ink, surface) + .05) / (Math.min(ink, surface) + .05);
+      });
+    });
+    assert(contrast.every(ratio => ratio >= 4.5), 'Default branding must preserve readable check results');
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Page must fit a narrow viewport');
     await page.screenshot({ path: join(out, 'checks-zh-narrow.png'), fullPage: true });
@@ -114,6 +130,18 @@ try {
     assert.notEqual(folder.checks.directoryPermission.status, 'pass');
     for (const request of requests) { assert.equal(request.method, 'GET'); assert.equal(new URL(request.url).origin, server.origin); }
     assert.deepEqual(sockets, []);
+    await page.goto(`${server.origin}/compatibility/index.html?lang=zh-CN`);
+    await page.goBack(); await expect(page.locator('#run')).toBeEnabled();
+    await runCheck(page);
+  });
+  await journey('cancel-pending-storage', async page => {
+    await page.addInitScript(() => Object.defineProperty(navigator.storage, 'getDirectory', { value: () => new Promise(() => {}), configurable: true }));
+    await page.goto(checkPage); await expect(page.locator('#run')).toBeEnabled();
+    await page.locator('#workflow').selectOption('browser-project'); await page.locator('#run').click();
+    await expect(page.locator('#cancel')).toBeEnabled(); await page.locator('#cancel').click();
+    await expect(page.locator('#status')).toContainText('Cancelled');
+    await expect(page.locator('#run')).toBeEnabled(); await expect(page.locator('#download')).toBeDisabled();
+    assert.equal(await page.locator('#report').textContent(), '');
   });
   await journey('missing-matrix-and-graphics', async page => {
     await page.route('**/compatibility/matrix.mjs', route => route.fulfill({ contentType: 'text/javascript', body: 'export default {schemaVersion: 999};' }));
