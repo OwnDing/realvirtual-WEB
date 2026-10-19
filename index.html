@@ -88,6 +88,11 @@
     #loading-overlay.hidden {
       display: none;
     }
+    /* Fatal errors and their recovery actions must remain above React dialogs
+       and the progressive loading preview, including full-width mobile settings. */
+    #loading-overlay.has-error {
+      z-index: 23000;
+    }
     #loading-overlay.fade-out {
       opacity: 0;
       pointer-events: none;

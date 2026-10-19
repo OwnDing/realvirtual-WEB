@@ -12,6 +12,9 @@
  * All UI lives in core/hmi/ (layout) and custom/ (content).
  */
 
+import { diagnosticSession } from './core/diagnostics/session';
+import { bindDiagnosticErrorEntry } from './core/diagnostics/error-entry';
+import { DiagnosticsPlugin } from './plugins/diagnostics';
 import { readPerformanceQuality } from './core/hmi/performance-quality';
 import { bindLoadFeedback } from './core/hmi/load-feedback';
 import { downloadModel } from './core/engine/rv-model-download';
@@ -180,6 +183,9 @@ import { refreshLicense } from './core/licensing/rv-lic-store';
 
 // Microsoft Teams JS SDK — dynamically imported only when ?teams=1
 
+const releaseDiagnosticCapture = diagnosticSession.start();
+diagnosticSession.record('BOOT_STARTED');
+
 // --- localStorage keys ---
 const LS_KEY_MODEL = 'rv-webviewer-last-model';
 const LS_KEY_RENDERER = 'rv-webviewer-renderer';
@@ -248,6 +254,8 @@ function applyPrebootText(): void {
   loadingLabel.textContent = rvT('preboot', 'loading');
 }
 applyPrebootText();
+const diagnosticErrorEntry = bindDiagnosticErrorEntry(loadingError);
+if (import.meta.hot) import.meta.hot.dispose(() => { diagnosticErrorEntry.dispose(); releaseDiagnosticCapture(); });
 
 function showLoadingOverlay(modelName: string) {
   loadingLabel.textContent = rvT('preboot', 'loading');
@@ -264,14 +272,17 @@ function showLoadingOverlay(modelName: string) {
 // surfacing the failure here — with a Retry — is the difference between a usable
 // error and a silent "empty scene". `detail` is a short, user-readable reason.
 function showLoadingError(detail: string) {
+  diagnosticErrorEntry.refresh();
   if (loadingProgressWrap) loadingProgressWrap.style.display = 'none';
   loadingStatus.style.display = 'none';
   loadingErrorDetail.textContent = detail;
   loadingError.classList.remove('hidden');
+  loadingOverlay.classList.add('has-error');
   loadingOverlay.classList.remove('fade-out', 'hidden');
 }
 
 function hideLoadingError() {
+  loadingOverlay.classList.remove('has-error');
   loadingError.classList.add('hidden');
   loadingStatus.style.display = '';
   if (loadingProgressWrap) loadingProgressWrap.style.display = '';
@@ -479,6 +490,7 @@ async function init() {
 
   // Set singleton — from here all stores have access via getAppConfig()
   setAppConfig(appConfig);
+  diagnosticErrorEntry.refresh();
   installRuntimeCsp(getAppConfig() as unknown as Record<string, unknown>);
 
   // --- Microsoft Teams integration ---
@@ -702,6 +714,7 @@ async function init() {
     .use(new KioskPlugin(), 'core')
     .use(new MeasurementPlugin(), 'core')
     .use(new ClippingPlugin(), 'core')
+    .use(new DiagnosticsPlugin(), 'core')
     .use(new WebErrorPlugin(), 'core')
     .use(new CollisionAlertPlugin(), 'core')
     .use(new CustomRuntimeInstructionPlugin(), 'core')
@@ -1302,6 +1315,7 @@ async function init() {
       if (!loadSession.visualAssets) visualController.abort();
       if (loadSession.signal.aborted) return { ok: false, error: 'cancelled' } as const;
       loadSession.fail();
+      diagnosticSession.record('LOAD_FAILED', e);
       // Surface the failure instead of leaving a silent empty scene. On mobile the
       // console is invisible, so without this the user just sees a blank viewer.
       console.error(`[main] Failed to load model: ${url}`, e);
@@ -1428,7 +1442,7 @@ async function init() {
   // A lost WebGL context (mobile GPU memory pressure, long-backgrounded tab)
   // leaves a permanently blank canvas. Surface it with a reload prompt.
   viewer.on('renderer-context-lost', () => {
-    showLoadingError('The 3D graphics context was lost (often low memory on mobile). Reload to recover.');
+    showLoadingError(rvT('shell', 'diagnostics.contextLost'));
   });
 
   // Preferred workspace mode derived from an opened published example's catalogue
@@ -1961,4 +1975,8 @@ async function init() {
   }
 }
 
-init().catch(console.error);
+init().catch(error => {
+  diagnosticSession.record('BOOT_FAILED', error);
+  showLoadingError(rvT('shell', 'diagnostics.bootFailed'));
+  console.error(error);
+});
