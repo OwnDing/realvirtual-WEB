@@ -3,13 +3,15 @@ doc_id: EXEC-PROPOSED-INDEX
 title: 待批准 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-08-27
+last_reviewed: 2026-10-20
 authority: normative-registry
 ---
 
 # 待批准 ExecPlan 索引
 
 当前没有待批准的 ExecPlan。
+
+- `EP-SEC-001` 于 2026-10-20 获用户批准，移至 [活动计划](../active/EP-SEC-001-supply-chain-and-script-security.md)。
 
 - `EP-LICENSE-001` 已于 2026-08-27 关闭 `OD-007`、接受 `ADR-0007` 后获用户批准并激活，并于 2026-08-28 完成，移至 [`../completed/EP-LICENSE-001-offline-license.md`](../completed/EP-LICENSE-001-offline-license.md)。
 

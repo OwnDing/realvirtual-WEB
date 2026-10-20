@@ -23,6 +23,8 @@ authority: normative-registry
 
 ## 执行规则
 
+OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独立测试证据，Owner 为 security/product/maintainers，状态 **closed**。2026-10-20 用户明确“同意，开 pr 实施”，认可 EP-SEC-001 D1–D5；落地 [ADR-0019](../adr/ADR-0019-supply-chain-and-script-trust.md) 与 [活动计划](../exec-plans/active/EP-SEC-001-supply-chain-and-script-security.md)。需同步门禁/策略/运行时/授权迁移/验收；决策关闭不代表代码、远程保护设置或第三方测试完成。OD-005 的原五项保护不撤销，新增检查的远程强制单独留证。
+
 1. 任务碰到阻塞范围时，ExecPlan 必须引用对应 OD。
 2. 决策完成后创建或更新 ADR/产品规格/契约，再把状态改为 `closed`。
 3. 关闭记录必须包含日期、批准人或批准来源、落地文档和需要同步的代码/测试。

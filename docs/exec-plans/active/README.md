@@ -17,3 +17,5 @@ authority: normative-registry
 只有 `status: approved, plan_status: active` 的计划可以驱动实现。Proposed 计划必须留在评审状态，不得通过移动文件自动获得批准。
 
 - [EP-COMPAT-001：L3-2 兼容性矩阵与最低配置](EP-COMPAT-001-compatibility-matrix.md)
+
+- [EP-SEC-001：供应链与脚本安全](EP-SEC-001-supply-chain-and-script-security.md)：用户于 2026-10-20 批准实施及开 PR。
