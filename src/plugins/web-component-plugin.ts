@@ -11,10 +11,9 @@
  * follow later.
  *
  * Responsibilities:
- *  - Trust gate (§10, v1-minimal): script execution is OFF BY DEFAULT.
- *    Enable via the constructor option, `setAllowScripts(true)`, or the
- *    `?scripts` URL parameter (dev/testing). The phase-3 editor UI adds the
- *    per-model confirmation flow.
+ *  - Script execution starts disabled. Constructor/URL flags request the
+ *    editor; explicit confirmation authorizes the current model content,
+ *    subject to load trust and the deployment scripting ceiling.
  *  - Lazily creates ONE shared `RVScriptHost` (QuickJS WASM) when the first
  *    model with script components is wired — no bundle/runtime cost otherwise.
  *  - Builds the `SdkEnvironment` per instance from the live viewer:
@@ -34,6 +33,9 @@
  *    workstream). Monaco loads lazily on first panel open.
  */
 
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+import { getAppConfig } from '../core/rv-app-config';
 import { Code } from '@mui/icons-material';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
@@ -44,7 +46,7 @@ import type { LoadResult } from '../core/engine/rv-scene-loader';
 import type { RVDrive } from '../core/engine/rv-drive';
 import type { RVSensor } from '../core/engine/rv-sensor';
 import { createSignalWriter, type SignalStore } from '../core/engine/rv-signal-store';
-import { RVScriptHost } from '../core/engine/rv-script-host';
+import type { RVScriptHost } from '../core/engine/rv-script-host';
 import {
   RVWebComponentRegistry,
   computeWebComponentNodePath,
@@ -113,7 +115,11 @@ export class WebComponentPlugin implements RVViewerPlugin {
   private registry: RVWebComponentRegistry | null = null;
   private host: RVScriptHost | null = null;
   private hostPromise: Promise<RVScriptHost> | null = null;
-  private allowScripts: boolean;
+  private allowScripts = false;
+  private readonly requestScripts: boolean;
+  private approvedContent: string | null = null;
+  private approvedScripts = new Map<string, string>();
+  private disposed = false;
   private readonly callDeadlineMs?: number;
   private readonly unsubs: Array<() => void> = [];
   /** Live per-instance flow ledgers (reset on `simulation-reset`, plan-259). */
@@ -123,7 +129,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
   private lastLoad: { result: LoadResult; viewer: RVViewer } | null = null;
 
   constructor(opts: WebComponentPluginOptions = {}) {
-    this.allowScripts = opts.allowScripts === true;
+    this.requestScripts = opts.allowScripts === true;
     this.callDeadlineMs = opts.callDeadlineMs;
     // The Monaco script editor is authoring — gone in the Viewer (plan-387 F4).
     // Gated per-entry rather than with a `modes` declaration on the plugin, for
@@ -141,7 +147,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
       visibilityId: 'script-editor-panel',
       visibilityRule: { hiddenIn: [modeContext('viewer')] },
     }];
-    if (this.allowScripts) {
+    if (this.requestScripts) {
       this.slots.unshift({
         slot: 'button-group',
         component: ScriptToolbarButton,
@@ -168,27 +174,36 @@ export class WebComponentPlugin implements RVViewerPlugin {
   // ── Lifecycle ──────────────────────────────────────────────────────────
 
   onModelLoaded(result: LoadResult, viewer: RVViewer): void {
+    this.onModelCleared();
     this.lastLoad = { result, viewer };
-    void this.wire(result, viewer);
+    if (this.requestScripts && countWebComponents(result.root) > 0) openScriptEditor();
   }
 
   onModelCleared(): void {
     this.wireToken++;               // cancels an in-flight async wire
     this.lastLoad = null;
+    this.allowScripts = false;
+    this.approvedContent = null;
+    this.approvedScripts.clear();
     this.registry?.dispose();
     this.registry = null;
     resetScriptEditorStore();
   }
 
   onFixedUpdatePre(dt: number): void {
+    if (!this.scriptsAllowed) {
+      if (this.allowScripts || this.registry) this.setAllowScripts(false);
+      return;
+    }
     this.registry?.tickAll(dt);
   }
 
   onFixedUpdatePost(dt: number): void {
-    this.registry?.lateTickAll(dt);
+    if (this.scriptsAllowed) this.registry?.lateTickAll(dt);
   }
 
   dispose(): void {
+    this.disposed = true;
     this.onModelCleared();
     for (const unsub of this.unsubs) unsub();
     this.unsubs.length = 0;
@@ -201,7 +216,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
 
   /** True when the trust gate allows script execution for loaded models. */
   get scriptsAllowed(): boolean {
-    return this.allowScripts;
+    return this.allowScripts && !this.disposed && getAppConfig().scripting?.sandbox !== false;
   }
 
   /**
@@ -209,11 +224,15 @@ export class WebComponentPlugin implements RVViewerPlugin {
    * components; disabling disposes all running instances.
    */
   setAllowScripts(allow: boolean): void {
-    if (this.allowScripts === allow) return;
-    this.allowScripts = allow;
+    this.wireToken++;
+    this.allowScripts = allow && !this.disposed && !!this.lastLoad
+      && !this.lastLoad.result.logicGated && !this.lastLoad.result.gatedFrames?.length
+      && getAppConfig().scripting?.sandbox !== false;
+    this.approvedContent = this.allowScripts ? this.contentDigest() : null;
+    this.approvedScripts = this.allowScripts ? this.scriptContents() : new Map();
     this.registry?.dispose();
     this.registry = null;
-    if (allow && this.lastLoad) {
+    if (this.allowScripts && this.lastLoad) {
       void this.wire(this.lastLoad.result, this.lastLoad.viewer);
     }
   }
@@ -234,7 +253,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
 
   /** Hot-reload one component (§4.4): COLD swap, `component-reloaded` event. */
   reload(nodePath: string, jsCode: string): void {
-    if (!this.registry) {
+    if (!this.registry || !this.scriptsAllowed) {
       console.warn('[web-component] reload ignored — scripting disabled or no model loaded');
       return;
     }
@@ -250,10 +269,21 @@ export class WebComponentPlugin implements RVViewerPlugin {
    * node not found) — persistence via the setCode op is unaffected then.
    */
   async reloadOrCreate(nodePath: string, jsCode: string): Promise<boolean> {
-    if (!this.allowScripts || !this.lastLoad) return false;
+    if (!this.scriptsAllowed || !this.lastLoad) return false;
+    // Save/Run authorizes only this editor target. A concurrent change to any
+    // other script must not inherit that authorization.
+    const contents = this.scriptContents();
+    const paths = new Set([...contents.keys(), ...this.approvedScripts.keys()]);
+    if ([...paths].some(path => path !== nodePath && contents.get(path) !== this.approvedScripts.get(path))) {
+      this.setAllowScripts(false);
+      return false;
+    }
+    this.wireToken++; // supersede an earlier whole-model wire awaiting WASM
+    this.approvedScripts = contents;
+    this.approvedContent = this.contentDigest();
     const { result, viewer } = this.lastLoad;
     const registry = this.registry ?? await this.ensureRegistry(result, viewer);
-    if (!registry) return false;
+    if (!registry || !this.scriptsAllowed || this.lastLoad?.result !== result) return false;
     if (registry.get(nodePath)) {
       registry.reload(nodePath, jsCode);
       return true;
@@ -285,13 +315,13 @@ export class WebComponentPlugin implements RVViewerPlugin {
 
     const found = countWebComponents(result.root);
     if (found === 0) return;
-    if (!this.allowScripts) {
-      console.info(`[web-component] ${found} script component(s) in this model — execution disabled (trust gate, plan-210 §10). Enable via setAllowScripts(true) or ?scripts.`);
+    if (!this.scriptsAllowed) {
+      console.info(`[web-component] ${found} script component(s) in this model — execution disabled (trust gate, plan-210 §10). Open the script editor and explicitly allow the current model content.`);
       return;
     }
 
     const registry = await this.ensureRegistry(result, viewer);
-    if (!registry) return;
+    if (!registry || !this.scriptsAllowed || this.approvedContent !== this.contentDigest()) return;
 
     const wired = wireWebComponents(result.root, registry, { allowScripts: true });
     if (wired.malformed > 0) {
@@ -314,7 +344,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
       console.warn('[web-component] QuickJS host failed to load — script components stay inactive:', err);
       return null;
     }
-    if (token !== this.wireToken) return null;   // superseded by newer load/clear
+    if (token !== this.wireToken || !this.scriptsAllowed || this.lastLoad?.result !== result || this.approvedContent !== this.contentDigest()) return null;   // superseded by newer load/clear
     if (this.registry) return this.registry;     // a concurrent caller won
 
     const registry = new RVWebComponentRegistry({
@@ -345,9 +375,24 @@ export class WebComponentPlugin implements RVViewerPlugin {
     ]);
   }
 
+  private contentDigest(): string | null {
+    if (!this.lastLoad) return null;
+    return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify([...this.scriptContents()]))));
+  }
+
+  private scriptContents(): Map<string, string> {
+    const entries = new Map<string, string>();
+    this.lastLoad?.result.root.traverse(node => {
+      const raw = (node.userData?.realvirtual as Record<string, unknown> | undefined)?.WebComponent;
+      if (raw !== undefined) entries.set(computeWebComponentNodePath(node), JSON.stringify(raw));
+    });
+    return entries;
+  }
+
   private ensureHost(): Promise<RVScriptHost> {
     if (this.host) return Promise.resolve(this.host);
-    this.hostPromise ??= RVScriptHost.create().then((host) => {
+    this.hostPromise ??= import('../core/engine/rv-script-host').then(({ RVScriptHost }) => RVScriptHost.create()).then((host) => {
+      if (this.disposed) { host.dispose(); throw new Error('Script plugin disposed while loading'); }
       this.host = host;
       return host;
     });

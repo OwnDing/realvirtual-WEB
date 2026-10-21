@@ -75,6 +75,7 @@ export function createSdkComponent(
   const ctx = host.createContext({
     callDeadlineMs: opts.callDeadlineMs,
     onDisable: (reason) => {
+      bridge.dispose();
       // Surface via env.log so the disable is visible without a debugger.
       (env.log ?? ((...a: unknown[]) => console.warn(`[sdk:${env.path}]`, ...a)))(
         `component disabled: ${reason}`,

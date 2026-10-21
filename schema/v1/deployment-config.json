@@ -22,6 +22,9 @@
     },
     "license": {
       "$ref": "#/$defs/license"
+    },
+    "scripting": {
+      "$ref": "#/$defs/scripting"
     }
   },
   "$defs": {
@@ -380,7 +383,7 @@
     "license": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Signed .rvlic expectations. See docs/contracts/LICENSE_FILE.md §8.",
+      "description": "Signed .rvlic expectations. See docs/contracts/LICENSE_FILE.md \u00a78.",
       "properties": {
         "required": {
           "type": "boolean",
@@ -394,6 +397,23 @@
           "type": "string",
           "pattern": "^[A-Za-z0-9._-]{8,64}$",
           "description": "Self-asserted install identity compared against the license binding. An audit assertion, not a lock."
+        }
+      }
+    },
+    "scripting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sandbox",
+        "native"
+      ],
+      "description": "Deployment ceiling: permits requesting consent, never grants execution. Missing retains opt-in; invalid denies both.",
+      "properties": {
+        "sandbox": {
+          "type": "boolean"
+        },
+        "native": {
+          "type": "boolean"
         }
       }
     }

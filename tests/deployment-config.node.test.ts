@@ -9,6 +9,15 @@ import {
 import { decideEgress } from '../src/core/deployment/egress-policy';
 
 describe('Deployment Config v1/v2', () => {
+  it('validates script ceilings independently and denies malformed policies', () => {
+    expect(validateDeploymentConfig({ schemaVersion: 2 }).config.scripting).toBeUndefined();
+    const scripting = { sandbox: true, native: false };
+    expect(validateDeploymentConfig({ schemaVersion: 2, scripting }).config.scripting).toEqual(scripting);
+    for (const value of [null, true, {}, { sandbox: 'true', native: true }, { ...scripting, extra: true }]) {
+      expect(validateDeploymentConfig({ schemaVersion: 2, scripting: value }).config.scripting).toEqual({ sandbox: false, native: false });
+    }
+    expect(validateDeploymentConfig({ schemaVersion: 99, scripting }).config.scripting).toEqual({ sandbox: false, native: false });
+  });
   it('fails closed when the deployment omits policy', () => {
     const result = validateDeploymentConfig({ defaultModel: 'demo.glb' });
     expect(result.config.egress).toEqual({ mode: 'deny-external', allow: [] });

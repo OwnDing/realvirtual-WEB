@@ -330,6 +330,7 @@ export const enUS = {
       show: 'Show password',
     },
     projectCode: {
+      contentBound: 'This decision applies only to this module and these exact bytes. Changed code requires new consent.',
       title: 'Run this project\'s code?',
       body: 'The project <0>{{name}}</0> contains executable code (<1>{{script}}</1>). It runs with the same rights as the viewer itself — it is not sandboxed.',
       warning: 'Only allow this for projects from a source you trust. Without your consent the project still opens; only its own code stays off.',

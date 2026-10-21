@@ -14,7 +14,8 @@
     "services": { "$ref": "../v1/deployment-config.json#/$defs/services" },
     "license": { "$ref": "../v1/deployment-config.json#/$defs/license" },
     "defaults": { "$ref": "#/$defs/values" },
-    "policy": { "$ref": "#/$defs/policy" }
+    "policy": { "$ref": "#/$defs/policy" },
+    "scripting": { "$ref": "../v1/deployment-config.json#/$defs/scripting" }
   },
   "$defs": {
     "id": {

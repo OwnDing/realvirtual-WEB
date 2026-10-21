@@ -83,8 +83,10 @@ export class RVScriptComponentAdapter implements ScriptHookDispatcher {
       this.scheduler = createHeapScheduler(this.heap, () => this.virtualNow);
       // Every due heap event dispatches through the SAME contract the DES
       // kernel uses — identical hook semantics in both kernels.
-      this.heap.addListener((ev) =>
-        this.dispatchScriptHook(ev.hook, (ev.mu ?? null) as ScriptMuRef | null, ev.data));
+      this.heap.addListener((ev) => {
+        this.component?.bridge.releaseTimer(ev.id);
+        this.dispatchScriptHook(ev.hook, (ev.mu ?? null) as ScriptMuRef | null, ev.data);
+      });
     }
   }
 
@@ -129,7 +131,13 @@ export class RVScriptComponentAdapter implements ScriptHookDispatcher {
   tick(dt: number): void {
     if (this.mode === 'des' || this.disposed) return;
     this.virtualNow += dt;
-    this.heap.drainUntil(this.virtualNow);
+    try { this.heap.drainUntil(this.virtualNow, 1024); }
+    catch (error) {
+      this.heap.clear();
+      this.component?.disable('Script timer dispatch budget exceeded');
+      this.onHandlerError('des.on', error instanceof Error ? error.message : String(error));
+      return;
+    }
     this.invoke('continuous.fixedUpdate', dt);
   }
 
@@ -147,6 +155,7 @@ export class RVScriptComponentAdapter implements ScriptHookDispatcher {
   /** Reset: clear pending timers, zero the clock, call optional `onReset()`. */
   reset(): void {
     if (this.disposed) return;
+    this.component?.bridge.resetTimers();
     this.heap.clear();
     this.virtualNow = 0;
     this.invoke('onReset');

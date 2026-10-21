@@ -172,7 +172,7 @@ describe('loadRuntimeScript — the .js sibling', () => {
     expect(lastRuntimeScriptFailure()).toBe('no-sibling');
   });
 
-  it('falls back to a plain URL and cache-busts it when there are no bytes', async () => {
+  it('denies URL-only fallback because executed bytes cannot be bound to consent', async () => {
     const seen: string[] = [];
     const loaded = await loadRuntimeScript('scripts/a.ts', {
       source: {
@@ -182,8 +182,8 @@ describe('loadRuntimeScript — the .js sibling', () => {
       consent: allow,
       importer: (url) => { seen.push(url); return Promise.resolve({ default: {} }); },
     });
-    expect(loaded).not.toBeNull();
-    expect(seen[0]).toMatch(/^https:\/\/example\.test\/scripts\/a\.js\?v=/);
+    expect(loaded).toBeNull();
+    expect(seen).toHaveLength(0);
   });
 
   it('rejects a reference that names no script before touching the source', async () => {
@@ -350,3 +350,45 @@ describe('ModelPluginManager — runtime resolver (2b.1)', () => {
     expect(named.registered).toBe(0);
   });
 });
+
+ describe('content-bound runtime consent', () => {
+   it('never constructs an export after the active model changes during import', async () => {
+     let current = true;
+     const constructed = vi.fn();
+     const loaded = await loadRuntimeScript('scripts/a.ts', {
+       source: sourceOf({ 'scripts/a.js': 'export default class {}' }),
+       consent: allow, isCurrent: () => current,
+       importer: async () => {
+         current = false;
+         return { default: class { constructor() { constructed(); } } };
+       },
+     });
+     expect(loaded).toBeNull();
+     expect(constructed).not.toHaveBeenCalled();
+   });
+   it('executes exactly the copied approved bytes, even if the source buffer changes', async () => {
+     const bytes = bytesOf('export default 42');
+     let digest = '';
+     const loaded = await loadRuntimeScript('scripts/a.ts', {
+       source: { readBytes: async () => bytes },
+       consent: ({ contentDigest }) => { digest = contentDigest; new Uint8Array(bytes).fill(32); return true; },
+       importer: async url => { expect(await (await fetch(url)).text()).toBe('export default 42'); return { default: 42 }; },
+     });
+     expect(digest).toMatch(/^[a-f0-9]{64}$/);
+     expect(loaded?.version).toBe(digest);
+   });
+   it('rechecks deployment policy and source generation after consent', async () => {
+     for (const disablePolicy of [true, false]) {
+       setAppConfig({});
+       let current = true;
+       const importer = vi.fn(async () => ({}));
+       const loaded = await loadRuntimeScript('scripts/a.ts', {
+         source: { ...sourceOf({ 'scripts/a.js': 'export default 42' }), isCurrent: () => current },
+         consent: () => { if (disablePolicy) setAppConfig({ scripting: { sandbox: true, native: false } }); else current = false; return true; },
+         importer,
+       });
+       expect(loaded).toBeNull();
+       expect(importer).not.toHaveBeenCalled();
+     }
+   });
+ });

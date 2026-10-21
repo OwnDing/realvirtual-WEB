@@ -42,7 +42,9 @@ import type {
   QuickJSRuntime,
   QuickJSWASMModule,
 } from 'quickjs-emscripten-core';
+export type { QuickJSContext, QuickJSHandle };
 import { rvT } from '../i18n';
+import { initializeGuestReader, releaseGuestReader, readGuestValue, positiveScriptLimit, SCRIPT_VALUE_LIMITS } from './rv-script-values';
 
 // ─── Public types ──────────────────────────────────────────────────────────
 
@@ -83,7 +85,7 @@ export const DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES = 32 * 1024 * 1024;
 export const DEFAULT_SANDBOX_EVAL_DEADLINE_MS = 5;
 
 /** Max nesting depth when marshalling host return values into the guest. */
-const MAX_MARSHAL_DEPTH = 16;
+const MAX_MARSHAL_DEPTH = SCRIPT_VALUE_LIMITS.depth;
 
 // ─── Lazy QuickJS module loading (module-wide singleton) ───────────────────
 
@@ -143,7 +145,8 @@ export function isMemoryError(error: SandboxError): boolean {
  * instances beyond plain data) throw — the caller converts that into a
  * guest exception. The returned handle is OWNED by the caller (dispose it).
  */
-export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0): QuickJSHandle {
+export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0, budget = { entries: 0, units: 0 }): QuickJSHandle {
+  if (++budget.entries > SCRIPT_VALUE_LIMITS.entries) throw new Error('host value budget exceeded');
   if (depth > MAX_MARSHAL_DEPTH) {
     throw new Error(`marshal depth limit (${MAX_MARSHAL_DEPTH}) exceeded`);
   }
@@ -155,6 +158,8 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0)
     case 'number':
       return ctx.newNumber(value);
     case 'string':
+      budget.units += value.length;
+      if (budget.units > SCRIPT_VALUE_LIMITS.stringUnits) throw new Error('host string budget exceeded');
       return ctx.newString(value);
     case 'object':
       break;
@@ -162,10 +167,11 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0)
       throw new Error(`unsupported host value type '${typeof value}'`);
   }
   if (Array.isArray(value)) {
+    if (value.length > SCRIPT_VALUE_LIMITS.entries) throw new Error('host array budget exceeded');
     const arr = ctx.newArray();
     try {
       for (let i = 0; i < value.length; i++) {
-        const h = marshalHostValue(ctx, value[i], depth + 1);
+        const h = marshalHostValue(ctx, value[i], depth + 1, budget);
         try {
           ctx.setProp(arr, i, h);
         } finally {
@@ -184,8 +190,12 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0)
   }
   const obj = ctx.newObject();
   try {
-    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-      const h = marshalHostValue(ctx, entry, depth + 1);
+    for (const key of Object.keys(value)) {
+      budget.units += key.length;
+      if (budget.units > SCRIPT_VALUE_LIMITS.stringUnits) throw new Error('host key budget exceeded');
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !('value' in descriptor)) throw new Error('host accessors cannot cross the bridge');
+      const h = marshalHostValue(ctx, descriptor.value, depth + 1, budget);
       try {
         ctx.setProp(obj, key, h);
       } finally {
@@ -204,12 +214,14 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0)
  * Shared implementation for `RVScriptSandbox.exposeFunction` and
  * `RVScriptContext.exposeFunction`.
  */
-export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction): void {
+export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, beforeCall: () => void): void {
   const fnHandle = ctx.newFunction(name, (...argHandles: QuickJSHandle[]) => {
     // Arg handles are borrowed (owned by the caller) — dump, don't dispose.
-    const args = argHandles.map((h) => ctx.dump(h));
     let ret: unknown;
     try {
+      beforeCall();
+      if (argHandles.length > SCRIPT_VALUE_LIMITS.arguments) throw new Error('script argument budget exceeded');
+      const args = argHandles.map((h) => readGuestValue(ctx, h));
       ret = fn(...args);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -255,6 +267,7 @@ export class RVScriptSandbox {
   private interruptFired = false;
   private poisoned = false;
   private disposed = false;
+  private bridgeCalls = 0;
 
   private constructor(
     runtime: QuickJSRuntime,
@@ -263,9 +276,11 @@ export class RVScriptSandbox {
   ) {
     this.runtime = runtime;
     this.context = context;
-    this.evalDeadlineMs = options.evalDeadlineMs ?? DEFAULT_SANDBOX_EVAL_DEADLINE_MS;
+    this.evalDeadlineMs = positiveScriptLimit(options.evalDeadlineMs ?? DEFAULT_SANDBOX_EVAL_DEADLINE_MS, 'evalDeadlineMs');
 
-    this.runtime.setMemoryLimit(options.memoryLimitBytes ?? DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES);
+    this.runtime.setMemoryLimit(positiveScriptLimit(options.memoryLimitBytes ?? DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES, 'memoryLimitBytes'));
+    this.runtime.setMaxStackSize(512 * 1024);
+    initializeGuestReader(this.context);
 
     // Installed ONCE; QuickJS polls it periodically while guest code runs.
     // Returning true aborts the current evaluation.
@@ -294,12 +309,16 @@ export class RVScriptSandbox {
    * (dynamic import, cached module-wide); later calls reuse the loaded module.
    */
   static async create(options: RVScriptSandboxOptions = {}): Promise<RVScriptSandbox> {
+    positiveScriptLimit(options.evalDeadlineMs ?? DEFAULT_SANDBOX_EVAL_DEADLINE_MS, 'evalDeadlineMs');
+    positiveScriptLimit(options.memoryLimitBytes ?? DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES, 'memoryLimitBytes');
     const module = await loadQuickJSModule();
     const runtime = module.newRuntime();
+    let context: QuickJSContext | undefined;
     try {
-      const context = runtime.newContext();
+      context = runtime.newContext();
       return new RVScriptSandbox(runtime, context, options);
     } catch (err) {
+      if (context?.alive) { releaseGuestReader(context); context.dispose(); }
       runtime.dispose();
       throw err;
     }
@@ -318,13 +337,13 @@ export class RVScriptSandbox {
   /** Sets the guest heap limit in bytes. */
   setMemoryLimit(limitBytes: number): void {
     this.assertUsable('setMemoryLimit');
-    this.runtime.setMemoryLimit(limitBytes);
+    this.runtime.setMemoryLimit(positiveScriptLimit(limitBytes, 'memoryLimitBytes'));
   }
 
   /** Sets the wallclock deadline per `evaluate()` call in milliseconds. */
   setEvalDeadlineMs(ms: number): void {
     this.assertUsable('setEvalDeadlineMs');
-    this.evalDeadlineMs = ms;
+    this.evalDeadlineMs = positiveScriptLimit(ms, 'evalDeadlineMs');
   }
 
   /**
@@ -336,7 +355,12 @@ export class RVScriptSandbox {
    */
   exposeFunction(name: string, fn: SandboxHostFunction): void {
     this.assertUsable('exposeFunction');
-    exposeHostFunction(this.context, name, fn);
+    exposeHostFunction(this.context, name, fn, () => {
+      if (++this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
+        this.interruptFired = true;
+        throw new Error('script bridge budget exceeded');
+      }
+    });
   }
 
   /**
@@ -361,9 +385,21 @@ export class RVScriptSandbox {
       };
     }
 
+    if (this.deadlineAt !== 0) return { ok: false, error: { name: 'SandboxReentryError', message: rvT('tools', 'finalSweep.script.reentryDenied') } };
     this.interruptFired = false;
+    this.bridgeCalls = 0;
     this.deadlineAt = performance.now() + this.evalDeadlineMs;
+    let outcome: SandboxResult;
+    try { outcome = this.evaluateInternal(code); }
+    catch { outcome = { ok: false, error: { name: 'SandboxInternalError', message: rvT('tools', 'finalSweep.script.conversionFailed') } }; }
+    finally {
+      this.deadlineAt = 0;
+      if (this.interruptFired) this.poisoned = true;
+    }
+    return this.interruptFired ? { ok: false, error: { name: 'SandboxLimitError', message: rvT('tools', 'finalSweep.script.budgetExceeded') } } : outcome;
+  }
 
+  private evaluateInternal(code: string): SandboxResult {
     let result: ReturnType<QuickJSContext['evalCode']>;
     try {
       // type: 'global' — module syntax (import/export) is a SyntaxError, which
@@ -380,15 +416,14 @@ export class RVScriptSandbox {
           message: err instanceof Error ? err.message : String(err),
         },
       };
-    } finally {
-      this.deadlineAt = 0;
     }
 
     if (result.error) {
       let dumped: unknown;
       try {
-        dumped = this.context.dump(result.error);
+        dumped = readGuestValue(this.context, result.error, true);
       } catch {
+        this.poisoned = true;
         dumped = 'failed to read guest error';
       } finally {
         result.error.dispose();
@@ -402,7 +437,7 @@ export class RVScriptSandbox {
 
     let value: unknown;
     try {
-      value = this.context.dump(result.value);
+      value = readGuestValue(this.context, result.value);
     } catch (err) {
       result.value.dispose();
       return {
@@ -422,7 +457,7 @@ export class RVScriptSandbox {
     if (this.disposed) return;
     this.disposed = true;
     try {
-      if (this.context.alive) this.context.dispose();
+      if (this.context.alive) { releaseGuestReader(this.context); this.context.dispose(); }
     } finally {
       if (this.runtime.alive) this.runtime.dispose();
     }

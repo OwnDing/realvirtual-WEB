@@ -98,6 +98,8 @@ export interface DeploymentConfigFields {
   egress?: DeploymentEgressConfig;
   services?: DeploymentServicesConfig;
   license?: DeploymentLicenseConfig;
+  /** Deployment maximum: permission to request consent, never a consent grant. */
+  scripting?: { sandbox: boolean; native: boolean };
   /** Ordinary deployment defaults; v2 only. */
   defaults?: UnifiedConfigValues;
   /** Organization/deployment policy plane; v2 only and never loosened below deployment. */
@@ -300,6 +302,7 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
     delete config.defaults;
     delete config.policy;
     config.egress = { mode: 'deny-external', allow: [] };
+    config.scripting = { sandbox: false, native: false };
     return { config, issues };
   }
   if (raw.schemaVersion === 1 || raw.schemaVersion === 2) config.schemaVersion = raw.schemaVersion;
@@ -308,6 +311,14 @@ export function validateDeploymentConfig<T extends Record<string, unknown>>(
   config.egress = parseEgress(raw.egress, issues);
   config.services = parseServices(raw.services, issues);
   config.license = parseLicense(raw.license, issues);
+  if (raw.scripting === undefined) config.scripting = undefined;
+  else if (isRecord(raw.scripting) && Object.keys(raw.scripting).every(k => k === 'sandbox' || k === 'native')
+    && typeof raw.scripting.sandbox === 'boolean' && typeof raw.scripting.native === 'boolean') {
+    config.scripting = { sandbox: raw.scripting.sandbox, native: raw.scripting.native };
+  } else {
+    issues.push('scripting is invalid; both script entry points were disabled');
+    config.scripting = { sandbox: false, native: false };
+  }
   if (raw.schemaVersion === 2) {
     config.branding = parseBranding(raw.branding, issues);
     config.defaults = parseUnifiedConfigValues(raw.defaults, issues);
