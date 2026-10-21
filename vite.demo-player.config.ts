@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { defineConfig } from 'vite';
+import { securityBuildGraph } from './scripts/security/build-graph';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 
 // A separate public, single-file target. The ESM embed build keeps its chunk boundaries.
 export default defineConfig({
   root: __dirname, publicDir: false,
+  plugins: [securityBuildGraph('demo-player')],
   resolve: { alias: { '@rv-private': resolve(__dirname, 'src/private-stubs'), '@rv': resolve(__dirname, 'src') } },
   define: { 'process.env.NODE_ENV': JSON.stringify('production'), __RV_HAS_PRIVATE__: 'false', __RV_INTERNAL__: 'false', __RV_COMMERCIAL__: 'false', __RV_VERSION__: JSON.stringify(JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8')).version) },
   worker: { format: 'es' },

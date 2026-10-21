@@ -80,6 +80,17 @@ run_browser_tests() {
   )
 }
 
+run_supply_chain() {
+  require_command node
+  require_file "$verify_repo_root/node_modules/.bin/vitest"
+  say "Supply-chain policy self-tests and public dependency evidence"
+  (
+    cd "$verify_repo_root"
+    node node_modules/vitest/vitest.mjs run --config vitest.node.config.ts tests/security-policy.node.test.ts
+    node scripts/security/run-supply-chain.mjs
+  )
+}
+
 run_build() {
   require_command npm
   require_file "$verify_repo_root/node_modules/.bin/vite"
@@ -123,7 +134,8 @@ Scopes:
   build       Public production build
   e2e         Playwright end-to-end suite
   offline     Offline production build + isolated Chromium journeys (Linux)
-  all         static + node + browser + build (not E2E or real-device validation)
+  supply-chain  Public npm vulnerability, license and completeness gate
+  all         static + node + browser + build + supply-chain (not E2E or real-device validation)
 USAGE
 }
 
@@ -150,11 +162,15 @@ case "$verify_scope" in
   offline)
     run_offline
     ;;
+  supply-chain)
+    run_supply_chain
+    ;;
   all)
     run_static
     run_node_tests
     run_browser_tests
     run_build
+    run_supply_chain
     ;;
   -h|--help|help)
     usage
