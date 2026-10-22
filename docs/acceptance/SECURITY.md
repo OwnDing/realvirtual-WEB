@@ -22,7 +22,7 @@ authority: normative
 | SEC-07 | 代码 digest 变化、项目变化、旧 consent、无提示宿主、字节缓冲被修改、URL-only fallback | consent/runtime-loader 浏览器套件 | 导入器次数、实际 Blob 字节、同意存储 v2 |
 | SEC-08 | 构建最终文件完整；新增/删除/篡改文件拒绝；过期报告或不同 commit/lock 拒绝 | release-evidence + security-policy Node 套件 | 实际 artifactSetSha256，未映射文件不得隐式排除 |
 | SEC-09 | SDK 注册/队列/定时器风暴，关闭后无后续信号写入 | SDK 与 reload/teardown 回归、第三方专项 | 不把一次 guest deadline 当作所有宿主工作均有硬超时 |
-| SEC-10 | 实际 WEB/播放器/Appliance 的复制资源、WASM、补丁、OS/原生库及许可义务 | 候选发布证据核验 | 未具备的目标保持未验收 |
+| SEC-10 | 实际 WEB/播放器/Appliance 的复制资源、WASM、补丁、OS/原生库及许可义务 | `scan-artifact.mjs`、`artifact-scan.node.test.ts`、候选发布证据核验 | 本地镜像/原生扫描绑定工具/DB/输入摘要；未知版本和未具备的目标保持未验收 |
 | SEC-11 | 独立机构测试、修复、同一候选版本复测 | [委托任务书](../delivery/SECURITY_OPERATIONS.md) | 机构签署报告、范围/摘要、风险签收 |
 
 ## 当前交付边界

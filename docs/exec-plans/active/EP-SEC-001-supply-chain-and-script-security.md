@@ -4,7 +4,7 @@ title: L3-3 供应链门禁与脚本安全验证方案
 status: approved
 plan_status: active
 owner: security
-last_reviewed: 2026-10-21
+last_reviewed: 2026-10-22
 authority: normative-process
 ---
 
@@ -235,6 +235,7 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - [x] 用户认可方案与 D1–D5；M0 形成 ADR-0019、安全规范、验收矩阵和运维任务书。
 - [ ] M1 公共依赖门禁落地并验证强制性。
 - [ ] M2 脚本安全测试与经批准加固完成。
+- 本地 M2 实现、真实 VM 专项、生产授权旅程及完整 Browser 已通过；等待修复提交的远程门禁结果后确认里程碑。
 - [ ] M3 实际发布制品证据、许可证义务和运维流程闭环。
 - [ ] M4 独立测试及复测报告验收。
 
@@ -244,9 +245,12 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - `consent-store.ts` 实为 analytics consent；原生项目代码不经过 QuickJS，授权仅按项目 ID。不能仅加固两个 VM 文件就声称用户脚本入口安全。
 - `?scripts` 在当前组合根中直接开启执行；资源 deadline 并未在源码层覆盖所有取值/序列化路径。两点进入优先验证和决策范围，尚不记为已确认可利用漏洞。
 - 历史路线图的“无服务端”已被 ADR-0009/0012 与 Appliance 实现推进；渗透测试范围必须包含现有服务端和访客访问控制。
-- 方案阶段未执行扫描。实施基线 npm audit 有 29 项（High 17/Critical 3）；2026-10-21 修复与工具加入后的候选树为 4 项 High（同一 braces advisory 及上游链），Critical 为 0。898 条依赖路径全部对账，100 条许可证正文/义务复核失败。数字仅对应本次输入摘要，后续必须重新扫描；例外文件保持为空。
+- 方案阶段未执行扫描。实施基线 npm audit 有 29 项（High 17/Critical 3）；2026-10-22 修复与工具加入后的候选树复扫为 4 项 High（同一 braces advisory 及上游链），Critical 为 0。900 条依赖路径全部对账，100 条许可证正文/义务复核失败。数字仅对应本次输入摘要，后续必须重新扫描；例外文件保持为空。
 - npm 10.9.7 对选定传递依赖执行更新时出现 `Cannot read properties of null (reading 'edgesOut')`。采用既有 semver 范围内重新解析锁文件，另对 sharp、handlebars、DOMPurify 明确选定修复版本；没有使用 `audit fix --force`。这也刷新了较多传递依赖，锁文件差异及全量回归必须单独审阅。已恢复与修复无关的 React、虚拟列表、stats-gl 版本，保留 Monaco 原范围，避免无关升级带来的兼容和体积回归。
-- 首轮全量 Browser 的失败集中在 3 条既有 bundle 体积断言（入口 3,599,283 字符，预算 3,520,000）。未提高预算；回退上述无关依赖升级，并使 QuickJS 宿主按显式启用脚本的路径加载，再构建复验。
+- 首轮全量 Browser 的失败集中在 3 条既有 bundle 体积断言（入口 3,599,283 字符，预算 3,520,000）。未提高预算；恢复其余无关直接依赖版本，并让 QuickJS 宿主和脚本编辑面板分别按显式启用/首次打开加载。最终入口 3,500,413 字符。原测试误把 Monaco chunk 称为 asset editor；随实际拆分更新为验证 entry → ScriptEditorPanel → Monaco 两条可达边，同时保留原体积断言。
+- 远程生产授权旅程发现 GPU 自动质量对话框会晚于 model-loaded 出现，原一次性可见性检查会漏掉它。改为 Playwright locator handler 点击真实确认按钮，保留全部授权与执行次数断言。本地生产旅程已通过。
+- 5 ms VM 默认预算的冷启动路径会受 WASM tier-up 影响。只在全新 context 内用可信常量和 inert callback 预热实际生命周期/数据读取路径，用户代码与真实能力仍受原 deadline。原始字符串先核对长度再分配宿主字符串；参数转换后、调用宿主副作用前再校验 deadline。新增真实 Proxy 转换耗尽预算后写入次数为 0 的回归，未放宽期限或已有 poison 断言。
+- 原生制品须用 Trivy rootfs 路径；源码目录 fs 扫描不能替代它。对锁定 Caddy 的真实二进制和包含同一文件的本地测试镜像分别扫描，两者均识别 146 个包，但主模块版本缺失且有漏洞，按 incomplete 阻断；镜像仅验证适配器，不代表完整 Appliance。
 
 ## Decision Log
 
@@ -258,6 +262,22 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 ## Validation
 
 方案阶段验证（2026-10-20）：`./scripts/verify.sh governance` 退出 0；Harness 自检、128 份治理文档检查、文档可发布检查、兼容性生成物一致性和 Git whitespace 检查通过。工作树变化仅本方案与 proposed 索引。静态读取不替代测试；未运行全仓 Static/Node/Browser/Build、漏洞扫描或攻击测试，这些不是本轮方案交付的验证范围。
+
+实施阶段本地验证（2026-10-21，含后续修复）：
+
+| 验证 | 实际结果 |
+| --- | --- |
+| `./scripts/verify.sh governance` | 2026-10-22 文档补齐后通过，132 份治理文档、发布链接及生成物检查通过 |
+| `./scripts/verify.sh static` | Lint、模块边界及 TypeScript 通过 |
+| `./scripts/verify.sh node` | 86 文件、877 条通过；随后增加的未知原生版本反例在对应 2 条测试中再次通过 |
+| `./scripts/verify.sh build` | 主应用、访问服务和演示播放器构建通过；入口体积低于原预算 |
+| `./scripts/verify.sh browser` | 8 分片与独立性能文件全部通过，共 11,054 条通过；已有 12 条 skip、2 条 todo，本任务未新增跳过 |
+| `node scripts/security/test-script-boundaries.mjs` | 外部 watchdog 下真实 Chromium/QuickJS，7 文件、86 条通过 |
+| `node scripts/security/test-script-production.mjs` | URL 不执行、显式 UI 确认执行一次、撤销释放、换模型重新确认、部署禁止优先，五项通过；无外部请求/页面异常 |
+| `./scripts/verify.sh supply-chain` | 2026-10-22 复扫：10 条策略自检通过；900/900 路径完整，4 High/0 Critical、100 条许可证失败、无工具错误，退出 1；未批准或添加例外 |
+| Trivy 适配器 | Linux arm64 工具真实运行；x64 归档与二进制摘要已核对但未执行。2026-10-22 00:11 UTC 复扫真实 Caddy 原生目录及本地测试镜像，均 146 包、50 条记录（23 High/21 Medium/5 Low/1 Unknown），主模块版本缺失，退出 2。DB 更新时间 2026-10-21 01:19 UTC，扫描时仍处于 24 小时/NextUpdate 窗口内 |
+
+上述为开发候选树的内部证据，不是干净发布制品的审核签收。上一远程候选 `65e1b29` 的 Governance/Static/Node/Build/Windows Chrome、Edge 兼容性通过；Supply Chain 因实际债务失败，Browser 在生产授权旅程的晚到 GPU 对话框处失败，未运行后续全量 Browser。后续修复的远程结果单独查询 PR，不将旧提交状态移用到新提交。`all` 未通过，M1 的远程强制设置、M3 的全部目标/分发复核和 M4 独立报告仍未验收。
 
 实施验收必须覆盖：
 
@@ -285,6 +305,6 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - [PR #18](https://github.com/OwnDing/realvirtual-WEB/pull/18) 是本计划的草稿实施 PR，基础提交 `0700922`。
 - 已增加 Supply Chain Gate（五项原门禁保留）、固定工具版本、全量包/平台清单、SPDX 判定、例外/分诊校验、CycloneDX schema 验证与失败报告。基线债务不自动豁免。
 - 已修改内容绑定的原生 consent、工作台当前模型确认、部署脚本上限、QuickJS 整体调用预算及有界序列化。增加 SDK 资源预算、关闭后释放、计时事件风暴与异步授权竞争回归；最终候选提交的验证结果另列在 Validation。
-- 发布文件集/摘要/构建输入图与校验器已实现；Trivy 适配尚未实现，复制资产、内嵌库、OS/原生目标审计和实际分发义务尚未获得逐目标证据，M3 未关闭。
+- 发布文件集/摘要/构建输入图与校验器、固定版本/摘要的 Trivy 本地镜像及原生目录适配已实现。扫描器真实试跑使用锁定的 Caddy 二进制和隔离测试镜像，未运行目标；主模块版本缺失与已有漏洞均保持阻断。复制资产、内嵌库、全部 OS/原生目标审计和实际分发义务尚未获得逐目标证据，M3 未关闭。
 - 尚无第三方报告或机构/目标授权，M4 未关闭。远程 required check 尚未修改。
 - 扫描/测试报告保留在 `test-results/security/`；不把 dirty checkout 的报告当正式发布证据。验证结果随候选提交更新。
