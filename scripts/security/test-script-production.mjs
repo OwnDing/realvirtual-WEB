@@ -62,6 +62,9 @@ try {
       externalRequests.push(route.request().url()); return route.abort();
     });
     const page = await context.newPage(); currentPage = page; page.setDefaultTimeout(30000);
+    // GPU classification can finish after model-loaded on software CI runners.
+    // Acknowledge its real dialog whenever it appears, including during click.
+    await page.addLocatorHandler(page.getByTestId('auto-quality-ok'), button => button.click());
     page.on('pageerror', error => errors.push(error.message));
     let executions = 0;
     page.on('console', message => {
@@ -72,8 +75,6 @@ try {
     await page.goto(`${origin}/?model=security.glb&scripts`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.viewer?.currentModelRoot?.getObjectByName('SecurityTriangle'), undefined, { timeout: 60000 });
     console.log(`Loaded synthetic script model (deployment denial: ${denied})`);
-    const ok = page.getByRole('button', { name: 'OK', exact: true });
-    if (await ok.isVisible()) await ok.click();
     const state = () => page.evaluate(() => {
       const plugin = window.viewer.getPlugin('web-component');
       return { allowed: plugin.scriptsAllowed, count: plugin.instances.length };

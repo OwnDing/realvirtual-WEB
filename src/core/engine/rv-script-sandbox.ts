@@ -214,14 +214,15 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0,
  * Shared implementation for `RVScriptSandbox.exposeFunction` and
  * `RVScriptContext.exposeFunction`.
  */
-export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, beforeCall: () => void): void {
+export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, checkBudget: (countCall: boolean) => void): void {
   const fnHandle = ctx.newFunction(name, (...argHandles: QuickJSHandle[]) => {
     // Arg handles are borrowed (owned by the caller) — dump, don't dispose.
     let ret: unknown;
     try {
-      beforeCall();
+      checkBudget(true);
       if (argHandles.length > SCRIPT_VALUE_LIMITS.arguments) throw new Error('script argument budget exceeded');
       const args = argHandles.map((h) => readGuestValue(ctx, h));
+      checkBudget(false); // conversion must not spend the budget and then write
       ret = fn(...args);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -355,8 +356,9 @@ export class RVScriptSandbox {
    */
   exposeFunction(name: string, fn: SandboxHostFunction): void {
     this.assertUsable('exposeFunction');
-    exposeHostFunction(this.context, name, fn, () => {
-      if (++this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
+    exposeHostFunction(this.context, name, fn, (countCall) => {
+      if (countCall) this.bridgeCalls++;
+      if (this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
         this.interruptFired = true;
         throw new Error('script bridge budget exceeded');
       }

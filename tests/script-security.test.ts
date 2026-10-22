@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { RVScriptSandbox } from '../src/core/engine/rv-script-sandbox';
 import { RVScriptHost } from '../src/core/engine/rv-script-host';
 
@@ -38,6 +38,19 @@ describe('script security — run with an external process watchdog', () => {
       expect(calls).toBeLessThanOrEqual(1024);
       expect(vm.isPoisoned).toBe(true);
     } finally { vm.dispose(); }
+  });
+  it('does not write after argument conversion spends the remaining deadline', async () => {
+    const vm = await RVScriptSandbox.create({ evalDeadlineMs: 100 });
+    let now = 0, writes = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    try {
+      vm.exposeFunction('expire', () => { now = 101; });
+      vm.exposeFunction('write', () => { writes++; });
+      const result = vm.evaluate('write(new Proxy({value:1},{ownKeys(){expire(); return ["value"];}}))');
+      expect(result.ok).toBe(false);
+      expect(writes).toBe(0);
+      expect(vm.isPoisoned).toBe(true);
+    } finally { clock.mockRestore(); vm.dispose(); }
   });
   it('interrupts setup and handler property getters; sibling contexts still run', async () => {
     const host = await RVScriptHost.create();

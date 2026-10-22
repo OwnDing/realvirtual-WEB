@@ -57,15 +57,33 @@ export function initializeGuestReader(ctx: QuickJSContext): void {
   })()`, 'sandbox://data-reader');
   if (result.error) { result.error.dispose(); throw new Error('Cannot initialize bounded script bridge'); }
   readers.set(ctx, result.value);
-  // The first WASM→host trampoline can tier up lazily. Warm it with an inert
-  // callback before any user deadline starts; never invoke a real capability.
+  // Warm the actual lifecycle path (property lookup → interpreted guest →
+  // host callback), not only a direct host call to a C function. WASM may tier
+  // these branches independently. This is trusted code in a fresh context;
+  // no user script or real host capability runs outside the deadline.
   const noop = ctx.newFunction('__rv_warm_bridge', () => ctx.undefined);
+  const factory = ctx.evalCode('(function(bridge){return {continuous:{fixedUpdate(){bridge();}}};})', 'sandbox://bridge-warmup');
   try {
-    const call = ctx.callFunction(noop, ctx.undefined);
-    if (call.error) call.error.dispose(); else call.value.dispose();
+    if (factory.error) { factory.error.dispose(); throw new Error('Cannot initialize script call path'); }
+    const root = ctx.callFunction(factory.value, ctx.undefined, noop);
+    try {
+      if (root.error) { root.error.dispose(); throw new Error('Cannot initialize script call path'); }
+      try {
+        const handlers = ctx.getProp(root.value, 'continuous');
+        try {
+          const handler = ctx.getProp(handlers, 'fixedUpdate');
+          try {
+            const call = ctx.callFunction(handler, ctx.undefined);
+            if (call.error) { call.error.dispose(); throw new Error('Cannot initialize script call path'); }
+            call.value.dispose();
+          } finally { handler.dispose(); }
+        } finally { handlers.dispose(); }
+      } finally { root.value.dispose(); }
+    } finally { factory.value.dispose(); }
   } finally { noop.dispose(); }
-  const warm = ctx.callFunction(result.value, ctx.undefined, ctx.null, ctx.false);
-  if (warm.error) warm.error.dispose(); else warm.value.dispose();
+  const warm = ctx.evalCode('({value:["warm",1,true,null]})', 'sandbox://value-warmup');
+  if (warm.error) { warm.error.dispose(); throw new Error('Cannot initialize script value path'); }
+  try { readGuestValue(ctx, warm.value); } finally { warm.value.dispose(); }
 }
 export function releaseGuestReader(ctx: QuickJSContext): void {
   readers.get(ctx)?.dispose();
@@ -78,6 +96,16 @@ export function readGuestValue(ctx: QuickJSContext, handle: QuickJSHandle, error
     const type = ctx.typeof(handle);
     if (type === 'undefined') return undefined;
     if (type === 'number') return ctx.getNumber(handle);
+    if (type === 'string') {
+      // Primitive string length is intrinsic: check it before allocating the
+      // host string. Avoid guest JSON serialization for every SDK operation.
+      const length = ctx.getProp(handle, 'length');
+      try {
+        const units = ctx.getNumber(length);
+        if (ctx.typeof(length) !== 'number' || !Number.isSafeInteger(units) || units < 0 || units > SCRIPT_VALUE_LIMITS.stringUnits) throw new Error('script string budget exceeded');
+        return ctx.getString(handle);
+      } finally { length.dispose(); }
+    }
     if (type === 'boolean') return ctx.eq(handle, ctx.true);
     if (type === 'function') return '[Function]';
     if (ctx.eq(handle, ctx.null)) return null;

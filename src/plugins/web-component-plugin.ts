@@ -72,7 +72,7 @@ import { isSurfaceOccupied } from '../behaviors/_shared/surface-occupancy';
 import { StateStatistics } from '../core/material-flow/rv-state-statistics';
 import { componentActionRegistry } from '../core/hmi/rv-component-action-registry';
 import { WEB_COMPONENT_TYPE } from '../core/hmi/scene/rv-scene-edits';
-import { ScriptEditorPanel } from '../core/hmi/script/ScriptEditorPanel';
+import { ScriptEditorPanelHost } from '../core/hmi/script/ScriptEditorPanelHost';
 import { ScriptToolbarButton } from '../core/hmi/script/ScriptToolbarButton';
 import { openScriptEditor, resetScriptEditorStore } from '../core/hmi/script/script-editor-store';
 
@@ -143,7 +143,7 @@ export class WebComponentPlugin implements RVViewerPlugin {
     // SlotRenderer only applies a rule when a `visibilityId` is present, hence
     // the explicit id.
     this.slots = [{
-      slot: 'overlay', component: ScriptEditorPanel, order: 97,
+      slot: 'overlay', component: ScriptEditorPanelHost, order: 97,
       visibilityId: 'script-editor-panel',
       visibilityRule: { hiddenIn: [modeContext('viewer')] },
     }];

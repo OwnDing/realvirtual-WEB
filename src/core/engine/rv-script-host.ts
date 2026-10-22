@@ -213,8 +213,9 @@ export class RVScriptHost {
   }
 
   /** @internal */
-  _bridgeCall(): void {
-    if (++this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
+  _bridgeCall(countCall: boolean): void {
+    if (countCall) this.bridgeCalls++;
+    if (this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
       this.interruptFired = true;
       throw new Error('script bridge budget exceeded');
     }
@@ -304,7 +305,7 @@ export class RVScriptContext {
   /** Exposes a host function into THIS context's global scope (whitelist bridge). */
   exposeFunction(name: string, fn: SandboxHostFunction): void {
     this.assertUsable('exposeFunction');
-    exposeHostFunction(this.context, name, fn, () => this.host._bridgeCall());
+    exposeHostFunction(this.context, name, fn, (countCall) => this.host._bridgeCall(countCall));
   }
 
   /**
