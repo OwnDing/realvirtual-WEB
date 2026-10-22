@@ -1,6 +1,9 @@
 name: Quality Gates
 
 on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main, develop]
@@ -14,21 +17,23 @@ concurrency:
 
 jobs:
   governance:
+    if: github.event_name != 'schedule'
     name: Governance Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
       - run: ./scripts/verify.sh governance
 
   static:
+    if: github.event_name != 'schedule'
     name: Static Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -36,14 +41,15 @@ jobs:
       - run: ./scripts/verify.sh static
 
   node:
+    if: github.event_name != 'schedule'
     name: Node Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           # The i18n verbatim gate reads the fixed pre-migration commit.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -53,7 +59,7 @@ jobs:
   browser:
     name: Browser Gate
     needs: compatibility-windows
-    if: ${{ always() }}
+    if: ${{ always() && github.event_name != 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -61,10 +67,10 @@ jobs:
         env:
           COMPATIBILITY_WINDOWS_RESULT: ${{ needs.compatibility-windows.result }}
         run: test "$COMPATIBILITY_WINDOWS_RESULT" = success
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           lfs: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -81,7 +87,7 @@ jobs:
         timeout-minutes: 5
       - name: Upload compatibility evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: compatibility-evidence
           path: test-results/compatibility/
@@ -99,6 +105,19 @@ jobs:
           node scripts/test-demo-package.mjs
           node scripts/test-demo-package-authoring.mjs
         timeout-minutes: 5
+      - name: Verify script boundaries with a process watchdog
+        run: node scripts/security/test-script-boundaries.mjs
+        timeout-minutes: 3
+      - name: Verify script consent in the production workbench
+        run: node scripts/security/test-script-production.mjs
+        timeout-minutes: 3
+      - name: Upload script security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: script-security-evidence
+          path: test-results/security/script-*
+          if-no-files-found: error
       - name: Run browser tests
         env:
           RV_BROWSER_DIAGNOSTIC_INTERVAL_SECONDS: '15'
@@ -112,21 +131,21 @@ jobs:
         timeout-minutes: 5
       - name: Upload loading performance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: loading-performance-evidence
           path: test-results/loading-performance/
           if-no-files-found: ignore
       - name: Upload offline gate evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: offline-gate-evidence
           path: test-results/offline/
           if-no-files-found: ignore
       - name: Upload protected presentation evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: protected-presentation-evidence
           path: test-results/access/
@@ -134,7 +153,7 @@ jobs:
 
       - name: Upload demo package evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: demo-package-evidence
           path: test-results/demo-package/
@@ -142,21 +161,22 @@ jobs:
 
       - name: Upload white-label evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: white-label-evidence
           path: test-results/white-label/
           if-no-files-found: ignore
 
   compatibility-windows:
+    if: github.event_name != 'schedule'
     name: Windows browser compatibility
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           lfs: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -172,20 +192,51 @@ jobs:
           node scripts/verify-compatibility-production.mjs --channel=msedge
       - name: Upload Windows compatibility evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: compatibility-windows-evidence
           path: test-results/compatibility/
           if-no-files-found: ignore
 
   build:
+    if: github.event_name != 'schedule'
     name: Build Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
       - run: npm ci
       - run: ./scripts/verify.sh build
+
+  supply-chain:
+    name: Supply Chain Gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.22.2'
+          cache: npm
+      - name: Verify scanner runtime
+        run: test "$(npm --version)" = 10.9.7
+      - name: Install public locked packages without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Evaluate vulnerabilities, licenses and completeness
+        run: ./scripts/verify.sh supply-chain
+      - name: Upload security evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: supply-chain-evidence
+          path: |
+            test-results/security/*.json
+            test-results/security/*.md
+            test-results/security/*.txt
+          if-no-files-found: error
+          retention-days: 30

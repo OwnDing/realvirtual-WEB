@@ -94,3 +94,7 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 2. 先增加会失败的自检样例，再实现规则。
 3. 本地运行适用命令。
 4. 更新 Harness、验收矩阵、ExecPlan 和必要的技术债。
+
+## 9. Supply Chain Gate（ADR-0019）
+
+新增 `./scripts/verify.sh supply-chain`，并纳入 `all`。漏洞、许可证和完整性分别报告，政策反例自检在扫描前执行。具体范围、退出语义、固定工具版本与数据外发边界见 [安全规范](../architecture/SCRIPT_SECURITY.md) 和 [运维说明](../delivery/SECURITY_OPERATIONS.md)。第六 job 已在 PR 中定义；远程 required check 配置仍需独立授权和读回，不能从 YAML 推断已强制。

@@ -767,16 +767,22 @@ async function init() {
     // manager), and reading a file is all the manager is given — no write side.
     runtimeScriptSource: () => {
       const backend = getProjectStore().getBackend();
-      return backend ? { readBytes: (rel: string) => backend.readBlobBytes(rel) } : null;
+      const projectId = getProjectStore().getProject()?.id;
+      return backend && projectId ? {
+        projectId,
+        readBytes: (rel: string) => backend.readBlobBytes(rel),
+        isCurrent: () => getProjectStore().getBackend() === backend && getProjectStore().getProject()?.id === projectId,
+      } : null;
     },
     // …and it runs only with this project's persisted consent (2b.3, R8).
-    runtimeScriptConsent: ({ scriptRef }) => {
+    runtimeScriptConsent: ({ jsRef, contentDigest, projectId }) => {
       const project = getProjectStore().getProject();
-      if (!project?.id) return false;
+      if (!project?.id || project.id !== projectId) return false;
       return requestProjectCodeConsent({
         projectId: project.id,
         projectName: String(project.name ?? project.id),
-        scriptRef,
+        scriptRef: jsRef,
+        contentDigest,
       });
     },
   });

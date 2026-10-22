@@ -42,7 +42,7 @@ async function addSource(directory) {
 }
 await addSource('src');
 for (const path of sourceFiles) if (!zip.file(path)) await add(path);
-for (const path of ['package.json', 'package-lock.json', 'tsconfig.json', 'LICENSE', 'vite.demo-player.config.ts', 'scripts/build-demo-player.mjs']) await add(path);
+for (const path of ['package.json', 'package-lock.json', 'tsconfig.json', 'LICENSE', 'vite.demo-player.config.ts', 'scripts/build-demo-player.mjs', 'scripts/security/build-graph.ts']) await add(path);
 for (const name of [...dependencies].sort()) {
   for (const entry of await readdir(join(root, 'node_modules', name), { withFileTypes: true })) {
     if (entry.isFile() && /^(?:license|licence|copying|notice)(?:\.|$)/i.test(entry.name)) await add(`node_modules/${name}/${entry.name}`, `third-party/${name}/${entry.name}`);

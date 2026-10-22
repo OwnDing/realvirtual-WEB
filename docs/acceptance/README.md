@@ -18,3 +18,5 @@ authority: normative-process
 - [诊断包验收矩阵](DIAGNOSTIC_BUNDLE.md)
 
 - [L3-2 兼容性验收矩阵](COMPATIBILITY.md)
+
+- [`SECURITY.md`](SECURITY.md)：L3-3 安全门禁与发布/独立测试验收。

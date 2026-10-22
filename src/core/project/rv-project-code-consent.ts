@@ -14,13 +14,11 @@
  * So the decision is asked for separately, and three properties of the way it is
  * asked are the whole point:
  *
- *  - **Per project, not global.** The unit a user can reason about is "this
- *    folder, from these people". A single global "allow scripting" switch would
- *    make the *next* project's code run because the *previous* one was trusted,
- *    and that is precisely the failure the gate exists to prevent. The global
- *    scripting gate is explicitly NOT a blanket permission here.
- *  - **Once, then persisted** (localStorage, keyed by project id). A prompt on
- *    every model switch is a prompt people click away.
+ *  - **Content-bound.** Decisions use the tuple of project ID, compiled module
+ *    path and full SHA-256 digest. A changed module or another project requires
+ *    its own decision; legacy project-wide v1 grants cannot authorize v2 code.
+ *  - **Persisted for these bytes** in localStorage, avoiding repeated prompts
+ *    for an unchanged module.
  *  - **Fail closed, at every step.** No decision on file and no dialog host
  *    mounted ⇒ denied. Storage unavailable (private mode) ⇒ the decision holds
  *    for the session and is asked again next time — never "assume yes".
@@ -34,9 +32,14 @@
 import { useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'rv-project-code-consent';
-const TABLE_VERSION = 1;
+const TABLE_VERSION = 2;
+export interface ProjectCodeIdentity { scriptRef: string; contentDigest: string }
+function consentKey(projectId: string, identity?: ProjectCodeIdentity): string | null {
+  if (!projectId || !identity?.scriptRef || !/^[a-f0-9]{64}$/.test(identity.contentDigest)) return null;
+  return JSON.stringify([projectId, identity.scriptRef, identity.contentDigest]);
+}
 
-/** What was decided about one project. */
+/** What was decided about one exact project/module/content tuple. */
 export interface ProjectCodeConsentRecord {
   v: number;
   decision: 'granted' | 'denied';
@@ -101,24 +104,26 @@ function writeRecord(projectId: string, record: ProjectCodeConsentRecord): void 
  * A record written by a future version of this table reads as **null**, not as
  * "granted": an unknown shape is not consent.
  */
-export function projectCodeConsent(projectId: string): 'granted' | 'denied' | null {
-  if (!projectId) return null;
-  const record = readTable()[projectId];
+export function projectCodeConsent(projectId: string, identity?: ProjectCodeIdentity): 'granted' | 'denied' | null {
+  const key = consentKey(projectId, identity);
+  if (!key) return null;
+  const record = readTable()[key];
   if (!record || record.v !== TABLE_VERSION) return null;
   return record.decision === 'granted' || record.decision === 'denied' ? record.decision : null;
 }
 
 /** True only for an explicit, current "granted". */
-export function hasProjectCodeConsent(projectId: string): boolean {
-  return projectCodeConsent(projectId) === 'granted';
+export function hasProjectCodeConsent(projectId: string, identity?: ProjectCodeIdentity): boolean {
+  return projectCodeConsent(projectId, identity) === 'granted';
 }
 
 // ─── Writing ────────────────────────────────────────────────────────────
 
 /** Record a decision. Persisted across sessions. */
-export function setProjectCodeConsent(projectId: string, granted: boolean): void {
-  if (!projectId) return;
-  writeRecord(projectId, {
+export function setProjectCodeConsent(projectId: string, granted: boolean, identity?: ProjectCodeIdentity): void {
+  const key = consentKey(projectId, identity);
+  if (!key) return;
+  writeRecord(key, {
     v: TABLE_VERSION,
     decision: granted ? 'granted' : 'denied',
     at: Date.now(),
@@ -126,11 +131,15 @@ export function setProjectCodeConsent(projectId: string, granted: boolean): void
   emit();
 }
 
+function belongsToProject(key: string, projectId: string): boolean {
+  if (key === projectId) return true;
+  try { const tuple: unknown = JSON.parse(key); return Array.isArray(tuple) && tuple[0] === projectId; } catch { return false; }
+}
+
 /** Forget a decision (or, with no id, all of them) — back to "will ask again". */
 export function resetProjectCodeConsent(projectId?: string): void {
   if (projectId) {
-    const { [projectId]: _dropped, ...rest } = sessionTable;
-    sessionTable = rest;
+    sessionTable = Object.fromEntries(Object.entries(sessionTable).filter(([k]) => !belongsToProject(k, projectId)));
   } else {
     sessionTable = {};
   }
@@ -142,7 +151,7 @@ export function resetProjectCodeConsent(projectId?: string): void {
       const parsed: unknown = raw ? JSON.parse(raw) : null;
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const table = parsed as ConsentTable;
-        delete table[projectId];
+        for (const key of Object.keys(table)) if (belongsToProject(key, projectId)) delete table[key];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(table));
       }
     }
@@ -153,7 +162,7 @@ export function resetProjectCodeConsent(projectId?: string): void {
 // ─── Asking ─────────────────────────────────────────────────────────────
 
 /** One project waiting for an answer. */
-export interface PendingProjectCodeConsent {
+export interface PendingProjectCodeConsent extends ProjectCodeIdentity {
   projectId: string;
   projectName: string;
   /** The script that triggered the question — shown so the prompt is concrete. */
@@ -198,7 +207,7 @@ export function answerProjectCodeConsent(granted: boolean): void {
   pending = null;
   pendingResolve = null;
   pendingPromise = null;
-  if (request) setProjectCodeConsent(request.projectId, granted);
+  if (request) setProjectCodeConsent(request.projectId, granted, request);
   resolve?.(granted);
   emit();
 }
@@ -215,17 +224,18 @@ export function requestProjectCodeConsent(
   request: PendingProjectCodeConsent,
 ): Promise<boolean> {
   const { projectId } = request;
-  if (!projectId) return Promise.resolve(false);
+  const key = consentKey(projectId, request);
+  if (!key) return Promise.resolve(false);
 
-  const decided = projectCodeConsent(projectId);
+  const decided = projectCodeConsent(projectId, request);
   if (decided) return Promise.resolve(decided === 'granted');
 
   if (pending && pendingPromise) {
-    return pending.projectId === projectId ? pendingPromise : Promise.resolve(false);
+    return consentKey(pending.projectId, pending) === key ? pendingPromise : Promise.resolve(false);
   }
   if (!hostMounted) return Promise.resolve(false);
 
-  pending = request;
+  pending = { ...request };
   pendingPromise = new Promise<boolean>(resolve => { pendingResolve = resolve; });
   emit();
   return pendingPromise;

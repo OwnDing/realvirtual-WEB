@@ -139,9 +139,11 @@ export interface ScriptHookEventData {
 export function createHeapScheduler(heap: RVEventHeap, getNow: () => number): SdkScheduler {
   return {
     in(delaySec, hook, mu, data): number {
+      if (heap.storageSize >= 8192) throw new Error('Script timer storage budget exceeded');
       return heap.schedule(getNow() + delaySec, hook, mu ?? null, data);
     },
     at(timeSec, hook, mu, data): number {
+      if (heap.storageSize >= 8192) throw new Error('Script timer storage budget exceeded');
       return heap.schedule(timeSec, hook, mu ?? null, data);
     },
     cancel(eventId: number): void {

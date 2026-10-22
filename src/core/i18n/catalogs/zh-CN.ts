@@ -1047,6 +1047,7 @@ export const zhCN = {
       show: '显示密码',
     },
     projectCode: {
+      contentBound: '此决定仅适用于当前模块及其代码内容。代码变化后需要重新同意。',
       title: '运行该项目的代码？',
       body: '项目 <0>{{name}}</0> 包含可执行代码（<1>{{script}}</1>）。它拥有与查看器本身相同的权限 — 不在沙箱中运行。',
       warning: '只对来源可信的项目允许此操作。即使不同意，项目仍会打开；只是它自己的代码不会运行。',
@@ -1805,6 +1806,9 @@ export const zhCN = {
         handlerNotFound: '路径“{{path}}”处没有处理程序',
         contextDisposed: '脚本上下文已释放',
         contextDisabled: '脚本上下文已禁用（{{reason}}）— 请显式调用 enable() 后重试',
+        reentryDenied: '不允许重入执行脚本',
+        conversionFailed: '脚本数据转换失败',
+        budgetExceeded: '脚本执行或宿主桥接预算已耗尽',
         sandboxDisposed: '沙箱已释放',
         sandboxPoisoned: '沙箱上下文已被先前的中断或内存故障破坏 — 请释放并创建新沙箱',
         unknownFailure: '未知故障',

@@ -468,17 +468,18 @@ describe('bundle cost — plan-707 self-describing MCP tooling', () => {
     expect(probeChunk, 'the delta probes are in no emitted chunk — is the bridge still shipped?')
       .not.toBeNull();
 
-    // `editor.main-*` is the asset-editor plugin's own chunk (~3.8 MB). If the
-    // probes had reached for the plugin instead of the core-side pointer, it
-    // would no longer be split out.
+    // `editor.main-*` is Monaco's chunk. Script authoring now has its own
+    // first-open boundary: entry → ScriptEditorPanel → Monaco. Assert both
+    // actual edges, so neither a missing editor nor an eager Monaco passes.
     expect(
       assetNames.some((n) => n.startsWith('editor.main-')),
-      'the asset editor lost its own chunk — something now pulls it in eagerly',
+      'Monaco lost its own chunk — something now pulls it in eagerly',
     ).toBe(true);
-    expect(
-      entryText.includes('editor.main-'),
-      'the entry no longer references the editor chunk at all',
-    ).toBe(true);
+    const panelName = assetNames.find(n => n.startsWith('ScriptEditorPanel-'));
+    expect(panelName, 'script authoring lost its first-open chunk').toBeDefined();
+    expect(entryText, 'the script editor is unreachable from the entry').toContain(panelName!);
+    const panelText = await distFiles[distKey(`/dist/assets/${panelName}`)!]();
+    expect(panelText, 'Monaco is unreachable from script authoring').toContain('editor.main-');
   }, SCAN_TIMEOUT_MS);
 
   it('T9 the entry budget still holds with the feature in', () => {

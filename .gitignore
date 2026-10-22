@@ -71,3 +71,6 @@ public/models/D5347024_1-matrices.glb
 # never read back by anything (no toMatchScreenshot in the repo). Untracked
 # on purpose; the previously committed ones were removed 2026-08-11.
 tests/**/__screenshots__/
+
+# Vitest diagnostic attachments
+.vitest-attachments/

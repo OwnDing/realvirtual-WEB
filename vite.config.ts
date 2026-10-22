@@ -3,6 +3,7 @@
 
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { securityBuildGraph } from './scripts/security/build-graph';
 // PWA disabled – always serve fresh content, no service worker caching
 // import { VitePWA } from 'vite-plugin-pwa';
 import { playwright } from '@vitest/browser-playwright';
@@ -754,6 +755,7 @@ function stripImpeccableLivePlugin() {
 export default defineConfig(({ command }) => ({
   base: process.env.VITE_BASE || './',
   plugins: [
+    securityBuildGraph('web'),
     {
       name: 'demo-player-dev-artifacts',
       configureServer(server) {

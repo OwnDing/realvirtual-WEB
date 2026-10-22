@@ -569,6 +569,11 @@ const PROTECTED_PRESENTATION_KEYS = [
 ];
 
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['tools.finalSweep.script.reentryDenied', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],
+  ['tools.finalSweep.script.conversionFailed', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],
+  ['tools.finalSweep.script.budgetExceeded', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],
+
+  ['shell.projectCode.contentBound', 'ADR-0019 adds a new security disclosure binding native script consent to exact code bytes; this text did not exist before the i18n migration.'],
   ['shell.demoExport.title', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.export', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],
   ['shell.demoExport.name', 'New portable demo UI under PS-DEMO-EXPORT-001 / EP-DEMO-005; not historical migrated wording.'],

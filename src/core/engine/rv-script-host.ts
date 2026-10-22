@@ -61,8 +61,10 @@ import {
   isMemoryError,
   marshalHostValue,
   exposeHostFunction,
+  warmHostBridge,
 } from './rv-script-sandbox';
 import { rvT } from '../i18n';
+import { initializeGuestReader, releaseGuestReader, readGuestValue, positiveScriptLimit, SCRIPT_VALUE_LIMITS } from './rv-script-values';
 
 // ─── Options ───────────────────────────────────────────────────────────────
 
@@ -116,10 +118,13 @@ export class RVScriptHost {
    *  deadline slot on the host suffices. 0 = idle (no deadline). */
   private deadlineAt = 0;
   private interruptFired = false;
+  private callDepth = 0;
+  private bridgeCalls = 0;
 
   private constructor(runtime: QuickJSRuntime, options: RVScriptHostOptions) {
     this.runtime = runtime;
-    this.runtime.setMemoryLimit(options.memoryLimitBytes ?? DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES);
+    this.runtime.setMemoryLimit(positiveScriptLimit(options.memoryLimitBytes ?? DEFAULT_SANDBOX_MEMORY_LIMIT_BYTES, 'memoryLimitBytes'));
+    this.runtime.setMaxStackSize(512 * 1024);
     this.runtime.setInterruptHandler(() => {
       if (this.deadlineAt !== 0 && performance.now() >= this.deadlineAt) {
         this.interruptFired = true;
@@ -157,7 +162,7 @@ export class RVScriptHost {
   /** Sets the runtime-wide guest heap limit in bytes (covers ALL contexts). */
   setMemoryLimit(limitBytes: number): void {
     this.assertUsable('setMemoryLimit');
-    this.runtime.setMemoryLimit(limitBytes);
+    this.runtime.setMemoryLimit(positiveScriptLimit(limitBytes, 'memoryLimitBytes'));
   }
 
   /** Human-readable QuickJS memory statistics of the shared runtime (diagnostics / leak tests). */
@@ -169,10 +174,17 @@ export class RVScriptHost {
   /** Creates a fresh, isolated guest context for one script component. */
   createContext(options: RVScriptContextOptions = {}): RVScriptContext {
     this.assertUsable('createContext');
+    positiveScriptLimit(options.callDeadlineMs ?? DEFAULT_SANDBOX_EVAL_DEADLINE_MS, 'callDeadlineMs');
     const context = this.runtime.newContext();
-    const scriptContext = new RVScriptContext(this, context, options);
-    this.contexts.add(scriptContext);
-    return scriptContext;
+    try {
+      const scriptContext = new RVScriptContext(this, context, options);
+      this.contexts.add(scriptContext);
+      return scriptContext;
+    } catch (error) {
+      releaseGuestReader(context);
+      if (context.alive) context.dispose();
+      throw error;
+    }
   }
 
   /** Disposes all remaining contexts and the shared runtime. Idempotent. */
@@ -188,14 +200,26 @@ export class RVScriptHost {
 
   /** @internal */
   _beginGuestCall(deadlineMs: number): void {
-    this.interruptFired = false;
-    this.deadlineAt = performance.now() + deadlineMs;
+    if (this.callDepth++ === 0) {
+      this.interruptFired = false;
+      this.bridgeCalls = 0;
+      this.deadlineAt = performance.now() + deadlineMs;
+    } else this.deadlineAt = Math.min(this.deadlineAt, performance.now() + deadlineMs);
   }
 
   /** @internal */
   _endGuestCall(): boolean {
-    this.deadlineAt = 0;
+    if (--this.callDepth === 0) this.deadlineAt = 0;
     return this.interruptFired;
+  }
+
+  /** @internal */
+  _bridgeCall(countCall: boolean): void {
+    if (countCall) this.bridgeCalls++;
+    if (this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
+      this.interruptFired = true;
+      throw new Error('script bridge budget exceeded');
+    }
   }
 
   /** @internal */
@@ -240,10 +264,20 @@ export class RVScriptContext {
     this.callDeadlineMs = options.callDeadlineMs ?? DEFAULT_SANDBOX_EVAL_DEADLINE_MS;
     this.onDisableCb = options.onDisable;
 
+    initializeGuestReader(this.context);
+
     // Warm-up without a deadline (see RVScriptSandbox constructor).
     const warmup = this.context.evalCode('0', 'script-host://warmup', { type: 'global' });
     if (warmup.error) warmup.error.dispose();
     else warmup.value.dispose();
+
+    // Trusted constants and an inert callback only, before any component code
+    // or capabilities are installed. Nested creation keeps the outer deadline.
+    this.host._beginGuestCall(1000);
+    let interrupted: boolean;
+    try { warmHostBridge(this.context, countCall => this.host._bridgeCall(countCall)); }
+    finally { interrupted = this.host._endGuestCall(); }
+    if (interrupted) throw new Error('Script bridge initialization timed out');
   }
 
   /** True after an interrupt abort or memory failure in this context. */
@@ -274,13 +308,13 @@ export class RVScriptContext {
   /** Sets the wallclock deadline per host→VM call in milliseconds. */
   setCallDeadlineMs(ms: number): void {
     this.assertUsable('setCallDeadlineMs');
-    this.callDeadlineMs = ms;
+    this.callDeadlineMs = positiveScriptLimit(ms, 'callDeadlineMs');
   }
 
   /** Exposes a host function into THIS context's global scope (whitelist bridge). */
   exposeFunction(name: string, fn: SandboxHostFunction): void {
     this.assertUsable('exposeFunction');
-    exposeHostFunction(this.context, name, fn);
+    exposeHostFunction(this.context, name, fn, (countCall) => this.host._bridgeCall(countCall));
   }
 
   /**
@@ -331,9 +365,8 @@ export class RVScriptContext {
           // Primitive / undefined return — nothing to retain; still a success
           // (a script may legitimately return nothing and only use exposed
           // host functions / onSignal-style bridges added later).
-          const dumped = ctx.dump(root);
-          root.dispose();
-          return { ok: true, value: dumped };
+          try { return { ok: true, value: readGuestValue(ctx, root) }; }
+          finally { root.dispose(); }
         }
         this.handlersRoot = root;   // RETAINED until dispose/reload
         return { ok: true };
@@ -346,7 +379,8 @@ export class RVScriptContext {
   /** True when `runSetup()` retained a handler at the dotted `path` (e.g. `'continuous.fixedUpdate'`). */
   hasHandler(path: string): boolean {
     if (this.disposed || this.disabled || !this.handlersRoot) return false;
-    return this.resolveHandler(path) !== null;
+    const result = this.guarded(() => ({ ok: true, value: this.resolveHandler(path) !== null }));
+    return result.ok && result.value === true;
   }
 
   /**
@@ -375,7 +409,7 @@ export class RVScriptContext {
       const ctx = this.context;
       let value: unknown;
       try {
-        value = ctx.dump(call.handle);
+        value = readGuestValue(ctx, call.handle);
       } catch (err) {
         return {
           ok: false,
@@ -423,7 +457,7 @@ export class RVScriptContext {
     if (this.disposed) return;
     this.disposed = true;
     this.releaseHandlers();
-    if (this.context.alive) this.context.dispose();
+    if (this.context.alive) { releaseGuestReader(this.context); this.context.dispose(); }
     this.host._releaseContext(this);
   }
 
@@ -448,7 +482,19 @@ export class RVScriptContext {
         },
       };
     }
-    return work();
+    this.host._beginGuestCall(this.callDeadlineMs);
+    let result: SandboxResult;
+    let interrupted: boolean;
+    try { result = work(); }
+    catch (error) {
+      result = { ok: false, error: { name: 'SandboxInternalError', message: error instanceof Error ? error.message : String(error) } };
+      this.poisonAndDisable('sandbox internal error');
+    } finally { interrupted = this.host._endGuestCall(); }
+    if (interrupted) {
+      this.poisonAndDisable(`interrupt deadline (${this.callDeadlineMs} ms) or bridge budget exceeded`);
+      return { ok: false, error: { name: 'SandboxLimitError', message: this.disabledReasonValue! } };
+    }
+    return result;
   }
 
   private evaluateInternal(code: string, filename: string): SandboxResult {
@@ -460,7 +506,6 @@ export class RVScriptContext {
       // type:'global' — see setup-contract note in the module header.
       result = ctx.evalCode(code, filename, { type: 'global' });
     } catch (err) {
-      this.host._endGuestCall();
       this.poisonAndDisable('sandbox internal error');
       return {
         ok: false,
@@ -473,8 +518,9 @@ export class RVScriptContext {
     if (result.error) {
       let dumped: unknown;
       try {
-        dumped = ctx.dump(result.error);
+        dumped = readGuestValue(ctx, result.error, true);
       } catch {
+        this.poisonAndDisable('guest error conversion failed');
         dumped = 'failed to read guest error';
       } finally {
         result.error.dispose();
@@ -490,7 +536,7 @@ export class RVScriptContext {
 
     let value: unknown;
     try {
-      value = ctx.dump(result.value);
+      value = readGuestValue(ctx, result.value);
     } catch (err) {
       result.value.dispose();
       return {
@@ -517,6 +563,7 @@ export class RVScriptContext {
     // Arena: marshal all args; dispose them no matter what.
     const argHandles: QuickJSHandle[] = [];
     try {
+      if (args.length > SCRIPT_VALUE_LIMITS.arguments) throw new Error('script argument budget exceeded');
       for (const arg of args) argHandles.push(marshalHostValue(ctx, arg));
     } catch (err) {
       for (const h of argHandles) h.dispose();
@@ -535,7 +582,6 @@ export class RVScriptContext {
     try {
       result = ctx.callFunction(fn, ctx.undefined, ...argHandles);
     } catch (err) {
-      this.host._endGuestCall();
       this.poisonAndDisable('sandbox internal error');
       return {
         ok: false,
@@ -552,8 +598,9 @@ export class RVScriptContext {
     if (result.error) {
       let dumped: unknown;
       try {
-        dumped = ctx.dump(result.error);
+        dumped = readGuestValue(ctx, result.error, true);
       } catch {
+        this.poisonAndDisable('guest error conversion failed');
         dumped = 'failed to read guest error';
       } finally {
         result.error.dispose();

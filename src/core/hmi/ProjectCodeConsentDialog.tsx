@@ -63,6 +63,10 @@ export function ProjectCodeConsentDialog() {
           />
           <br /><br />
           {t('projectCode.warning')}
+          <br /><br />
+          {t('projectCode.contentBound')}
+          <br />
+          <code style={{ overflowWrap: 'anywhere' }}>{pending?.contentDigest}</code>
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

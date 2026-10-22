@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "nodeMajor": 22,
+  "npmVersion": "10.9.7",
+  "cycloneDxVersion": "6.0.1",
+  "registry": "https://registry.npmjs.org",
+  "allowedLicenses": ["MIT", "Apache-2.0", "ISC", "BSD-2-Clause", "BSD-3-Clause", "0BSD", "BlueOak-1.0.0", "CC0-1.0", "Zlib", "Python-2.0"],
+  "deniedLicenses": [],
+  "reviewDays": { "moderate": 30, "low": 90, "info": 90 },
+  "releaseMaxAgeHours": 24,
+  "maxArchiveBytes": 134217728,
+  "maxExpandedBytes": 268435456
+}

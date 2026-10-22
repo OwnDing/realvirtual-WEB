@@ -23,8 +23,9 @@ import {
   _resetProjectCodeConsentForTests,
 } from '../src/core/project/rv-project-code-consent';
 
+const identity = { scriptRef: 'scripts/a.ts', contentDigest: 'a'.repeat(64) };
 const ask = (projectId: string, scriptRef = 'scripts/a.ts') =>
-  requestProjectCodeConsent({ projectId, projectName: projectId, scriptRef });
+  requestProjectCodeConsent({ projectId, projectName: projectId, scriptRef, contentDigest: identity.contentDigest });
 
 beforeEach(() => { _resetProjectCodeConsentForTests(); });
 afterEach(() => { _resetProjectCodeConsentForTests(); });
@@ -36,7 +37,7 @@ describe('decision states', () => {
     expect(pendingProjectCodeConsent()?.projectId).toBe('p1');
     answerProjectCodeConsent(true);
     expect(await answer).toBe(true);
-    expect(hasProjectCodeConsent('p1')).toBe(true);
+    expect(hasProjectCodeConsent('p1', identity)).toBe(true);
   });
 
   it('refuses without prompting again once the answer was no', async () => {
@@ -48,7 +49,7 @@ describe('decision states', () => {
     // Persisted refusal: the second ask settles immediately, no dialog.
     expect(await ask('p1')).toBe(false);
     expect(pendingProjectCodeConsent()).toBeNull();
-    expect(projectCodeConsent('p1')).toBe('denied');
+    expect(projectCodeConsent('p1', identity)).toBe('denied');
   });
 
   it('persists a grant across "sessions" — the store is re-read, not remembered', async () => {
@@ -61,7 +62,7 @@ describe('decision states', () => {
     const raw = localStorage.getItem('rv-project-code-consent');
     _resetProjectCodeConsentForTests();
     localStorage.setItem('rv-project-code-consent', raw!);
-    expect(hasProjectCodeConsent('p1')).toBe(true);
+    expect(hasProjectCodeConsent('p1', identity)).toBe(true);
     expect(await ask('p1')).toBe(true);      // resolves with no host mounted
   });
 
@@ -70,16 +71,16 @@ describe('decision states', () => {
     const first = ask('p1');
     answerProjectCodeConsent(true);
     await first;
-    expect(hasProjectCodeConsent('p1')).toBe(true);
-    expect(hasProjectCodeConsent('p2')).toBe(false);
-    expect(projectCodeConsent('p2')).toBeNull();
+    expect(hasProjectCodeConsent('p1', identity)).toBe(true);
+    expect(hasProjectCodeConsent('p2', identity)).toBe(false);
+    expect(projectCodeConsent('p2', identity)).toBeNull();
   });
 
   it('forgets a decision on reset', () => {
-    setProjectCodeConsent('p1', true);
-    expect(hasProjectCodeConsent('p1')).toBe(true);
+    setProjectCodeConsent('p1', true, identity);
+    expect(hasProjectCodeConsent('p1', identity)).toBe(true);
     resetProjectCodeConsent('p1');
-    expect(projectCodeConsent('p1')).toBeNull();
+    expect(projectCodeConsent('p1', identity)).toBeNull();
   });
 });
 
@@ -87,7 +88,7 @@ describe('failing closed', () => {
   it('denies when no dialog host is mounted — never hangs, never assumes yes', async () => {
     expect(await ask('p1')).toBe(false);
     expect(pendingProjectCodeConsent()).toBeNull();
-    expect(projectCodeConsent('p1')).toBeNull();   // nothing was DECIDED either
+    expect(projectCodeConsent('p1', identity)).toBeNull();   // nothing was DECIDED either
   });
 
   it('denies a second project while one question is open', async () => {
@@ -98,13 +99,13 @@ describe('failing closed', () => {
     expect(await first).toBe(true);
   });
 
-  it('shares one question between concurrent asks for the same project', async () => {
+  it('does not share a question across two modules in the same project', async () => {
     registerProjectCodeConsentHost();
     const a = ask('p1', 'scripts/a.ts');
     const b = ask('p1', 'scripts/b.ts');
     answerProjectCodeConsent(true);
     expect(await a).toBe(true);
-    expect(await b).toBe(true);
+    expect(await b).toBe(false);
   });
 
   it('answers no when the host unmounts with a question open', async () => {
@@ -119,12 +120,21 @@ describe('failing closed', () => {
       'rv-project-code-consent',
       JSON.stringify({ p1: { v: 99, decision: 'granted', at: 0 } }),
     );
-    expect(projectCodeConsent('p1')).toBeNull();
-    expect(hasProjectCodeConsent('p1')).toBe(false);
+    expect(projectCodeConsent('p1', identity)).toBeNull();
+    expect(hasProjectCodeConsent('p1', identity)).toBe(false);
   });
 
   it('reads a corrupt table as "no decision"', () => {
     localStorage.setItem('rv-project-code-consent', 'not json');
-    expect(projectCodeConsent('p1')).toBeNull();
+    expect(projectCodeConsent('p1', identity)).toBeNull();
   });
 });
+
+ it('invalidates legacy project grants and changed code digests', async () => {
+   localStorage.setItem('rv-project-code-consent', JSON.stringify({ p1: { v: 1, decision: 'granted', at: 0 } }));
+   expect(hasProjectCodeConsent('p1', identity)).toBe(false);
+   setProjectCodeConsent('p1', true, identity);
+   expect(hasProjectCodeConsent('p1', { ...identity, contentDigest: 'b'.repeat(64) })).toBe(false);
+   expect(hasProjectCodeConsent('p1')).toBe(false);
+   expect(hasProjectCodeConsent('p1', identity)).toBe(true);
+ });

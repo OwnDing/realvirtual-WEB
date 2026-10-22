@@ -267,6 +267,7 @@ export class ModelPluginManager {
    * "keyed by scriptRef" — two references to one file collapse onto one entry,
    * and the legacy name paths get the same benefit for free.
    */
+  private loadGeneration = 0;
   private moduleCache = new Map<string, ModelPluginModule>();
   /** `ref:<scriptRef>` / `name:<modelName>` → module path. The lookup index. */
   private _moduleKeyByLookup = new Map<string, string>();
@@ -355,7 +356,7 @@ export class ModelPluginManager {
   /** A cache hit for an already-resolved lookup key, or null. */
   private _cached(lookup: string): { mod: ModelPluginModule; projectFolder: string | null } | null {
     const key = this._moduleKeyByLookup.get(lookup);
-    if (!key) return null;
+    if (!key || key.startsWith('runtime:')) return null;
     const mod = this.moduleCache.get(key);
     if (!mod) return null;
     return { mod, projectFolder: this._projectFolderCache.get(key) ?? null };
@@ -439,11 +440,13 @@ export class ModelPluginManager {
     }
     if (!source) return null;
 
+    const generation = this.loadGeneration;
     const loaded = await loadRuntimeScript(ref, {
       source,
+      isCurrent: () => generation === this.loadGeneration,
       consent: this._runtimeScriptConsent,
     });
-    if (!loaded) {
+    if (!loaded || generation !== this.loadGeneration || source.isCurrent?.() === false) {
       const why = lastRuntimeScriptFailure();
       if (why === 'denied' || why === 'import-failed') {
         debugWarn('plugins', `Runtime script for "${ref}" was not loaded (${why}).`);
@@ -463,7 +466,8 @@ export class ModelPluginManager {
       return null;
     }
     logInfo(`Model plugins for "${ref}" loaded from the project at runtime (v${loaded.version}).`);
-    return this._loadModule(`runtime:${ref}`, () => Promise.resolve(mod), [lookup]);
+    this._moduleKeyByLookup.set(lookup, `runtime:${ref}`);
+    return { mod, projectFolder: null };
   }
 
   private async _findByModelName(
@@ -533,6 +537,7 @@ export class ModelPluginManager {
    * (See `_handleContextChange` for the deferred-register path.)
    */
   async onModelLoading(modelUrl: string, viewer: RVViewer): Promise<void> {
+    const generation = ++this.loadGeneration;
     // Prefer pendingModelUrl (original URL set before loadModel) over the passed URL which may be a blob:
     const resolveUrl = viewer.pendingModelUrl || modelUrl;
     const modelName = resolveModelName(resolveUrl);
@@ -551,7 +556,7 @@ export class ModelPluginManager {
     this._ensureContextSubscription();
 
     // Same model — nothing to do
-    if (modelName === this.activeModelName) return;
+    if (modelName === this.activeModelName && !this._runtimeScriptSource) return;
 
     // Unload previous model plugins (only if currently registered — when
     // we switch models inside planner mode they were never registered).
@@ -580,6 +585,7 @@ export class ModelPluginManager {
       debugWarn('plugins', `scriptRef provider failed for '${modelName}': ${e}`);
     }
     const findResult = await this.findModuleWithPath(modelName, scriptRef);
+    if (generation !== this.loadGeneration) return;
     if (findResult) {
       const { mod, projectFolder } = findResult;
       try {

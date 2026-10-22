@@ -65,6 +65,9 @@ export class RVEventHeap {
   private nextId = 1;
   private nextSeq = 0;
 
+  /** Physical storage includes cancellation tombstones (resource accounting). */
+  get storageSize(): number { return this.entries.length; }
+
   /** Number of pending (non-cancelled) events. */
   get size(): number {
     return this.entries.length - this.cancelled.size;
@@ -128,11 +131,12 @@ export class RVEventHeap {
    * that are also due (`time <= now`) run in the same drain — delta-cycle
    * semantics. Returns the number of dispatched events.
    */
-  drainUntil(now: number): number {
+  drainUntil(now: number, maxEvents = Number.POSITIVE_INFINITY): number {
     let dispatched = 0;
     for (;;) {
       this.skimCancelled();
       if (this.entries.length === 0 || this.entries[0].time > now) break;
+      if (dispatched >= maxEvents) throw new Error('Script timer dispatch budget exceeded');
       const entry = this.popTop();
       dispatched++;
       const event: ScheduledHookEvent = {

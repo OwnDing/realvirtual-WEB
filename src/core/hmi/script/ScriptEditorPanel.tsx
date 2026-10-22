@@ -360,7 +360,7 @@ export function ScriptEditorPanel({ viewer }: UISlotProps) {
 
   const handleEnableScripts = useCallback(() => {
     getScriptPlugin(viewer)?.setAllowScripts(true);
-    setAllowed(true);
+    setAllowed(getScriptPlugin(viewer)?.scriptsAllowed ?? false);
   }, [viewer]);
 
   if (!state.open) return null;

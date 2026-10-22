@@ -33,15 +33,16 @@
  *    served from its module map. The `version` returned here is the content
  *    hash, so a caller keying a cache on it (and `ModelPluginManager` does)
  *    cannot hand back the previous version of a script that was just saved
- *    (R13). For the optional {@link RuntimeScriptSource.resolveUrl} path — a
- *    real URL, where relative imports *do* work — the same token is appended as
- *    `?v=<hash>` instead.
+ *    (R13). Consent uses the full SHA-256 digest of a copied byte buffer.
  *  - **Consent is asked between reading and importing.** Reading bytes executes
  *    nothing, so the question can be asked with knowledge of whether there is
  *    anything to ask about: a project with no `.js` sibling never prompts.
  *    Without a consent callback nothing runs — this loader fails CLOSED (R8).
  */
 
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+import { getAppConfig } from './rv-app-config';
 import { requireRuntimeEgressUrl } from './deployment/runtime-egress';
 import { debug, debugWarn } from './engine/rv-debug';
 
@@ -58,22 +59,24 @@ import { debug, debugWarn } from './engine/rv-debug';
 export interface RuntimeScriptSource {
   /** The bytes stored at a project-relative path, or null when nothing is. */
   readBytes(relPath: string): Promise<ArrayBuffer | null>;
+  /** Captured source identity; checked again after every asynchronous boundary. */
+  projectId?: string;
+  isCurrent?: () => boolean;
   /**
-   * An importable URL for a project-relative path, when the medium has one.
-   *
-   * Optional, and tried only when {@link readBytes} came back empty. A real URL
-   * keeps relative imports and source maps working; a Blob URL cannot.
+   * @deprecated URL-only fallback is refused: executed bytes must be available
+   * before asking for consent. Retained as a source compatibility seam.
    */
   resolveUrl?(relPath: string): Promise<string | null>;
 }
 
-/** Asked once per project before any of its native code runs (2b.3). */
+/** Consent is bound to project, compiled module path and full content digest. */
 export type RuntimeScriptConsent = (
-  ctx: { scriptRef: string; jsRef: string },
+  ctx: { scriptRef: string; jsRef: string; contentDigest: string; projectId?: string },
 ) => boolean | Promise<boolean>;
 
 export interface LoadRuntimeScriptOptions {
   source: RuntimeScriptSource;
+  isCurrent?: () => boolean;
   /**
    * The consent gate. **Omitting it denies**: native project code is exactly
    * the thing that must not run because a wiring step was forgotten.
@@ -111,8 +114,8 @@ export type RuntimeScriptFailure =
  * returns null rather than a guess.
  */
 export function jsSiblingOf(scriptRef: string): string | null {
-  const ref = String(scriptRef ?? '').trim().replace(/\\/g, '/').replace(/^\.?\//, '');
-  if (ref === '') return null;
+  const ref = String(scriptRef ?? '').trim().replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!ref || ref.startsWith('/') || /[:?#\x00]/.test(ref) || ref.split('/').some(p => !p || p === '..')) return null;
   if (/\.[cm]?js$/i.test(ref)) return ref;
   const m = /^(.*)\.(tsx?|mts|cts)$/i.exec(ref);
   return m ? `${m[1]}.js` : null;
@@ -194,6 +197,7 @@ export async function loadRuntimeScript(
   opts: LoadRuntimeScriptOptions,
 ): Promise<RuntimeScriptLoad | null> {
   _lastFailure = null;
+  if (getAppConfig().scripting?.native === false || opts.isCurrent?.() === false || opts.source.isCurrent?.() === false) { _lastFailure = 'denied'; return null; }
   const jsRef = jsSiblingOf(scriptRef);
   if (!jsRef) {
     _lastFailure = 'not-a-script-ref';
@@ -208,28 +212,28 @@ export async function loadRuntimeScript(
     bytes = null;
   }
 
-  let plainUrl: string | null = null;
   if (!bytes || bytes.byteLength === 0) {
-    try {
-      plainUrl = (await opts.source.resolveUrl?.(jsRef)) ?? null;
-    } catch { plainUrl = null; }
-    if (!plainUrl) {
-      _lastFailure = 'no-sibling';
-      return null;
-    }
+    _lastFailure = 'no-sibling';
+    return null; // URL-only imports cannot bind consent to the executed bytes.
   }
+  // Copy before prompting: a backend must not mutate an approved ArrayBuffer.
+  bytes = bytes.slice(0);
+  const contentDigest = bytesToHex(sha256(new Uint8Array(bytes)));
+  const current = () => getAppConfig().scripting?.native !== false
+    && (opts.source.isCurrent?.() ?? true) && (opts.isCurrent?.() ?? true);
+  if (!current()) { _lastFailure = 'denied'; return null; }
 
   // Only now — with something to run — is the question worth asking (2b.3).
   // The `try` covers a SYNCHRONOUS throw out of the gate too — `.catch()` alone
   // would not, and a consent callback that explodes must deny, not propagate.
   let granted = false;
   try {
-    granted = opts.consent ? await opts.consent({ scriptRef, jsRef }) : false;
+    granted = opts.consent ? await opts.consent({ scriptRef, jsRef, contentDigest, projectId: opts.source.projectId }) : false;
   } catch (e) {
     debugWarn('plugins', `Consent gate failed for "${jsRef}" — denying: ${e}`);
     granted = false;
   }
-  if (!granted) {
+  if (!granted || !current()) {
     debugWarn(
       'plugins',
       `Native project code "${jsRef}" was NOT loaded: this project has no consent to run `
@@ -239,16 +243,17 @@ export async function loadRuntimeScript(
     return null;
   }
 
-  const version = bytes ? await hashBytes(bytes) : '';
-  let objectUrl: string | null = null;
-  const url = bytes
-    ? (objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'text/javascript' })))
-    : `${plainUrl}${plainUrl!.includes('?') ? '&' : '?'}v=${encodeURIComponent(version || String(Date.now()))}`;
+  const version = contentDigest;
+  const objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'text/javascript' }));
+  const url = objectUrl;
 
   try {
     const importer = opts.importer ?? ((u: string) => import(/* @vite-ignore */ u));
     requireRuntimeEgressUrl(url, 'debug-tool');
     const namespace = (await importer(url)) as Record<string, unknown>;
+    // Import top-level code has already run; never construct/register a stale
+    // export after revocation or switching the active project/model.
+    if (!current()) { _lastFailure = 'denied'; return null; }
     if (!namespace || typeof namespace !== 'object') {
       _lastFailure = 'import-failed';
       return null;

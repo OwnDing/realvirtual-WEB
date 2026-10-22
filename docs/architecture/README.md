@@ -21,3 +21,5 @@ authority: normative-registry
 4. 项目/文档/资产/场景关系；
 5. 工业连接与安全模型；
 6. 多语言、配置、设备库和装配的目标架构。
+
+- [`SCRIPT_SECURITY.md`](SCRIPT_SECURITY.md)：脚本信任、资源预算与供应链判定。

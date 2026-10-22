@@ -34,7 +34,7 @@
 
 import { Box3, Quaternion, Vector3, type Object3D } from 'three';
 import type { SdkScheduler, ScriptMuRef } from './rv-script-hook';
-import { findAll as findKindNodes, NODE_KIND_TESTS } from '../library-component-loader';
+import { NODE_KIND_TESTS } from '../library-component-loader';
 
 // ─── Host-side narrow component targets (duck-typed engine slices) ─────────
 
@@ -458,6 +458,18 @@ const MAX_NOTIFY_CASCADE = 1000;
  * when the owner calls `flushDeferredNotifies()` after its VM invocation
  * (the registry does this after every tick).
  */
+function boundedDescendants(root: Object3D, test: (node: Object3D) => boolean): Object3D[] {
+  const result: Object3D[] = []; const stack = [root]; let visited = 0;
+  while (stack.length) {
+    if (++visited > 8192) throw new Error('Script node traversal budget exceeded');
+    const node = stack.pop()!;
+    if (test(node)) result.push(node);
+    if (node.children.length + stack.length > 8192) throw new Error('Script node traversal budget exceeded');
+    for (let i = node.children.length - 1; i >= 0; i--) stack.push(node.children[i]);
+  }
+  return result;
+}
+
 export class SdkBridge {
   private readonly env: SdkEnvironment;
   private readonly nodes = new Map<number, Object3D>();
@@ -465,8 +477,8 @@ export class SdkBridge {
   private readonly comps = new Map<number, { kind: SdkComponentKind; target: SdkComponentTarget }>();
   private readonly unsubs = new Map<number, () => void>();
   /** Auto-teardown register for `self.in/at` timers: pending event ids,
-   *  cancelled on dispose. Ids of already-fired events stay in the set until
-   *  dispose — `SdkScheduler.cancel` is a documented no-op for those. */
+   *  cancelled on dispose. Continuous delivery acknowledges fired IDs; other
+   *  schedulers retain them conservatively until reset/dispose. */
   private readonly pendingTimers = new Set<number>();
   /** Notifications deferred while the VM is busy (see class doc). */
   private readonly deferredNotifies: Array<{ subId: number; args: unknown[] }> = [];
@@ -503,6 +515,14 @@ export class SdkBridge {
   /** Number of not-yet-cancelled timer registrations (leak tests). */
   get pendingTimerCount(): number {
     return this.pendingTimers.size;
+  }
+
+  /** Host delivery acknowledgement; guest code cannot release another timer. */
+  releaseTimer(eventId: number): void { this.pendingTimers.delete(eventId); }
+
+  resetTimers(): void {
+    for (const id of this.pendingTimers) this.env.scheduler.cancel(id);
+    this.pendingTimers.clear();
   }
 
   /** Number of live host-side subscriptions taken by the guest (leak tests). */
@@ -550,6 +570,11 @@ export class SdkBridge {
   };
 
   private dispatchHostCall(raw: unknown[]): unknown {
+    if (this.disposed) throw new Error('Script bridge is disposed');
+    if (this.nodes.size > 8192 || this.comps.size > 8192 || this.unsubs.size > 1024 || this.deferredNotifies.length > 1024) {
+      this.onDisableRequested?.('Script host resource budget exceeded');
+      throw new Error('Script host resource budget exceeded');
+    }
     const op = String(raw[0]);
     const a = raw.slice(1);
     switch (op) {
@@ -571,11 +596,13 @@ export class SdkBridge {
       }
       // ── timers (kernel scheduler; auto-registered for teardown) ─────
       case 'timer.in': {
+        if (this.pendingTimers.size >= 8192) throw new Error('Script timer registration budget exceeded');
         const id = this.env.scheduler.in(Number(a[0]), String(a[1]), (a[2] ?? null) as ScriptMuRef | null, a[3]);
         this.pendingTimers.add(id);
         return id;
       }
       case 'timer.at': {
+        if (this.pendingTimers.size >= 8192) throw new Error('Script timer registration budget exceeded');
         const id = this.env.scheduler.at(Number(a[0]), String(a[1]), (a[2] ?? null) as ScriptMuRef | null, a[3]);
         this.pendingTimers.add(id);
         return id;
@@ -604,9 +631,10 @@ export class SdkBridge {
         if (kind && kind in NODE_KIND_TESTS) {
           // Convention-kind filter (like MaterialFlowSelf.findAll): all
           // DESCENDANT nodes matching the shared name-convention table.
-          return findKindNodes(n, NODE_KIND_TESTS[kind as keyof typeof NODE_KIND_TESTS])
+          return boundedDescendants(n, NODE_KIND_TESTS[kind as keyof typeof NODE_KIND_TESTS])
             .map((c) => this.nodeId(c));
         }
+        if (n.children.length > 4096) throw new Error('Script node result budget exceeded');
         return n.children.map((c) => this.nodeId(c));
       }
       case 'node.read': return this.nodeRead(a[0], String(a[1]));
@@ -638,6 +666,7 @@ export class SdkBridge {
         const resolver = this.env.components?.[kind];
         const target = resolver ? resolver(String(a[1])) : null;
         if (!target) return null;
+        if (this.comps.size >= 8192) throw new Error('Script component handle budget exceeded');
         const c = this.nextCompId++;
         this.comps.set(c, { kind, target: target as SdkComponentTarget });
         const node = (target as { node?: Object3D }).node;
@@ -647,6 +676,7 @@ export class SdkBridge {
         const kind = String(a[0]) as SdkComponentKind;
         const resolver = this.env.componentsAll?.[kind];
         const targets = resolver ? resolver() : [];
+        if (targets.length + this.comps.size > 8192) throw new Error('Script component handle budget exceeded');
         return targets.map((target) => {
           const c = this.nextCompId++;
           this.comps.set(c, { kind, target: target as SdkComponentTarget });
@@ -657,6 +687,7 @@ export class SdkBridge {
       case 'comp.read': return this.compRead(Number(a[0]), String(a[1]));
       case 'comp.call': return this.compCall(Number(a[0]), String(a[1]), (a[2] ?? []) as unknown[]);
       case 'comp.on': {
+        if (this.unsubs.size >= 1024) throw new Error('Script subscription budget exceeded');
         const entry = this.comps.get(Number(a[0]));
         const subId = Number(a[1]);
         if (!entry) return null;
@@ -682,6 +713,7 @@ export class SdkBridge {
         return undefined;
       }
       case 'sig.on': {
+        if (this.unsubs.size >= 1024) throw new Error('Script subscription budget exceeded');
         const name = String(a[0]);
         const subId = Number(a[1]);
         const sub = this.env.signals?.subscribe;
@@ -916,6 +948,10 @@ export class SdkBridge {
     // stack) → defer; a nested guest call would corrupt the shared deadline
     // bookkeeping (phase-1 open point "Notify-Reentranz").
     if (this.hostCallDepth > 0 || this.notifying) {
+      if (this.deferredNotifies.length >= 1024) {
+        this.onDisableRequested?.('Script notification queue budget exceeded');
+        return;
+      }
       this.deferredNotifies.push({ subId, args });
       return;
     }
@@ -947,6 +983,7 @@ export class SdkBridge {
   private nodeId(node: Object3D): number {
     let id = this.nodeIds.get(node);
     if (id === undefined) {
+      if (this.nodes.size >= 8192) throw new Error('Script node handle budget exceeded');
       id = this.nextNodeId++;
       this.nodeIds.set(node, id);
       this.nodes.set(id, node);
