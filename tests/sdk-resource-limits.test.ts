@@ -5,6 +5,17 @@ import { RVScriptHost } from '../src/core/engine/rv-script-host';
 import { createSdkComponent, SdkBridge, RVEventHeap, createHeapScheduler, RVScriptComponentAdapter } from '../src/core/sdk/rv-component-sdk';
 
 describe('SDK host resource budgets', () => {
+  it('runs the first SDK setup at the default deadline without leaking initialization capabilities', async () => {
+    const host = await RVScriptHost.create(); const adapter = new RVScriptComponentAdapter();
+    const logs: unknown[][] = [];
+    const component = createSdkComponent(host, { name: 'cold', path: 'cold', node: new Object3D(), scheduler: adapter.scheduler, log: (...args) => logs.push(args) }, `function setup(self){self.log("ready", {value:1}); return {};}`);
+    try {
+      expect(component.ok, component.error?.message).toBe(true);
+      expect(logs).toEqual([['ready', {value:1}]]);
+      expect(component.ctx.evaluate('typeof __rv_warm_bridge')).toMatchObject({ ok: true, value: 'undefined' });
+    } finally { component.dispose(); adapter.dispose(); host.dispose(); }
+  });
+
   it('bounds pending timers including cancelled storage, and subscriptions before allocation', () => {
     const heap = new RVEventHeap(); let subscriptions = 0; let released = 0;
     const bridge = new SdkBridge({ name: 'budget', path: 'budget', node: new Object3D(), scheduler: createHeapScheduler(heap, () => 0), signals: { get: () => undefined, set: () => {}, subscribe: () => { subscriptions++; return () => { released++; }; } } });

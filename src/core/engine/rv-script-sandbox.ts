@@ -210,12 +210,12 @@ export function marshalHostValue(ctx: QuickJSContext, value: unknown, depth = 0,
 }
 
 /**
- * Installs a host function on the guest global scope (whitelist bridge).
+ * Creates a host function handle for the whitelist bridge.
  * Shared implementation for `RVScriptSandbox.exposeFunction` and
  * `RVScriptContext.exposeFunction`.
  */
-export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, checkBudget: (countCall: boolean) => void): void {
-  const fnHandle = ctx.newFunction(name, (...argHandles: QuickJSHandle[]) => {
+function createHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, checkBudget: (countCall: boolean) => void): QuickJSHandle {
+  return ctx.newFunction(name, (...argHandles: QuickJSHandle[]) => {
     // Arg handles are borrowed (owned by the caller) — dump, don't dispose.
     let ret: unknown;
     try {
@@ -235,11 +235,32 @@ export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: Sandbo
       return { error: ctx.newError(`host function '${name}' returned an unmarshallable value: ${message}`) };
     }
   });
+}
+
+/** Installs a whitelist bridge function on the guest global scope. */
+export function exposeHostFunction(ctx: QuickJSContext, name: string, fn: SandboxHostFunction, checkBudget: (countCall: boolean) => void): void {
+  const fnHandle = createHostFunction(ctx, name, fn, checkBudget);
   try {
     ctx.setProp(ctx.global, name, fnHandle);
   } finally {
     fnHandle.dispose();
   }
+}
+
+/** @internal Fresh-context initialization only: no user code or capability. */
+export function warmHostBridge(ctx: QuickJSContext, checkBudget: (countCall: boolean) => void): void {
+  // Exercise the same string/data readers, budget checks and return marshaller
+  // as a real bridge. A bare QuickJS C-function noop leaves these paths cold.
+  const bridge = createHostFunction(ctx, '__rv_warm_bridge', () => ({ ready: true }), checkBudget);
+  try {
+    const caller = ctx.evalCode('(function(bridge){ return bridge("warm", 1, {values:[true,null]}); })', 'sandbox://bridge-data-warmup');
+    if (caller.error) { caller.error.dispose(); throw new Error('Cannot initialize script bridge data path'); }
+    try {
+      const call = ctx.callFunction(caller.value, ctx.undefined, bridge);
+      if (call.error) { call.error.dispose(); throw new Error('Cannot initialize script bridge data path'); }
+      try { readGuestValue(ctx, call.value); } finally { call.value.dispose(); }
+    } finally { caller.value.dispose(); }
+  } finally { bridge.dispose(); }
 }
 
 // ─── RVScriptSandbox ───────────────────────────────────────────────────────
@@ -303,6 +324,14 @@ export class RVScriptSandbox {
     } else {
       warmup.value.dispose();
     }
+
+    // Bound trusted initialization separately; user evaluations retain their
+    // configured deadline. The callback and all values here are constants.
+    this.deadlineAt = performance.now() + 1000;
+    try {
+      warmHostBridge(this.context, countCall => this.checkBridgeBudget(countCall));
+      if (this.interruptFired) throw new Error('Script bridge initialization timed out');
+    } finally { this.deadlineAt = 0; this.bridgeCalls = 0; }
   }
 
   /**
@@ -356,13 +385,7 @@ export class RVScriptSandbox {
    */
   exposeFunction(name: string, fn: SandboxHostFunction): void {
     this.assertUsable('exposeFunction');
-    exposeHostFunction(this.context, name, fn, (countCall) => {
-      if (countCall) this.bridgeCalls++;
-      if (this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
-        this.interruptFired = true;
-        throw new Error('script bridge budget exceeded');
-      }
-    });
+    exposeHostFunction(this.context, name, fn, countCall => this.checkBridgeBudget(countCall));
   }
 
   /**
@@ -466,6 +489,14 @@ export class RVScriptSandbox {
   }
 
   // ─── Internals ───────────────────────────────────────────────────────────
+
+  private checkBridgeBudget(countCall: boolean): void {
+    if (countCall) this.bridgeCalls++;
+    if (this.bridgeCalls > SCRIPT_VALUE_LIMITS.bridgeCalls || performance.now() >= this.deadlineAt) {
+      this.interruptFired = true;
+      throw new Error('script bridge budget exceeded');
+    }
+  }
 
   private assertUsable(operation: string): void {
     if (this.disposed) {

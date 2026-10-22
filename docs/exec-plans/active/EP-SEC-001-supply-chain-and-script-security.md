@@ -251,6 +251,7 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - 远程生产授权旅程发现 GPU 自动质量对话框会晚于 model-loaded 出现，原一次性可见性检查会漏掉它。改为 Playwright locator handler 点击真实确认按钮，保留全部授权与执行次数断言。本地生产旅程已通过。
 - 5 ms VM 默认预算的冷启动路径会受 WASM tier-up 影响。只在全新 context 内用可信常量和 inert callback 预热实际生命周期/数据读取路径，用户代码与真实能力仍受原 deadline。原始字符串先核对长度再分配宿主字符串；参数转换后、调用宿主副作用前再校验 deadline。新增真实 Proxy 转换耗尽预算后写入次数为 0 的回归，未放宽期限或已有 poison 断言。
 - 原生制品须用 Trivy rootfs 路径；源码目录 fs 扫描不能替代它。对锁定 Caddy 的真实二进制和包含同一文件的本地测试镜像分别扫描，两者均识别 146 个包，但主模块版本缺失且有漏洞，按 incomplete 阻断；镜像仅验证适配器，不代表完整 Appliance。
+- 合并前读取远程 `f03e399` 结果，Browser 授权旅程仍因首次 SDK setup 超过 5 ms 失败，本地性能采样复现。此前 bare noop 预热未覆盖真实参数读取、预算检查与返回值转换；补齐使用同一桥接实现的可信常量预热，独立限时 1 秒且不运行用户代码/能力，不改变用户预算、poison 或生产旅程断言。新增默认预算下首次 SDK setup 与初始化入口不泄漏的回归。
 
 ## Decision Log
 
@@ -258,6 +259,7 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 | --- | --- | --- |
 | 2026-10-20 | 只起草 L3-3 方案，认可后再实施 | 用户当前明确请求；本轮不扩展为实现授权 |
 | 2026-10-20 | D1–D5 与范围内实施、开 PR | 用户明确“同意，开 pr 实施”；接受 ADR-0019，记录 OD-008；不包含采购、部署或未经单独授权的远程保护设置 |
+| 2026-10-22 | 合并 PR #18 到 develop 并删除对应功能分支 | 用户明确“完成 pr merge。功能开发分支可可删除了”；保留供应链风险和未验收里程碑，不等于正式发布或许可证豁免；仍按远程受保护门禁完成合并 |
 
 ## Validation
 
@@ -278,6 +280,8 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 | Trivy 适配器 | Linux arm64 工具真实运行；x64 归档与二进制摘要已核对但未执行。2026-10-22 00:11 UTC 复扫真实 Caddy 原生目录及本地测试镜像，均 146 包、50 条记录（23 High/21 Medium/5 Low/1 Unknown），主模块版本缺失，退出 2。DB 更新时间 2026-10-21 01:19 UTC，扫描时仍处于 24 小时/NextUpdate 窗口内 |
 
 上述为开发候选树的内部证据，不是干净发布制品的审核签收。上一远程候选 `65e1b29` 的 Governance/Static/Node/Build/Windows Chrome、Edge 兼容性通过；Supply Chain 因实际债务失败，Browser 在生产授权旅程的晚到 GPU 对话框处失败，未运行后续全量 Browser。后续修复的远程结果单独查询 PR，不将旧提交状态移用到新提交。`all` 未通过，M1 的远程强制设置、M3 的全部目标/分发复核和 M4 独立报告仍未验收。
+
+2026-10-22 合并前读回 develop 分支保护：required contexts 为 Governance/Static/Node/Browser/Build，enforcement 为 everyone；rulesets 为空。Supply Chain 尚未加入远程 required contexts，此轮未修改保护设置。`f03e399` 的原四项门禁和 Windows 兼容性通过，Browser 在生产 setup deadline 处失败；对应修复后 7 文件、87 条脚本专项通过，其余候选验证继续记录于 PR。
 
 实施验收必须覆盖：
 

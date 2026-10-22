@@ -61,6 +61,7 @@ import {
   isMemoryError,
   marshalHostValue,
   exposeHostFunction,
+  warmHostBridge,
 } from './rv-script-sandbox';
 import { rvT } from '../i18n';
 import { initializeGuestReader, releaseGuestReader, readGuestValue, positiveScriptLimit, SCRIPT_VALUE_LIMITS } from './rv-script-values';
@@ -269,6 +270,14 @@ export class RVScriptContext {
     const warmup = this.context.evalCode('0', 'script-host://warmup', { type: 'global' });
     if (warmup.error) warmup.error.dispose();
     else warmup.value.dispose();
+
+    // Trusted constants and an inert callback only, before any component code
+    // or capabilities are installed. Nested creation keeps the outer deadline.
+    this.host._beginGuestCall(1000);
+    let interrupted: boolean;
+    try { warmHostBridge(this.context, countCall => this.host._bridgeCall(countCall)); }
+    finally { interrupted = this.host._endGuestCall(); }
+    if (interrupted) throw new Error('Script bridge initialization timed out');
   }
 
   /** True after an interrupt abort or memory failure in this context. */

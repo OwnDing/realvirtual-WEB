@@ -3,7 +3,7 @@ doc_id: ARCH-SEC-001
 title: 脚本执行与供应链安全边界
 status: approved
 owner: security
-last_reviewed: 2026-10-20
+last_reviewed: 2026-10-22
 authority: normative
 ---
 
@@ -38,6 +38,8 @@ authority: normative
 | 构建树被误作交付物清单 | Rollup 实际输入图 + 最终文件集/摘要，独立发布检查 | 复制资源、WASM 内嵌引擎、补丁、OCI/原生依赖必须单独取证 |
 
 32 MiB guest heap 默认值保持；共享 RVScriptHost 的堆限额覆盖全部 context。stack 上限为 512 KiB。默认每次调用 5 ms 不变，配置限额必须为有限正数。正常脚本的固定 Tick、PLC 方向、NodeId、GLB/rv_extras 与项目文档格式不变。
+
+全新 context 在安装用户代码/真实能力之前，用可信常量和 inert callback 预热完整数据桥路径（参数读取、预算检查、返回值转换）。这一步独立限时 1 秒；共享 host 嵌套创建 context 时仍服从外层更早的 deadline。临时句柄全部释放，不向 guest global 留下初始化入口；首次用户调用重新计数并使用原 5 ms 预算。此举减少浏览器首次编译绑定代码造成的预算误耗，不保证所有设备或负载下正常脚本都能在 5 ms 内完成。
 
 ## 供应链判定
 
