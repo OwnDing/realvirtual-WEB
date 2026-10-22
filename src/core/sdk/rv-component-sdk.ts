@@ -25,7 +25,10 @@
 
 import type { RVScriptHost, RVScriptContext } from '../engine/rv-script-host';
 import type { SandboxError, SandboxResult } from '../engine/rv-script-sandbox';
+import { Object3D } from 'three';
 import { SDK_MATH_INSTALL_SOURCE } from './rv-sdk-math';
+import { RVEventHeap } from './rv-event-heap';
+import { createHeapScheduler } from './rv-script-hook';
 import { rvT } from '../i18n';
 import {
   SDK_SELF_SOURCE,
@@ -60,6 +63,30 @@ export interface SdkComponent {
   dispose(): void;
 }
 
+const initializedHosts = new WeakSet<RVScriptHost>();
+
+/**
+ * Exercise the actual SDK construction/dispatch path before charging a user
+ * call for browser/WASM first-use compilation. Only bundled source and a
+ * detached node are used: this context has no model, signals or external
+ * capabilities. Its handles and registrations are always released.
+ */
+function initializeSdk(host: RVScriptHost): SandboxError | null {
+  if (initializedHosts.has(host)) return null;
+  const heap = new RVEventHeap();
+  const component = instantiateSdkComponent(host, {
+    name: 'sdk-initialization', path: 'sdk-initialization', node: new Object3D(),
+    scheduler: createHeapScheduler(heap, () => 0), log: () => {},
+  }, 'function setup(self) { self.log("initialize", {value: 1}); return {}; }', { callDeadlineMs: 1000 });
+  try {
+    if (!component.ok) return component.error;
+    initializedHosts.add(host);
+    return null;
+  } finally {
+    component.dispose();
+  }
+}
+
 /**
  * Build and set up one script component against `env`. Synchronous — the
  * caller creates the shared `RVScriptHost` once (async WASM load) and then
@@ -70,6 +97,17 @@ export function createSdkComponent(
   env: SdkEnvironment,
   code: string,
   opts: CreateSdkComponentOptions = {},
+): SdkComponent {
+  const initializationError = initializeSdk(host);
+  return instantiateSdkComponent(host, env, code, opts, initializationError);
+}
+
+function instantiateSdkComponent(
+  host: RVScriptHost,
+  env: SdkEnvironment,
+  code: string,
+  opts: CreateSdkComponentOptions,
+  initializationError: SandboxError | null = null,
 ): SdkComponent {
   const bridge = new SdkBridge(env);
   const ctx = host.createContext({
@@ -116,6 +154,7 @@ export function createSdkComponent(
   };
 
   const steps: Array<[string, () => SandboxResult]> = [
+    ['SDK initialization', () => initializationError ? { ok: false, error: initializationError } : { ok: true }],
     ['math install', () => ctx.evaluate(SDK_MATH_INSTALL_SOURCE)],
     ['self install', () => ctx.evaluate(SDK_SELF_SOURCE)],
     ['meta install', () => ctx.evaluate(`globalThis.__rvMeta = ${JSON.stringify(meta)}; 'ok';`)],

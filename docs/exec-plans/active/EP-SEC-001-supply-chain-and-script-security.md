@@ -252,6 +252,7 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - 5 ms VM 默认预算的冷启动路径会受 WASM tier-up 影响。只在全新 context 内用可信常量和 inert callback 预热实际生命周期/数据读取路径，用户代码与真实能力仍受原 deadline。原始字符串先核对长度再分配宿主字符串；参数转换后、调用宿主副作用前再校验 deadline。新增真实 Proxy 转换耗尽预算后写入次数为 0 的回归，未放宽期限或已有 poison 断言。
 - 原生制品须用 Trivy rootfs 路径；源码目录 fs 扫描不能替代它。对锁定 Caddy 的真实二进制和包含同一文件的本地测试镜像分别扫描，两者均识别 146 个包，但主模块版本缺失且有漏洞，按 incomplete 阻断；镜像仅验证适配器，不代表完整 Appliance。
 - 合并前读取远程 `f03e399` 结果，Browser 授权旅程仍因首次 SDK setup 超过 5 ms 失败，本地性能采样复现。此前 bare noop 预热未覆盖真实参数读取、预算检查与返回值转换；补齐使用同一桥接实现的可信常量预热，独立限时 1 秒且不运行用户代码/能力，不改变用户预算、poison 或生产旅程断言。新增默认预算下首次 SDK setup 与初始化入口不泄漏的回归。
+- 后续 `9ba0603` 的远程 Browser 和本地 2 倍 CPU 降速采样仍复现首次 SDK setup 超时，通用桥接预热未覆盖 SDK 构造/分派/包装。补充每个 host 一次、独立临时 context 的固定 SDK 初始化；不接入调用者环境，每次调用限时 1 秒并释放全部句柄。保留用户 5 ms、生产执行次数和 poison 断言，增加初始化后无限 setup 仍超时且无信号写入的回归。
 
 ## Decision Log
 
@@ -282,6 +283,8 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 上述为开发候选树的内部证据，不是干净发布制品的审核签收。上一远程候选 `65e1b29` 的 Governance/Static/Node/Build/Windows Chrome、Edge 兼容性通过；Supply Chain 因实际债务失败，Browser 在生产授权旅程的晚到 GPU 对话框处失败，未运行后续全量 Browser。后续修复的远程结果单独查询 PR，不将旧提交状态移用到新提交。`all` 未通过，M1 的远程强制设置、M3 的全部目标/分发复核和 M4 独立报告仍未验收。
 
 2026-10-22 合并前读回 develop 分支保护：required contexts 为 Governance/Static/Node/Browser/Build，enforcement 为 everyone；rulesets 为空。Supply Chain 尚未加入远程 required contexts，此轮未修改保护设置。`f03e399` 的原四项门禁和 Windows 兼容性通过，Browser 在生产 setup deadline 处失败；对应修复后 7 文件、87 条脚本专项通过，其余候选验证继续记录于 PR。
+
+`9ba0603` 的 Windows 首次执行在 Edge 最后一个 WebGPU fallback 旅程遇到本地预设请求耗时 5–49 秒，保留 trace 后一次新 runner 复验通过；Browser 则再次确认首次 SDK setup 超时。SDK 初始化补齐后的本地验证：脚本 watchdog 7 文件/88 条、SDK 回归 8 文件/59 条、Governance/Static/Build、正常生产授权旅程全部通过；相同的 2 倍 CPU 降速与性能采样复现从失败转为通过。最终提交的远程结果仍须单独验证，不能由本地结果代替。
 
 实施验收必须覆盖：
 

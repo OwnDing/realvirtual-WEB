@@ -12,7 +12,25 @@ describe('SDK host resource budgets', () => {
     try {
       expect(component.ok, component.error?.message).toBe(true);
       expect(logs).toEqual([['ready', {value:1}]]);
+      expect(host.contextCount).toBe(1);
+      expect(adapter.heap.size).toBe(0);
       expect(component.ctx.evaluate('typeof __rv_warm_bridge')).toMatchObject({ ok: true, value: 'undefined' });
+    } finally { component.dispose(); adapter.dispose(); host.dispose(); }
+  });
+
+  it('keeps the default user deadline after trusted SDK initialization and releases failed setup', async () => {
+    const host = await RVScriptHost.create(); const adapter = new RVScriptComponentAdapter();
+    let writes = 0;
+    const component = createSdkComponent(host, { name: 'loop', path: 'loop', node: new Object3D(), scheduler: adapter.scheduler, signals: { get: () => undefined, set: () => { writes++; } }, log: () => {} }, `function setup(self){ while(true){} self.signal('x').set(1); }`);
+    try {
+      expect(component.ok).toBe(false);
+      expect(component.error?.message).toMatch(/5 ms/);
+      expect(component.ctx.isPoisoned).toBe(true);
+      expect(component.ctx.isDisabled).toBe(true);
+      expect(writes).toBe(0);
+      expect(host.contextCount).toBe(1);
+      component.dispose();
+      expect(host.contextCount).toBe(0);
     } finally { component.dispose(); adapter.dispose(); host.dispose(); }
   });
 

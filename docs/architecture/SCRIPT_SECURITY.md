@@ -41,6 +41,8 @@ authority: normative
 
 全新 context 在安装用户代码/真实能力之前，用可信常量和 inert callback 预热完整数据桥路径（参数读取、预算检查、返回值转换）。这一步独立限时 1 秒；共享 host 嵌套创建 context 时仍服从外层更早的 deadline。临时句柄全部释放，不向 guest global 留下初始化入口；首次用户调用重新计数并使用原 5 ms 预算。此举减少浏览器首次编译绑定代码造成的预算误耗，不保证所有设备或负载下正常脚本都能在 5 ms 内完成。
 
+SDK 首次用于一个 host 时，还在独立临时 context 中执行固定的内置初始化源码，覆盖真实 `self` 构造、SDK 分派和 setup 包装路径。仅使用 detached node、独立调度器和空日志回调，不引用调用者的模型、信号或其他能力；每个初始化调用限时 1 秒，完成或失败后都释放该 context。初始化失败阻止用户源码运行。后续用户 context、setup 和生命周期调用继续使用原配置（默认 5 ms），不会重试失败的用户 setup。
+
 ## 供应链判定
 
 公共在线扫描只接受 npm v3 lockfile 中可完整对应的 registry.npmjs.org 归档和 SHA-512 integrity。别名包同时保存安装路径名和真实包名。任何私有、链接、非固定或含认证信息的来源在联网前失败；不得删去它再宣称完整扫描。扫描时不运行包安装脚本、不修改 lockfile。未安装的平台 optional 包从经过 integrity 校验的归档只读提取证据，不解包执行。
