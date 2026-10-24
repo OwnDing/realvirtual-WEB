@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { helpDestination } from '../hmi/help-destination';
+import { getLocale } from '../i18n';
+import { userHelpMessages } from '../i18n/catalogs/user-help';
 import { onLocaleChange, rvT } from '../i18n';
 import { _subscribe as subscribeContexts } from '../hmi/ui-context-store';
 import { canExportDiagnostics } from './access';
@@ -9,6 +12,7 @@ import { abortIfNeeded } from './types';
 /** Native DOM fallback works before React / Viewer creation. JSON needs no extra chunk request. */
 export function bindDiagnosticErrorEntry(host: HTMLElement): { refresh: () => void; dispose: () => void } {
   const block = document.createElement('div'), button = document.createElement('button'), cancel = document.createElement('button'), note = document.createElement('p');
+  const help = document.createElement('a'); help.target = '_blank'; help.rel = 'noopener noreferrer';
   block.dataset.testid = 'diagnostics-error-entry';
   button.type = cancel.type = 'button'; button.className = cancel.className = 'loader-btn';
   button.style.marginTop = cancel.style.marginTop = '12px';
@@ -22,6 +26,8 @@ export function bindDiagnosticErrorEntry(host: HTMLElement): { refresh: () => vo
     if (!allowed && active) diagnosticSession.cancel();
     button.textContent = rvT('shell', 'diagnostics.export'); button.disabled = !!active;
     cancel.textContent = rvT('shell', 'diagnostics.cancel'); cancel.hidden = !active;
+    const href = helpDestination({ slug: 'support' }); help.hidden = !href; if (href) help.href = href; else help.removeAttribute('href');
+    help.textContent = userHelpMessages(getLocale()).open;
     note.textContent = rvT('shell', `diagnostics.${message}`);
   }
   button.onclick = async () => {
@@ -39,7 +45,7 @@ export function bindDiagnosticErrorEntry(host: HTMLElement): { refresh: () => vo
     finally { diagnosticSession.finish(signal); active = null; if (!disposed) render(); }
   };
   cancel.onclick = () => diagnosticSession.cancel();
-  block.append(button, cancel, note); host.append(block); render();
+  block.append(button, cancel, note, help); host.append(block); render();
   const offs = [onLocaleChange(render), subscribeContexts(render)];
   return { refresh: render, dispose: () => { disposed = true; if (active) diagnosticSession.cancel(); offs.forEach(off => off()); block.remove(); } };
 }

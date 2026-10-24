@@ -1,0 +1,743 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "6.3.27",
+  "revision": "2026-10-23.1",
+  "contentDigest": "4527ece535bbf8c1a625d12d996e42b919c149acb9a53176a29d69772238d123",
+  "inputs": {
+    "appliance/docs/INSTALL.en.md": "b035459c003bc3394fd9dffb306cd5eb8240b12e7f5e8f6234ff1d8a48c7326f",
+    "appliance/docs/INSTALL.zh-CN.md": "859f41ae63992d9b0693161edbbd92c876420b8f35fa776aee070ec138cbeb0e",
+    "docs/delivery/SECURITY_OPERATIONS.md": "dbcdbb8bef7e60b129e60cfebfb57ee9d4d52aed0baa6bafcc8814da930429ce",
+    "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md": "f6aeb5eac222599e472f996b2b52e0e9e7d6368ec401a7bbb1ecaae591ff03b2",
+    "docs/generated/COMPATIBILITY_MATRIX.en-US.md": "50ffb82cef3a253e839972bf5dbd4616e09fceedb7f9d45a4a61d70eea9a7029",
+    "docs/generated/COMPATIBILITY_MATRIX.zh-CN.md": "d29ee9a0d8e0c5d5e1708a0cf0f8728b1235ffc5eda800cf024e29875b25f6b1",
+    "docs/product-specs/COMPATIBILITY.md": "af103c8873b26b7bbbebbb25b1805bbcc7a5bbecf378bc1e0b6b2d280c54c244",
+    "docs/product-specs/LICENSE_AND_EXPIRY.md": "8559e27191c6261f42efcf3b990c83c8efb25b9f135680c92831ea3246a1137a",
+    "docs/product-specs/SMART_ASSET_EDITOR.md": "85f6b82b42e4b248f7e31cc4cb810a3accf832e438a461a61cdf1a048aa1960b",
+    "docs/runbooks/COMPATIBILITY.md": "83e1c56bf7aaaf1507f26282541d12b631de620f98a7c569a5f4096d94d4dfcb",
+    "docs/runbooks/DEMO_PACKAGE_EXPORT.md": "eeb46f9d59be2228f1c01152feb01cf3cb784a3c36d8317ae5df4e8850694a17",
+    "docs/runbooks/DIAGNOSTIC_BUNDLE.md": "40dce20b6e799917396466a0f97b0311f773d219fde3f6471f242b0f6460a3fb",
+    "docs/runbooks/PROTECTED_PRESENTATIONS.md": "1f13a5934f5fc803ce48e6fb2f87c286592c206daa56baf8ca0688fbf20f6db3",
+    "docs/runbooks/README.md": "b6d2c98aa0186225e938f72ef42a3313c685c989ddab58fb4a3d3c7a4108888d",
+    "docs/runbooks/VERSION_UPGRADE.md": "ff2a320001c93284f217bb7071aca3daff214b45030b8aceafcd9064188af23e",
+    "docs/user/en-US/appearance.md": "8ec5a19c2454e06c1972726d5dab22656b5b217934e135cbd1637d02a7e96b5f",
+    "docs/user/en-US/delivery.md": "8ec354e923df929f6112f45b27acf1f9377b350e1d84eafb22dcf37a50306059",
+    "docs/user/en-US/faq.md": "5050a0335dbd32045a6f7b30e98466df2f31811cb62639c8146383297637a588",
+    "docs/user/en-US/licensing.md": "ee3cdaea5e245d257c4d7e373bac39c7770335b168c3e991349d7332f08f670f",
+    "docs/user/en-US/media.md": "05e35aba6c4d43fafea45bae86d02a9a95078ad37a4ca870d51a153c14a3f63f",
+    "docs/user/en-US/models.md": "48280ade457f9819c5ec3fd845ba6ba26c1ee35300dc504c0982ddca408f0c10",
+    "docs/user/en-US/navigation.md": "1eb0a480f9a26fd22c5afb86d65f80e4fc70c35c1c9e35ae4fddcf3bf10856ca",
+    "docs/user/en-US/overview.md": "4fba2185733153bd27f141a19a632ae4966048dbd3f7b4d91858d9bd72e20445",
+    "docs/user/en-US/projects.md": "0167532cc2237ef980b94e4a5f972398f443aa63a6f539016f76a995ee23abcb",
+    "docs/user/en-US/quickstart.md": "705cb75a85c526d9a3b45e75b34870a365c0dd579c93ed632c425972645681de",
+    "docs/user/en-US/support.md": "08392d2d0f78f39c1426c0d1f4d36f8d36afcf660cab400a6e95d673c26a5aca",
+    "docs/user/en-US/tours.md": "7471303e7db302c41c9feee3dbbacdaf4f1eaebcb354666c83aa7a82aa8b4ee2",
+    "docs/user/manifest.json": "3725be839b8b45a8fc814463e2a36ea719c0456f65e9db7e965c1718de3bee4a",
+    "docs/user/media/manifest.json": "e347478311c161ae9157d95a1aad8eb1837e314de44484e8a308c841ce6161eb",
+    "docs/user/media/navigation.en-US.vtt": "9c810d3ca7f076ae7d6108b82ceb01db965951b239bb853ac85a8f0eab0992f2",
+    "docs/user/media/navigation.png": "2cb655a72cc3e30f4cffd12139fd6c8b47559d7d126df6901ad00e725500ec97",
+    "docs/user/media/navigation.webm": "23c845607b714ced969be3369591614608a129bfea3f1ce7ef06cb4f7f51a186",
+    "docs/user/media/navigation.zh-CN.vtt": "3f313f1d37cb41390e7d942d3d5e53b57a3bb16756a21397fec9552c5344133c",
+    "docs/user/media/support.en-US.vtt": "3315a723396b679a5faaf5457ac097964aa3f8446e36fcbd4ca9a41c1c26634a",
+    "docs/user/media/support.png": "1417a54cd74da67ec6baf61e04f5cff3b4d9532193ea9cb1bbea4d005d88b80d",
+    "docs/user/media/support.webm": "ddb6089337e116ba0b4d04ef3699d74591d5308dbf32919ed259bccca1900807",
+    "docs/user/media/support.zh-CN.vtt": "a8fcceba8f7fa72118371e490723a5ee1e6b89b2e3bd0af137915601eaef1bd0",
+    "docs/user/media/tours.en-US.vtt": "eacf10bcef0bed48b4dfb9cd6eef9cf4075caceb006cdfd437eca8e471451910",
+    "docs/user/media/tours.png": "af2f4812e08e28e3f9ddd71e588f1fa00a80ccd999d3444d8f87982edcd7526d",
+    "docs/user/media/tours.webm": "ea42a7aeae860470e9721ae298e28b54d58f80769f15dea5c9f27c3de4b3eb3f",
+    "docs/user/media/tours.zh-CN.vtt": "aca6e30c5b09ef258ef869706da2cba60a6ac7571ee11b0350957ef5ba73161f",
+    "docs/user/zh-CN/appearance.md": "b4cd9e9acbf3d27a5a707d4094901c7cdceb4fa4a023b05ee8e29f52e543362f",
+    "docs/user/zh-CN/delivery.md": "74879080f8d71f0357dd1265b4210353bd9254071f4a8830c212faa81036dff3",
+    "docs/user/zh-CN/faq.md": "b37347a7615a77962f4ddec165c22d870dfe41a4c3d27e3eff4dd1c75bc54d07",
+    "docs/user/zh-CN/licensing.md": "24c62796778937c33d6a43fbeceda5f0187defb2c815ae043f12a642a5bcc3bd",
+    "docs/user/zh-CN/media.md": "524b3d502d8db0f0cdab00888949e421f939b398bf337b46829b39b5c97733c3",
+    "docs/user/zh-CN/models.md": "5a15d65210efbea6fa7f709e0eb7150bb8afa5eb51246d742bdb8f3f4b80be4a",
+    "docs/user/zh-CN/navigation.md": "0574cb6742225483f90fea62c408c2e0feaa8bc635513a21981097e1915cd2cb",
+    "docs/user/zh-CN/overview.md": "c91f102ab8fe27a73d7ca54b7683199502223a713ce67590238afa5b4f21f8ae",
+    "docs/user/zh-CN/projects.md": "0908fcd9794b1ee0634c96829a5ef65b65dd7280126ddd3eec68da72b0676bb3",
+    "docs/user/zh-CN/quickstart.md": "259e5c0ebf36c7a61ede5f38866cb5ea10e7784dfeeb9dc3863893c09837867b",
+    "docs/user/zh-CN/support.md": "e81efe0689f360a65da82ef2176cca13888769631868a68ced02da02bb64f972",
+    "docs/user/zh-CN/tours.md": "c9f8b083c3afac3571163abd3dee6a8257f2b209d1045536dd616e13220e3e07",
+    "package.json": "f1c0af5c501d3f8d86a11418cd69833dca838918d995caf414264c78afb67bd4",
+    "public/library/PalletHandling/RollConveyor-3m.glb": "9ccd82bdfc1f94c165da49f38df1b8363f794b68261cfbd454359cec19c8dcc4",
+    "scripts/user-help/build.mjs": "928b8d3c8f1a3e4b229ca395487ea3c1aff5ec19bd064e3f713d7a423259ebb0",
+    "scripts/user-help/captions.mjs": "0e02dd9f78eecacb1fbbb5c217f0755f23c6da96a8c7d26805c0951938147a17",
+    "scripts/user-help/media-sources.mjs": "326c6814cb0d34b38e327b6deb3739a9cf5e6297433680665d6945e1272a70cb",
+    "scripts/user-help/page.css": "e254fea20681a8064d6e36a1bedfdb0e90c51d1a1985541746ba0a679ed3908b",
+    "scripts/user-help/page.js": "4da88b21c2802e852b6cd2aa07500071c324097dd90a6ddb10a51488c2b133df",
+    "scripts/user-help/redirect.js": "dc348582c849086f0e2e42965efbb42747ddda077542d79e4ef4272d907a4a94",
+    "src/core/demo-package/DemoExportPanel.tsx": "03f6b43874c6a4cdf68cb15cd3d4f3e748dba62a17fbc5c86e2d44c599b065e3",
+    "src/core/demo-package/html.ts": "4f278a064d8feceb50334488d42fbdb0a9ff3bdcf3d4952d038fe8041070d595",
+    "src/core/demo-package/recipe.ts": "04e876ce4290f72375d3d6ac55ddf07a60c6e7b3d2d8cc8ae8bbc2984f872fe5",
+    "src/core/diagnostics/error-entry.ts": "a07121108ecbf1fc7ff6eb3a96a5733fd3c9f182a112c242364df143f9c252e4",
+    "src/core/hmi/ActivityBar.tsx": "d02dff4eafaae8038f6c4ffd067633d3b909bcf10ede75d52aa7eb6bf1a3ae56",
+    "src/core/hmi/help-context.ts": "efe4b77bab6ca376bb721e6c13684e6f622ced34a8c5a481a059165f60bf7cb5",
+    "src/core/hmi/help-topics.ts": "eb127f87f429aba22967eab06e91be624e04f4d1917edac25c3cc65fa89b4fb1",
+    "src/core/hmi/scene/DocumentCard.tsx": "9611369893ff3eb20961708924150c777ed15c1c5f853e9a56c6d3a03e367cc3",
+    "src/core/hmi/settings/LanguageSection.tsx": "bdbc5bfe7f4a41407b99e34788c46735549c1c3f638d416780cd645d0ae40937",
+    "src/plugins/diagnostics/DiagnosticsPanel.tsx": "2de0ba3cb9626a297aa0829869f820d393ff00b434d483569cde0544771b7356"
+  },
+  "pages": [
+    {
+      "locale": "zh-CN",
+      "id": "overview",
+      "anchors": [
+        "产品与环境",
+        "开始前",
+        "选择工作方式",
+        "环境检查",
+        "结果与失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "quickstart",
+      "anchors": [
+        "首次离线演示",
+        "准备",
+        "操作",
+        "预期结果",
+        "失败处理",
+        "操作示例"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "navigation",
+      "anchors": [
+        "界面与视角",
+        "适用条件",
+        "操作",
+        "hierarchy",
+        "the-tool-strip",
+        "settings",
+        "预期结果与失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "models",
+      "anchors": [
+        "打开与导入模型",
+        "准备",
+        "操作",
+        "预期结果",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "projects",
+      "anchors": [
+        "保存重开与备份",
+        "适用条件",
+        "操作",
+        "预期结果",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "appearance",
+      "anchors": [
+        "风格与材质",
+        "适用条件",
+        "操作",
+        "预期结果",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "media",
+      "anchors": [
+        "图片与场景录像",
+        "准备",
+        "操作",
+        "预期结果",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "tours",
+      "anchors": [
+        "导览与离线-html",
+        "适用条件",
+        "制作步骤",
+        "预期结果",
+        "错误与取消"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "delivery",
+      "anchors": [
+        "交付与访问控制",
+        "选择交付方式",
+        "离线文件交付",
+        "受保护演示",
+        "预期结果与边界",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "licensing",
+      "anchors": [
+        "授权只读与功能不可用",
+        "先区分原因",
+        "操作",
+        "预期行为",
+        "失败处理"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "support",
+      "anchors": [
+        "诊断与支持",
+        "故障发生时",
+        "导出步骤",
+        "预期结果",
+        "环境检查与故障入口",
+        "下一步"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "faq",
+      "anchors": [
+        "常见问题",
+        "使用方法",
+        "1-保存后文件在哪里",
+        "2-换浏览器后为什么项目不见了",
+        "3-刷新是不是备份",
+        "4-导览配方包含模型吗",
+        "5-html-能撤销吗",
+        "6-离线演示需要登录吗",
+        "7-为什么导出效果不同",
+        "8-为什么没有演示打包按钮",
+        "9-为什么-cad-文件不能导入",
+        "10-为什么模型缺纹理",
+        "11-为什么保存被拒绝",
+        "12-写入超时可以马上重试吗",
+        "13-webgpu-是必须的吗",
+        "14-环境检查通过就代表认证吗",
+        "15-需要浏览器插件吗",
+        "16-为什么截图没有网页面板",
+        "17-为什么录像没有声音",
+        "18-为什么输出-webm",
+        "19-取消后为什么还要等待",
+        "20-诊断包会自动发出去吗",
+        "21-可以通过清缓存解决一切问题吗",
+        "22-为什么英文按钮旁仍有中文设备名"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "it-installation",
+      "anchors": [
+        "xyvirtual-offline-appliance-安装手册",
+        "1-范围和准备",
+        "2-解包和配置",
+        "3-一次性预检",
+        "4-安装",
+        "5-internal-ca-信任",
+        "6-安装验收",
+        "7-升级回滚备份和卸载",
+        "8-常见问题"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "it-compatibility",
+      "anchors": [
+        "发布支持矩阵"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "it-upgrade",
+      "anchors": [
+        "私有化版本升级与恢复运行手册",
+        "升级前",
+        "标准升级",
+        "失败处理",
+        "回退选择"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "it-protected",
+      "anchors": [
+        "受保护演示-protected-presentations",
+        "安装和账户",
+        "发布分享和撤销",
+        "运维升级和恢复",
+        "验收入口与证据",
+        "english-operating-guide"
+      ]
+    },
+    {
+      "locale": "zh-CN",
+      "id": "it-security",
+      "anchors": [
+        "供应链扫描发布证据与独立测试",
+        "本地与-ci",
+        "分诊和许可证复核",
+        "实际制品",
+        "镜像与原生组件扫描",
+        "独立渗透测试任务书",
+        "回滚"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "overview",
+      "anchors": [
+        "product-and-environment",
+        "before-you-begin",
+        "choose-a-workflow",
+        "check-your-environment",
+        "result-and-recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "quickstart",
+      "anchors": [
+        "your-first-offline-presentation",
+        "prepare",
+        "steps",
+        "expected-result",
+        "recovery",
+        "example"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "navigation",
+      "anchors": [
+        "interface-and-navigation",
+        "prerequisites",
+        "steps",
+        "hierarchy",
+        "the-tool-strip",
+        "settings",
+        "result-and-recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "models",
+      "anchors": [
+        "opening-and-importing-models",
+        "prepare",
+        "steps",
+        "expected-result",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "projects",
+      "anchors": [
+        "saving-reopening-and-backup",
+        "prerequisites",
+        "steps",
+        "expected-result",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "appearance",
+      "anchors": [
+        "styles-and-materials",
+        "prerequisites",
+        "steps",
+        "expected-result",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "media",
+      "anchors": [
+        "images-and-scene-video",
+        "prepare",
+        "steps",
+        "expected-result",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "tours",
+      "anchors": [
+        "tours-and-offline-html",
+        "prerequisites",
+        "authoring-steps",
+        "expected-result",
+        "errors-and-cancellation"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "delivery",
+      "anchors": [
+        "delivery-and-access",
+        "choose-a-delivery-mode",
+        "deliver-an-offline-file",
+        "protected-presentations",
+        "result-and-limits",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "licensing",
+      "anchors": [
+        "licensing-and-unavailable-features",
+        "identify-the-cause",
+        "steps",
+        "expected-behavior",
+        "recovery"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "support",
+      "anchors": [
+        "diagnostics-and-support",
+        "when-a-failure-occurs",
+        "export-steps",
+        "expected-result",
+        "environment-checks-and-failure-entry-points",
+        "next-steps"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "faq",
+      "anchors": [
+        "frequently-asked-questions",
+        "how-to-use-this-page",
+        "1-where-is-my-saved-file",
+        "2-why-is-my-project-missing-in-another-browser",
+        "3-is-reloading-a-backup",
+        "4-does-a-tour-recipe-contain-the-model",
+        "5-can-i-revoke-an-html-file",
+        "6-does-offline-playback-require-sign-in",
+        "7-why-does-the-exported-model-look-different",
+        "8-why-is-demo-package-missing",
+        "9-why-can-i-not-import-a-cad-file",
+        "10-why-are-textures-missing",
+        "11-why-was-saving-refused",
+        "12-can-i-immediately-repeat-a-timed-out-write",
+        "13-is-webgpu-required",
+        "14-does-passing-environment-checks-mean-certification",
+        "15-do-i-need-a-browser-extension",
+        "16-why-are-web-panels-absent-from-screenshots",
+        "17-why-is-video-silent",
+        "18-why-did-i-receive-webm",
+        "19-why-does-cancellation-still-take-time",
+        "20-are-diagnostics-sent-automatically",
+        "21-can-clearing-caches-solve-every-problem",
+        "22-why-do-chinese-device-names-remain-in-english-ui"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "it-installation",
+      "anchors": [
+        "xyvirtual-offline-appliance-installation"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "it-compatibility",
+      "anchors": [
+        "release-support-matrix"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "it-upgrade",
+      "anchors": [
+        "私有化版本升级与恢复运行手册",
+        "升级前",
+        "标准升级",
+        "失败处理",
+        "回退选择"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "it-protected",
+      "anchors": [
+        "受保护演示-protected-presentations",
+        "安装和账户",
+        "发布分享和撤销",
+        "运维升级和恢复",
+        "验收入口与证据",
+        "english-operating-guide"
+      ]
+    },
+    {
+      "locale": "en-US",
+      "id": "it-security",
+      "anchors": [
+        "供应链扫描发布证据与独立测试",
+        "本地与-ci",
+        "分诊和许可证复核",
+        "实际制品",
+        "镜像与原生组件扫描",
+        "独立渗透测试任务书",
+        "回滚"
+      ]
+    }
+  ],
+  "routes": {
+    "": "overview",
+    "odt": "overview",
+    "des/overview": "overview",
+    "planner/overview": "overview",
+    "hmi/overview": "overview",
+    "hmi/signals-and-alarms": "overview",
+    "development/overview": "overview",
+    "viewer/interface": "navigation",
+    "getting-started/navigation": "navigation",
+    "viewer/scenes-and-models": "models",
+    "getting-started/opening-a-twin": "models",
+    "editor/overview": "models",
+    "hmi/ai-diagnosis": "support",
+    "quickstart": "quickstart",
+    "tours": "tours",
+    "appearance": "appearance",
+    "media": "media",
+    "support": "support",
+    "projects": "projects",
+    "connect/development/ai-clients": "support",
+    "connect/development/rest-and-websocket-api": "support",
+    "connect/getting-started/first-connection": "support",
+    "connect/getting-started/installation": "support",
+    "connect/getting-started/licensing": "licensing",
+    "connect/getting-started/viewer-delivery": "support",
+    "connect/interfaces/configuration": "support",
+    "connect/interfaces/protocols": "support",
+    "connect/operations/configuration-file": "support",
+    "connect/operations/remote-access": "support",
+    "connect/operations/troubleshooting": "support",
+    "connect/operations/updates": "support",
+    "connect/overview": "support",
+    "connect/services/ai-diagnosis": "support",
+    "connect/services/cad-conversion": "support",
+    "connect/services/data-recording": "support",
+    "hosting/deployment-options": "delivery",
+    "hosting/licensing": "licensing",
+    "overview": "overview",
+    "navigation": "navigation",
+    "models": "models",
+    "delivery": "delivery",
+    "licensing": "licensing",
+    "faq": "faq"
+  },
+  "media": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-10-23T12:05:10.477Z",
+    "productVersion": "6.3.27",
+    "screenLocale": "en-US",
+    "fixture": "public/library/PalletHandling/RollConveyor-3m.glb",
+    "fixtureSha256": "9ccd82bdfc1f94c165da49f38df1b8363f794b68261cfbd454359cec19c8dcc4",
+    "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+    "browser": "156.0.8078.4",
+    "videos": [
+      {
+        "topic": "navigation",
+        "file": "navigation.webm",
+        "poster": "navigation.png",
+        "durationSeconds": 164.4,
+        "subtitles": {
+          "zh-CN": "navigation.zh-CN.vtt",
+          "en-US": "navigation.en-US.vtt"
+        },
+        "chapters": [
+          {
+            "start": 0,
+            "end": 23893,
+            "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+            "en": "Open the bundled conveyor example and wait until it is ready."
+          },
+          {
+            "start": 23893,
+            "end": 54693,
+            "zh": "拖动画布旋转模型，用滚轮缩放。",
+            "en": "Drag the canvas to orbit. Use the wheel to zoom."
+          },
+          {
+            "start": 54693,
+            "end": 86522,
+            "zh": "按 Shift+F 适配模型，然后查看层级。",
+            "en": "Press Shift+F to fit the model, then open Hierarchy."
+          },
+          {
+            "start": 86522,
+            "end": 115498,
+            "zh": "设置中的视觉页提供语言选择。",
+            "en": "The Visual settings page contains the language selector."
+          },
+          {
+            "start": 115498,
+            "end": 138262,
+            "zh": "切换中文。界面语言不会改写设备名称或项目。",
+            "en": "Switch to Chinese. UI language does not rewrite device names or the project."
+          },
+          {
+            "start": 138262,
+            "end": 164400,
+            "zh": "切回英文。帮助可从按钮或 F1 打开。",
+            "en": "Switch back to English. Open contextual help with its button or F1."
+          }
+        ],
+        "recordedAt": "2026-10-23T12:08:01.557Z",
+        "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+        "sourceDigests": {
+          "src/core/hmi/settings/LanguageSection.tsx": "bdbc5bfe7f4a41407b99e34788c46735549c1c3f638d416780cd645d0ae40937",
+          "src/core/hmi/ActivityBar.tsx": "d02dff4eafaae8038f6c4ffd067633d3b909bcf10ede75d52aa7eb6bf1a3ae56",
+          "src/core/hmi/help-context.ts": "efe4b77bab6ca376bb721e6c13684e6f622ced34a8c5a481a059165f60bf7cb5",
+          "src/core/hmi/help-topics.ts": "eb127f87f429aba22967eab06e91be624e04f4d1917edac25c3cc65fa89b4fb1"
+        },
+        "capturedDurationSeconds": 169.617,
+        "recordingLeadInSeconds": 5.2169999999999845
+      },
+      {
+        "topic": "tours",
+        "file": "tours.webm",
+        "poster": "tours.png",
+        "durationSeconds": 162.8,
+        "subtitles": {
+          "zh-CN": "tours.zh-CN.vtt",
+          "en-US": "tours.en-US.vtt"
+        },
+        "chapters": [
+          {
+            "start": 0,
+            "end": 23758,
+            "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+            "en": "Open the bundled conveyor example and wait until it is ready."
+          },
+          {
+            "start": 23763,
+            "end": 47670,
+            "zh": "打开当前文档更多菜单，选择演示打包。",
+            "en": "Open the current document menu and choose Demo package."
+          },
+          {
+            "start": 47670,
+            "end": 79527,
+            "zh": "设定初始视角，添加镜头并填写标题与说明。",
+            "en": "Set the initial view, add a shot and enter its title and description."
+          },
+          {
+            "start": 79527,
+            "end": 100950,
+            "zh": "保存导览配方。配方不含模型，需要另行保存模型。",
+            "en": "Save the tour recipe. It does not contain the model; keep the model separately."
+          },
+          {
+            "start": 100950,
+            "end": 130374,
+            "zh": "导出演示 HTML，等待完整下载后再交付。",
+            "en": "Export demo HTML and wait for the complete download before delivery."
+          },
+          {
+            "start": 130374,
+            "end": 162800,
+            "zh": "断网打开下载文件。播放导览，拖动接管，再恢复初始视角。",
+            "en": "Open the downloaded file offline. Play the tour, drag to take over, then reset the view."
+          }
+        ],
+        "recordedAt": "2026-10-23T12:10:52.259Z",
+        "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+        "sourceDigests": {
+          "src/core/demo-package/DemoExportPanel.tsx": "03f6b43874c6a4cdf68cb15cd3d4f3e748dba62a17fbc5c86e2d44c599b065e3",
+          "src/core/demo-package/recipe.ts": "04e876ce4290f72375d3d6ac55ddf07a60c6e7b3d2d8cc8ae8bbc2984f872fe5",
+          "src/core/demo-package/html.ts": "4f278a064d8feceb50334488d42fbdb0a9ff3bdcf3d4952d038fe8041070d595"
+        },
+        "capturedDurationSeconds": 164.93,
+        "recordingLeadInSeconds": 2.1299999999999955
+      },
+      {
+        "topic": "support",
+        "file": "support.webm",
+        "poster": "support.png",
+        "durationSeconds": 140.68,
+        "subtitles": {
+          "zh-CN": "support.zh-CN.vtt",
+          "en-US": "support.en-US.vtt"
+        },
+        "chapters": [
+          {
+            "start": 0,
+            "end": 22205,
+            "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+            "en": "Open the bundled conveyor example and wait until it is ready."
+          },
+          {
+            "start": 22205,
+            "end": 44525,
+            "zh": "故障时保留当前页面，在设置中打开诊断与支持。",
+            "en": "Keep the failing page open. Open Diagnostics & support in Settings."
+          },
+          {
+            "start": 44525,
+            "end": 66734,
+            "zh": "选择采集范围，刷新预览。诊断不会自动上传。",
+            "en": "Choose the scope and refresh the preview. Diagnostics are not uploaded automatically."
+          },
+          {
+            "start": 66734,
+            "end": 96908,
+            "zh": "展开脱敏内容，确认实际内容和快照时间。",
+            "en": "Expand the redacted preview. Check the actual contents and snapshot time."
+          },
+          {
+            "start": 96909,
+            "end": 118152,
+            "zh": "下载诊断 ZIP，由你审阅并决定是否发送给支持人员。",
+            "en": "Download the diagnostic ZIP. Review it and decide whether to send it to support."
+          },
+          {
+            "start": 118152,
+            "end": 140680,
+            "zh": "取消场景摘要后重新导出，报告明确标记排除项。",
+            "en": "Exclude the scene summary and export again. The report marks excluded sections."
+          }
+        ],
+        "recordedAt": "2026-10-23T12:13:21.195Z",
+        "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+        "sourceDigests": {
+          "src/plugins/diagnostics/DiagnosticsPanel.tsx": "2de0ba3cb9626a297aa0829869f820d393ff00b434d483569cde0544771b7356",
+          "src/core/diagnostics/error-entry.ts": "a07121108ecbf1fc7ff6eb3a96a5733fd3c9f182a112c242364df143f9c252e4"
+        },
+        "capturedDurationSeconds": 145.211,
+        "recordingLeadInSeconds": 4.531000000000006
+      }
+    ],
+    "files": {
+      "navigation.webm": "23c845607b714ced969be3369591614608a129bfea3f1ce7ef06cb4f7f51a186",
+      "navigation.png": "2cb655a72cc3e30f4cffd12139fd6c8b47559d7d126df6901ad00e725500ec97",
+      "navigation.zh-CN.vtt": "3f313f1d37cb41390e7d942d3d5e53b57a3bb16756a21397fec9552c5344133c",
+      "navigation.en-US.vtt": "9c810d3ca7f076ae7d6108b82ceb01db965951b239bb853ac85a8f0eab0992f2",
+      "tours.webm": "ea42a7aeae860470e9721ae298e28b54d58f80769f15dea5c9f27c3de4b3eb3f",
+      "tours.png": "af2f4812e08e28e3f9ddd71e588f1fa00a80ccd999d3444d8f87982edcd7526d",
+      "tours.zh-CN.vtt": "aca6e30c5b09ef258ef869706da2cba60a6ac7571ee11b0350957ef5ba73161f",
+      "tours.en-US.vtt": "eacf10bcef0bed48b4dfb9cd6eef9cf4075caceb006cdfd437eca8e471451910",
+      "support.webm": "ddb6089337e116ba0b4d04ef3699d74591d5308dbf32919ed259bccca1900807",
+      "support.png": "1417a54cd74da67ec6baf61e04f5cff3b4d9532193ea9cb1bbea4d005d88b80d",
+      "support.zh-CN.vtt": "a8fcceba8f7fa72118371e490723a5ee1e6b89b2e3bd0af137915601eaef1bd0",
+      "support.en-US.vtt": "3315a723396b679a5faaf5457ac097964aa3f8446e36fcbd4ca9a41c1c26634a"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { UserHelpLink } from '../../core/hmi/UserHelpLink';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Checkbox, FormControlLabel, LinearProgress, Typography } from '@mui/material';
 import { getLocale, useRvTranslation } from '../../core/i18n';
@@ -46,7 +47,7 @@ export default function DiagnosticsPanel() {
   const partial = report && ([report.environment, report.graphics, report.scene].some(item => !['ok', 'excluded'].includes(item.status)) || Object.values(report.manifest.omissions).some(n => n > 0));
   const time = (value: number | null) => value == null ? t('diagnostics.unavailable') : new Date(value).toLocaleString(getLocale());
   return <Box data-testid="diagnostics-panel" sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-    <Typography variant="h6">{t('diagnostics.title')}</Typography>
+    <UserHelpLink topic="support" /><Typography variant="h6">{t('diagnostics.title')}</Typography>
     <Alert severity="info">{t('diagnostics.notice')}</Alert>
     <Typography variant="body2">{t('diagnostics.scope')}</Typography>
     <Typography variant="body2">{t('diagnostics.excluded')}</Typography>

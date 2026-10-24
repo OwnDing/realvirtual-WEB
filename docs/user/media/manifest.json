@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-23T12:05:10.477Z",
+  "productVersion": "6.3.27",
+  "screenLocale": "en-US",
+  "fixture": "public/library/PalletHandling/RollConveyor-3m.glb",
+  "fixtureSha256": "9ccd82bdfc1f94c165da49f38df1b8363f794b68261cfbd454359cec19c8dcc4",
+  "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+  "browser": "156.0.8078.4",
+  "videos": [
+    {
+      "topic": "navigation",
+      "file": "navigation.webm",
+      "poster": "navigation.png",
+      "durationSeconds": 164.4,
+      "subtitles": {
+        "zh-CN": "navigation.zh-CN.vtt",
+        "en-US": "navigation.en-US.vtt"
+      },
+      "chapters": [
+        {
+          "start": 0,
+          "end": 23893,
+          "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+          "en": "Open the bundled conveyor example and wait until it is ready."
+        },
+        {
+          "start": 23893,
+          "end": 54693,
+          "zh": "拖动画布旋转模型，用滚轮缩放。",
+          "en": "Drag the canvas to orbit. Use the wheel to zoom."
+        },
+        {
+          "start": 54693,
+          "end": 86522,
+          "zh": "按 Shift+F 适配模型，然后查看层级。",
+          "en": "Press Shift+F to fit the model, then open Hierarchy."
+        },
+        {
+          "start": 86522,
+          "end": 115498,
+          "zh": "设置中的视觉页提供语言选择。",
+          "en": "The Visual settings page contains the language selector."
+        },
+        {
+          "start": 115498,
+          "end": 138262,
+          "zh": "切换中文。界面语言不会改写设备名称或项目。",
+          "en": "Switch to Chinese. UI language does not rewrite device names or the project."
+        },
+        {
+          "start": 138262,
+          "end": 164400,
+          "zh": "切回英文。帮助可从按钮或 F1 打开。",
+          "en": "Switch back to English. Open contextual help with its button or F1."
+        }
+      ],
+      "recordedAt": "2026-10-23T12:08:01.557Z",
+      "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+      "sourceDigests": {
+        "src/core/hmi/settings/LanguageSection.tsx": "bdbc5bfe7f4a41407b99e34788c46735549c1c3f638d416780cd645d0ae40937",
+        "src/core/hmi/ActivityBar.tsx": "d02dff4eafaae8038f6c4ffd067633d3b909bcf10ede75d52aa7eb6bf1a3ae56",
+        "src/core/hmi/help-context.ts": "efe4b77bab6ca376bb721e6c13684e6f622ced34a8c5a481a059165f60bf7cb5",
+        "src/core/hmi/help-topics.ts": "eb127f87f429aba22967eab06e91be624e04f4d1917edac25c3cc65fa89b4fb1"
+      },
+      "capturedDurationSeconds": 169.617,
+      "recordingLeadInSeconds": 5.2169999999999845
+    },
+    {
+      "topic": "tours",
+      "file": "tours.webm",
+      "poster": "tours.png",
+      "durationSeconds": 162.8,
+      "subtitles": {
+        "zh-CN": "tours.zh-CN.vtt",
+        "en-US": "tours.en-US.vtt"
+      },
+      "chapters": [
+        {
+          "start": 0,
+          "end": 23758,
+          "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+          "en": "Open the bundled conveyor example and wait until it is ready."
+        },
+        {
+          "start": 23763,
+          "end": 47670,
+          "zh": "打开当前文档更多菜单，选择演示打包。",
+          "en": "Open the current document menu and choose Demo package."
+        },
+        {
+          "start": 47670,
+          "end": 79527,
+          "zh": "设定初始视角，添加镜头并填写标题与说明。",
+          "en": "Set the initial view, add a shot and enter its title and description."
+        },
+        {
+          "start": 79527,
+          "end": 100950,
+          "zh": "保存导览配方。配方不含模型，需要另行保存模型。",
+          "en": "Save the tour recipe. It does not contain the model; keep the model separately."
+        },
+        {
+          "start": 100950,
+          "end": 130374,
+          "zh": "导出演示 HTML，等待完整下载后再交付。",
+          "en": "Export demo HTML and wait for the complete download before delivery."
+        },
+        {
+          "start": 130374,
+          "end": 162800,
+          "zh": "断网打开下载文件。播放导览，拖动接管，再恢复初始视角。",
+          "en": "Open the downloaded file offline. Play the tour, drag to take over, then reset the view."
+        }
+      ],
+      "recordedAt": "2026-10-23T12:10:52.259Z",
+      "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+      "sourceDigests": {
+        "src/core/demo-package/DemoExportPanel.tsx": "03f6b43874c6a4cdf68cb15cd3d4f3e748dba62a17fbc5c86e2d44c599b065e3",
+        "src/core/demo-package/recipe.ts": "04e876ce4290f72375d3d6ac55ddf07a60c6e7b3d2d8cc8ae8bbc2984f872fe5",
+        "src/core/demo-package/html.ts": "4f278a064d8feceb50334488d42fbdb0a9ff3bdcf3d4952d038fe8041070d595"
+      },
+      "capturedDurationSeconds": 164.93,
+      "recordingLeadInSeconds": 2.1299999999999955
+    },
+    {
+      "topic": "support",
+      "file": "support.webm",
+      "poster": "support.png",
+      "durationSeconds": 140.68,
+      "subtitles": {
+        "zh-CN": "support.zh-CN.vtt",
+        "en-US": "support.en-US.vtt"
+      },
+      "chapters": [
+        {
+          "start": 0,
+          "end": 22205,
+          "zh": "打开随版本提供的公开输送机示例，等待资源就绪。",
+          "en": "Open the bundled conveyor example and wait until it is ready."
+        },
+        {
+          "start": 22205,
+          "end": 44525,
+          "zh": "故障时保留当前页面，在设置中打开诊断与支持。",
+          "en": "Keep the failing page open. Open Diagnostics & support in Settings."
+        },
+        {
+          "start": 44525,
+          "end": 66734,
+          "zh": "选择采集范围，刷新预览。诊断不会自动上传。",
+          "en": "Choose the scope and refresh the preview. Diagnostics are not uploaded automatically."
+        },
+        {
+          "start": 66734,
+          "end": 96908,
+          "zh": "展开脱敏内容，确认实际内容和快照时间。",
+          "en": "Expand the redacted preview. Check the actual contents and snapshot time."
+        },
+        {
+          "start": 96909,
+          "end": 118152,
+          "zh": "下载诊断 ZIP，由你审阅并决定是否发送给支持人员。",
+          "en": "Download the diagnostic ZIP. Review it and decide whether to send it to support."
+        },
+        {
+          "start": 118152,
+          "end": 140680,
+          "zh": "取消场景摘要后重新导出，报告明确标记排除项。",
+          "en": "Exclude the scene summary and export again. The report marks excluded sections."
+        }
+      ],
+      "recordedAt": "2026-10-23T12:13:21.195Z",
+      "productionIndexSha256": "51e92ea454dfa0bec5f126eee9becd3286122cde070c069e06a71dd365809e0c",
+      "sourceDigests": {
+        "src/plugins/diagnostics/DiagnosticsPanel.tsx": "2de0ba3cb9626a297aa0829869f820d393ff00b434d483569cde0544771b7356",
+        "src/core/diagnostics/error-entry.ts": "a07121108ecbf1fc7ff6eb3a96a5733fd3c9f182a112c242364df143f9c252e4"
+      },
+      "capturedDurationSeconds": 145.211,
+      "recordingLeadInSeconds": 4.531000000000006
+    }
+  ],
+  "files": {
+    "navigation.webm": "23c845607b714ced969be3369591614608a129bfea3f1ce7ef06cb4f7f51a186",
+    "navigation.png": "2cb655a72cc3e30f4cffd12139fd6c8b47559d7d126df6901ad00e725500ec97",
+    "navigation.zh-CN.vtt": "3f313f1d37cb41390e7d942d3d5e53b57a3bb16756a21397fec9552c5344133c",
+    "navigation.en-US.vtt": "9c810d3ca7f076ae7d6108b82ceb01db965951b239bb853ac85a8f0eab0992f2",
+    "tours.webm": "ea42a7aeae860470e9721ae298e28b54d58f80769f15dea5c9f27c3de4b3eb3f",
+    "tours.png": "af2f4812e08e28e3f9ddd71e588f1fa00a80ccd999d3444d8f87982edcd7526d",
+    "tours.zh-CN.vtt": "aca6e30c5b09ef258ef869706da2cba60a6ac7571ee11b0350957ef5ba73161f",
+    "tours.en-US.vtt": "eacf10bcef0bed48b4dfb9cd6eef9cf4075caceb006cdfd437eca8e471451910",
+    "support.webm": "ddb6089337e116ba0b4d04ef3699d74591d5308dbf32919ed259bccca1900807",
+    "support.png": "1417a54cd74da67ec6baf61e04f5cff3b4d9532193ea9cb1bbea4d005d88b80d",
+    "support.zh-CN.vtt": "a8fcceba8f7fa72118371e490723a5ee1e6b89b2e3bd0af137915601eaef1bd0",
+    "support.en-US.vtt": "3315a723396b679a5faaf5457ac097964aa3f8446e36fcbd4ca9a41c1c26634a"
+  }
+}

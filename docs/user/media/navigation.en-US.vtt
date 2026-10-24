@@ -1,0 +1,25 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:23.893
+Open the bundled conveyor example and wait until it is ready.
+
+2
+00:00:23.893 --> 00:00:54.693
+Drag the canvas to orbit. Use the wheel to zoom.
+
+3
+00:00:54.693 --> 00:01:26.522
+Press Shift+F to fit the model, then open Hierarchy.
+
+4
+00:01:26.522 --> 00:01:55.498
+The Visual settings page contains the language selector.
+
+5
+00:01:55.498 --> 00:02:18.262
+Switch to Chinese. UI language does not rewrite device names or the project.
+
+6
+00:02:18.262 --> 00:02:44.400
+Switch back to English. Open contextual help with its button or F1.

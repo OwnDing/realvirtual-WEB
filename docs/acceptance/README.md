@@ -20,3 +20,5 @@ authority: normative-process
 - [L3-2 兼容性验收矩阵](COMPATIBILITY.md)
 
 - [`SECURITY.md`](SECURITY.md)：L3-3 安全门禁与发布/独立测试验收。
+
+- [用户文档与帮助](USER_DOCUMENTATION.md)

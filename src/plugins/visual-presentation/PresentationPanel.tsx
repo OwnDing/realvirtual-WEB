@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { UserHelpLink } from '../../core/hmi/UserHelpLink';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Slider, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import type { RVViewer } from '../../core/rv-viewer';
@@ -27,7 +28,7 @@ function StylePreview({ id }: { id: string }) {
 export default function PresentationPanel({ viewer, plugin }: { viewer: RVViewer; plugin: VisualPresentationPlugin }) {
   useRvTranslation('shell'); const m = presentationMessages(getLocale());
   const state = useSyncExternalStore(plugin.subscribe, plugin.getSnapshot);
-  const [tab, setTab] = useState(0), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [tab, setTab] = useState(0), [busy, setBusy] = useState(false), [error, setError] = useState<keyof ReturnType<typeof presentationMessages> | ''>(''), [notice, setNotice] = useState('');
   const [templateName, setTemplateName] = useState('');
   const [templates, setTemplates] = useState(() => { try { return loadTemplates().templates; } catch { return []; } });
   const input = useRef<HTMLInputElement>(null), mounted = useRef(true);
@@ -39,11 +40,11 @@ export default function PresentationPanel({ viewer, plugin }: { viewer: RVViewer
   }, [plugin]);
   const apply = (look: PresentationLook) => {
     setError('');
-    try { plugin.apply(look); } catch (err) { setError(err instanceof PresentationError ? m[`error_${err.code}`] : m.error_unknown); }
+    try { plugin.apply(look); } catch (err) { setError(err instanceof PresentationError ? `error_${err.code}` : 'error_unknown'); }
   };
   const run = (fn: () => Promise<void> | void) => {
     if (busy) return; setBusy(true); setError(''); setNotice('');
-    Promise.resolve().then(fn).catch(err => { if (mounted.current) setError(err instanceof PresentationError ? m[`error_${err.code}`] : m.error_unknown); })
+    Promise.resolve().then(fn).catch(err => { if (mounted.current) setError(err instanceof PresentationError ? `error_${err.code}` : 'error_unknown'); })
       .finally(() => { if (mounted.current) setBusy(false); });
   };
   return <LeftPanel title={m.title} width={410} onClose={() => plugin.setOpen(false)}><Box role="region" aria-label={m.title} data-testid="presentation-panel" sx={{ p: 2, overflowY: 'auto' }}>
@@ -51,7 +52,7 @@ export default function PresentationPanel({ viewer, plugin }: { viewer: RVViewer
       <Tabs value={tab} onChange={(_, value: number) => setTab(value)} variant="fullWidth" aria-label={m.title}><Tab label={m.style} /><Tab label={m.materials} /><Tab label={m.output} /></Tabs>
       <Typography variant="caption">{m.backend}</Typography>
       {viewer.isWebGPU && <Alert severity="warning">{m.webgpu}</Alert>}
-      {(error || state.error) && <Alert severity="error">{error || m[`error_${state.error}` as keyof typeof m] || m.error_unknown}</Alert>}
+      {(error || state.error) && <Alert severity="error" action={<UserHelpLink topic="appearance" />}>{error ? m[error] : m[`error_${state.error}` as keyof typeof m] || m.error_unknown}</Alert>}
       <Typography role="status" variant="body2">{busy ? m.working : notice}</Typography>
       <Box component="fieldset" disabled={busy} sx={{ p: 0, m: 0, border: 0, minWidth: 0 }}>
         {tab === 0 && <Stack spacing={1.5}>

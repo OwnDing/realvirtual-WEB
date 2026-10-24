@@ -12,6 +12,7 @@ import { remediationFor } from '../src/plugins/unified-import/UnifiedImportDialo
 import { resolveProviderSafe } from '../src/core/import/rv-import-provider';
 import { UnifiedImportPlugin } from '../src/plugins/unified-import';
 import { evaluateVisibilityRule } from '../src/core/hmi/ui-context-store';
+import { getLocale, initI18n, setLocale } from '../src/core/i18n';
 
 function makeFile(name: string, content: string): File {
   return new File([content], name, { type: 'model/gltf-binary' });
@@ -87,10 +88,26 @@ describe('unified-import button visibility', () => {
 });
 
 describe('remediationFor', () => {
-  it('maps known engine failures to an actionable next step', () => {
-    expect(remediationFor('RuntimeError: memory access out of bounds')).toMatch(/tessellation quality|CONNECT/);
-    expect(remediationFor('TypeError: Failed to fetch')).toMatch(/CONNECT is running/);
-    expect(remediationFor('Unknown format: not a GLB')).toMatch(/valid, uncorrupted/);
+  it.each(['en-US', 'zh-CN'] as const)('maps known engine failures to actionable %s guidance', async locale => {
+    initI18n();
+    const previous = getLocale();
+    try {
+      await setLocale(locale);
+      const memory = remediationFor('RuntimeError: memory access out of bounds');
+      const network = remediationFor('TypeError: Failed to fetch');
+      const invalid = remediationFor('Unknown format: not a GLB');
+      if (locale === 'en-US') {
+        expect(memory).toMatch(/Reduce model detail, split the assembly/);
+        expect(network).toMatch(/Check connectivity, same-origin resources/);
+        expect(invalid).toMatch(/Check the file and use a supported format/);
+      } else {
+        expect(memory).toMatch(/降低模型精度、拆分装配/);
+        expect(network).toMatch(/检查连接、同源资源/);
+        expect(invalid).toMatch(/检查文件并使用受支持的格式/);
+      }
+    } finally {
+      await setLocale(previous);
+    }
   });
 
   it('returns null for messages it cannot improve', () => {

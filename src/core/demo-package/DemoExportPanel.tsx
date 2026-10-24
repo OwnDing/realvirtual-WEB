@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { UserHelpLink } from '../hmi/UserHelpLink';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Paper, Portal, Stack, TextField, Typography } from '@mui/material';
 import { PerspectiveCamera, Vector3 } from 'three';
@@ -48,12 +49,12 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
     startCamera: { position: [3, 3, 3], target: [0, 0, 0], fov: 50 }, steps: [] }));
   const [captured, setCaptured] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<keyof ReturnType<typeof demoMessages>>();
   const [notice, setNotice] = useState<string>();
   const job = useRef<AbortController | null>(null);
   const active = useRef(true);
   const file = useRef<HTMLInputElement>(null);
-  const report = (err: unknown) => { setError(err instanceof DemoPackageError ? m[`error_${err.code}`] : m.error_unknown); setNotice(undefined); };
+  const report = (err: unknown) => { setError(err instanceof DemoPackageError ? `error_${err.code}` : 'error_unknown'); setNotice(undefined); };
   useEffect(() => {
     active.current = true;
     try { const camera = captureDemoCamera(viewer); setRecipe(r => ({ ...r, startCamera: camera })); setCaptured(true); }
@@ -122,7 +123,7 @@ export default function DemoExportPanel({ viewer, capability, name, mode, onClos
     <Stack spacing={1.5}>
       <Stack direction="row" justifyContent="space-between"><Typography component="h2" variant="h6">{m.title}</Typography><Button onClick={() => { cancel(); onClose(); }}>{m.close}</Button></Stack>
       <Typography variant="body2">{m.intro}</Typography><Alert severity="info" role="note">{m.boundary}</Alert>
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error" action={<UserHelpLink topic="tours" />}>{m[error]}</Alert>}
       <Typography role="status" variant="body2">{busy ? notice ?? m.working : notice}</Typography>
       <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Stack spacing={1.5}>
         <TextField label={m.name} value={recipe.title} size="small" inputProps={{ maxLength: 120 }} onChange={e => setRecipe(r => ({ ...r, title: e.target.value }))} />

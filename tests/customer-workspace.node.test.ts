@@ -262,6 +262,28 @@ function trackPublicModels(core: string, tracked: string[], untracked: string[] 
 vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
 describe('customer workspace generator', () => {
+  it('redirects authoring guide links to the offline help included in filtered deliveries', () => {
+    const { core, privateRoot, delivery } = fixture();
+    const helpPages = [
+      ['docs/user/en-US/quickstart.md', 'public/user-help/en-US/quickstart/index.html'],
+      ['docs/user/zh-CN/quickstart.md', 'public/user-help/zh-CN/quickstart/index.html'],
+      ['docs/user/README.md', 'public/user-help/index.html'],
+    ];
+    write(join(core, 'README.md'), helpPages.map(([source], index) => `[Guide ${index}](${source})`).join('\n'));
+    for (const [, target] of helpPages) write(join(core, target), '<!doctype html><title>Offline help</title>');
+
+    const staged = stageFilteredSourceTree({ coreRoot: core, privateRoot, projectKey: 'acme', profile: delivery, delivery });
+    temporary.push(staged.workspaceRoot);
+    const deliveredCore = join(staged.workspaceRoot, 'xyvirtual-web');
+    const readme = readFileSync(join(deliveredCore, 'README.md'), 'utf8');
+    for (const [source, target] of helpPages) {
+      expect(readme).toContain(`](${target})`);
+      expect(readme).not.toContain(`](${source})`);
+      expect(existsSync(join(deliveredCore, target))).toBe(true);
+    }
+    expect(existsSync(join(deliveredCore, 'docs', 'user'))).toBe(false);
+  });
+
   it('populates the tier-profile dependency cache after a fast cache miss', () => {
     const { workspaceRoot, coreRoot, cacheRoot, state } = buildFixture();
     const result = withBuildCache(cacheRoot, () => runBuild(workspaceRoot, {
