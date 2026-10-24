@@ -37,3 +37,7 @@ authority: normative
 生产旅程证据由 `npm run verify:help` 写入 `test-results/user-help/verification/`，包含结果 JSON、帮助/作者/接收者截图、实际下载的演示配方与 HTML；CI 归档该目录。媒体版本、UI 源摘要、录制输入与字幕摘要随 `docs/user/media/manifest.json` 和生成清单交付。临时测试日志不作为产品内容提交。
 
 真实首次使用者走查未进行，不能宣称已证明 15 分钟上手。Windows/macOS 目标机器、真实 PLC/设备及独立安全认证不在这次本地证据范围。OD-006 保持 open；119 个专业域报错后续项保留责任登记。本次没有修改依赖锁文件、放宽安全门禁或变更持久化格式。
+
+## 合并前 CI 跟进
+
+PR #19 的首轮 CI 中，Governance/Static/Node/Build 与 Windows compatibility 通过，生产用户帮助旅程通过；Browser Gate 在第 5 分片因 `glb-file-provider.test.ts` 仍固定断言旧英文排障句子失败。按双语规格将该测试同步为分别切换中英文、验证内存/网络/格式三类可操作指引，并保留未知错误反例；本地相关 2 文件、20 用例及治理检查通过。远端合并以同一提交的必需检查为准，不能用本地结果覆盖 CI 失败。
