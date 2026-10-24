@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { Alert } from '@mui/material';
+import { userFailure, userFailureText, type UserFailure } from '../../user-errors/failure';
+import { getLocale } from '../../i18n';
+import { UserHelpLink } from '../UserHelpLink';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -77,6 +81,7 @@ import {
   subscribeActiveDocumentView,
   type ActiveDocumentVerb,
   type ActiveDocumentView,
+  type ActiveDocumentSaveOutcome,
 } from '../../editor/active-document-view';
 import type { Object3D } from 'three';
 import { useOptionalViewer } from '../../../hooks/use-viewer';
@@ -174,7 +179,8 @@ export function DocumentCard({
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [nameDialog, setNameDialog] = useState<NameDialogState>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | UserFailure | null>(null);
+  const [saveFailure, setSaveFailure] = useState<UserFailure | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [demoIdentity, setDemoIdentity] = useState<object | null>(null);
@@ -206,6 +212,8 @@ export function DocumentCard({
   const documentKey = view
     ? (view.thumbnailKey ? JSON.stringify(view.thumbnailKey) : view.name)
     : null;
+
+  useEffect(() => { setSaveFailure(null); }, [documentKey, activeMode]);
 
   /**
    * One tick per model load/clear. The picture and the reference tally both
@@ -313,8 +321,15 @@ export function DocumentCard({
       return;
     }
     setNotice(null);
+    setSaveFailure(null);
     setAnnouncement('Saving…');
-    const outcome = await view.actions.save(askName);
+    let outcome: ActiveDocumentSaveOutcome;
+    try { outcome = await view.actions.save(askName); }
+    catch (error) {
+      setSaveFailure(userFailure(error, 'save'));
+      setAnnouncement('');
+      return;
+    }
     switch (outcome.status) {
       case 'saved':
       case 'no-op':
@@ -328,8 +343,8 @@ export function DocumentCard({
         setAnnouncement(outcome.reason);
         break;
       case 'error':
-        setNotice(outcome.message);
-        setAnnouncement(`Save failed: ${outcome.message}`);
+        setSaveFailure(userFailure(outcome, 'save'));
+        setAnnouncement('');
         break;
     }
   }, [view, askName]);
@@ -381,7 +396,7 @@ export function DocumentCard({
       setExportDialog(null);
     } catch (e) {
       setExportDialog(null);
-      setMessage(e instanceof Error ? e.message : String(e));
+      setMessage(userFailure(e, 'export'));
     } finally {
       setExporting(false);
     }
@@ -702,7 +717,7 @@ export function DocumentCard({
             clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
           }}
         >
-          {announcement}
+          {saveFailure ? userFailureText(saveFailure, getLocale()) : announcement}
         </Box>
       </Box>
 
@@ -851,11 +866,13 @@ export function DocumentCard({
         />
       )}
 
+      {saveFailure && <Alert role="group" severity="error" action={<UserHelpLink topic="projects" />}>{userFailureText(saveFailure, getLocale())}</Alert>}
+
       {/* Success and every refusal both land here, with a reason. */}
       <Dialog open={Boolean(message)} onClose={() => setMessage(null)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontSize: 14, fontWeight: 600 }}>{view.name}</DialogTitle>
         <DialogContent>
-          <Typography sx={{ fontSize: 13 }}>{message}</Typography>
+          <Typography sx={{ fontSize: 13 }}>{typeof message === 'string' ? message : message ? userFailureText(message, getLocale()) : ''}</Typography><UserHelpLink topic="projects" />
         </DialogContent>
         <DialogActions>
           <Button

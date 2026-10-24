@@ -216,7 +216,7 @@ describe('DocumentCard live region', () => {
     }));
     fireEvent.click(screen.getByTestId('document-card-save'));
     await waitFor(() => expect(screen.getByTestId('document-card-status').textContent)
-      .toBe('Save failed: disk full'));
+      .toContain('Document saving did not complete.'));
   });
 });
 

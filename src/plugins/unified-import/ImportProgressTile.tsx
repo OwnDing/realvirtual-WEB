@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { userFailure, userFailureText } from '../../core/user-errors/failure';
+import { getLocale } from '../../core/i18n';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -109,7 +111,7 @@ export function ImportProgressTile({ onOpenDialog }: ImportProgressTileProps) {
                 ? t('import.tileComplete', { names: outcome.importedNames.join(', ') || t('import.tileDone') })
                 : outcome.kind === 'warning'
                   ? t('import.tileWarning', { message: outcome.warnings[0] ?? '' })
-                  : t('import.tileFailed', { message: outcome.errors[0] ?? '' })}
+                  : userFailureText(userFailure(undefined, 'load'), getLocale())}
             </Typography>
             {outcome.kind !== 'success' && (
               <Button size="small" onClick={onOpenDialog} sx={{ textTransform: 'none', flexShrink: 0 }}>
@@ -138,6 +140,8 @@ export function ImportProgressTile({ onOpenDialog }: ImportProgressTileProps) {
  * conversion would read as a hang.
  */
 export function ImportJobAnnouncer() {
+  useRvTranslation('shell');
+  const locale = getLocale();
   const job = useImportJob();
   const lastAnnounceRef = useRef(0);
   const [announcement, setAnnouncement] = useState('');
@@ -159,13 +163,13 @@ export function ImportJobAnnouncer() {
       setAnnouncement(
         job.outcome.kind === 'success' ? 'Import complete'
           : job.outcome.kind === 'warning' ? 'Import finished with warnings'
-          : job.outcome.kind === 'error' ? `Import failed: ${job.outcome.errors[0] ?? ''}`
+          : job.outcome.kind === 'error' ? userFailureText(userFailure(undefined, 'load'), getLocale())
           : 'Import cancelled',
       );
     } else {
       setAnnouncement('');
     }
-  }, [job]);
+  }, [job, locale]);
 
   return <Box role="status" aria-live="polite" sx={visuallyHidden}>{announcement}</Box>;
 }

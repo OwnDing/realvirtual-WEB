@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-23.1",
+  "locales": [
+    "zh-CN",
+    "en-US"
+  ],
+  "topics": [
+    {
+      "id": "overview",
+      "titles": {
+        "zh-CN": "产品与环境",
+        "en-US": "Product and environment"
+      },
+      "sources": [
+        "docs/product-specs/COMPATIBILITY.md",
+        "docs/runbooks/COMPATIBILITY.md"
+      ]
+    },
+    {
+      "id": "quickstart",
+      "titles": {
+        "zh-CN": "首次离线演示",
+        "en-US": "Your first offline presentation"
+      },
+      "sources": [
+        "docs/runbooks/DEMO_PACKAGE_EXPORT.md"
+      ]
+    },
+    {
+      "id": "navigation",
+      "titles": {
+        "zh-CN": "界面与视角",
+        "en-US": "Interface and navigation"
+      },
+      "sources": [
+        "src/core/hmi/help-context.ts",
+        "src/core/hmi/help-topics.ts"
+      ]
+    },
+    {
+      "id": "models",
+      "titles": {
+        "zh-CN": "打开与导入模型",
+        "en-US": "Opening and importing models"
+      },
+      "sources": [
+        "docs/product-specs/SMART_ASSET_EDITOR.md",
+        "docs/runbooks/DEMO_PACKAGE_EXPORT.md"
+      ]
+    },
+    {
+      "id": "projects",
+      "titles": {
+        "zh-CN": "保存、重开与备份",
+        "en-US": "Saving, reopening and backup"
+      },
+      "sources": [
+        "docs/runbooks/VERSION_UPGRADE.md",
+        "src/core/hmi/scene/DocumentCard.tsx"
+      ]
+    },
+    {
+      "id": "appearance",
+      "titles": {
+        "zh-CN": "风格与材质",
+        "en-US": "Styles and materials"
+      },
+      "sources": [
+        "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "media",
+      "titles": {
+        "zh-CN": "图片与场景录像",
+        "en-US": "Images and scene video"
+      },
+      "sources": [
+        "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "tours",
+      "titles": {
+        "zh-CN": "导览与离线 HTML",
+        "en-US": "Tours and offline HTML"
+      },
+      "sources": [
+        "docs/runbooks/DEMO_PACKAGE_EXPORT.md"
+      ]
+    },
+    {
+      "id": "delivery",
+      "titles": {
+        "zh-CN": "交付与访问控制",
+        "en-US": "Delivery and access"
+      },
+      "sources": [
+        "docs/runbooks/PROTECTED_PRESENTATIONS.md"
+      ]
+    },
+    {
+      "id": "licensing",
+      "titles": {
+        "zh-CN": "授权、只读与功能不可用",
+        "en-US": "Licensing and unavailable features"
+      },
+      "sources": [
+        "docs/product-specs/LICENSE_AND_EXPIRY.md"
+      ]
+    },
+    {
+      "id": "support",
+      "titles": {
+        "zh-CN": "诊断与支持",
+        "en-US": "Diagnostics and support"
+      },
+      "sources": [
+        "docs/runbooks/DIAGNOSTIC_BUNDLE.md"
+      ]
+    },
+    {
+      "id": "faq",
+      "titles": {
+        "zh-CN": "常见问题",
+        "en-US": "Frequently asked questions"
+      },
+      "sources": [
+        "docs/runbooks/README.md",
+        "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "installation",
+      "titles": {
+        "zh-CN": "IT：安装手册",
+        "en-US": "IT: Installation"
+      },
+      "sources": {
+        "zh-CN": "appliance/docs/INSTALL.zh-CN.md",
+        "en-US": "appliance/docs/INSTALL.en.md"
+      }
+    },
+    {
+      "id": "compatibility",
+      "titles": {
+        "zh-CN": "兼容性矩阵",
+        "en-US": "Compatibility matrix"
+      },
+      "sources": {
+        "zh-CN": "docs/generated/COMPATIBILITY_MATRIX.zh-CN.md",
+        "en-US": "docs/generated/COMPATIBILITY_MATRIX.en-US.md"
+      }
+    },
+    {
+      "id": "upgrade",
+      "titles": {
+        "zh-CN": "IT：升级与恢复",
+        "en-US": "IT: Upgrade and recovery (source language)"
+      },
+      "sources": {
+        "zh-CN": "docs/runbooks/VERSION_UPGRADE.md",
+        "en-US": "docs/runbooks/VERSION_UPGRADE.md"
+      }
+    },
+    {
+      "id": "protected",
+      "titles": {
+        "zh-CN": "IT：受保护演示",
+        "en-US": "IT: Protected presentations (bilingual source)"
+      },
+      "sources": {
+        "zh-CN": "docs/runbooks/PROTECTED_PRESENTATIONS.md",
+        "en-US": "docs/runbooks/PROTECTED_PRESENTATIONS.md"
+      }
+    },
+    {
+      "id": "security",
+      "titles": {
+        "zh-CN": "IT：安全运维",
+        "en-US": "IT: Security operations (source language)"
+      },
+      "sources": {
+        "zh-CN": "docs/delivery/SECURITY_OPERATIONS.md",
+        "en-US": "docs/delivery/SECURITY_OPERATIONS.md"
+      }
+    }
+  ]
+}

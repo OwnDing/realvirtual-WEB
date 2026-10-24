@@ -15,6 +15,10 @@ XYvirtual WEB is an open-source, browser-based 3D HMI and digital twin viewer fo
 
 > Part of the [xyvirtual.io](https://xyvirtual.io) industrial digital twin platform — a [Unity Verified Solution](https://unity.com/partners/XYvirtual) for virtual commissioning, 3D HMI, and simulation.
 
+## User guides
+
+Start with the [English quick start](docs/user/en-US/quickstart.md) or [中文快速上手](docs/user/zh-CN/quickstart.md). The [user manual](docs/user/README.md) covers model import, saving, media, offline tours, diagnostics and 22 FAQs in both languages. A complete searchable offline guide, three UI tutorials and bilingual subtitles ship in `dist/user-help/` after building. Open `user-help/index.html` directly. Contextual Help/F1 follows the delivery's `services.documentation` setting.
+
 ## What It Does
 
 XYvirtual WEB replaces traditional desktop HMI and SCADA visualization with a modern, browser-based 3D experience. Connect to real PLCs via WebSocket or MQTT, and operators see live machine states — drive positions, sensor readings, alarms, KPIs — all in the context of the machine's 3D layout. Unlike flat panel HMIs, operators see *what* is happening, *where* it is happening, and *why*.

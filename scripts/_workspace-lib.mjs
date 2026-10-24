@@ -157,6 +157,10 @@ const NEVER_DELIVERED_DOCS = new Set([
 ]);
 const DELIVERY_DOC_LINK_REDIRECTS = new Map([
   ['src/plugins/sim-controller/DESExperimentsPanel.tsx', 'src/plugins/sim-controller/DESExperimentMatrixPanel.tsx'],
+  // Customer workspaces carry the built, offline guide rather than authoring docs/.
+  ['docs/user/en-US/quickstart.md', 'public/user-help/en-US/quickstart/index.html'],
+  ['docs/user/zh-CN/quickstart.md', 'public/user-help/zh-CN/quickstart/index.html'],
+  ['docs/user/README.md', 'public/user-help/index.html'],
 ]);
 const NON_DELIVERED_DOC_LINK_PREFIXES = [
   'tests/', 'e2e/', 'scripts/', 'mcp-bridge/', '.claude/', '.github/', 'public/models/', 'public/scenes/',

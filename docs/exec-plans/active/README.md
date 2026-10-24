@@ -19,3 +19,5 @@ authority: normative-registry
 - [EP-COMPAT-001：L3-2 兼容性矩阵与最低配置](EP-COMPAT-001-compatibility-matrix.md)
 
 - [EP-SEC-001：供应链与脚本安全](EP-SEC-001-supply-chain-and-script-security.md)：用户于 2026-10-20 批准实施及开 PR。
+
+- [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。

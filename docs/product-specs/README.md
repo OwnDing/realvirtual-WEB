@@ -43,3 +43,5 @@ authority: normative-registry
 - [PS-DIAG-001：L3-1 本地诊断包](DIAGNOSTIC_BUNDLE.md)
 
 - [PS-COMPAT-001：L3-2 兼容性与最低配置](COMPATIBILITY.md)
+
+- [双语用户文档与离线帮助](USER_DOCUMENTATION.md)

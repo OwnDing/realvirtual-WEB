@@ -82,6 +82,16 @@ jobs:
       - name: Install Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
         timeout-minutes: 10
+      - name: Verify offline user help and customer workflows
+        run: npm run verify:help
+        timeout-minutes: 5
+      - name: Upload user help evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: user-help-evidence
+          path: test-results/user-help/verification/
+          if-no-files-found: error
       - name: Verify compatibility production workflows
         run: npm run verify:compatibility
         timeout-minutes: 5

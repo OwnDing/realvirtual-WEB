@@ -35,6 +35,7 @@ run_governance() {
     node scripts/verify-governance.mjs
     node scripts/assert-docs-publishable.mjs
     node scripts/generate-compatibility.mjs --check
+    node scripts/user-help/build.mjs --check
     git diff --check
     git diff --cached --check
   )
@@ -47,6 +48,7 @@ run_static() {
   say "ESLint architecture boundary gate"
   (
     cd "$verify_repo_root"
+    node scripts/user-help/errors.mjs
     node scripts/assert-runtime-external-origins.mjs
     node scripts/assert-network-boundaries.mjs
     npm run lint
@@ -97,6 +99,7 @@ run_build() {
   say "Public production build"
   (
     cd "$verify_repo_root"
+    npm run check:help
     npm run build
   )
 }

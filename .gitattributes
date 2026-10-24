@@ -21,3 +21,15 @@ appliance/runtime/static/diagnostics/compatibility/** text eol=lf
 appliance/runtime/static/diagnostics/support-matrix.json text eol=lf
 appliance/docs/SUPPORT_MATRIX.*.md text eol=lf
 docs/generated/COMPATIBILITY_MATRIX.*.md text eol=lf
+
+# L3-4 documentation, input digests and subtitles are reproducible across hosts.
+docs/user/**/*.md text eol=lf
+docs/user/**/*.json text eol=lf
+docs/user/**/*.vtt text eol=lf
+scripts/user-help/** text eol=lf
+public/user-help/**/*.html text eol=lf
+public/user-help/**/*.json text eol=lf
+public/user-help/**/*.js text eol=lf
+public/user-help/**/*.css text eol=lf
+public/user-help/**/*.vtt text eol=lf
+src/core/hmi/help-topics.ts text eol=lf
