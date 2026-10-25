@@ -15,16 +15,16 @@ let pendingLink = consumeAccessLink();
 initI18n(readStoredLocale() ?? normalizeLocale(document.documentElement.lang));
 type Key = keyof typeof import('../core/i18n/catalogs/zh-CN').zhCN.shell.access;
 const t = (key: Key) => rvT('shell', `access.${key}`);
-function errorText(error: unknown): string {
+function errorKey(error: unknown): Key {
   const code = error instanceof AccessFailure ? error.code : '';
-  if (code === 'UNAUTHENTICATED') return t('invalid');
-  if (code === 'SHARE_UNAVAILABLE') return t('expired');
-  if (['FORBIDDEN', 'CSRF_DENIED', 'ORIGIN_DENIED'].includes(code)) return t('forbidden');
-  if (['RATE_LIMITED', 'UPLOAD_BUSY'].includes(code)) return t('rate');
-  if (['EXTERNAL_DEPENDENCY', 'EXECUTABLE_CONTENT'].includes(code)) return t('dependency');
-  if (['TOO_LARGE', 'QUOTA_EXCEEDED'].includes(code)) return t('large');
-  if (code === 'INVALID_GLB') return t('badFile');
-  return t('failed');
+  if (code === 'UNAUTHENTICATED') return 'invalid';
+  if (code === 'SHARE_UNAVAILABLE') return 'expired';
+  if (['FORBIDDEN', 'CSRF_DENIED', 'ORIGIN_DENIED'].includes(code)) return 'forbidden';
+  if (['RATE_LIMITED', 'UPLOAD_BUSY'].includes(code)) return 'rate';
+  if (['EXTERNAL_DEPENDENCY', 'EXECUTABLE_CONTENT'].includes(code)) return 'dependency';
+  if (['TOO_LARGE', 'QUOTA_EXCEEDED'].includes(code)) return 'large';
+  if (code === 'INVALID_GLB') return 'badFile';
+  return 'failed';
 }
 const date = (time: number) => new Date(time).toLocaleString(getLocale());
 
@@ -34,7 +34,7 @@ applyBrandDocument(brand);
 function App() {
   useRvTranslation('shell');
   const [session, setSession] = useState<AccessSession | null>(null);
-  const [loading, setLoading] = useState(true), [error, setError] = useState('');
+  const [loading, setLoading] = useState(true), [error, setError] = useState<Key | ''>('');
   const [busy, setBusy] = useState(false);
   const refreshSession = async () => {
     if (pendingLink) {
@@ -49,43 +49,43 @@ function App() {
     // Restart the flow so the previous viewer/session UI cannot consume the new link.
     const openLink = () => { if (new URLSearchParams(location.hash.slice(1)).has('share')) location.reload(); };
     window.addEventListener('hashchange', openLink);
-    refreshSession().catch(e => { if (pendingLink || !(e instanceof AccessFailure) || e.code !== 'UNAUTHENTICATED') setError(errorText(e)); }).finally(() => setLoading(false));
+    refreshSession().catch(e => { if (pendingLink || !(e instanceof AccessFailure) || e.code !== 'UNAUTHENTICATED') setError(errorKey(e)); }).finally(() => setLoading(false));
     return () => window.removeEventListener('hashchange', openLink);
   }, []);
   const login = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); const data = new FormData(event.currentTarget); setBusy(true); setError('');
     try { await accessWrite('/login', { username: data.get('username'), password: data.get('password') }); await refreshSession(); }
-    catch (e) { setError(errorText(e)); } finally { setBusy(false); }
+    catch (e) { setError(errorKey(e)); } finally { setBusy(false); }
   };
   const logout = async () => {
     setBusy(true);
     try { await accessWrite('/logout', {}, session?.csrf); setSession(null); }
     catch (e) {
       if (e instanceof AccessFailure && ['UNAUTHENTICATED', 'SHARE_UNAVAILABLE'].includes(e.code)) setSession(null);
-      else setError(errorText(e));
+      else setError(errorKey(e));
     } finally { setBusy(false); }
   };
   const attributionText = localizeBrandText(brand.attribution.text, getLocale());
   const attributionHref = brand.attribution.url ? (/^https?:/.test(brand.attribution.url) ? brand.attribution.url : brandAssetHref(brand.attribution.url, documentBrandBase())) : undefined;
   return <><header><BrandImage src={brandAssetHref(brand.logoUrl, documentBrandBase())} name={brand.shortName} /><strong>{brand.productName}</strong><nav><button onClick={() => void setLocale(getLocale() === 'zh-CN' ? 'en-US' : 'zh-CN')}>{t('language')}</button>{session && <button disabled={busy} onClick={() => void logout()}>{t('logout')}</button>}</nav></header>
-    {error && <p role="alert" className="error">{error}</p>}
+    {error && <p role="alert" className="error">{t(error)}</p>}
     {loading ? <p role="status">{t('loading')}</p> : !session ? <main className="signin"><h1>{t('login')}</h1><p>{t('noLink')}</p><form onSubmit={login}><label>{t('username')}<input name="username" autoComplete="username" required maxLength={64}/></label><label>{t('password')}<input name="password" type="password" autoComplete="current-password" required maxLength={256}/></label><button disabled={busy}>{t('login')}</button></form></main>
       : session.shareId ? <Viewer shareId={session.shareId} onExpired={message => { setError(message); setSession(null); }}/>
       : session.role === 'admin' ? <Admin session={session} report={setError}/> : <p>{t('noLink')}</p>}
     <footer>{brand.attribution.visible && <p>{attributionHref ? <a href={attributionHref} target="_blank" rel="noopener noreferrer">{attributionText}</a> : attributionText}</p>}{t('warning')}</footer></>;
 }
 
-function Admin({ session, report }: { session: AccessSession; report: (message: string) => void }) {
+function Admin({ session, report }: { session: AccessSession; report: (message: Key | '') => void }) {
   const [presentations, setPresentations] = useState<Presentation[]>([]), [shares, setShares] = useState<Share[]>([]), [users, setUsers] = useState<Visitor[]>([]), [audit, setAudit] = useState<Audit[]>([]);
   const [busy, setBusy] = useState(false), [link, setLink] = useState(''), [expiry, setExpiry] = useState('7'), [custom, setCustom] = useState('');
   const refresh = async () => {
     const [p, s, u, a] = await Promise.all([accessRequest<Presentation[]>('/presentations'), accessRequest<Share[]>('/shares'), accessRequest<Visitor[]>('/users'), accessRequest<Audit[]>('/audit')]);
     setPresentations(p); setShares(s); setUsers(u); setAudit(a);
   };
-  useEffect(() => { void refresh().catch(e => report(errorText(e))); }, []);
+  useEffect(() => { void refresh().catch(e => report(errorKey(e))); }, []);
   const run = async (action: () => Promise<unknown>) => {
     setBusy(true); report('');
-    try { await action(); await refresh(); } catch (e) { report(errorText(e)); } finally { setBusy(false); }
+    try { await action(); await refresh(); } catch (e) { report(errorKey(e)); } finally { setBusy(false); }
   };
   const publish = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const file = data.get('file') as File;
@@ -103,21 +103,21 @@ function Admin({ session, report }: { session: AccessSession; report: (message: 
     <section><h2>{t('shares')}</h2>{shares.length ? <table><thead><tr><th>{t('name')}</th><th>{t('recipient')}</th><th>{t('expiredAt')}</th><th>{t('revoke')}</th></tr></thead><tbody>{shares.map(s => <tr key={s.id}><td>{presentations.find(p => p.id === s.presentation)?.name ?? s.id}</td><td>{users.find(u => u.id === s.user)?.username ?? t('anyone')}</td><td>{date(s.expires)}</td><td>{s.revoked ? t('revoked') : <button disabled={busy} onClick={() => void run(() => accessWrite(`/shares/${s.id}/revoke`, {}, session.csrf))}>{t('revoke')}</button>}</td></tr>)}</tbody></table> : <p>{t('empty')}</p>}</section>
     <section><h2>{t('users')}</h2><form className="inline" onSubmit={event => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void run(async () => { await accessWrite('/users', { username: data.get('username'), password: data.get('password'), role: 'visitor' }, session.csrf); form.reset(); }); }}><label>{t('username')}<input name="username" required maxLength={64}/></label><label>{t('password')}<input name="password" type="password" required minLength={12} maxLength={256} autoComplete="new-password"/></label><button disabled={busy}>{t('createUser')}</button></form>
       {users.map(u => <form className="inline user" key={u.id} onSubmit={event => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void run(async () => { await accessWrite(`/users/${u.id}`, { password: data.get('password') }, session.csrf, 'PATCH'); form.reset(); }); }}><strong>{u.username}</strong><span>{u.disabled ? t('disabled') : t('active')}</span><button type="button" disabled={busy} onClick={() => void run(() => accessWrite(`/users/${u.id}`, { disabled: !u.disabled }, session.csrf, 'PATCH'))}>{u.disabled ? t('enable') : t('disable')}</button><label>{t('password')}<input type="password" name="password" minLength={12} maxLength={256} required autoComplete="new-password"/></label><button disabled={busy}>{t('resetPassword')}</button></form>)}
-    </section><section><h2>{t('audit')}</h2><div className="records">{audit.map(a => <p key={a.id}>{date(a.time)} · {users.find(u => u.id === a.actor)?.username ?? a.actor} · {a.action} · {a.target} · {a.outcome}</p>)}</div>{audit.length >= 100 && <button disabled={busy} onClick={() => void accessRequest<Audit[]>(`/audit?before=${audit[audit.length - 1].id}`).then(a => setAudit([...audit, ...a])).catch(e => report(errorText(e)))}>{t('more')}</button>}</section>
+    </section><section><h2>{t('audit')}</h2><div className="records">{audit.map(a => <p key={a.id}>{date(a.time)} · {users.find(u => u.id === a.actor)?.username ?? a.actor} · {a.action} · {a.target} · {a.outcome}</p>)}</div>{audit.length >= 100 && <button disabled={busy} onClick={() => void accessRequest<Audit[]>(`/audit?before=${audit[audit.length - 1].id}`).then(a => setAudit([...audit, ...a])).catch(e => report(errorKey(e)))}>{t('more')}</button>}</section>
   </main>;
 }
 
-function Viewer({ shareId, onExpired }: { shareId: string; onExpired: (message: string) => void }) {
+function Viewer({ shareId, onExpired }: { shareId: string; onExpired: (message: Key) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null), engine = useRef<RVEmbedViewer | null>(null);
   const [info, setInfo] = useState<ShareInfo | null>(null), [ready, setReady] = useState(false), [time, setTime] = useState(Date.now());
   const onExpiredRef = useRef(onExpired); onExpiredRef.current = onExpired;
   useEffect(() => {
     const controller = new AbortController(); let stopped = false, timer: ReturnType<typeof setInterval> | undefined; let checking = false;
-    const stop = (message: string) => { if (stopped) return; stopped = true; controller.abort(); engine.current?.dispose(); engine.current = null; onExpiredRef.current(message); };
+    const stop = (message: Key) => { if (stopped) return; stopped = true; controller.abort(); engine.current?.dispose(); engine.current = null; onExpiredRef.current(message); };
     const check = async () => {
       if (checking || stopped) return; checking = true;
       try { const next = await accessRequest<ShareInfo>(`/shares/${shareId}`); if (!stopped) { setInfo(next); setTime(next.serverTime); } }
-      catch (e) { stop(e instanceof AccessFailure && e.code === 'SHARE_UNAVAILABLE' ? t('expired') : t('unavailable')); }
+      catch (e) { stop(e instanceof AccessFailure && e.code === 'SHARE_UNAVAILABLE' ? 'expired' : 'unavailable'); }
       finally { checking = false; }
     };
     const visibility = () => { if (document.visibilityState === 'visible') void check(); };
@@ -135,7 +135,7 @@ function Viewer({ shareId, onExpired }: { shareId: string; onExpired: (message: 
         await viewer.loadModel(`${accessRoot}/shares/${shareId}/model`, bytes);
         await check(); if (stopped) return;
         viewer.resume(); setReady(true);
-      } catch { if (!stopped) stop(t('unavailable')); }
+      } catch { if (!stopped) stop('unavailable'); }
     };
     timer = setInterval(() => void check(), 15000); document.addEventListener('visibilitychange', visibility); window.addEventListener('resize', resize);
     void start();

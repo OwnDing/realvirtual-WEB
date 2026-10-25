@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { UserHelpLink } from '../../core/hmi/UserHelpLink';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Checkbox, FormControlLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import type { RVViewer } from '../../core/rv-viewer';
@@ -31,7 +32,7 @@ export default function ExportPanel({ viewer, plugin }: { viewer: RVViewer; plug
   const [options, setOptions] = useState(readOptions), [motion, setMotion] = useState<'manual' | 'orbit' | 'tour'>('manual');
   const [guide, setGuide] = useState(true);
   const [tour, setTour] = useState<DemoRecipe | null>(null), [busy, setBusy] = useState(false), [recording, setRecording] = useState(false);
-  const [status, setStatus] = useState(''), [error, setError] = useState('');
+  const [status, setStatus] = useState(''), [error, setError] = useState<keyof ReturnType<typeof presentationMessages> | ''>('');
   const job = useRef<AbortController | null>(null), recorder = useRef<Recording | null>(null), mounted = useRef(true), file = useRef<HTMLInputElement>(null);
   const mime = typeof MediaRecorder === 'undefined' ? null : chooseRecordingMime(type => MediaRecorder.isTypeSupported(type));
   const cancel = () => { job.current?.abort(); recorder.current?.cancel(); };
@@ -67,13 +68,13 @@ export default function ExportPanel({ viewer, plugin }: { viewer: RVViewer; plug
     } catch (err) {
       if (mounted.current) {
         if (controller.signal.aborted) setStatus('');
-        else { setError(err instanceof PresentationError ? m[`error_${err.code}`] : m.error_unknown); setStatus(''); }
+        else { setError(err instanceof PresentationError ? `error_${err.code}` : 'error_unknown'); setStatus(''); }
       }
     } finally { if (job.current === controller) { job.current = null; recorder.current = null; if (mounted.current) { setBusy(false); setRecording(false); } } }
   };
   return <Stack spacing={1.5}>
     {guide && !busy && <FramingGuide canvas={viewer.renderer.domElement} aspect={options.size === 'viewport' ? null : options.shape === 'wide' ? 16 / 9 : options.shape === 'portrait' ? 9 / 16 : 1} />}
-    {error && <Alert severity="error">{error}</Alert>}<Typography role="status">{status}</Typography>
+    {error && <Alert severity="error" action={<UserHelpLink topic="media" />}>{m[error]}</Alert>}<Typography role="status">{status}</Typography>
     <Box component="fieldset" disabled={busy} sx={{ border: 0, m: 0, p: 0 }}><Stack spacing={1.5}>
       <TextField select label={m.resolution} size="small" value={options.size} onChange={e => patch({ size: e.target.value as Options['size'] })}><MenuItem value="viewport">{m.viewport}</MenuItem><MenuItem value="1080">1920 × 1080</MenuItem><MenuItem value="4k">3840 × 2160</MenuItem></TextField>
       <TextField select label={m.shape} size="small" value={options.shape} disabled={options.size === 'viewport'} onChange={e => patch({ shape: e.target.value as Options['shape'] })}>{(['wide', 'square', 'portrait'] as const).map(id => <MenuItem key={id} value={id}>{m[id]}</MenuItem>)}</TextField>
@@ -90,7 +91,7 @@ export default function ExportPanel({ viewer, plugin }: { viewer: RVViewer; plug
       {motion === 'tour' && <><Button onClick={() => file.current?.click()}>{m.loadTour}</Button><Typography variant="caption">{tour?.title ?? m.noTour}</Typography></>}
       <input hidden ref={file} type="file" accept=".json,application/json" onChange={e => {
         const f = e.target.files?.[0]; e.target.value = '';
-        if (f) void (async () => { try { if (f.size > 512 * 1024) throw new PresentationError('size'); const recipe = parseDemoRecipe(JSON.parse(await f.text())); if (!recipe.steps.length) throw new PresentationError('invalid'); if (mounted.current) { setTour(recipe); setError(''); } } catch { if (mounted.current) setError(m.error_invalid); } })();
+        if (f) void (async () => { try { if (f.size > 512 * 1024) throw new PresentationError('size'); const recipe = parseDemoRecipe(JSON.parse(await f.text())); if (!recipe.steps.length) throw new PresentationError('invalid'); if (mounted.current) { setTour(recipe); setError(''); } } catch { if (mounted.current) setError('error_invalid'); } })();
       }} />
       <Typography variant="caption">{mime?.startsWith('video/mp4') ? 'MP4' : mime ? 'WebM' : m.unavailable}</Typography>
       <Button variant="outlined" disabled={viewer.isWebGPU || !mime || options.background === 'transparent' || (motion === 'tour' && !tour)} onClick={() => void start(true)}>{m.start}</Button>

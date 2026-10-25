@@ -25,10 +25,11 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 import { useViewer } from '../../hooks/use-viewer';
-import { getAppConfig } from '../rv-app-config';
+import { getLocale, useRvTranslation } from '../i18n';
+import { userHelpMessages } from '../i18n/catalogs/user-help';
+import { configuredHelpBase, openHelpTopic } from './help-destination';
 import { allowRuntimeEgressUrl } from '../deployment/runtime-egress';
 import type { LeftPanelSnapshot, PanelId } from './left-panel-manager';
-import { buildHelpUrl, openExternal } from './help-url';
 import { getHelpTopicsSnapshot, readPluginTopic, subscribeHelpTopics } from './help-topic-registry';
 import { isEditableTarget } from './search-shortcut';
 import { useUIVisible, type UIVisibilityRule } from './ui-context-store';
@@ -138,18 +139,12 @@ export function readHelpContextInput(viewer: HelpContextHost | null | undefined)
  * them. Strictly synchronous — see help-url.ts.
  */
 export function openCurrentHelp(viewer: HelpContextHost | null | undefined): void {
-  const configuredBase = getAppConfig().services?.documentation?.baseUrl
-    ?? getAppConfig().docs?.baseUrl;
-  if (!configuredBase) return;
-  const topic = deriveHelpTopic(readHelpContextInput(viewer));
-  const allowed = allowRuntimeEgressUrl(buildHelpUrl(topic, configuredBase), 'documentation');
-  if (allowed) openExternal(allowed.href);
+  openHelpTopic(deriveHelpTopic(readHelpContextInput(viewer)));
 }
 
 /** Whether help has a deployment-owned destination permitted by egress policy. */
 export function isDocumentationAvailable(): boolean {
-  const configuredBase = getAppConfig().services?.documentation?.baseUrl
-    ?? getAppConfig().docs?.baseUrl;
+  const configuredBase = configuredHelpBase();
   return Boolean(configuredBase && allowRuntimeEgressUrl(configuredBase, 'documentation'));
 }
 
@@ -174,6 +169,7 @@ const ZERO_VERSION = (): number => 0;
  * reasons would leave a stale tooltip and a stale accessible name behind.
  */
 export function useHelpTopic(): HelpTopic {
+  useRvTranslation('shell');
   const viewer = useViewer() as unknown as HelpContextHost & {
     modes?: { activeMode: string | null; subscribe: (cb: () => void) => () => void; getSnapshot: () => number };
     leftPanelManager?: {
@@ -196,7 +192,7 @@ export function useHelpTopic(): HelpTopic {
 
 /** Tooltip text, e.g. "Help: Layout Planner". */
 export function helpTooltip(topic: HelpTopic): string {
-  return `Help: ${helpTopicLabel(topic)}`;
+  return `${userHelpMessages(getLocale()).tooltip}${helpTopicLabel(topic, getLocale())}`;
 }
 
 /**
@@ -204,7 +200,8 @@ export function helpTooltip(topic: HelpTopic): string {
  * alone is not reliably announced by screen readers.
  */
 export function helpAriaLabel(topic: HelpTopic): string {
-  return `Open help for ${helpTopicLabel(topic)} (new tab)`;
+  const m = userHelpMessages(getLocale());
+  return `${m.ariaStart}${helpTopicLabel(topic, getLocale())}${m.ariaEnd}`;
 }
 
 /**

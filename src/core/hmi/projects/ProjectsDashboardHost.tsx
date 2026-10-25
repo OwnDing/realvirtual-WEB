@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { userFailure, userFailureText, type UserFailure } from '../../user-errors/failure';
+import { getLocale } from '../../i18n';
+import { UserHelpLink } from '../UserHelpLink';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -371,7 +374,7 @@ export function ProjectsDashboardHost() {
   // plan-370 dirty guard lives (§3.4). Calling it here rather than
   // reimplementing a guard is the whole point: one prompt, one rule.
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | UserFailure | { key: 'error.projectOpenFailed' | 'error.closeBeforeDelete' } | null>(null);
   // One confirm for every destructive verb — see DestructiveConfirmDialog.
   const [confirmReq, setConfirmReq] = useState<DestructiveConfirmRequest | null>(null);
   const [createHere, setCreateHere] = useState<(CreateHereRequest & { dir: FileSystemDirectoryHandle }) | null>(null);
@@ -384,7 +387,7 @@ export function ProjectsDashboardHost() {
     try {
       await fn();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : rvT('projects', 'error.verbFailed', { verb: label, detail: String(e) }));
+      setMessage(userFailure(e, 'project'));
     } finally {
       setBusy(false);
     }
@@ -421,7 +424,7 @@ export function ProjectsDashboardHost() {
           : id === DEMO_PROJECT_ID
             ? await store.openDemoProject()
             : await store.openRecentProject(id);
-        if (!ok) setMessage(rvT('projects', 'error.projectOpenFailed'));
+        if (!ok) setMessage({ key: 'error.projectOpenFailed' });
         else setProjectsView('project');
       } finally {
         // A failed open must not leave the flag armed for the next one.
@@ -457,7 +460,7 @@ export function ProjectsDashboardHost() {
         const ok = await store.openProjectFolder(dir);
         if (!ok) {
           pendingResumeRef.current = false;
-          setMessage(rvT('projects', 'error.projectOpenFailed'));
+          setMessage({ key: 'error.projectOpenFailed' });
           return;
         }
         setProjectsView('project');
@@ -907,7 +910,7 @@ export function ProjectsDashboardHost() {
     // Deleting the folder under the open project would leave the store
     // writing into nowhere — closing first is the user's explicit step.
     if (project.project?.id === id) {
-      setMessage(rvT('projects', 'error.closeBeforeDelete'));
+      setMessage({ key: 'error.closeBeforeDelete' });
       return;
     }
     setConfirmReq({
@@ -2446,7 +2449,8 @@ export function ProjectsDashboardHost() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert severity="warning" onClose={() => setMessage(null)} sx={{ fontSize: 12 }}>
-          {message}
+          {typeof message === 'string' ? message : message ? ('key' in message ? rvT('projects', message.key) : userFailureText(message, getLocale())) : ''}
+          <UserHelpLink topic="projects" />
         </Alert>
       </Snackbar>
     </>

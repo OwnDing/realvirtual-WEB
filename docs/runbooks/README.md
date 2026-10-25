@@ -20,3 +20,5 @@ authority: normative-registry
 - [DIAGNOSTIC_BUNDLE.md](DIAGNOSTIC_BUNDLE.md)：本地诊断包导出、脱敏边界、故障入口和支持人员排障。
 
 - [客户 IT 兼容性、最低配置与信任验收](COMPATIBILITY.md)
+
+- [用户文档维护](USER_DOCUMENTATION.md)：帮助包、教程媒体、错误分诊与交付。

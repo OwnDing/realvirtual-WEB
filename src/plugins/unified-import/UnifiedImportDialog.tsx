@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { userFailure, userFailureText } from '../../core/user-errors/failure';
+import { userHelpMessages } from '../../core/i18n/catalogs/user-help';
+import { UserHelpLink } from '../../core/hmi/UserHelpLink';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -43,7 +46,7 @@ import {
 import {
   abortImportJob, dismissImportOutcome, startImportJob, useImportJob,
 } from './import-job-store';
-import { useRvTranslation } from '../../core/i18n';
+import { getLocale, useRvTranslation } from '../../core/i18n';
 
 /**
  * Map known failure signatures to an actionable next step. Raw engine errors
@@ -53,16 +56,13 @@ import { useRvTranslation } from '../../core/i18n';
 export function remediationFor(message: string): string | null {
   const m = message.toLowerCase();
   if (/memory access out of bounds|out of memory|allocation fail|wasm memory|heap limit/.test(m)) {
-    return 'The in-browser CAD engine ran out of memory — try a lower tessellation quality, '
-      + 'enable "Split assembly", or convert via XYvirtual CONNECT.';
+    return userHelpMessages(getLocale()).memory;
   }
   if (/unreachable|failed to fetch|networkerror|load failed|timed? ?out/.test(m)) {
-    return 'The server could not be reached — check that XYvirtual CONNECT is running '
-      + 'and reachable, then try again.';
+    return userHelpMessages(getLocale()).network;
   }
   if (/unsupported|not supported|unknown format|failed to parse|unexpected token|invalid glb|corrupt/.test(m)) {
-    return 'The file could not be read — check that it is a valid, uncorrupted file in a '
-      + 'supported format.';
+    return userHelpMessages(getLocale()).invalid;
   }
   return null;
 }
@@ -343,8 +343,8 @@ export function UnifiedImportDialog({ viewer, open, onClose }: UnifiedImportDial
         {errors.map((e, i) => {
           const hint = remediationFor(e);
           return (
-            <Alert key={`e${i}`} severity="error" sx={{ mt: 1.25 }}>
-              {e}
+            <Alert key={`e${i}`} severity="error" sx={{ mt: 1.25 }} action={<UserHelpLink topic="models" />}>
+              {userFailureText(userFailure(undefined, 'load'), getLocale())}
               {hint && (
                 <Typography variant="caption" component="div" sx={{ mt: 0.25 }}>
                   {hint}

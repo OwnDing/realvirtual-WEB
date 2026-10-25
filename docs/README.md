@@ -80,3 +80,5 @@ authority: normative|normative-process|normative-registry|proposed|reference|sna
 6. 根目录旧技术文档在迁移前由 [`LEGACY_DOCUMENT_REGISTER.md`](LEGACY_DOCUMENT_REGISTER.md) 管理，不强行一次性重写。
 7. 运行 `./scripts/verify.sh governance` 检查元数据、唯一 ID、目录索引、链接、计划状态、旧文档登记和危险 AI 命令。
 8. `approved` 文档超过策略中的复审周期只产生显式 warning，不会仅因时间自动失效；Owner 必须结合语义漂移决定复审、降级或替代。
+
+- [用户文档](user/README.md)：随版本交付的双语用户手册。

@@ -239,9 +239,12 @@ try {
       { timeout: 30000 },
     );
     assert.equal(await page.evaluate(() => window.viewer.loading.getSnapshot().preview), true);
-    await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+    const retry = page
+      .getByTestId('model-load-feedback')
+      .getByRole('button', { name: 'Retry', exact: true });
+    await expect(retry).toBeVisible();
     await page.unroute('**/_perf/model.glb');
-    await page.getByRole('button', { name: 'Retry', exact: true }).click();
+    await retry.click();
     await ready(page);
   });
   await journey('quality-and-repeated-loads', async (page) => {

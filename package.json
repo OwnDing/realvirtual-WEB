@@ -21,7 +21,7 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.full.json --noEmit",
     "gen:mcp-docs": "node scripts/gen-mcp-docs.mjs",
-    "verify:governance": "node scripts/verify-governance-selftest.mjs && node scripts/verify-governance.mjs && node scripts/assert-docs-publishable.mjs",
+    "verify:governance": "node scripts/verify-governance-selftest.mjs && node scripts/verify-governance.mjs && node scripts/assert-docs-publishable.mjs && node scripts/user-help/build.mjs --check",
     "verify:static": "./scripts/verify.sh static",
     "build:project-scripts": "node scripts/compile-project-scripts.mjs",
     "gen:private-excludes": "node scripts/gen-private-test-excludes.mjs",
@@ -54,7 +54,10 @@
     "benchmark:performance": "node scripts/performance/verify-production.mjs --benchmark",
     "build:brand": "node scripts/prepare-brand-delivery.mjs",
     "gen:compatibility": "node scripts/generate-compatibility.mjs",
-    "verify:compatibility": "node scripts/verify-compatibility-production.mjs"
+    "verify:compatibility": "node scripts/verify-compatibility-production.mjs",
+    "build:help": "node scripts/user-help/build.mjs",
+    "check:help": "node scripts/user-help/build.mjs --check && node scripts/user-help/errors.mjs",
+    "verify:help": "node scripts/user-help/verify.mjs"
   },
   "engines": {
     "node": ">=18"

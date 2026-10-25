@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
+import { chineseHelpTopicLabels } from '../i18n/catalogs/user-help';
 
 /**
  * help-topics — the single place where documentation slugs live (plan-370).
@@ -37,6 +38,12 @@
  */
 export const KNOWN_DOC_SLUGS = [
   '',
+  'quickstart',
+  'tours',
+  'appearance',
+  'media',
+  'support',
+  'projects',
   'connect/development/ai-clients',
   'connect/development/rest-and-websocket-api',
   'connect/getting-started/first-connection',
@@ -92,6 +99,9 @@ export const HELP_FALLBACK: HelpTopic = { slug: '' };
  * layout planner, never as a call — it is intentionally NOT listed here.)
  */
 export const PANEL_TOPICS: Readonly<Record<string, HelpTopic>> = {
+  'visual-presentation': { slug: 'appearance' },
+  'demo-export': { slug: 'tours' },
+  'diagnostics': { slug: 'support' },
   'annotations': { slug: 'hmi/signals-and-alarms' },
   'connect': { slug: 'connect/overview' },
   'hierarchy': { slug: 'viewer/interface', anchor: 'hierarchy' },
@@ -120,11 +130,17 @@ export const MODE_TOPICS: Readonly<Record<string, HelpTopic>> = {
 
 /**
  * Human-readable page names — used for the tooltip and the accessible name
- * ("Open help for Layout Planner (new tab)"). English throughout, matching the
- * rest of the activity bar (Models, Hierarchy, Settings, AI Bridge).
+ * ("Open help for Layout Planner (new tab)"). The English reference names remain stable; Chinese display labels
+ * come from the user-help catalog.
  */
 export const DOC_SLUG_LABELS: Readonly<Record<string, string>> = {
   '': 'XYvirtual WEB',
+  'quickstart': 'Quick start',
+  'tours': 'Offline tours',
+  'appearance': 'Visual presentation',
+  'media': 'Media export',
+  'support': 'Diagnostics & support',
+  'projects': 'Projects and backup',
   'connect/development/ai-clients': 'AI Clients',
   'connect/development/rest-and-websocket-api': 'REST and WebSocket API',
   'connect/getting-started/first-connection': 'First Connection',
@@ -161,6 +177,7 @@ export const DOC_SLUG_LABELS: Readonly<Record<string, string>> = {
  * Label for a topic. Falls back to the raw slug for plugin-contributed topics
  * that point into a documentation set we know nothing about.
  */
-export function helpTopicLabel(topic: HelpTopic): string {
+export function helpTopicLabel(topic: HelpTopic, locale = 'en-US'): string {
+  if (locale === 'zh-CN' && chineseHelpTopicLabels[topic.slug]) return chineseHelpTopicLabels[topic.slug];
   return DOC_SLUG_LABELS[topic.slug] ?? (topic.slug || DOC_SLUG_LABELS['']);
 }

@@ -43,3 +43,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0018：兼容性规则与认证证据](ADR-0018-compatibility-evidence.md)
 
 - [ADR-0019：供应链证据与内容绑定的代码执行授权](ADR-0019-supply-chain-and-script-trust.md)：用户于 2026-10-20 批准 EP-SEC-001 后接受。
+
+- [ADR-0020：离线帮助与错误展示](ADR-0020-offline-user-help.md)

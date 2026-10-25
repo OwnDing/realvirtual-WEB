@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { onLocaleChange } from './core/i18n';
+import { userFailure, userFailureText } from './core/user-errors/failure';
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
 /**
@@ -223,6 +225,7 @@ const loadingProgressBar = document.getElementById('loading-progress-bar')!;
 const loadingProgressPct = document.getElementById('loading-progress-pct')!;
 const loadingProgressWrap = loadingProgressBar.parentElement?.parentElement ?? null;
 const loadingError = document.getElementById('loading-error')!;
+let currentLoadingDetail: (() => string) | null = null;
 const loadingErrorDetail = document.getElementById('loading-error-detail')!;
 const loadingRetryBtn = document.getElementById('loading-retry-btn') as HTMLButtonElement;
 const loadingReloadBtn = document.getElementById('loading-reload-btn') as HTMLButtonElement;
@@ -242,6 +245,7 @@ const loadingReloadBtn = document.getElementById('loading-reload-btn') as HTMLBu
  * `tests/i18n-preboot.node.test.ts` stops the copies from drifting apart.
  */
 function applyPrebootText(): void {
+  if (currentLoadingDetail) loadingErrorDetail.textContent = currentLoadingDetail();
   const set = (selector: string, value: string) => {
     const el = document.querySelector(selector);
     if (el) el.textContent = value;
@@ -254,8 +258,9 @@ function applyPrebootText(): void {
   loadingLabel.textContent = rvT('preboot', 'loading');
 }
 applyPrebootText();
+const releaseLoadingLocale = onLocaleChange(applyPrebootText);
 const diagnosticErrorEntry = bindDiagnosticErrorEntry(loadingError);
-if (import.meta.hot) import.meta.hot.dispose(() => { diagnosticErrorEntry.dispose(); releaseDiagnosticCapture(); });
+if (import.meta.hot) import.meta.hot.dispose(() => { diagnosticErrorEntry.dispose(); releaseDiagnosticCapture(); releaseLoadingLocale(); });
 
 function showLoadingOverlay(modelName: string) {
   loadingLabel.textContent = rvT('preboot', 'loading');
@@ -271,17 +276,19 @@ function showLoadingOverlay(modelName: string) {
 // retries, or the WebGL context was lost). On mobile the console is invisible, so
 // surfacing the failure here — with a Retry — is the difference between a usable
 // error and a silent "empty scene". `detail` is a short, user-readable reason.
-function showLoadingError(detail: string) {
+function showLoadingError(detail: () => string) {
+  currentLoadingDetail = detail;
   diagnosticErrorEntry.refresh();
   if (loadingProgressWrap) loadingProgressWrap.style.display = 'none';
   loadingStatus.style.display = 'none';
-  loadingErrorDetail.textContent = detail;
+  loadingErrorDetail.textContent = detail();
   loadingError.classList.remove('hidden');
   loadingOverlay.classList.add('has-error');
   loadingOverlay.classList.remove('fade-out', 'hidden');
 }
 
 function hideLoadingError() {
+  currentLoadingDetail = null;
   loadingOverlay.classList.remove('has-error');
   loadingError.classList.add('hidden');
   loadingStatus.style.display = '';
@@ -1330,7 +1337,8 @@ async function init() {
         hideLoadingOverlay();
         failConnectEmbedDemoLoad(reason);
       } else {
-        showLoadingError(`${reason}\n${url}`);
+        const failure = userFailure(e, 'load');
+        showLoadingError(() => userFailureText(failure, getLocale()));
       }
       return { ok: false, error: reason } as const;
     }
@@ -1448,7 +1456,7 @@ async function init() {
   // A lost WebGL context (mobile GPU memory pressure, long-backgrounded tab)
   // leaves a permanently blank canvas. Surface it with a reload prompt.
   viewer.on('renderer-context-lost', () => {
-    showLoadingError(rvT('shell', 'diagnostics.contextLost'));
+    showLoadingError(() => rvT('shell', 'diagnostics.contextLost'));
   });
 
   // Preferred workspace mode derived from an opened published example's catalogue
@@ -1983,6 +1991,6 @@ async function init() {
 
 init().catch(error => {
   diagnosticSession.record('BOOT_FAILED', error);
-  showLoadingError(rvT('shell', 'diagnostics.bootFailed'));
+  showLoadingError(() => rvT('shell', 'diagnostics.bootFailed'));
   console.error(error);
 });
