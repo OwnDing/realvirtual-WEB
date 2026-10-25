@@ -45,3 +45,7 @@ PR #19 的首轮 CI 中，Governance/Static/Node/Build 与 Windows compatibility
 2026-10-25 继续处理合并：提交 `9769d8c` 的 CI 首次在未修改的 SDK 5 ms 中断用例失败，该文件本地 5 用例独立复核通过；仅重跑 Browser Gate，没有更改测试或时间预算。重跑通过全部八个浏览器分片、独立性能测试、离线帮助与其他生产旅程，最终渐进加载旅程失败：两个加载层的按钮均已正确显示英文 Retry，全页面定位不再唯一。将该旅程定位限定到预览反馈面板，继续验证按钮可见、真实点击重试和恢复 ready；原生加载层的产品行为保持。
 
 定位修正后，本地完整 `npm run verify:performance` 的九个生产场景通过，包括失败后保留预览并成功重试、取消/重复加载、质量设置和延迟任务取消；治理检查通过。证据写入 `test-results/loading-performance/`。提交后的远端必需检查和最终合并状态以 PR #19 为准。
+
+提交 `153341d` 的 CI 通过治理、静态、Node、构建、Windows Chrome/Edge、离线帮助、隔离网络、HTTPS 演示、脚本安全及全部八个浏览器分片。随后白标生产测试因测试模型缺失 `.perf.json` 返回 404 失败，渐进加载生产步骤因此未执行。按 Performance Package v1 契约使用现有生成器补齐白标夹具的可选性能资源，新增清单 HTTP 成功检查，并将派生目录纳入原有零资源错误断言；没有忽略 404 或放宽品牌断言。
+
+夹具修正后，完整 `node scripts/test-white-label.mjs` 通过首次绘制、工作台/刷新、子路径、严格 CSP 访问页及断网品牌演示验证；结果保存在 `test-results/white-label/result.json`。

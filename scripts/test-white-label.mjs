@@ -10,6 +10,7 @@ import { chromium, expect } from 'playwright/test';
 import sharp from 'sharp';
 import { build } from 'esbuild';
 import { prepareBrandDelivery } from './prepare-brand-delivery.mjs';
+import { prepareModel } from './performance/prepare-model.mjs';
 const root = await mkdtemp(join(tmpdir(), 'rv-brand-e2e-'));
 const artifacts = resolve('test-results/white-label'); await mkdir(artifacts, { recursive: true });
 const assets = join(root, 'assets'); await mkdir(assets);
@@ -39,6 +40,9 @@ try {
   const output = await prepareBrandDelivery({ input: 'dist', output: join(root, 'release'), settings, assets, base: '/twin/', pageUrl: 'https://brand.example.test/twin/' });
   await mkdir(join(output, 'models'), { recursive: true });
   await writeFile(join(output, 'models/brand-model.glb'), model());
+  // Supply the optional performance assets too, so a fast source load does not
+  // decide whether an otherwise missing fixture response is observed.
+  await prepareModel(join(output, 'models/brand-model.glb'));
   const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.glb': 'model/gltf-binary' };
   server = createServer(async (req, res) => {
     const path = new URL(req.url, 'http://localhost').pathname;
@@ -72,13 +76,14 @@ try {
   });
   context.on('request', request => { if (/^https?:/.test(request.url()) && new URL(request.url()).origin !== origin) external.push(request.url()); });
   const page = await context.newPage(); page.on('pageerror', error => errors.push(error.message));
-  page.on('response', response => { if (response.status() >= 400 && /(?:_brand\/|brand-model\.glb)/.test(response.url())) errors.push(`Missing fixture/brand resource: ${new URL(response.url()).pathname}`); });
+  page.on('response', response => { if (response.status() >= 400 && /(?:_brand\/|brand-model\.glb|rv-performance\/)/.test(response.url())) errors.push(`Missing fixture/brand resource: ${new URL(response.url()).pathname}`); });
   page.on('requestfailed', request => { if (request.failure()?.errorText !== 'net::ERR_ABORTED') failed.push(new URL(request.url()).pathname); });
   await page.goto(origin + '/twin/?mode=viewer');
   await expect(page.getByTestId('model-load-feedback')).toHaveAttribute('data-phase', 'ready', { timeout: 90000 });
   await expect(page.locator('#react-root img[alt="Amber"]')).toBeVisible({ timeout: 90000 });
   await expect(page.getByTestId('brand-attribution')).toHaveText('Customer technology');
   await expect(page).toHaveTitle('Factory Amber Twin');
+  await expect(await page.request.get(origin + '/twin/models/brand-model.glb.perf.json')).toBeOK();
   const manifest = await (await page.request.get(origin + '/twin/manifest.json')).json();
   assert.equal(manifest.name, 'Factory Amber'); assert.equal(manifest.scope, '/twin/');
   await page.reload();
