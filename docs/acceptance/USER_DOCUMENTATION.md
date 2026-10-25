@@ -3,7 +3,7 @@ doc_id: ACCEPT-DOCS-001
 title: 用户文档与帮助验收矩阵
 status: approved
 owner: qa
-last_reviewed: 2026-10-24
+last_reviewed: 2026-10-25
 authority: normative
 ---
 
@@ -41,3 +41,7 @@ authority: normative
 ## 合并前 CI 跟进
 
 PR #19 的首轮 CI 中，Governance/Static/Node/Build 与 Windows compatibility 通过，生产用户帮助旅程通过；Browser Gate 在第 5 分片因 `glb-file-provider.test.ts` 仍固定断言旧英文排障句子失败。按双语规格将该测试同步为分别切换中英文、验证内存/网络/格式三类可操作指引，并保留未知错误反例；本地相关 2 文件、20 用例及治理检查通过。远端合并以同一提交的必需检查为准，不能用本地结果覆盖 CI 失败。
+
+2026-10-25 继续处理合并：提交 `9769d8c` 的 CI 首次在未修改的 SDK 5 ms 中断用例失败，该文件本地 5 用例独立复核通过；仅重跑 Browser Gate，没有更改测试或时间预算。重跑通过全部八个浏览器分片、独立性能测试、离线帮助与其他生产旅程，最终渐进加载旅程失败：两个加载层的按钮均已正确显示英文 Retry，全页面定位不再唯一。将该旅程定位限定到预览反馈面板，继续验证按钮可见、真实点击重试和恢复 ready；原生加载层的产品行为保持。
+
+定位修正后，本地完整 `npm run verify:performance` 的九个生产场景通过，包括失败后保留预览并成功重试、取消/重复加载、质量设置和延迟任务取消；治理检查通过。证据写入 `test-results/loading-performance/`。提交后的远端必需检查和最终合并状态以 PR #19 为准。
