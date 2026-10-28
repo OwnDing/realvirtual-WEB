@@ -17,6 +17,7 @@ authority: normative
 - [`HARNESS.md`](HARNESS.md)：本地与 CI 共用的质量门禁。
 - [`REPOSITORY_FACTS.md`](REPOSITORY_FACTS.md)：易漂移事实的验证方法和当前基线。
 - [`OPEN_DECISIONS.md`](OPEN_DECISIONS.md)：必须由 Owner 拍板的实施闸口。
+- [`COMMERCIAL_RELEASE_GATES.md`](COMMERCIAL_RELEASE_GATES.md)：阶段 A 遗留的权利事实、署名、源码和实际制品发布证据，保留未通过项。
 - [`KNOWN_DEVIATIONS.md`](KNOWN_DEVIATIONS.md)：现有实现偏离 Approved 目标时的证据、围栏和关闭路径。
 - [`document-metadata-policy.json`](document-metadata-policy.json)：状态、权威、Owner、合法组合和复审告警周期的机器事实源。
 

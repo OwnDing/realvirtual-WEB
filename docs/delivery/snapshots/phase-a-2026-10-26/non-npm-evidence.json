@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "runtimeLocks": [
+    {
+      "path": "appliance/dependencies/locks/linux-arm64-base-images.json",
+      "sha256": "bf64562fa8e4cf47524c6d1d9c214c0a86be3e3a791ee355a5f9165299e1878a",
+      "declaration": {
+        "schemaVersion": 1,
+        "target": "linux-arm64",
+        "resolvedAt": "2026-08-30T00:00:00.000Z",
+        "images": {
+          "edge": "caddy:2.11.4-alpine@sha256:1172d4213087d3fc30bafc7ff2c2896180eb0c41ff7f75f315568fb36cabdcba",
+          "control": "node:24.20.0-bookworm-slim@sha256:e9b5516b06baeaea9a8e65a7aec6a85fbb960a30b52b66968f2c8092b3e2a3eb",
+          "connect": "debian:12-slim@sha256:6bd27d44e6c32a66bbd72d7cb2b76a8ae3497ec2e5274a81abd1b37f6013fa1f",
+          "forgejo": "codeberg.org/forgejo/forgejo:15.0.7@sha256:631a9e0075004a975cf2c66309c7a165062442696aa602af9659c5ea9585c436",
+          "influxdb": "influxdb:2.9.1@sha256:f8af6f227b5932201b7714580b9d569a3fb88a8d63af9451a61f436f55c15d4d"
+        }
+      }
+    },
+    {
+      "path": "appliance/dependencies/locks/linux-arm64-native-downloads.json",
+      "sha256": "75bba11bd69c0060fc5e5a0580b3038feba9b092db0ba0d12227d80cfd9e3b1a",
+      "declaration": {
+        "schemaVersion": 1,
+        "target": "linux-arm64",
+        "resolvedAt": "2026-08-30T00:00:00.000Z",
+        "artifacts": [
+          {
+            "component": "node",
+            "version": "24.20.0",
+            "url": "https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-arm64.tar.xz",
+            "bytes": 30778928,
+            "sha256": "5f4ddab610c1ab2016b3c227cebdbf6d9495161487e4739c7b90090595f465f7"
+          },
+          {
+            "component": "caddy",
+            "version": "2.11.4",
+            "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.4/caddy_2.11.4_linux_arm64.tar.gz",
+            "bytes": 15704974,
+            "sha256": "52d42ae12b3462097e9868da6dfed3c9648ae12edd3b3638102312af84cb6904",
+            "upstreamSha512": "d5a7c423853c24a799765e0e8210d5c7c22a8f56ed37a3cae2fb9f58be138853c02b4efd6b59d576e6d8c7c0d30b9c1592deeaa6a536ff69bcca23b8c1ea709c"
+          },
+          {
+            "component": "forgejo",
+            "version": "15.0.7",
+            "url": "https://code.forgejo.org/forgejo/forgejo/releases/download/v15.0.7/forgejo-15.0.7-linux-arm64",
+            "bytes": 107071776,
+            "sha256": "ba3a543822c734439c2f84145a9d5cf7e449aacfd9ee0b2f8fa87926feb42c80"
+          },
+          {
+            "component": "influxdb",
+            "version": "2.9.1",
+            "url": "https://download.influxdata.com/influxdb/releases/influxdb2-2.9.1_linux_arm64.tar.gz",
+            "bytes": 52720410,
+            "sha256": "a99c3b89fc580f945a6d7a7b0b9c66961bb8b3bf9ddaaab1dae17cdf6af531c9"
+          },
+          {
+            "component": "influx-cli",
+            "version": "2.8.0",
+            "url": "https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.8.0-linux-arm64.tar.gz",
+            "bytes": 11325580,
+            "sha256": "95cda9399dcda3c704dd8ab929c2c08f20e55cab7273dd1f3d305be942530232"
+          }
+        ]
+      }
+    }
+  ],
+  "embedded": [
+    {
+      "path": "node_modules/occt-import-js/dist/occt-import-js.wasm",
+      "bytes": 7604031,
+      "sha256": "9bfead6e1ccd2edbcd4fd0377e90af272a5993557a2be18f632fb749334e310f"
+    },
+    {
+      "path": "node_modules/occt-import-js/dist/occt-import-js.js",
+      "bytes": 96871,
+      "sha256": "ae6f97030e26aa1b322bca4874aef541636f981dca3bdb6505ddae8586fecddc"
+    },
+    {
+      "path": "public/pdf.worker.min.js",
+      "bytes": 1046214,
+      "sha256": "dbcae78a691b3c501508f74b774c6066a57a14a76cefdc9e25ad86b651bb75d5"
+    }
+  ],
+  "buildGraphs": [
+    {
+      "path": "dist/security-build-graph.json",
+      "sha256": "7e0933f85042979e564b78e2c8523a1f50d1929cea4805de57236900ee8fe487",
+      "mtime": "2026-10-24T00:24:58.980Z",
+      "lockSha256": "2353e5bd29f7d21108131b71ae12e9c4dfaa3309ef23ed1d1aaf6ce40754f8cc",
+      "revision": null,
+      "inputCount": 277,
+      "currentReleaseVerified": false
+    },
+    {
+      "path": "dist/demo-player/security-build-graph.json",
+      "sha256": "c1d5fb5a456d6c50f98d3e3750b635860ead2cec8508c9e38c16fe543ec3bbb5",
+      "mtime": "2026-10-24T00:25:40.580Z",
+      "lockSha256": "2353e5bd29f7d21108131b71ae12e9c4dfaa3309ef23ed1d1aaf6ce40754f8cc",
+      "revision": null,
+      "inputCount": 6,
+      "currentReleaseVerified": false
+    },
+    {
+      "path": "dist/demo-player/demo-player.json",
+      "sha256": "1810a1846b974564abf0f2473724b0d0e5de4c4fa5d78aa1af0b14ea7e4da7ae",
+      "mtime": "2026-10-24T00:25:42.312Z",
+      "lockSha256": null,
+      "revision": "270541c229a0630096ac472016e8214227463117-dirty",
+      "inputCount": null,
+      "currentReleaseVerified": false
+    }
+  ],
+  "runtimePayloadsVerified": false
+}

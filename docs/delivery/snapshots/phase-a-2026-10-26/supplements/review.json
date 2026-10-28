@@ -1,0 +1,4008 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-26T06:40:00.169Z",
+  "inventorySha256": "0036e3a01b0676e65fa6c569facd29a64e1ea075f7f9f4d36e0df77932800452",
+  "counts": {
+    "packageVersions": 141,
+    "found": 122,
+    "unresolved": 19
+  },
+  "limitation": "Publisher gitHead + matching archive integrity is a source mapping lead. Scope, embedded notices and fulfillment require review. No gate result or legal right is overridden.",
+  "results": [
+    {
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/aix-ppc64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Faix-ppc64/0.25.12",
+        "sha256": "425e466b5b48e241ab32cfd4032d8f0225d5609abfae891aee79f0b9e833245a",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-arm",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/android-arm"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-arm/0.25.12",
+        "sha256": "bf15fa389b5c66753751f16e29b208559ab665656da2887e1ad94366dd1542c2",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/android-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-arm64/0.25.12",
+        "sha256": "476dca7e2616b8e01f25e4e8e7e803de4ef092e427aed6e12356c0085a5aefe5",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/android-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-x64/0.25.12",
+        "sha256": "9428f81ad0e4375071212901db2714c0968e63c284f249c33787c378f04da4ba",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/darwin-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fdarwin-arm64/0.25.12",
+        "sha256": "d2892c9fb6513d8c36969f0b800acd47b993cc2d3dc30358837bbef3fb9e8dab",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/darwin-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/darwin-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fdarwin-x64/0.25.12",
+        "sha256": "c8c781af60dcc1f9e212c49ef6f2467173312d92face7c37569a9335711773e6",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/freebsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Ffreebsd-arm64/0.25.12",
+        "sha256": "1bf067b3b9728c1ff5ebe6ff49114e93b0e1fb370cf30d45f62640a5cdafc4b0",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/freebsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Ffreebsd-x64/0.25.12",
+        "sha256": "017be07c370f6a72a8949e24df2af54a82afcd524692dfcaf010eda764a2422e",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-arm",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-arm"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-arm/0.25.12",
+        "sha256": "93b182241993a5af470d3ec4ffa683926579c8fc59c63d2380e8e827eca6ddec",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-arm64/0.25.12",
+        "sha256": "804ecfa628c96b7aa71891028ef69b6b269804985700769728f66ce06e3892d1",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-ia32",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-ia32"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-ia32/0.25.12",
+        "sha256": "352e2d0ec44ea84fec654984a21e35a4c6c94500760720b5b67022d3d04a9671",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-loong64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-loong64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-loong64/0.25.12",
+        "sha256": "0c5fe2df0d2ac470390a5953f6ebe9125991ae201380114a340a732c1b8a5745",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-mips64el"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-mips64el/0.25.12",
+        "sha256": "57b83c6ed3a6fe5f935673183eb50e425506362d6b7aad15d71c7a94d53be1eb",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-ppc64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-ppc64/0.25.12",
+        "sha256": "009aa8c796273f88ddd7b0c01787f0cf541593f1e652a789a6424c8a5934eaaf",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-riscv64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-riscv64/0.25.12",
+        "sha256": "5049958bf81ea1caff51578ddf1ba8a685312ec46ae921844db96bcc2f6b75ff",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-s390x",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-s390x"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-s390x/0.25.12",
+        "sha256": "3de5ad92c3990e2e387f70d0e05df7412ef3edd8988f0508ee011ac5f62c9a4a",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/linux-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-x64/0.25.12",
+        "sha256": "fbe354283efc0fe2ff022119e42a3d5dba299676426dcae05f1d0fcced689860",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/netbsd-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/netbsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fnetbsd-arm64/0.25.12",
+        "sha256": "8f1fb3021c2147f226123629d4cd13cf6ed7022d463e477a756c1717cc69a41e",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/netbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fnetbsd-x64/0.25.12",
+        "sha256": "3ac93219c455645a5f8fbc50f4ff57b1b3ddf1cdad4f848213f8b42300281d1b",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/openbsd-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/openbsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fopenbsd-arm64/0.25.12",
+        "sha256": "0c15df01437390e7ac6fb81955bc984af27515872e253ccadd862025322ce73a",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/openbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fopenbsd-x64/0.25.12",
+        "sha256": "c6cc19537231e964f1e0cb510da88f7bc018ea6c498f211e50db8b053575d739",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/openharmony-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/openharmony-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fopenharmony-arm64/0.25.12",
+        "sha256": "95a249ea21534e09076b446effd19d18ebf0f81c2723eca46b91b1d89032a6dc",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/sunos-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/sunos-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fsunos-x64/0.25.12",
+        "sha256": "061758b849680147e99f80e653aab6d4a7ca1a22990cb6f19c04f2d11a30a617",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-arm64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/win32-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-arm64/0.25.12",
+        "sha256": "7c3ec7db833caaedfd551304dfa6f630dff419a7635227820f66adca0bb76e3f",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-ia32",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/win32-ia32"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-ia32/0.25.12",
+        "sha256": "6cfd4d585d51aaac8f97669e854ddd855878f9c4c469efe766e7b10a0fddc1ab",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-x64",
+      "version": "0.25.12",
+      "paths": [
+        "web:node_modules/@esbuild/win32-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-x64/0.25.12",
+        "sha256": "3ba71b8b58f3066452df74b6a6c6a69286b57f624d032e374dee9dcd828c81e5",
+        "gitHead": "208f539945b145e7c9d6d844290f81c3fe5af320",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/208f539945b145e7c9d6d844290f81c3fe5af320/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@humanfs/types",
+      "version": "0.15.0",
+      "paths": [
+        "web:node_modules/@humanfs/types"
+      ],
+      "declaration": "Apache-2.0",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/LICENSE",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/LICENSE.md",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/LICENSE.txt",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/license",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/license.md",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/COPYING",
+        "https://raw.githubusercontent.com/humanwhocodes/humanfs/85069f193cbacc371c3beb649ce746f8c5a493be/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40humanfs%2Ftypes/0.15.0",
+        "sha256": "debc8d4e7eb6bf6c1e25264f6cca07bccab958e3b8a16d9e79e1554dfa927917",
+        "gitHead": "85069f193cbacc371c3beb649ce746f8c5a493be",
+        "repository": {
+          "url": "git+https://github.com/humanwhocodes/humanfs.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-darwin-arm64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-arm64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-darwin-arm64/1.3.4",
+        "sha256": "37386f3a91996d622deb24fec04bd1d18d76e414855ece2b7e86b83b22e0395b",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/darwin-arm64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-darwin-x64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/darwin-x64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-darwin-x64/1.3.4",
+        "sha256": "22d855b5746dd229baa1f04ede9397c8dd59eed611748531f5acafdc77a952a3",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/darwin-x64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-arm"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-arm/1.3.4",
+        "sha256": "7c456f32c9f363821d40c04ea55d68e068cf1da0d87dd723f2a42411af700cac",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-arm"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-arm64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-arm64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-arm64/1.3.4",
+        "sha256": "ae6886fe1b96901cbf85c41740938dfa57dc74e1435c5ed084803086a474f9c5",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-arm64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-ppc64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-ppc64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-ppc64/1.3.4",
+        "sha256": "21de2fd0572bb7ea1ce74914c0f02dc2fb0e6a6c32c63180bc5f1ef3b96097b6",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-ppc64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-riscv64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-riscv64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-riscv64/1.3.4",
+        "sha256": "d329438abfdebab5a24992f30e2be934048920c185d351f168f04bf1130a9c65",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-riscv64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-s390x"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-s390x/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-s390x/1.3.4",
+        "sha256": "a1ea308ea460b724f1da6e251e0a4564415475b8e1b7a4722d4508a75269c9a5",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-s390x"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linux-x64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linux-x64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linux-x64/1.3.4",
+        "sha256": "f88163320513e36d7dd201d0587c95d4bb4bd4a2e77901754a20647e803e7507",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linux-x64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linuxmusl-arm64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-arm64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linuxmusl-arm64/1.3.4",
+        "sha256": "4dc0d925fa4f45581f63ea6d4417d57bb58b3800cdafdc718f394ba577c96d75",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linuxmusl-arm64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "paths": [
+        "web:node_modules/@img/sharp-libvips-linuxmusl-x64"
+      ],
+      "declaration": "LGPL-3.0-or-later",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/LICENSE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/LICENSE.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/LICENSE.txt",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/license",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/license.md",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/COPYING",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/npm/linuxmusl-x64/LICENCE",
+        "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40img%2Fsharp-libvips-linuxmusl-x64/1.3.4",
+        "sha256": "8a7977500d66633080779d6712ec24246e0485f1b0025ccfd1ac2edca0cab5ad",
+        "gitHead": "ebb95f8add54eee8bed840e3fb587e4cbec857d7",
+        "repository": {
+          "url": "git+https://github.com/lovell/sharp-libvips.git",
+          "type": "git",
+          "directory": "npm/linuxmusl-x64"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/ebb95f8add54eee8bed840e3fb587e4cbec857d7/LICENSE",
+        "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-android-arm64",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-android-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-android-arm64/0.1.100",
+        "sha256": "5d5bde1df18cae8e623353c6d84458ee5afe9e227789ac1d6d652f33f0f98c74",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-darwin-arm64",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-darwin-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-darwin-arm64/0.1.100",
+        "sha256": "74be872c71280d454ef836153a660097701e1d72c4e91f1ff9fd12e9ce5bc99f",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-darwin-x64",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-darwin-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-darwin-x64/0.1.100",
+        "sha256": "94b753695c80a556ffb8d3f2031558cfe0471f64587e00eaf8fc5bfde1478343",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-arm-gnueabihf",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-arm-gnueabihf"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-arm-gnueabihf/0.1.100",
+        "sha256": "a3859c8073f081fb235ea8d05e3d86cd4b1e557eb82123c3ddc78da333eca81f",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-arm64-gnu",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-arm64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-arm64-gnu/0.1.100",
+        "sha256": "c80f78b9827f3b842f7ca7190a5be195a6a569038ef89fa57c4eeec227f12af7",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-arm64-musl",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-arm64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-arm64-musl/0.1.100",
+        "sha256": "a285fff160cf5cb32fc8b7b044df337bf5fdf44de510ff6b7e0e209717be32c4",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-riscv64-gnu",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-riscv64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-riscv64-gnu/0.1.100",
+        "sha256": "e9bf9a4897fc63f56d7268bf7443dece5e5167a4918e660ce9174fcd6674580c",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-x64-gnu",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-x64-gnu/0.1.100",
+        "sha256": "aaf9b0782a9a7cc4d79360cdb5da33cad725d869e9c5a51b6c4aca4b693936aa",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-linux-x64-musl",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-linux-x64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-linux-x64-musl/0.1.100",
+        "sha256": "e2930ce74b0bbdbe3f2dd32ce35bfd4a4d163a0d96af97629c5ed106d1fc06ea",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-win32-arm64-msvc",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-win32-arm64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-win32-arm64-msvc/0.1.100",
+        "sha256": "c40ee2ba1e839930474a9ac687cfdc7a22ee85b9006c218e16ea79bb01bde480",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/canvas-win32-x64-msvc",
+      "version": "0.1.100",
+      "paths": [
+        "web:node_modules/@napi-rs/canvas-win32-x64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Fcanvas-win32-x64-msvc/0.1.100",
+        "sha256": "a6998e9a5ad4eb651ffa152c1a19e59e6ea9f72fd929ade2ed49c937c26273de",
+        "gitHead": "db337893b9b53483050ca7b24c6d306e4da06741",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/canvas.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE",
+        "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6"
+      }
+    },
+    {
+      "name": "@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "paths": [
+        "web:node_modules/@napi-rs/lzma-linux-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/LICENSE",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/LICENSE.md",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/LICENSE.txt",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/license",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/license.md",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/COPYING",
+        "https://raw.githubusercontent.com/Brooooooklyn/lzma/f164df92d83e095f195d628b1a68a141ae2eb638/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40napi-rs%2Flzma-linux-x64-gnu/1.5.1",
+        "sha256": "583f8b4bfc4c8838baea2394986c9deb1e915ba2a8948481903aa266229ec6cb",
+        "gitHead": "f164df92d83e095f195d628b1a68a141ae2eb638",
+        "repository": {
+          "url": "git+https://github.com/Brooooooklyn/lzma.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "@npmcli/agent",
+      "version": "3.0.0",
+      "paths": [
+        "web:node_modules/@npmcli/agent"
+      ],
+      "declaration": "ISC",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/LICENSE",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/LICENSE.md",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/LICENSE.txt",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/license",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/license.md",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/COPYING",
+        "https://raw.githubusercontent.com/npm/agent/94f346d882458ac9481d015c55057d15f5899bf1/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40npmcli%2Fagent/3.0.0",
+        "sha256": "a5af52b5733bb1ba8094a69696aeceded240c3b930f9ff8b4af68524fc523ac3",
+        "gitHead": "94f346d882458ac9481d015c55057d15f5899bf1",
+        "repository": {
+          "url": "git+https://github.com/npm/agent.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "@polka/url",
+      "version": "1.0.0-next.29",
+      "paths": [
+        "web:node_modules/@polka/url"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lukeed/polka/02cbdb529ddca0a9f3d225e2abb2931924219cc3/LICENSE",
+        "https://raw.githubusercontent.com/lukeed/polka/02cbdb529ddca0a9f3d225e2abb2931924219cc3/LICENSE.md",
+        "https://raw.githubusercontent.com/lukeed/polka/02cbdb529ddca0a9f3d225e2abb2931924219cc3/LICENSE.txt",
+        "https://raw.githubusercontent.com/lukeed/polka/02cbdb529ddca0a9f3d225e2abb2931924219cc3/license"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40polka%2Furl/1.0.0-next.29",
+        "sha256": "0a563aea8fb1fb474b44a24082579ebcec98fe850311f719a0c37bc845543307",
+        "gitHead": "02cbdb529ddca0a9f3d225e2abb2931924219cc3",
+        "repository": {
+          "url": "git+https://github.com/lukeed/polka.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lukeed/polka/02cbdb529ddca0a9f3d225e2abb2931924219cc3/license",
+        "sha256": "ba573393f24555ac0528612ad39665fab5bdcc80330a61096024bbf5f736526d"
+      }
+    },
+    {
+      "name": "@rollup/rollup-android-arm-eabi",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-android-arm-eabi"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-android-arm-eabi/4.64.12",
+        "sha256": "3e4dc5ed8383e778c65b051b305c22be1d004d0be049714edd5ca9ab517e80ad",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-android-arm64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-android-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-android-arm64/4.64.12",
+        "sha256": "d5ef2ed1e7e794742e3c7924dc39a8845b612b131434e4f5951ee62e6ba1c837",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-darwin-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-darwin-arm64/4.64.12",
+        "sha256": "0b71acc50231af04240a9765b2852770ec828148cab46e40fcde48ae5fc77696",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-darwin-x64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-darwin-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-darwin-x64/4.64.12",
+        "sha256": "7cabad6f34e23ff63dd5a5b9dcdb71113c49d64bd3d5fd82bb8d1f59ed39ae27",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-freebsd-arm64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-freebsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-freebsd-arm64/4.64.12",
+        "sha256": "367fed5635a3f84267017248ed1c7a475bf1d9da3fbf7bb768d2415860b7f36d",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-freebsd-x64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-freebsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-freebsd-x64/4.64.12",
+        "sha256": "570e7bea0274ef098df9fa83eba43d843c8c05450cf522e304181320e7173a34",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-arm-gnueabihf"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm-gnueabihf/4.64.12",
+        "sha256": "630c73f143dbdd1746d8b16fc2a50be3438a7efb641313fec34eff7896cbb8ad",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-arm-musleabihf"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm-musleabihf/4.64.12",
+        "sha256": "53c54d8ceecad6cf74096f2b9b2e40b5a7725fd51cf5cac6dc93eb3553a586e8",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-arm64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm64-gnu/4.64.12",
+        "sha256": "c68e6a961127e2a14ae0db21e1596b292b2d25b9fdfa73dae4893a388aaa0326",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-arm64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm64-musl/4.64.12",
+        "sha256": "4684aa3dbe39324813fa413504369ca8916c2e547a2fc7ae02cce9a10d9c3a02",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-loong64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-loong64-gnu/4.64.12",
+        "sha256": "b788a5ab56c18496e0a03337cf6032883a1d6ae112c27095d259a303d5f94a32",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-loong64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-loong64-musl/4.64.12",
+        "sha256": "7db31d5caaf325b7a8f267338b6800638aa0ccc6b519421274ae03c1db98890a",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-ppc64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-ppc64-gnu/4.64.12",
+        "sha256": "315a0e7ebb0bcec5c705b43eeb4226cb927d865131f69b130a5b5d184c6557cb",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-ppc64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-ppc64-musl/4.64.12",
+        "sha256": "8c09f47491886f3bae9a685be55b551f1755aa712082748b1be52689e2f255db",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-riscv64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-riscv64-gnu/4.64.12",
+        "sha256": "58760f17a918da7dc4e8e583458efc94f2ed60477665f63e978a65fc1ee70427",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-riscv64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-riscv64-musl/4.64.12",
+        "sha256": "a3a82652706debd00af012a8079204556b12ae6ee56361fdec1161d84eed8b1d",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-s390x-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-s390x-gnu/4.64.12",
+        "sha256": "9db3bcc0abb371327dffa5c3412566dc3641266d25915e4a90b145672567bf2f",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-x64-gnu/4.64.12",
+        "sha256": "4a4ae0624973a1c826e02af18967d3200f396d8f99306da4888fa8e227fb9dfc",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-linux-x64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-x64-musl/4.64.12",
+        "sha256": "ac6dc0d94e0f4e46c7754690c4278ec656a2944873bbde333f9d4a6fdcc2635d",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-openbsd-x64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-openbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-openbsd-x64/4.64.12",
+        "sha256": "10451b3f689c62377f6d5e3f1608ffe325e3310dc14d8d60a51cbadef399996d",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-openharmony-arm64",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-openharmony-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-openharmony-arm64/4.64.12",
+        "sha256": "0d3dee5ff5feb5b06915931c84ff70326cf9808b0930bdb7a7d5746f8f266dc1",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-win32-arm64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-arm64-msvc/4.64.12",
+        "sha256": "0a1ab4de19af2142502a9d4cbbaa7395e5a6febda115039623a83719283e85ff",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-win32-ia32-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-ia32-msvc/4.64.12",
+        "sha256": "9ec077a151d82ba966fc8493f30209f8ff7740e758fd6a99029e72c0fe126d01",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-win32-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-x64-gnu/4.64.12",
+        "sha256": "d83e796ad817927432fb07f8643dead5286ccd15ab6d045eb7486ec184b521e5",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "version": "4.64.12",
+      "paths": [
+        "web:node_modules/@rollup/rollup-win32-x64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-x64-msvc/4.64.12",
+        "sha256": "dddec8b58b8ff3b4c3372d1c9055bc3785299cd8e699c043a3d233c34e588a6f",
+        "gitHead": "78d43df94e2169414edb3827e3bcfe09fefb7ccc",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/78d43df94e2169414edb3827e3bcfe09fefb7ccc/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "eastasianwidth",
+      "version": "0.2.0",
+      "paths": [
+        "web:node_modules/eastasianwidth"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/LICENSE",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/LICENSE.md",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/LICENSE.txt",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/license",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/license.md",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/COPYING",
+        "https://raw.githubusercontent.com/komagata/eastasianwidth/b89f04d44dc786885615e94cd6e2ba1ef7866fa4/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/eastasianwidth/0.2.0",
+        "sha256": "69eee30a00108372f9fbc4af8795347d35c7a1f0d0abe7a84883cbf77a1f0894",
+        "gitHead": "b89f04d44dc786885615e94cd6e2ba1ef7866fa4",
+        "repository": {
+          "url": "git://github.com/komagata/eastasianwidth.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "err-code",
+      "version": "2.0.3",
+      "paths": [
+        "web:node_modules/err-code"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/LICENSE",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/LICENSE.md",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/LICENSE.txt",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/license",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/license.md",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/COPYING",
+        "https://raw.githubusercontent.com/IndigoUnited/js-err-code/92511d41a6a926c94c9d11493404867b1e92a77a/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/err-code/2.0.3",
+        "sha256": "c11fc2918c90e0476ecc0424f778afbc900ded3ec2255f140d70d88f6236960e",
+        "gitHead": "92511d41a6a926c94c9d11493404867b1e92a77a",
+        "repository": {
+          "url": "git://github.com/IndigoUnited/js-err-code.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "esrecurse",
+      "version": "4.3.0",
+      "paths": [
+        "web:node_modules/esrecurse"
+      ],
+      "declaration": "BSD-2-Clause",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/LICENSE",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/LICENSE.md",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/LICENSE.txt",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/license",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/license.md",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/COPYING",
+        "https://raw.githubusercontent.com/estools/esrecurse/8ceb63797813d9ac69572a671b95cf58ffdf35b6/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/esrecurse/4.3.0",
+        "sha256": "ac2df97d55c40cfcdb00de7101bbbc2ef0e308d011c7aec1caac1f6ed342b821",
+        "gitHead": "8ceb63797813d9ac69572a671b95cf58ffdf35b6",
+        "repository": {
+          "url": "git+https://github.com/estools/esrecurse.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "filelist",
+      "version": "1.0.6",
+      "paths": [
+        "web:node_modules/filelist"
+      ],
+      "declaration": "Apache-2.0",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/filelist/1.0.6",
+        "sha256": "a37d1e854f5f4d00575154883dccc6016036f7f09fc19db8b4ccdde53291daf9",
+        "gitHead": null,
+        "repository": {
+          "url": "git://github.com/mde/filelist.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "imurmurhash",
+      "version": "0.1.4",
+      "paths": [
+        "web:node_modules/imurmurhash"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/imurmurhash/0.1.4",
+        "sha256": "607afc2d3b38969d94532f32df526cb44a2f1715eb726a9963bfeb7334488297",
+        "gitHead": null,
+        "repository": {
+          "url": "https://github.com/jensyt/imurmurhash-js",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "is-module",
+      "version": "1.0.0",
+      "paths": [
+        "web:node_modules/is-module"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/is-module/1.0.0",
+        "sha256": "212a83a1d1ab01a8ae3686e10f67c98e03aba48ce133ba2dd70adc0c873b197c",
+        "gitHead": null,
+        "repository": {
+          "url": "git://github.com/component/is-module",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "is-regexp",
+      "version": "1.0.0",
+      "paths": [
+        "web:node_modules/is-regexp"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/is-regexp/1.0.0",
+        "sha256": "24d6a8cfca8482cd6758ca7bb79fe018c39ca2a2c7826e51f31b804cad24f36b",
+        "gitHead": null,
+        "repository": {
+          "url": "git://github.com/sindresorhus/is-regexp",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "isarray",
+      "version": "1.0.0",
+      "paths": [
+        "web:node_modules/isarray"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/LICENSE",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/LICENSE.md",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/LICENSE.txt",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/license",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/license.md",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/COPYING",
+        "https://raw.githubusercontent.com/juliangruber/isarray/2a23a281f369e9ae06394c0fb4d2381355a6ba33/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/isarray/1.0.0",
+        "sha256": "566bbad706db3711a1be1a2822bd37b200fd273fc118305430f019100e521a15",
+        "gitHead": "2a23a281f369e9ae06394c0fb4d2381355a6ba33",
+        "repository": {
+          "url": "git://github.com/juliangruber/isarray.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "jake",
+      "version": "10.9.4",
+      "paths": [
+        "web:node_modules/jake"
+      ],
+      "declaration": "Apache-2.0",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/jake/10.9.4",
+        "sha256": "cd697ab4d9ba858199348ca0582fdb513bed4b324344f04c96ab129c4ca36065",
+        "gitHead": null,
+        "repository": {
+          "url": "git://github.com/jakejs/jake.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "natural-compare",
+      "version": "1.4.0",
+      "paths": [
+        "web:node_modules/natural-compare"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/LICENSE",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/LICENSE.md",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/LICENSE.txt",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/license",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/license.md",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/COPYING",
+        "https://raw.githubusercontent.com/litejs/natural-compare-lite/eec83eee67cfac84d6db30cdd65363f155673770/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/natural-compare/1.4.0",
+        "sha256": "8b910f6ec433d27eb98fa7d846e586b7ce571ed92e0da5685d6e77c1689cc9d4",
+        "gitHead": "eec83eee67cfac84d6db30cdd65363f155673770",
+        "repository": {
+          "url": "git://github.com/litejs/natural-compare-lite.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "railroad-diagrams",
+      "version": "1.0.0",
+      "paths": [
+        "web:node_modules/railroad-diagrams"
+      ],
+      "declaration": "CC0-1.0",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/LICENSE",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/LICENSE.md",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/LICENSE.txt",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/license",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/license.md",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/COPYING",
+        "https://raw.githubusercontent.com/tabatkins/railroad-diagrams/c20d5f11a1350e0b0e5818937e5b1c419adc8d94/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/railroad-diagrams/1.0.0",
+        "sha256": "2f07557579f0aa23247a4981578df85922931a58356ef9f2ce691ed138b2a04f",
+        "gitHead": "c20d5f11a1350e0b0e5818937e5b1c419adc8d94",
+        "repository": {
+          "url": "https://github.com/tabatkins/railroad-diagrams.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "schemes",
+      "version": "1.4.0",
+      "paths": [
+        "web:node_modules/schemes"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/LICENSE",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/LICENSE.md",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/LICENSE.txt",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/license",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/license.md",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/COPYING",
+        "https://raw.githubusercontent.com/Munter/schemes/0bb817f7a71fad575fbc134cd597a260b828315e/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/schemes/1.4.0",
+        "sha256": "1570580765819817e0e99367ef8ac523825bece002acbebc3e2642a30bcfd1f6",
+        "gitHead": "0bb817f7a71fad575fbc134cd597a260b828315e",
+        "repository": {
+          "url": "git://github.com/Munter/schemes.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "sirv",
+      "version": "3.0.2",
+      "paths": [
+        "web:node_modules/sirv"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/lukeed/sirv/1135207e92c40354543cbd15c763c7a61d79d432/LICENSE",
+        "https://raw.githubusercontent.com/lukeed/sirv/1135207e92c40354543cbd15c763c7a61d79d432/LICENSE.md",
+        "https://raw.githubusercontent.com/lukeed/sirv/1135207e92c40354543cbd15c763c7a61d79d432/LICENSE.txt",
+        "https://raw.githubusercontent.com/lukeed/sirv/1135207e92c40354543cbd15c763c7a61d79d432/license"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/sirv/3.0.2",
+        "sha256": "dd9f587c125cb99398bdee35e1f8ba9533698f20091f885736a4b0e082be217e",
+        "gitHead": "1135207e92c40354543cbd15c763c7a61d79d432",
+        "repository": {
+          "url": "git+https://github.com/lukeed/sirv.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/lukeed/sirv/1135207e92c40354543cbd15c763c7a61d79d432/license",
+        "sha256": "ba573393f24555ac0528612ad39665fab5bdcc80330a61096024bbf5f736526d"
+      }
+    },
+    {
+      "name": "spdx-exceptions",
+      "version": "2.5.0",
+      "paths": [
+        "web:node_modules/spdx-exceptions"
+      ],
+      "declaration": "CC-BY-3.0",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/LICENSE",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/LICENSE.md",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/LICENSE.txt",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/license",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/license.md",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/COPYING",
+        "https://raw.githubusercontent.com/kemitchell/spdx-exceptions.json/3aa64bec339abc6a3eca00c3436aaa7e154b8799/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/spdx-exceptions/2.5.0",
+        "sha256": "1b2795b394da9b14d39f328441e9be1c099c32d9833bd2ddf9234ecc7c68db08",
+        "gitHead": "3aa64bec339abc6a3eca00c3436aaa7e154b8799",
+        "repository": {
+          "url": "git+https://github.com/kemitchell/spdx-exceptions.json.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "spdx-license-ids",
+      "version": "3.0.24",
+      "paths": [
+        "web:node_modules/spdx-license-ids"
+      ],
+      "declaration": "CC0-1.0",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/LICENSE",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/LICENSE.md",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/LICENSE.txt",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/license",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/license.md",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/COPYING",
+        "https://raw.githubusercontent.com/jslicense/spdx-license-ids/dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/spdx-license-ids/3.0.24",
+        "sha256": "f1c8df61676d0e9a5fd92a2318626e66d2cff3bcbfb0213bf3ca1464e6b6f3ed",
+        "gitHead": "dc0dd99cfb7b38c9159f3baa2804a4d3fd2632e1",
+        "repository": {
+          "url": "git+https://github.com/jslicense/spdx-license-ids.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "stackback",
+      "version": "0.0.2",
+      "paths": [
+        "web:node_modules/stackback",
+        "mcp-bridge:node_modules/stackback"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [
+        "No immutable GitHub source mapping"
+      ],
+      "attemptedLicenseUrls": [],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/stackback/0.0.2",
+        "sha256": "b165861241d958f5111d25594d60d3be317f38e4f09271bc5a757dc66d409f4c",
+        "gitHead": null,
+        "repository": {
+          "url": "git://github.com/shtylman/node-stackback.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "stats-gl",
+      "version": "4.1.0",
+      "paths": [
+        "web:node_modules/stats-gl"
+      ],
+      "declaration": "MIT",
+      "status": "unresolved",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/LICENSE",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/LICENSE.md",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/LICENSE.txt",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/license",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/license.md",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/COPYING",
+        "https://raw.githubusercontent.com/RenaudRohlinger/stats-gl/7a08ec13f02d4b9caca3de4da82d729796512d4e/LICENCE"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/stats-gl/4.1.0",
+        "sha256": "05ab90ae9e12d833da89e48ffbc188984b661344961c9cf315e61219d0ddcba7",
+        "gitHead": "7a08ec13f02d4b9caca3de4da82d729796512d4e",
+        "repository": {
+          "url": "git+https://github.com/RenaudRohlinger/stats-gl.git",
+          "type": "git"
+        }
+      }
+    },
+    {
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/aix-ppc64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Faix-ppc64/0.21.5",
+        "sha256": "2c161ceaa3c724308a4e3eb79be69513b28a66bf95fce01cc8b36eb8968fc32b",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-arm",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/android-arm"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-arm/0.21.5",
+        "sha256": "1a87847df27d980b0ed4cef1563a0e4255ced9b0251f3089a192f0d60b6b7a82",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-arm64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/android-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-arm64/0.21.5",
+        "sha256": "a8738f37f49f42921d9746dc82f4ad69d09fdbca53fa44faa094f84628c1f51a",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/android-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/android-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fandroid-x64/0.21.5",
+        "sha256": "496bd466035f015bf46de68b82ce42e9accc58fdf696d72189099bf8fb66c654",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/darwin-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fdarwin-arm64/0.21.5",
+        "sha256": "d8274753f4061b40274fa5ba6de40b3b64e4a3e9e2527d3dff1e6640b150c30d",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/darwin-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/darwin-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fdarwin-x64/0.21.5",
+        "sha256": "f46bff9aadb1925b9a6777ccdbd3b4fba3eb8d32b68e87e6be0aec93c2eb9163",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/freebsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Ffreebsd-arm64/0.21.5",
+        "sha256": "02b12c7b66378826ab03d01eb75db953a131deb4b10ed5781a361816bfdc5dd4",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/freebsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Ffreebsd-x64/0.21.5",
+        "sha256": "984e27d469f305d3ef4436ec1506ef10f46fa7e320331fc81b8015dd05c89ad1",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-arm",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-arm"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-arm/0.21.5",
+        "sha256": "2303995e00c70f26b10f8addf04924ed964dfdc2b520402354aaab753e0e02ce",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-arm64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-arm64/0.21.5",
+        "sha256": "ba64d206c3dba6499432a3f57f68f9579a6955b028bba0d1987a2cc490b5bbda",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-ia32",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-ia32"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-ia32/0.21.5",
+        "sha256": "c5436c68d7122f6f1a12e239e513ad91f18b65a7d87327dd1f4591f5c2afd0fd",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-loong64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-loong64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-loong64/0.21.5",
+        "sha256": "168aa43471c009a8062974422187f2e0819488436ff36c81e80ab6b014dbceb9",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-mips64el"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-mips64el/0.21.5",
+        "sha256": "fffa201b5086633cd4a100197e3f8477d45e9efe35d14d3f3cf220abc52ede13",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-ppc64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-ppc64/0.21.5",
+        "sha256": "f3baa42bd7f65087bed514ea032b8b7e09bcb5164df618af1cdf999c33b66540",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-riscv64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-riscv64/0.21.5",
+        "sha256": "d8c1c36bd0acf6f71e4dcc92da9733db2dbe20e4a343fb1ca8f87f1896b4fd41",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-s390x",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-s390x"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-s390x/0.21.5",
+        "sha256": "04aa3f744ee596aeb6aaa8a6b13eb34249fdda922364875650aa1739cec1a56d",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/linux-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/linux-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Flinux-x64/0.21.5",
+        "sha256": "19d38a9f0e7abe82bd914d48be5d1d8809015b890d691421d460bea502772b69",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/netbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fnetbsd-x64/0.21.5",
+        "sha256": "8102fb5a1c2bfa565cc11a740b6f86980f58284b6ce2bd1f627f7c58683a327e",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/openbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fopenbsd-x64/0.21.5",
+        "sha256": "ce0b78f0013d29081d558dcf6af8b7f9b2a1fe157f5b42f1678dc5ce3598fd32",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/sunos-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/sunos-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fsunos-x64/0.21.5",
+        "sha256": "3866cc006daa862751434019ffefc42a8d172f880eb22f78800728bd2f9e6d6e",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-arm64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/win32-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-arm64/0.21.5",
+        "sha256": "d2b2ea71412bedadda7574bfb439a06a67793efd1e777f360a6c4e7ad965445f",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-ia32",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/win32-ia32"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-ia32/0.21.5",
+        "sha256": "be3f80c229132b35de709f93aaf8c43cbd14c4cec12786d09c59bd2c88a9679e",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@esbuild/win32-x64",
+      "version": "0.21.5",
+      "paths": [
+        "mcp-bridge:node_modules/@esbuild/win32-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE",
+        "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40esbuild%2Fwin32-x64/0.21.5",
+        "sha256": "bc35065e690cc1d06520a04cfdb46e86fcde88b1ceb1b6ea8c50cce2ae2743f1",
+        "gitHead": "fc37c2fa9de2ad77476a6d4a8f1516196b90187e",
+        "repository": {
+          "url": "git+https://github.com/evanw/esbuild.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/evanw/esbuild/fc37c2fa9de2ad77476a6d4a8f1516196b90187e/LICENSE.md",
+        "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+      }
+    },
+    {
+      "name": "@rollup/rollup-android-arm-eabi",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-android-arm-eabi"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-android-arm-eabi/4.62.2",
+        "sha256": "9f2442247bbb0d07e0cb1b15be7de325e4060a28f559faae70ff1432f4f1be67",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-android-arm64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-android-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-android-arm64/4.62.2",
+        "sha256": "28e0a8cfaa35581e60e75803a2f965adede6fd641ddb5e2ed5ba7b1d19aa0e9b",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-darwin-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-darwin-arm64/4.62.2",
+        "sha256": "71fc6f34bb04cd1e1d3d5985f90ae4d7e6f3ead5b29e3dcaf407880d5e417ee2",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-darwin-x64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-darwin-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-darwin-x64/4.62.2",
+        "sha256": "1ad2dc83b62328d626aea03a345f5afbae48e868ef0afb48c7a5a429ab3b6142",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-freebsd-arm64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-freebsd-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-freebsd-arm64/4.62.2",
+        "sha256": "580bbf22a6cfcf787c20d3e1fe440f11f9ac8062e561bfd394f6a3c74331315a",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-freebsd-x64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-freebsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-freebsd-x64/4.62.2",
+        "sha256": "fe8a92372aeca1c875b61147fdd79faf92966b983c9f7b759264c4661b6ac379",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-arm-gnueabihf"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm-gnueabihf/4.62.2",
+        "sha256": "265b3bc9711a9f3c5699a0c0e7968e3bbcdedf71d768661e13d09c0eeed87fca",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-arm-musleabihf"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm-musleabihf/4.62.2",
+        "sha256": "04b8ac6ef26c92140328426943cf5f9a3feb16e61cba1b106ea582152b1c6fd3",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-arm64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm64-gnu/4.62.2",
+        "sha256": "c6804d75dad1ddda875fcd43466cc200d208452082b2c98f5b49a117f960595e",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-arm64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-arm64-musl/4.62.2",
+        "sha256": "ce15b2c77b2d4d08e471a117a8833dd7bed2b6c1d376396fdeb3ae52bc412d6d",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-loong64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-loong64-gnu/4.62.2",
+        "sha256": "39d8318f94881b683438803cead7d4808f113fcf5288ef0fc77f857456209fe3",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-loong64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-loong64-musl/4.62.2",
+        "sha256": "71c78048ca85a6b23e0d0769ceabe291d66d5c7f6f0cca7435104d32a4763438",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-ppc64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-ppc64-gnu/4.62.2",
+        "sha256": "9c2ed254e0c388b537fc80b305bd45f109d9bada17f8cdf8c32e07ed9d731826",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-ppc64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-ppc64-musl/4.62.2",
+        "sha256": "6cca4919a8b2bd4484d3247cc87323e1aeb44261e7e07fef66ceb4cbc1a9db11",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-riscv64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-riscv64-gnu/4.62.2",
+        "sha256": "3249bc865d6a96ed82f347c6bbae4dd40f73765959b911872bb38e1b485285f9",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-riscv64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-riscv64-musl/4.62.2",
+        "sha256": "28054f80ca62d932048a623b87655f3bcee68a5c6d66615843b133c99fabb1dc",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-s390x-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-s390x-gnu/4.62.2",
+        "sha256": "94a1114a703369534a034bc87fccaca1c3dc9b1486d6ed25cc75e6b5ff243d84",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-x64-gnu/4.62.2",
+        "sha256": "70b446a33f7dee74d6417fea71435b6aeb92bf9e012dcb0f2c33907359b114d0",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-linux-x64-musl"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-linux-x64-musl/4.62.2",
+        "sha256": "82acb235d6e8868c4db023f265cf28d473b5bdf6cd29f107ecaa888f5562c5a8",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-openbsd-x64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-openbsd-x64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-openbsd-x64/4.62.2",
+        "sha256": "be3216d1a1f6e6965541bcfeb0792a3d4b9ee114134fccd7f55347efe6611008",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-openharmony-arm64",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-openharmony-arm64"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-openharmony-arm64/4.62.2",
+        "sha256": "f5503e87a641b9b537bc556f423ef099263ed7d0465bc35a58cd849009fdb651",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-win32-arm64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-arm64-msvc/4.62.2",
+        "sha256": "3b0ce42414c5c8bf2aa4c603d97bdfcbd099cb20033fee8473aad13074594f64",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-win32-ia32-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-ia32-msvc/4.62.2",
+        "sha256": "d7289cadb2a6bfb7e5fdf0b1936ac3ce3da385865c50d3be718cdfc3a1923cac",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-win32-x64-gnu"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-x64-gnu/4.62.2",
+        "sha256": "6212e2001492a1a818477225b6f73e57399cd8def984eef1156c588884cc2862",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    },
+    {
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "version": "4.62.2",
+      "paths": [
+        "mcp-bridge:node_modules/@rollup/rollup-win32-x64-msvc"
+      ],
+      "declaration": "MIT",
+      "status": "pinned-source-text-found-review-required",
+      "errors": [],
+      "attemptedLicenseUrls": [
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE",
+        "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md"
+      ],
+      "legalApproval": "not-issued",
+      "metadata": {
+        "url": "https://registry.npmjs.org/%40rollup%2Frollup-win32-x64-msvc/4.62.2",
+        "sha256": "1d3fff15d33848360a022f6a6e0e3373da63faa4719fb6444159da4de14836bf",
+        "gitHead": "8faa18777374582bb813d54ce3623f4acf1f9e0b",
+        "repository": {
+          "url": "git+https://github.com/rollup/rollup.git",
+          "type": "git"
+        }
+      },
+      "candidate": {
+        "url": "https://raw.githubusercontent.com/rollup/rollup/8faa18777374582bb813d54ce3623f4acf1f9e0b/LICENSE.md",
+        "sha256": "fa1bd040c5bdeefe65b3821cebf474f2733ce65df13089bd151dda1778e62fe8"
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ doc_id: GOV-OPEN-DECISIONS
 title: 当前未决事项与实施闸口
 status: approved
 owner: architecture
-last_reviewed: 2026-08-27
+last_reviewed: 2026-10-27
 authority: normative-registry
 ---
 
@@ -20,8 +20,16 @@ authority: normative-registry
 | OD-005 | 新 Quality Gates 在远程 CI 的必需检查名称和分支保护策略 | maintainers | 把 CI configured 状态升级为 enforced | closed |
 | OD-006 | 根目录 22 份 `doc-*.md` 的逐份审计、迁移和 Approved 清单 | architecture、engineering | 将旧文档从 reference 提升为正式依据 | open |
 | OD-007 | 自有离线授权系统的强制力边界：在 AGPL-3.0-only 前提下，许可证校验是「合同凭证 + 防篡改审计记录」还是「技术强制」；绑定维度（部署域名 / 部署身份 / 机器指纹）、有效期与宽限期长度、到期降级形态（只读、水印或两者）、并发上限在浏览器端的可执行性，以及是否保留上游 CONNECT 授权查询 | product、security | 替换 `src/core/hmi/license-store.ts` 的 CONNECT 授权查询、许可证文件契约、功能位与并发上限强制点、到期行为、销售合同条款 | closed |
+| OD-009 | AGPL 商业路线、独立发行身份及阶段 A 定性与清点的结案范围 | product、security | 已落入 ADR-0021 与完成计划 EP-LEGAL-001；法律/发布证据转 OD-010 | closed |
+| OD-010 | 阶段 A 遗留的权属事实、法律签收及实际交付履约 | product、security、engineering | A-01–A-08 对应的权利声明、实际制品与正式商业发布 | open |
 
 ## 执行规则
+
+OD-009：商业化阶段 A 的许可路径与结案范围，Owner 为 product/security，状态 **closed**（2026-10-27）。用户先于 2026-10-26 要求完成阶段 A，并明确“接受 AGPL，允许客户取得源码并依法再分发；没有授权书。主要面向中国大陆销售”；于 2026-10-27 对“定性与清点结案，法律与发布阻断保留”的方案回复“确认”。批准来源为上述用户明确指令，落地为 Accepted [ADR-0021](../adr/ADR-0021-agpl-commercial-delivery.md)、Completed [EP-LEGAL-001](../exec-plans/completed/EP-LEGAL-001-phase-a-commercialization.md) 和 [结案核对单](../delivery/snapshots/phase-a-2026-10-26/CLOSEOUT.md)。
+
+本次关闭接收两份 npm 锁文件清点、已识别非 npm/资产范围登记及定性材料，不是全量实际制品内部 SBOM 或整体法律放行；研究和原始失败见 [备忘录](../references/COMMERCIALIZATION_PHASE_A.md) 与 [取证快照](../delivery/snapshots/phase-a-2026-10-26/README.md)。未来署名、源码包、客户合同和交付证据须与 ADR-0021 同步实施及验证，本轮未改运行时或放宽门禁。“没有单独授权书”不等于没有 AGPL 许可，不把采购闭源许可列作本路线默认前置。ADR-0007/ADR-0019 保持生效。
+
+OD-010：遗留权属、法律与发布证据，Owner 为 product/security/engineering，状态 **open**。按 2026-10-27 用户确认的结案范围，完整接收原 OD-009/M4 中尚未完成的 A-01–A-08，详见 [商业发布证据登记](COMMERCIAL_RELEASE_GATES.md)。签约主体、贡献/雇佣事实、历史交付、署名、对应源码、特殊依赖/素材/独立组件权利和法律签收尚需证据。阻塞范围仍为相关权利声明、变更 LICENSE/贡献权属及正式商业发布；不阻断不依赖未知授权的合规工程准备。须由实际权利人/审核方提供证据、产品负责人签收后逐项关闭；阶段 A 的接收不是代签，也不豁免原供应链门禁。
 
 OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独立测试证据，Owner 为 security/product/maintainers，状态 **closed**。2026-10-20 用户明确“同意，开 pr 实施”，认可 EP-SEC-001 D1–D5；落地 [ADR-0019](../adr/ADR-0019-supply-chain-and-script-trust.md) 与 [活动计划](../exec-plans/active/EP-SEC-001-supply-chain-and-script-security.md)。需同步门禁/策略/运行时/授权迁移/验收；决策关闭不代表代码、远程保护设置或第三方测试完成。OD-005 的原五项保护不撤销，新增检查的远程强制单独留证。
 

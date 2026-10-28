@@ -1,0 +1,10 @@
+{
+  "npm-inventory.json": "0036e3a01b0676e65fa6c569facd29a64e1ea075f7f9f4d36e0df77932800452",
+  "license-texts.json": "426e30e209bf40c18ed8cdb2e312a8d7045aeab11d4d2db1bfc1bcfede0f96fd",
+  "non-npm-evidence.json": "d9aa5300db3e0397e3df9e534f6467765cd6028f91c1ee7748ba43e3a80d95af",
+  "npm-inventory.csv": "f862d9a3dad009d99026a9067cec1f4cf0458142e7dfceb91ab86d87331435db",
+  "npm-findings.csv": "d02e4c1f18b1aecb6d157d98a7d099ec1feb0d79548e37066bc9f40e43549916",
+  "tracked-inputs.csv": "23cf88374c108f211d6c748d1a9043e6231c4383328a3837103797d42a225447",
+  "asset-inventory.csv": "7c40a1084d50c3134990ca1d11467087fc60144210a91c0ba8d37e9fc529fc0c",
+  "summary.json": "c4e7e141a7a72813fe2fb9fcd2e9d7aca0df66724d0ac4e5b74df4840b1dd266"
+}

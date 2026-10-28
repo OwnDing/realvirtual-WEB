@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-26T06:36:55.931Z",
+  "commit": "97f3936867f4f8db9dcaa543372dcc9723d74b57",
+  "inputSha256": {
+    "package-lock.json": "2353e5bd29f7d21108131b71ae12e9c4dfaa3309ef23ed1d1aaf6ce40754f8cc",
+    "mcp-bridge/package-lock.json": "f52f110d030dc5c4f1cd0b3d94e1f80066f841edfa5efd55d239e5ffb832d914",
+    "security/policy.json": "0496f5e80b96f68febfb1a9c163457f8aed292e795e69bba928739657da7bec0"
+  },
+  "scopes": [
+    {
+      "scope": "web",
+      "paths": 900,
+      "packageVersions": 859,
+      "evidenceCollectionErrors": 0,
+      "technicalPolicyPassed": 800,
+      "technicalPolicyFailed": 100,
+      "declaredLicenses": {
+        "MIT": 707,
+        "ISC": 62,
+        "Apache-2.0": 52,
+        "0BSD": 8,
+        "OFL-1.1": 1,
+        "LGPL-3.0-or-later": 10,
+        "Apache-2.0 AND LGPL-3.0-or-later AND MIT": 1,
+        "Apache-2.0 AND LGPL-3.0-or-later": 3,
+        "BSD-3-Clause": 15,
+        "Python-2.0": 1,
+        "CC-BY-4.0": 1,
+        "BlueOak-1.0.0": 16,
+        "(MPL-2.0 OR Apache-2.0)": 1,
+        "BSD-2-Clause": 12,
+        "(MIT OR WTFPL)": 1,
+        "(MIT OR GPL-3.0-or-later)": 1,
+        "LGPL-2.1": 1,
+        "(MIT AND Zlib)": 1,
+        "Zlib": 1,
+        "CC0-1.0": 2,
+        "(BSD-2-Clause OR MIT OR Apache-2.0)": 1,
+        "CC-BY-3.0": 1,
+        "(MIT OR CC0-1.0)": 1
+      }
+    },
+    {
+      "scope": "mcp-bridge",
+      "paths": 186,
+      "packageVersions": 185,
+      "evidenceCollectionErrors": 0,
+      "technicalPolicyPassed": 137,
+      "technicalPolicyFailed": 49,
+      "declaredLicenses": {
+        "MIT": 171,
+        "Apache-2.0": 2,
+        "BSD-3-Clause": 3,
+        "ISC": 9,
+        "BSD-2-Clause": 1
+      }
+    }
+  ],
+  "totalPaths": 1086,
+  "totalUniquePackageVersions": 997,
+  "licenseTextCount": 447,
+  "trackedInputs": 1638,
+  "assets": 94,
+  "limitation": "Input enumeration and technical evidence only. No release, ownership or legal clearance; no vulnerability scan."
+}
