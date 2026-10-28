@@ -45,3 +45,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0019：供应链证据与内容绑定的代码执行授权](ADR-0019-supply-chain-and-script-trust.md)：用户于 2026-10-20 批准 EP-SEC-001 后接受。
 
 - [ADR-0020：离线帮助与错误展示](ADR-0020-offline-user-help.md)
+
+- [ADR-0021：AGPL 商业交付与独立发行身份](ADR-0021-agpl-commercial-delivery.md)：Accepted，记录用户 2026-10-26 选择的 AGPL 路线及 2026-10-27 确认的阶段 A 结案范围；法律签收与实际发布证据由 OD-010 单独验收。

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-26T06:48:24.553Z",
+  "inputSha256": {
+    "inventory": "0036e3a01b0676e65fa6c569facd29a64e1ea075f7f9f4d36e0df77932800452",
+    "upstreamSupplements": "cef8043b030d4abcb4ff0db3f69637bbb01e764321ac9d1b1fdbca24a1f3c0a2"
+  },
+  "basePolicyFailures": 149,
+  "localFullSections": 5,
+  "unresolvedLicenseTextPackageVersions": [
+    {
+      "name": "@humanfs/types",
+      "version": "0.15.0",
+      "declared": "Apache-2.0"
+    },
+    {
+      "name": "@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "declared": "MIT"
+    },
+    {
+      "name": "@npmcli/agent",
+      "version": "3.0.0",
+      "declared": "ISC"
+    },
+    {
+      "name": "eastasianwidth",
+      "version": "0.2.0",
+      "declared": "MIT"
+    },
+    {
+      "name": "err-code",
+      "version": "2.0.3",
+      "declared": "MIT"
+    },
+    {
+      "name": "filelist",
+      "version": "1.0.6",
+      "declared": "Apache-2.0"
+    },
+    {
+      "name": "is-regexp",
+      "version": "1.0.0",
+      "declared": "MIT"
+    },
+    {
+      "name": "jake",
+      "version": "10.9.4",
+      "declared": "Apache-2.0"
+    },
+    {
+      "name": "natural-compare",
+      "version": "1.4.0",
+      "declared": "MIT"
+    },
+    {
+      "name": "railroad-diagrams",
+      "version": "1.0.0",
+      "declared": "CC0-1.0"
+    },
+    {
+      "name": "spdx-exceptions",
+      "version": "2.5.0",
+      "declared": "CC-BY-3.0"
+    },
+    {
+      "name": "spdx-license-ids",
+      "version": "3.0.24",
+      "declared": "CC0-1.0"
+    },
+    {
+      "name": "stackback",
+      "version": "0.0.2",
+      "declared": "MIT"
+    },
+    {
+      "name": "stats-gl",
+      "version": "4.1.0",
+      "declared": "MIT"
+    }
+  ],
+  "existingGraph": {
+    "path": "dist/security-build-graph.json",
+    "sha256": "7e0933f85042979e564b78e2c8523a1f50d1929cea4805de57236900ee8fe487",
+    "matchingLock": true,
+    "currentReleaseVerified": false
+  },
+  "copiedPdfWorker": {
+    "path": "public/pdf.worker.min.js",
+    "sha256": "dbcae78a691b3c501508f74b774c6066a57a14a76cefdc9e25ad86b651bb75d5",
+    "matchesInstalledPdfjsBytes": true,
+    "installedVersion": "5.4.296"
+  },
+  "libvipsEmbeddedVersions": {
+    "path": "node_modules/@img/sharp-libvips-linux-arm64/versions.json",
+    "sha256": "e2611d5d854815a8b33c8a3d2ec649511a9596ccf16844e8eae7cf81e79881c4",
+    "components": {
+      "aom": "3.15.1",
+      "archive": "3.8.9",
+      "cairo": "1.18.6",
+      "cgif": "0.5.4",
+      "exif": "0.6.26",
+      "expat": "2.8.5",
+      "ffi": "3.8.0",
+      "fontconfig": "2.18.3",
+      "freetype": "2.14.3",
+      "fribidi": "1.0.17",
+      "glib": "2.90.0",
+      "harfbuzz": "14.5.0",
+      "heif": "1.23.5",
+      "highway": "1.4.0",
+      "imagequant": "2.4.1",
+      "lcms": "2.19.1",
+      "mozjpeg": "0826579",
+      "pango": "1.58.2",
+      "pixman": "0.46.4",
+      "png": "1.6.58",
+      "proxy-libintl": "0.5",
+      "rsvg": "2.63.2",
+      "tiff": "4.7.2",
+      "uhdr": "2.0.2",
+      "vips": "8.18.7",
+      "webp": "1.6.0",
+      "xml2": "2.15.4",
+      "zlib-ng": "2.3.3"
+    },
+    "licenseScopeVerified": false
+  },
+  "limitation": "Policy decisions unchanged. Source text mapping, distribution scope, source offers and asset rights still require explicit closure."
+}

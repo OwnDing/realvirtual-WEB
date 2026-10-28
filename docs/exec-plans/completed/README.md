@@ -3,11 +3,13 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-15
+last_reviewed: 2026-10-27
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [EP-LEGAL-001-phase-a-commercialization.md](EP-LEGAL-001-phase-a-commercialization.md)：2026-10-27 经用户确认，阶段 A 定性与现有范围清点结案；OD-009 关闭，OD-010/A-01–A-08 保留法律与发布阻断。
 
 - [EP-DIAG-001-local-diagnostics.md](EP-DIAG-001-local-diagnostics.md)：L3-1 本地脱敏诊断包、设置与故障入口、ZIP/JSON 降级；2026-10-14 完成本地门禁与隔离网络下载验收，2026-10-15 在 PR #16 补齐嵌入/启动锁定可见性回归，真实 WebGPU/移动设备另验。
 
