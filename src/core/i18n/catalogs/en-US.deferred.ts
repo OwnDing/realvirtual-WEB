@@ -14,6 +14,8 @@
  * renders against a half-loaded catalog.
  */
 
+import { hmiAlarmsEnglish } from './hmi-alarms-en';
+
 export const enUSDeferred = {
   projects: {
     title: 'Projects',
@@ -2312,6 +2314,7 @@ export const enUSDeferred = {
     },
   },
   operator: {
+    alarms: hmiAlarmsEnglish,
     machine: {
       title: 'Machine Control',
       demo: 'Demo',

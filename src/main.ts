@@ -165,6 +165,7 @@ import {
 } from './plugins/connect-embed/connect-embed-store';
 import { HistorianTrendPlugin } from './plugins/historian-trend-plugin';
 import { initHmiSession } from './core/hmi/hmi-session-store';
+import { HmiOperationsPlugin } from './plugins/hmi-operations-plugin';
 import { SignalBindPlugin } from './plugins/signal-bind/SignalBindPlugin';
 
 // Shared asset links — `?glb=<url>` / `?glb=s:<id>` (plan-386).
@@ -727,6 +728,7 @@ async function init() {
     .use(new ClippingPlugin(), 'core')
     .use(new DiagnosticsPlugin(), 'core')
     .use(new WebErrorPlugin(), 'core')
+    .use(new HmiOperationsPlugin(), 'core')
     .use(new CollisionAlertPlugin(), 'core')
     .use(new CustomRuntimeInstructionPlugin(), 'core')
     .use(new RvExtrasEditorPlugin(), 'core')

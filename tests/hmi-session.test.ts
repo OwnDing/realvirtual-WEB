@@ -30,17 +30,17 @@ describe('HMI session (ADR-0024)', () => {
   it('maps each role to exactly its capabilities', async () => {
     setAppConfig({ services: { access: { url: '/api/access/v1' } } });
     const expected = {
-      viewer: [false, false, false, false],
-      operator: [true, false, false, false],
-      engineer: [true, true, true, false],
-      admin: [true, true, true, true],
+      viewer: [false, false, false, false, false, false, false],
+      operator: [true, false, false, false, true, false, false],
+      engineer: [true, true, true, false, true, true, true],
+      admin: [true, true, true, true, true, true, true],
     } as const;
     for (const [role, grants] of Object.entries(expected)) {
       const fetchImpl = vi.fn(async () => json(200, { username: `u-${role}`, role, csrf: 'c' }));
       const snapshot = await initHmiSession(fetchImpl as unknown as typeof fetch);
       expect(String((fetchImpl.mock.calls[0] as unknown[])[0])).toBe('/api/access/v1/session');
       expect(snapshot).toMatchObject({ status: 'signed-in', role, username: `u-${role}` });
-      expect((['write-signals', 'force-signals', 'save-server-projects', 'manage-users'] as const).map((c) => hmiCan(c))).toEqual(grants);
+      expect((['write-signals', 'force-signals', 'save-server-projects', 'manage-users', 'ack-alarms', 'shelve-alarms', 'configure-hmi'] as const).map((c) => hmiCan(c))).toEqual(grants);
     }
   });
 

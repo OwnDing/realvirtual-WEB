@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productVersion": "6.3.27",
   "revision": "2026-10-23.1",
-  "contentDigest": "7dd897c8801de0dcb3e3e855e07da295de2e8a8417b4966982d99b93347cf04c",
+  "contentDigest": "b8d48cf72c10fa8dcca6bc9822f6e1b220f91db6e38eb30816a462fbadc79e97",
   "inputs": {
     "appliance/docs/INSTALL.en.md": "9e290f1ec2fd7ab02eefaeab627c983e94b959b82d18869e4b1d86c55b16809d",
     "appliance/docs/INSTALL.zh-CN.md": "f81ba61fba02251971a27b414a23fe0d20493d9af2d618c298464f0995fada7b",
@@ -25,7 +25,7 @@
     "docs/user/en-US/licensing.md": "ee3cdaea5e245d257c4d7e373bac39c7770335b168c3e991349d7332f08f670f",
     "docs/user/en-US/media.md": "05e35aba6c4d43fafea45bae86d02a9a95078ad37a4ca870d51a153c14a3f63f",
     "docs/user/en-US/models.md": "48280ade457f9819c5ec3fd845ba6ba26c1ee35300dc504c0982ddca408f0c10",
-    "docs/user/en-US/navigation.md": "1eb0a480f9a26fd22c5afb86d65f80e4fc70c35c1c9e35ae4fddcf3bf10856ca",
+    "docs/user/en-US/navigation.md": "e4c9da26190eaf031e8ff76a8cd93a2e886e69cbcb563c004a52ea86c587d8af",
     "docs/user/en-US/overview.md": "4fba2185733153bd27f141a19a632ae4966048dbd3f7b4d91858d9bd72e20445",
     "docs/user/en-US/projects.md": "0167532cc2237ef980b94e4a5f972398f443aa63a6f539016f76a995ee23abcb",
     "docs/user/en-US/quickstart.md": "705cb75a85c526d9a3b45e75b34870a365c0dd579c93ed632c425972645681de",
@@ -51,7 +51,7 @@
     "docs/user/zh-CN/licensing.md": "24c62796778937c33d6a43fbeceda5f0187defb2c815ae043f12a642a5bcc3bd",
     "docs/user/zh-CN/media.md": "524b3d502d8db0f0cdab00888949e421f939b398bf337b46829b39b5c97733c3",
     "docs/user/zh-CN/models.md": "5a15d65210efbea6fa7f709e0eb7150bb8afa5eb51246d742bdb8f3f4b80be4a",
-    "docs/user/zh-CN/navigation.md": "0574cb6742225483f90fea62c408c2e0feaa8bc635513a21981097e1915cd2cb",
+    "docs/user/zh-CN/navigation.md": "59bb7e7b805d6b4d8812b189ae5455828f232b93fdf915a7508719ecb75f31c0",
     "docs/user/zh-CN/overview.md": "c91f102ab8fe27a73d7ca54b7683199502223a713ce67590238afa5b4f21f8ae",
     "docs/user/zh-CN/projects.md": "0908fcd9794b1ee0634c96829a5ef65b65dd7280126ddd3eec68da72b0676bb3",
     "docs/user/zh-CN/quickstart.md": "259e5c0ebf36c7a61ede5f38866cb5ea10e7784dfeeb9dc3863893c09837867b",
@@ -110,6 +110,7 @@
         "hierarchy",
         "the-tool-strip",
         "settings",
+        "alarms-and-kpis",
         "预期结果与失败处理"
       ]
     },
@@ -326,6 +327,7 @@
         "hierarchy",
         "the-tool-strip",
         "settings",
+        "alarms-and-kpis",
         "result-and-recovery"
       ]
     },

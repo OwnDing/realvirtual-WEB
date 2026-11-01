@@ -84,7 +84,7 @@ describe('WebErrorPanel Ask AI', () => {
     expect(await screen.findByRole('button', { name: /ask ai/i })).toBeTruthy();
   });
 
-  it('emits the typed diagnose-request contract with node context', () => {
+  it('emits the typed diagnose-request contract with node context', async () => {
     const { viewer, events } = makeViewer();
     const received: ViewerEvents['diagnose-request'][] = [];
     events.on('diagnose-request', (event) => received.push(event));
@@ -93,7 +93,8 @@ describe('WebErrorPanel Ask AI', () => {
     });
     renderPanel(viewer);
 
-    fireEvent.click(screen.getByRole('button', { name: /ask ai/i }));
+    // The alarm panel is its own chunk (ADR-0025); it arrives through Suspense.
+    fireEvent.click(await screen.findByRole('button', { name: /ask ai/i }));
 
     expect(received).toHaveLength(1);
     expect(received[0]).toMatchObject({

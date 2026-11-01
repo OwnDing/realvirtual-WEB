@@ -28,6 +28,9 @@ Measurement, annotation and camera tools depend on the workspace. Exit a tool be
 ## Settings {#settings}
 Deployment policy controls settings. Kiosk, guest and embedded contexts may hide help or diagnostics. If help is disabled, open the user guide in the delivery package directly.
 
+## Alarms and KPIs {#alarms-and-kpis}
+Alarm cards on the right are coloured by priority; an unacknowledged alarm blinks. A latched alarm stays after its signal returns to normal until someone acknowledges it. With accounts deployed, operators and above can Acknowledge, and engineers can Shelve 30 min; a shelved alarm comes back when the time is up. Alarm history lists raised, returned, acknowledged and shelved events and exports CSV; it is kept in this browser only. Engineers set alarm priorities and define KPIs from live signals (current value, rate, ratio, uptime, OEE) on the Alarms & KPIs settings tab. The configuration is saved to the project when it is writable, otherwise in this browser.
+
 ## Result and recovery
 Camera movement does not change geometry; language selection only changes presentation. If the model disappears, fit the view and inspect hierarchy visibility. Then consult [Model import](models.md) and [Support](support.md).
 
