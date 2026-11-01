@@ -15,3 +15,6 @@
 export default {};
 export const autoAssignToKinematic: any = () => undefined;
 export const groupSelection: any = () => undefined;
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

@@ -18,3 +18,6 @@ export function registerSelectionAssetResolver(_fn: SelectionAssetResolver): () 
   return () => undefined;
 }
 export function resolveSelectionAsset(_path: string): null { return null; }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

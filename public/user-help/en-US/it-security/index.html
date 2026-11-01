@@ -11,6 +11,7 @@
 <p>责任角色：安全维护者分诊，依赖维护者修复，发布负责人汇总，权利/合同 Owner 审定商业分发义务。实际具名责任人须在对应记录填写，角色名不是已经签收。</p>
 <p>新漏洞出现后核实 exact path/version/integrity、上游 advisory、使用范围及可达性。High/Critical 立即阻断候选发布；已有部署依影响紧急评估。保留上游修复版本、复现及回归证据。只有批准的精确安全例外才写入 <code>security/exceptions.json</code>，到期自动红；Low/Moderate 跟踪在 <code>security/triage.json</code>。不从 npm audit 的 <code>fixAvailable</code> 自动执行降级/强制更新。此轮 handlebars 和 DOMPurify 用明确修复版本覆盖上游旧精确 pin；移除 override 前须确认上游锁已修复并复扫。</p>
 <p>许可报告的失败项逐个补齐：上游版本/修订、归档与正文摘要、权利来源、适用范围、分发义务和批准记录。平台包只指向许可证网页而未携带正文时，应取同一版本的可追溯正文并审定归属，不能随便复制另一个 MIT 文本。LGPL 原生/WASM 库需列对应源码、修改/重链接等实际义务证据；字体/数据保留署名与其许可。未完成时保持红色。法律/供应商文件留受控交付位置，公共仓库只放脱敏索引。</p>
+<p>依赖升级后若 <code>license-decisions.json</code> 或 <code>license-evidence.json</code> 报告 integrity 不匹配或未使用条目，必须重新审定并更新登记，不能沿用旧版本结论。补充正文的来源顺序与组合规则见 ADR-0022；<code>triage.json</code> 的到期日（Moderate 30 天、Low 90 天）到达前必须复评，届时门禁会自动转红。</p>
 <h2 id="实际制品">实际制品</h2>
 <p>先构建，再运行：</p>
 <pre><code>node scripts/security/release-evidence.mjs collect web dist
@@ -35,4 +36,4 @@ node scripts/security/scan-artifact.mjs filesystem /absolute/path/to/native-arti
 <p>交付正式报告必须含方法/范围/环境/限制、发现与复现、风险分级、修复 commit、复测结果、残余风险签收。完整报告受控存放；公开只发布经批准的脱敏摘要。Critical/High 未关闭不得正式交付。重大授权/沙箱/服务端改动重新评估复测范围。内部回归、npm 审计和 AI 分析均不能冒充独立报告。</p>
 <h2 id="回滚">回滚</h2>
 <p>回滚应用代码时同时回滚配套依赖 lock/配置/构建图，但不能静默恢复 v1 项目级授权。运行问题可通过部署 <code>scripting: {sandbox:false,native:false}</code> 禁用两个脚本入口。安全门禁保持阻断并重新取证，不以回滚测试或关闭 check 绕过风险。</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 4527ece535bb</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 2e2726842d6f</span></footer></main></div></body></html>

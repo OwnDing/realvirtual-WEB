@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { licenseDecision, evaluateLicenses, evaluateAudit, validateExceptions, validatePolicy } from '../scripts/security/policy.mjs';
-import { lockedEntries, enrichSbom, archiveEvidence } from '../scripts/security/inventory.mjs';
+import { createHash } from 'node:crypto';
+import { licenseDecision, evaluateLicenses, evaluateAudit, validateExceptions, validatePolicy, validateLicenseDecisions } from '../scripts/security/policy.mjs';
+import { lockedEntries, enrichSbom, archiveEvidence, validateSupplementalEvidence, applySupplementalEvidence } from '../scripts/security/inventory.mjs';
 const policy = JSON.parse(readFileSync('security/policy.json', 'utf8'));
 const entry = { path: 'node_modules/example', name: 'example', version: '1.2.3', integrity: 'sha512-proof' };
 const advisory = 'https://github.com/advisories/GHSA-xxxx-yyyy-zzzz';
@@ -58,6 +59,60 @@ describe('supply-chain decisions fail closed', () => {
   it('never accepts an SBOM that silently drops a package or a malformed archive', () => {
     expect(() => enrichSbom({ bomFormat: 'CycloneDX', specVersion: '1.5', dependencies: [{}], components: [] }, [entry])).toThrow(/omitted/);
     expect(() => archiveEvidence(Buffer.alloc(512), entry)).toThrow(/identity/);
+  });
+});
+
+describe('exact license decisions never widen the global policy', () => {
+  const text = [{ path: 'LICENSE', text: 'evidence' }];
+  const lgpl = { ...entry, license: 'LGPL-2.1', evidence: text };
+  const decision = { id: 'LIC-test', package: 'example', version: '1.2.3', integrity: 'sha512-proof', license: 'LGPL-2.1', decision: 'accept', rationale: 'dynamically loaded WASM, source published', obligations: 'ship LGPL text and corresponding source', tracking: 'A-07', owner: 'security', approvedBy: 'product', approval: 'test/1', createdAt: '2026-10-19T00:00:00Z' };
+  it('accepts only the exact package, version, integrity and declared expression', () => {
+    const decisions = validateLicenseDecisions({ schemaVersion: 1, decisions: [decision] });
+    expect(evaluateLicenses([lgpl], policy).status).toBe('failed');
+    const accepted = evaluateLicenses([lgpl], policy, decisions);
+    expect(accepted.status).toBe('passed');
+    expect(accepted.findings[0]).toMatchObject({ decision: 'LIC-test', obligations: decision.obligations });
+    for (const change of [{ version: '1.2.4' }, { integrity: 'sha512-other' }, { license: 'LGPL-3.0-only' }]) {
+      expect(evaluateLicenses([{ ...lgpl, ...change }], policy, decisions).status).toBe('failed');
+    }
+  });
+  it('cannot waive missing license text, a denied license or a stale decision', () => {
+    const decisions = validateLicenseDecisions({ schemaVersion: 1, decisions: [decision] });
+    expect(evaluateLicenses([{ ...lgpl, evidence: [] }], policy, decisions).status).toBe('failed');
+    expect(evaluateLicenses([lgpl], { ...policy, deniedLicenses: ['LGPL-2.1'] }, decisions).status).toBe('failed');
+    const stale = evaluateLicenses([{ ...entry, license: 'MIT', evidence: text }], policy, decisions);
+    expect(stale.status).toBe('failed');
+    expect(stale.unusedDecisions).toEqual(['LIC-test']);
+  });
+  it('rejects incomplete, wildcard and duplicate decisions', () => {
+    for (const change of [{ rationale: '' }, { package: 'ex*' }, { version: '*' }, { decision: 'waive' }, { obligations: undefined }]) {
+      expect(() => validateLicenseDecisions({ schemaVersion: 1, decisions: [{ ...decision, ...change }] })).toThrow();
+    }
+    expect(() => validateLicenseDecisions({ schemaVersion: 1, decisions: [decision, { ...decision, id: 'LIC-other' }] })).toThrow(/Duplicate/);
+  });
+});
+
+describe('supplemental license evidence is exact and content-bound', () => {
+  const body = 'MIT License\n\nCopyright (c) Example\n';
+  const sha = createHash('sha256').update(body).digest('hex');
+  const doc = { schemaVersion: 1, texts: { 'example-1.2.3-LICENSE': { sha256: sha, source: 'npm:example-parent@1.2.3/LICENSE' } }, packages: [{ package: 'example', version: '1.2.3', integrity: 'sha512-proof', text: 'example-1.2.3-LICENSE', reason: 'platform package omits parent LICENSE' }] };
+  const read = (name: string) => { if (name !== 'example-1.2.3-LICENSE') throw new Error('missing'); return Buffer.from(body); };
+  it('adds evidence only to an exact package without in-package text', () => {
+    const registry = validateSupplementalEvidence(doc, read);
+    const applied = applySupplementalEvidence({ evidence: [], evidenceSource: 'installed-package' }, entry, registry);
+    expect(applied.evidenceSource).toBe('supplemental');
+    expect(applied.evidence[0]).toMatchObject({ path: 'supplemental:example-1.2.3-LICENSE', sha256: sha, text: body });
+    expect(applySupplementalEvidence({ evidence: [], evidenceSource: 'x' }, { ...entry, integrity: 'sha512-other' }, registry).evidence).toEqual([]);
+    expect(applySupplementalEvidence({ evidence: [], evidenceSource: 'x' }, { ...entry, version: '1.2.4' }, registry).evidence).toEqual([]);
+    expect(registry.used.size).toBe(1);
+  });
+  it('refuses tampered, missing, traversing or redundant evidence', () => {
+    expect(() => validateSupplementalEvidence(doc, () => Buffer.from(body + 'x'))).toThrow(/digest/);
+    expect(() => validateSupplementalEvidence({ ...doc, texts: { '../LICENSE': doc.texts['example-1.2.3-LICENSE'] } }, read)).toThrow();
+    expect(() => validateSupplementalEvidence({ ...doc, packages: [{ ...doc.packages[0], text: 'unknown' }] }, read)).toThrow();
+    expect(() => validateSupplementalEvidence({ ...doc, packages: [{ ...doc.packages[0], version: '1.*' }] }, read)).toThrow();
+    const registry = validateSupplementalEvidence(doc, read);
+    expect(() => applySupplementalEvidence({ evidence: [{ path: 'LICENSE', sha256: sha, text: body }], evidenceSource: 'x' }, entry, registry)).toThrow(/redundant/);
   });
 });
 

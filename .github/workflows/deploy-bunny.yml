@@ -1,10 +1,11 @@
 name: Build & Deploy to Bunny CDN
 
-# Runs on the DEV repo (private) — secrets stay safe.
-# Push to public repo is done manually via /gitweb.
+# Upstream (realvirtual) publishing pipeline for its own Bunny CDN zone.
+# This repository holds no BUNNY_* secrets and does not publish there, so the
+# workflow is manual-only: a push to main must never try to deploy (and fail)
+# against another party's CDN. Run it deliberately with your own secrets/zone.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 env:
   BUNNY_STORAGE_ZONE: realvitual-web
@@ -16,6 +17,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Require deployment credentials
+        env:
+          BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
+        run: |
+          if [ -z "$BUNNY_STORAGE_KEY" ]; then
+            echo "::error::BUNNY_STORAGE_KEY is not configured for this repository; refusing to deploy."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4

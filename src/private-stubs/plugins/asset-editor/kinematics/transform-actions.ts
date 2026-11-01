@@ -23,3 +23,6 @@ export const rotate90: any = () => undefined;
 export const snapshotLocal: any = () => undefined;
 export const toGround: any = () => undefined;
 export const zeroLocalPosition: any = () => undefined;
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

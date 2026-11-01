@@ -5,8 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Validation, Spec } from '@cyclonedx/cyclonedx-library';
-import { lockedEntries, collectInventory, enrichSbom, sha256 } from './inventory.mjs';
-import { evaluateAudit, evaluateLicenses, validateExceptions, validatePolicy } from './policy.mjs';
+import { lockedEntries, collectInventory, enrichSbom, sha256, validateSupplementalEvidence } from './inventory.mjs';
+import { evaluateAudit, evaluateLicenses, validateExceptions, validateLicenseDecisions, validatePolicy } from './policy.mjs';
+import { readFileSync } from 'node:fs';
 
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -18,8 +19,11 @@ const errors = [];
 await mkdir(out, { recursive: true });
 const result = { schemaVersion: 1, generatedAt: new Date().toISOString(), scope: 'public-npm-development-tree', vulnerability: { status: 'incomplete' }, licenses: { status: 'incomplete' }, completeness: { status: 'incomplete' }, errors };
 try {
-  const [policy, lock, exceptionsDoc, triageDoc] = await Promise.all(['security/policy.json', 'package-lock.json', 'security/exceptions.json', 'security/triage.json'].map(readJson));
+  const [policy, lock, exceptionsDoc, triageDoc, decisionsDoc, evidenceDoc] = await Promise.all(['security/policy.json', 'package-lock.json', 'security/exceptions.json', 'security/triage.json', 'security/license-decisions.json', 'security/license-evidence.json'].map(readJson));
   validatePolicy(policy);
+  const licenseDecisions = validateLicenseDecisions(decisionsDoc);
+  // Stored texts are read through a fixed directory; names are validated before the join.
+  const supplemental = validateSupplementalEvidence(evidenceDoc, name => readFileSync(join(root, 'security/license-texts', name)));
   if (triageDoc.schemaVersion !== 1 || !Array.isArray(triageDoc.findings)) throw new Error('Unsupported triage document');
   const entries = lockedEntries(lock, policy.registry); // before any network call
   const exceptions = validateExceptions(exceptionsDoc);
@@ -28,7 +32,7 @@ try {
   if (Number(process.versions.node.split('.')[0]) !== policy.nodeMajor || version !== policy.npmVersion) throw new Error(`Scanner requires Node ${policy.nodeMajor} / npm ${policy.npmVersion}`);
   if ((await readJson('node_modules/@cyclonedx/cyclonedx-npm/package.json')).version !== policy.cycloneDxVersion) throw new Error('Unexpected CycloneDX tool version');
   result.input = { lockSha256: sha256(await readFile(join(root, 'package-lock.json'))), policySha256: sha256(await readFile(join(root, 'security/policy.json'))), commit: (await exec('git', ['rev-parse', 'HEAD'], opts)).stdout.trim(), dirty: Boolean((await exec('git', ['status', '--porcelain'], opts)).stdout.trim()), packages: entries.length };
-  const inputFiles = ['package-lock.json', 'security/policy.json', 'security/exceptions.json', 'security/triage.json'];
+  const inputFiles = ['package-lock.json', 'security/policy.json', 'security/exceptions.json', 'security/triage.json', 'security/license-decisions.json', 'security/license-evidence.json'];
   result.input.files = Object.fromEntries(await Promise.all(inputFiles.map(async file => [file, sha256(await readFile(join(root, file)))])));
   result.tools = { node: process.version, npm: version, cyclonedx: policy.cycloneDxVersion, advisoryDatabaseVersion: null, registry: policy.registry };
   // Independent lanes both finish and leave evidence even when the other fails.
@@ -43,9 +47,12 @@ try {
       await save('vulnerabilities.json', result.vulnerability);
     })(),
     (async () => {
-      const inventory = await collectInventory(root, entries, join(out, 'cache'), policy);
+      const inventory = await collectInventory(root, entries, join(out, 'cache'), policy, supplemental);
       await save('inventory.json', { schemaVersion: 1, input: result.input, components: inventory });
-      result.licenses = evaluateLicenses(inventory, policy);
+      result.licenses = evaluateLicenses(inventory, policy, licenseDecisions);
+      // Evidence registered for a package the tree no longer contains is stale and blocks.
+      result.licenses.unusedSupplementalEvidence = [...supplemental.packages.keys()].filter(key => !supplemental.used.has(key));
+      if (result.licenses.unusedSupplementalEvidence.length) result.licenses.status = 'failed';
       await save('licenses.json', result.licenses);
       const cdx = join(root, 'node_modules/@cyclonedx/cyclonedx-npm/bin/cyclonedx-npm-cli.js');
       await exec(process.execPath, [cdx, '--package-lock-only', '--spec-version', '1.5', '--output-format', 'JSON', '--output-reproducible', '--output-file', join(out, 'dependencies.cdx.json')], opts);

@@ -16,3 +16,6 @@ export type DownsampledSeries = any;
 export const DownsampledSeries: any = () => undefined;
 export type downsampleSeries = any;
 export const downsampleSeries: any = () => undefined;
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

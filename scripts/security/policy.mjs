@@ -110,13 +110,46 @@ export function evaluateAudit(audit, entries, policy, exceptions = [], triage = 
   return { status: findings.some(f => f.blocked) ? 'failed' : 'passed', findings };
 }
 
-export function evaluateLicenses(entries, policy) {
+const DECISION_FIELDS = ['id', 'package', 'version', 'integrity', 'license', 'decision', 'rationale', 'obligations', 'tracking', 'owner', 'approvedBy', 'approval', 'createdAt'];
+/**
+ * Exact, per-package license judgments (ADR-0022). A decision accepts ONE declared
+ * expression for ONE package version and integrity; it never widens
+ * `allowedLicenses`, never covers a denied license, and never stands in for
+ * missing license text — distribution obligations stay listed on the finding.
+ */
+export function validateLicenseDecisions(document) {
+  if (document?.schemaVersion !== 1 || !Array.isArray(document.decisions)) throw new Error('Invalid license decisions document');
+  const keys = new Set(); const ids = new Set();
+  for (const d of document.decisions) {
+    for (const field of DECISION_FIELDS) {
+      if (typeof d?.[field] !== 'string' || !d[field].trim()) throw new Error(`Invalid license decision field: ${field}`);
+    }
+    if (/[*?]/.test(d.package + d.version + d.integrity)) throw new Error(`Wildcard license decision: ${d.id}`);
+    if (d.decision !== 'accept') throw new Error(`Unsupported license decision: ${d.id}`);
+    if (!Number.isFinite(Date.parse(d.createdAt))) throw new Error(`Invalid license decision date: ${d.id}`);
+    try { parseSpdx(d.license); } catch { throw new Error(`Invalid license decision expression: ${d.id}`); }
+    const key = [d.package, d.version, d.integrity].join('|');
+    if (keys.has(key) || ids.has(d.id)) throw new Error(`Duplicate license decision: ${d.id}`);
+    keys.add(key); ids.add(d.id);
+  }
+  return document.decisions;
+}
+
+export function evaluateLicenses(entries, policy, decisions = []) {
+  const used = new Set();
   const findings = entries.map(e => {
     const decision = licenseDecision(e.license, policy);
     const reasons = [...(e.errors ?? [])];
-    if (decision.status !== 'allow') reasons.push(decision.reason);
+    let accepted = null;
+    if (decision.status === 'review') {
+      accepted = decisions.find(d => d.package === e.name && d.version === e.version && d.integrity === e.integrity && d.license === e.license) ?? null;
+      if (accepted) used.add(accepted.id);
+    }
+    if (decision.status !== 'allow' && !accepted) reasons.push(decision.reason);
     if (!e.evidence?.length) reasons.push('missing-license-text');
-    return { package: e.name, version: e.version, path: e.path, declared: e.license ?? null, selected: decision.selected ?? null, status: reasons.length ? 'failed' : 'passed', reasons };
+    return { package: e.name, version: e.version, path: e.path, declared: e.license ?? null, selected: decision.selected ?? accepted?.license ?? null, status: reasons.length ? 'failed' : 'passed', reasons, decision: accepted?.id ?? null, obligations: accepted?.obligations ?? null, evidenceSource: e.evidenceSource ?? null };
   });
-  return { status: findings.some(f => f.status === 'failed') ? 'failed' : 'passed', findings };
+  // A decision that no longer matches the tree is stale evidence, not harmless noise.
+  const unusedDecisions = decisions.map(d => d.id).filter(id => !used.has(id));
+  return { status: findings.some(f => f.status === 'failed') || unusedDecisions.length ? 'failed' : 'passed', findings, unusedDecisions };
 }

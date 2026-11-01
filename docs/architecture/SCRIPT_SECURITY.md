@@ -49,6 +49,6 @@ SDK 首次用于一个 host 时，还在独立临时 context 中执行固定的�
 
 `security/policy.json` 固定扫描器版本与策略。High/Critical 全量阻断，开发依赖也包括在内。Low/Moderate 必须有精确身份、首次发现时间、到期日、责任人和修复任务。所有例外要求 advisory/包/版本/路径/integrity 精确匹配，具名批准和补偿措施；High 最长 14 天，其余最长 30 天，Critical/已知利用/许可证权利缺失不能使用安全例外。正式发布不接受 High 例外。
 
-SPDX `AND` 必须全部满足，`OR` 记录选中分支，`WITH` 必须精确审定。缺失、非 SPDX 或策略未批准的表达式进入人工复核；许可元数据不替代正文。构建报告收集 LICENSE/NOTICE/COPYING 等正文及 SHA-256，保留未知项。对缺正文、字体/数据署名、LGPL/OCCT 本地补丁等问题逐项建立来源和义务证据，不能把“开源”视为商业分发许可已解决。
+SPDX `AND` 必须全部满足，`OR` 记录选中分支，`WITH` 必须精确审定。缺失、非 SPDX 或策略未批准的表达式进入人工复核；许可元数据不替代正文。构建报告收集 LICENSE/NOTICE/COPYING 等正文及 SHA-256，保留未知项。对缺正文、字体/数据署名、LGPL/OCCT 本地补丁等问题逐项建立来源和义务证据，不能把“开源”视为商业分发许可已解决。按 [ADR-0022](../adr/ADR-0022-exact-license-decisions.md)，审定结论写入 `security/license-decisions.json`（包/版本/integrity/表达式精确匹配，不扩大全局白名单、不覆盖拒绝许可、不替代正文），归档缺正文时以 `security/license-evidence.json` + `security/license-texts/` 的 SHA-256 绑定正文补齐；未使用或过期的登记同样阻断。
 
 连续内核在事件交付时确认并移除计时器登记，reset 同时清理登记；取消事件的物理 heap 槽位也纳入预算，防止取消/注册循环积累墓碑。私有 DES scheduler 未提供事件 ID 确认接口时，计时器登记保留到 reset/dispose 并受 8192 上限约束；该私有运行路径须在商业构建中补充复测，不能以公共连续内核结果替代。

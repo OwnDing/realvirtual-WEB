@@ -17,3 +17,6 @@ export type MechanismJointInput = { [key: string]: any };
 export type MechanismTopology = { [key: string]: any };
 
 export function buildTopology(..._args: any[]): MechanismTopology { return {}; }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;
