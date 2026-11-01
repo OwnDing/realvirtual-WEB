@@ -21,7 +21,7 @@ authority: normative-registry
 | A-02 | open：全部交付入口的对应源码未验收 | engineering / qa | 精确源码、补丁、构建/安装资料、通知清单；客户与适用网络用户取源；离线及干净环境重建证据 | 副本交付和适用网络提供 |
 | A-03 | open：主体及贡献/雇佣/委托事实不完整 | product / 法律审阅方 | 实际主体、贡献记录、适用协议及成果权属审阅；不得从 Git 作者名推断 | 自有成果权利声明与交付 |
 | A-04 | open：94 项候选未逐项形成权利结论 | product / 素材提供者 | 文件摘要关联来源许可/授权/自制证据；或经产品确认排除并验证最终工件不含该项 | 相应模型、手册和静态资源的分发 |
-| A-05 | open：独立组件与实际镜像内部范围不完整 | product / engineering / security | CONNECT 等独立组件的适用权利；各平台真实二进制/镜像内部 SBOM、正文和源码履约；或明确且实测排除的范围 | 相应 Appliance/平台制品 |
+| A-05 | open：独立组件与实际镜像内部范围不完整（2026-11-01：按 ADR-0023 CONNECT 已为可选组件，不含 CONNECT 的 Appliance 发布可把它移出本项范围；自有网关的 npm 依赖由 Supply Chain Gate `gateway` 作用域与 `gateway-npm-notices.txt` 覆盖，实际镜像内部仍待核验） | product / engineering / security | CONNECT 等独立组件的适用权利；各平台真实二进制/镜像内部 SBOM、正文和源码履约；或明确且实测排除的范围 | 相应 Appliance/平台制品 |
 | A-06 | open：149 条原技术许可失败；14 个版本缺完整正文证明 | security / engineering | 精确证据映射、特殊许可判断与制品通知；按 ADR-0019 机制处置并重跑适用门禁 | 当前依赖门禁与正式制品 |
 | A-07 | open：OCCT 等内嵌源版本与补丁履约不全 | engineering / security，必要法律复核 | 内嵌修订、许可/例外、对应源码、补丁和适用替换/重链接材料 | 包含相关原生/WASM 库的交付 |
 | A-08 | open：大陆合同与法律意见未签收 | product / 法律审阅方 | 签约/交付主体、首发范围、历史交付事实、版本化法律意见、合同条款和产品放行记录 | 整体法律放行和正式商业交付 |

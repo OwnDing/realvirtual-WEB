@@ -2,7 +2,7 @@
 doc_id: EP-REMED-001
 title: 缺口整改第 1 步：门禁转绿、公开 Stub 如实报告与上游部署流水线
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-11-01
 authority: normative-process
@@ -23,7 +23,7 @@ authority: normative-process
 - 依赖：非破坏性 `npm audit fix`（锁文件），剩余 Low/Moderate 逐条分诊。
 - 门禁：ADR-0022 的逐包许可判定、补充正文证据，以及对应自检。
 - 运行时：`src/core/rv-public-stub.ts` 公开 Stub 契约，22 个空桩模块加标记，MCP 编辑器/视图/观察工具在调用前检查。
-- CI：`deploy-bunny.yml`、`deploy-embed-bunny.yml` 改为仅手动触发；Supply Chain Gate 加入 `develop`/`main` required checks（远程设置，读回留证）。
+- CI：`deploy-bunny.yml`、`deploy-embed-bunny.yml` 改为仅手动触发；Supply Chain Gate 加入 `develop` required checks（远程设置，读回留证；用户 2026-11-01 明确“只合并到 develop，不需要合并到 main”，`main` 保护不变）。
 
 ## Non-goals
 
@@ -33,7 +33,7 @@ authority: normative-process
 
 ## Required Documents and Decisions
 
-- [ADR-0019](../../adr/ADR-0019-supply-chain-and-script-trust.md)、[ADR-0022](../../adr/ADR-0022-exact-license-decisions.md)、[EP-SEC-001](EP-SEC-001-supply-chain-and-script-security.md)
+- [ADR-0019](../../adr/ADR-0019-supply-chain-and-script-trust.md)、[ADR-0022](../../adr/ADR-0022-exact-license-decisions.md)、[EP-SEC-001](../active/EP-SEC-001-supply-chain-and-script-security.md)
 - [OPEN_DECISIONS](../../governance/OPEN_DECISIONS.md)：OD-005（required checks 已关闭，本计划是其扩展）、OD-010（不受影响）
 - 宪法 AR-5/AR-6、AI_SAFETY §5/§7、DoD §1
 
@@ -81,7 +81,7 @@ authority: normative-process
 - [x] M1：锁文件非破坏性修复；25 条分诊；18 条许可判定；93 个包 / 25 份补充正文；本地扫描退出 0。
 - [x] M2：契约、标记、MCP 检查与测试。
 - [x] M3a：两个部署流水线改为 `workflow_dispatch`，并在缺少密钥时明确失败。
-- [ ] M3b：远程 Supply Chain Gate 绿色 + required check 配置读回。
+- [x] M3b：远程 Supply Chain Gate 绿色 + required check 配置读回（仅 `develop`，按用户 2026-11-01 指令不改 `main`）。
 
 ## Surprises & Discoveries
 
@@ -99,6 +99,7 @@ authority: normative-process
 | 2026-11-01 | 执行缺口整改 1–5 步；每步测试通过后提交、推送并开 PR，等远程 CI 后进入下一步 | 用户当前明确指令与 AskUserQuestion 选择“推送分支并开 PR” |
 | 2026-11-01 | 采用 ADR-0022 而非扩大全局白名单 | 本计划技术决定，依据 ADR-0019“统一禁用 copyleft 不适用”与“逐项建立证据” |
 | 2026-11-01 | 部署流水线改手动而非删除，保留上游维护者可用的路径 | 可逆的最小改动 |
+| 2026-11-01 | 每步 CI 通过后合并到 `develop`；required check 只加到 `develop`，`main` 不动 | 用户当前明确指令“后面只要合并到 develop 就行，不需要合并到 main 分支” |
 
 ## Validation
 
@@ -122,4 +123,8 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-（远程 CI 与 required check 读回后补齐。）
+- 远程：PR [#21](https://github.com/OwnDing/realvirtual-WEB/pull/21) 的 run `41266860571` 七项全部通过（Governance 19 s、Static 1 m 26 s、Node 1 m 38 s、Build 2 m 23 s、Supply Chain 1 m 14 s、Windows browser compatibility 6 m 8 s、Browser 16 m 42 s）。这是 Supply Chain Gate 自 2026-10-20 引入以来首次远程绿色。
+- 强制：2026-11-01 通过 GitHub API 把 `Supply Chain Gate` 加入 `develop` required contexts，读回为 Governance/Static/Node/Browser/Build/Supply Chain 六项，`strict=true`、`enforce_admins=true`、禁止强推与删除。`main` 保护未改。
+- 合并：2026-11-01T03:15:50Z 合入 `develop`，merge commit `d9c2e14`。
+- 偏差：push 被仓库 `.claude/settings.json` 的 `git push` deny 规则拦截（AI_SAFETY 纵深防御），由用户手动执行；未绕过。
+- 未验证/遗留：A-06/A-07/OD-010 的实际制品履约与法律签收；漏洞分诊到期日 Moderate 2026-12-01、Low 2027-01-30 前必须复评；被桩替代的能力在第 5 步实现。

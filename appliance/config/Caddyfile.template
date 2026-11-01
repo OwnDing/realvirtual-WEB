@@ -58,13 +58,11 @@ https://{{HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
 		redir /appliance /appliance/
 		redir /diagnostics /diagnostics/
 		redir /git /git/
-		handle_path /connect/* {
-			reverse_proxy {{CONNECT_UPSTREAM}}
+		# XYvirtual Gateway (ADR-0023): /gateway/ws, /gateway/history/*, /gateway/health.
+		handle_path /gateway/* {
+			reverse_proxy {{GATEWAY_UPSTREAM}}
 		}
-		@connectRoot path /health /ws /webviewer /mcp /mcp/* /interface-types /config /config/* /discover/* /signals/* /model /logs /status /history /history/* /update/* /news /news/* /diagnose/* /comments /comments/* /docs/*
-		handle @connectRoot {
-			reverse_proxy {{CONNECT_UPSTREAM}}
-		}
+		{{CONNECT_ROUTES}}
 		handle /git/* {
 			reverse_proxy {{FORGEJO_UPSTREAM}}
 		}

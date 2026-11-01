@@ -49,3 +49,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0021：AGPL 商业交付与独立发行身份](ADR-0021-agpl-commercial-delivery.md)：Accepted，记录用户 2026-10-26 选择的 AGPL 路线及 2026-10-27 确认的阶段 A 结案范围；法律签收与实际发布证据由 OD-010 单独验收。
 
 - [ADR-0022：逐包许可证判定与补充正文证据](ADR-0022-exact-license-decisions.md)：Accepted（2026-11-01），Supply Chain Gate 的许可证结论按包/版本/integrity 精确判定，缺正文时以摘要绑定的补充证据补齐；不扩大全局白名单，不关闭 A-06/A-07。
+
+- [ADR-0023：自有工业网关（OPC UA 优先），CONNECT 降为可选](ADR-0023-own-industrial-gateway.md)：Accepted（2026-11-01），用户在缺口整改第 2 步选择自研网关；浏览器协议不变，Historian 不再要求 CONNECT，Appliance 中 CONNECT 改为可选组件。

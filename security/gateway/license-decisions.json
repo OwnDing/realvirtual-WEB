@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "decisions": [
+    {
+      "id": "GW-LIC-001",
+      "package": "dequeue",
+      "version": "1.0.5",
+      "integrity": "sha512-2FIVJZTaWhUj0Y2uKmDAasTP6ZwFWRjkRc01MYN5jFm96iIzkYyNzGADfJ13C5W7CTN7XO9mBYDcVB68eNybBA==",
+      "declared": null,
+      "license": "BSD-2-Clause",
+      "decision": "accept",
+      "owner": "security",
+      "approvedBy": "product (project owner instruction)",
+      "approval": "2026-11-01 explicit user instruction: gap remediation step 2, own OPC UA gateway with node-opcua",
+      "createdAt": "2026-11-01T00:00:00Z",
+      "tracking": "A-06",
+      "scope": "development",
+      "rationale": "Dependency of node-opcua-server, used only by the gateway integration test (in-process stand-in PLC). package.json declares no license; the shipped LICENSE file is the 2-Clause BSD text.",
+      "obligations": "None for the gateway runtime (not installed with --omit=dev). Keep the BSD notice if the test toolchain is redistributed."
+    },
+    {
+      "id": "GW-LIC-002",
+      "package": "precond",
+      "version": "0.2.3",
+      "integrity": "sha512-QCYG84SgGyGzqJ/vlMsxeXd/pgL/I94ixdNFyh1PusWmTCyVfPJjZ1K1jvHtsbfnXQs2TSkEP2fR7QiMZAnKFQ==",
+      "declared": null,
+      "license": "MIT",
+      "decision": "accept",
+      "owner": "security",
+      "approvedBy": "product (project owner instruction)",
+      "approval": "2026-11-01 explicit user instruction: gap remediation step 2, own OPC UA gateway with node-opcua",
+      "createdAt": "2026-11-01T00:00:00Z",
+      "tracking": "A-06",
+      "scope": "runtime-dependency",
+      "rationale": "Runtime dependency of node-opcua-secure-channel (via backoff). package.json declares no license; README states MIT and the upstream repository LICENSE at v0.2.3 is the MIT text.",
+      "obligations": "Keep the MIT notice (security/license-texts/precond@0.2.3-LICENSE) in the gateway third-party notices."
+    },
+    {
+      "id": "GW-LIC-003",
+      "package": "tweetnacl",
+      "version": "0.14.5",
+      "integrity": "sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==",
+      "license": "Unlicense",
+      "decision": "accept",
+      "owner": "security",
+      "approvedBy": "product (project owner instruction)",
+      "approval": "2026-11-01 explicit user instruction: gap remediation step 2, own OPC UA gateway with node-opcua",
+      "createdAt": "2026-11-01T00:00:00Z",
+      "tracking": "A-06",
+      "scope": "runtime-dependency",
+      "rationale": "Runtime dependency of node-opcua-crypto (via sshpk). The Unlicense dedicates the work to the public domain with a permissive fallback grant; no conditions on redistribution.",
+      "obligations": "None required; keep the Unlicense text in the notices for traceability."
+    }
+  ]
+}

@@ -41,7 +41,10 @@ function HistorianTrendButton(_props: UISlotProps) {
   const open = historian.panelOpen;
 
   useEffect(() => {
-    if (connect.state !== 'connected' || connect.gatewayUnreachable) {
+    // A deployment/user history endpoint (e.g. the XYvirtual Gateway) does not need
+    // CONNECT; only the CONNECT-derived default is gated on the CONNECT connection.
+    const independent = historianStore.usesIndependentEndpoint();
+    if (!independent && (connect.state !== 'connected' || connect.gatewayUnreachable)) {
       historianStore.markConnectUnavailable();
       return;
     }

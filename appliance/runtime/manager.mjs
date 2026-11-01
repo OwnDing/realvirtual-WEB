@@ -8,7 +8,7 @@ import { cp, readFile, rename } from 'node:fs/promises';
 import { dirname, join, parse, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPreflight } from './lib/preflight.mjs';
-import { httpsPortSuffix, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
+import { httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
 import { isRollbackDataCompatible } from './lib/compatibility.mjs';
 
@@ -202,6 +202,51 @@ function initializeSecrets(roots, config, releaseRoot, target, runImpl) {
   return { values, generatedOperatorPassword: operatorPassword };
 }
 
+/** CONNECT is an optional third-party component since ADR-0023; the gateway is always present. */
+export function hasConnect(manifest) {
+  return Array.isArray(manifest.services) && manifest.services.includes('connect');
+}
+
+/** Services managed on this host, in start order. */
+export function managedServiceIds(manifest) {
+  return ['control', 'gateway', ...(hasConnect(manifest) ? ['connect'] : []), 'forgejo', 'influxdb', 'edge'];
+}
+
+
+
+/**
+ * Gateway configuration written on first install only: the administrator owns it
+ * afterwards (signal mapping, PLC endpoint, writable flags). The default is an
+ * UNCONFIGURED, read-only gateway that records history once signals are mapped.
+ */
+function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
+  const data = join(roots.stateRoot, 'data', 'gateway');
+  mkdirSync(join(data, 'audit'), { recursive: true, mode: 0o750 });
+  const tokenPath = join(data, 'influx-token');
+  if (!existsSync(tokenPath) || readFileSync(tokenPath, 'utf8') !== secrets.influxToken) writeFileSync(tokenPath, secrets.influxToken, { mode: 0o600 });
+  const path = join(roots.configRoot, 'gateway.json');
+  if (existsSync(path)) return path;
+  const inside = container ? '/var/lib/xyvirtual-gateway' : data;
+  const gateway = {
+    schemaVersion: 1,
+    listen: container ? { host: '0.0.0.0', port: 5200 } : { host: '127.0.0.1', port: config.gatewayPort },
+    websocketPath: '/ws',
+    readOnly: true,
+    audit: { path: container ? `${inside}/audit/writes.jsonl` : join(inside, 'audit', 'writes.jsonl') },
+    signals: [],
+    history: {
+      enabled: true,
+      url: container ? 'http://influxdb:8086' : `http://127.0.0.1:${config.influxPort}`,
+      org: 'xyvirtual',
+      bucket: 'signals',
+      tokenFile: container ? `${inside}/influx-token` : tokenPath,
+    },
+  };
+  // No secret in this file (the token is in tokenFile, 0600), so the service user may read it.
+  writeFileSync(path, `${JSON.stringify(gateway, null, 2)}\n`, { mode: 0o644 });
+  return path;
+}
+
 function tlsDirective(config, roots, container, windows) {
   if (config.tls.mode === 'internal-ca') return 'tls internal';
   const pki = join(roots.stateRoot, 'pki', 'customer');
@@ -217,7 +262,8 @@ function tlsDirective(config, roots, container, windows) {
 
 function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode, secrets }) {
   mkdirSync(roots.configRoot, { recursive: true, mode: 0o700 });
-  mkdirSync(join(roots.configRoot, 'connect'), { recursive: true, mode: 0o750 });
+  const connectPresent = hasConnect(manifest);
+  if (connectPresent) mkdirSync(join(roots.configRoot, 'connect'), { recursive: true, mode: 0o750 });
   const persistedLicense = join(roots.stateRoot, 'license', 'license.rvlic');
   if (config.license.file && existsSync(config.license.file)) copyFileAtomicallyIfChanged(config.license.file, persistedLicense, 0o640);
   else if (config.license.file && !existsSync(persistedLicense)) throw new Error('Configured offline license is unavailable and no persisted license exists.');
@@ -225,12 +271,14 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
   const windows = manifest.target.startsWith('windows-');
   const upstream = {
     control: container ? 'control:8081' : `127.0.0.1:${config.controlPort}`,
+    gateway: container ? 'gateway:5200' : `127.0.0.1:${config.gatewayPort}`,
     connect: container && !windows ? 'connect:5100' : container ? `host.docker.internal:${config.connectPort}` : `127.0.0.1:${config.connectPort}`,
     forgejo: container ? 'forgejo:3000' : `127.0.0.1:${config.forgejoPort}`,
     influxdb: container ? 'influxdb:8086' : `127.0.0.1:${config.influxPort}`,
   };
+  writeDefaultGatewayConfig({ roots, container, config, secrets });
   const template = readFileSync(join(releaseRoot, 'config', 'Caddyfile.template'), 'utf8');
-  const caddyfile = renderTemplate(template, {
+  const caddyfile = renderCaddyfile(template, { connect: connectPresent }, {
     HOSTNAME: config.hostname,
     INFLUX_HOSTNAME: config.influxHostname,
     LISTEN_HTTP_PORT: container ? 80 : config.httpPort,
@@ -241,7 +289,8 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     OPERATOR_USER: config.authentication.operatorUser,
     OPERATOR_PASSWORD_HASH: secrets.operatorPasswordHash,
     CONTROL_UPSTREAM: upstream.control,
-    CONNECT_UPSTREAM: upstream.connect,
+    GATEWAY_UPSTREAM: upstream.gateway,
+    ...(connectPresent ? { CONNECT_UPSTREAM: upstream.connect } : {}),
     FORGEJO_UPSTREAM: upstream.forgejo,
     INFLUX_UPSTREAM: upstream.influxdb,
     WEB_ROOT: caddyQuote(container ? '/srv/xyvirtual/web' : join(releaseRoot, 'web'), windows && !container),
@@ -262,7 +311,7 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     host: container ? '0.0.0.0' : '127.0.0.1',
     port: container ? 8081 : config.controlPort,
     staticRoot: container ? '/app/static' : join(releaseRoot, 'runtime', 'static'),
-    websocketPath: '/connect/webviewer',
+    websocketPath: connectPresent ? '/connect/webviewer' : '/gateway/ws',
     integrityTtlMs: 86_400_000,
     access: {
       root: container ? '/state-access' : accessRoot,
@@ -282,12 +331,14 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     urls: {
       web: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/`,
       git: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/git/`,
-      connectHealth: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/connect/health`,
+      gatewayHealth: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/gateway/health`,
+      ...(connectPresent ? { connectHealth: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/connect/health` } : {}),
       influx: `https://${config.influxHostname}${httpsPortSuffix(config.httpsPort)}/`,
       diagnostics: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}/diagnostics/`,
     },
     services: [
-      { id: 'connect', url: `http://${upstream.connect}/health`, required: true },
+      { id: 'gateway', url: `http://${upstream.gateway}/health`, required: true },
+      ...(connectPresent ? [{ id: 'connect', url: `http://${upstream.connect}/health`, required: true }] : []),
       { id: 'forgejo', url: `http://${upstream.forgejo}/api/healthz`, required: true },
       { id: 'influxdb', url: `http://${upstream.influxdb}/health`, required: true },
     ],
@@ -344,7 +395,8 @@ export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, co
     const controlCommand = `${systemdQuote(node)} ${systemdQuote(join(releaseRoot, 'runtime', 'control-plane.mjs'))} --config ${systemdQuote(join(roots.configRoot, 'control.json'))}`;
     return [
       { id: 'control', unit: linuxUnit('XYvirtual Appliance Control', controlCommand, roots) },
-      { id: 'connect', unit: linuxUnit('XYvirtual CONNECT', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'connect'))} --project-root ${systemdQuote(join(data, 'connect'))} --port ${config.connectPort}`, roots) },
+      { id: 'gateway', unit: linuxUnit('XYvirtual Industrial Gateway', `${systemdQuote(node)} ${systemdQuote(join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs'))} --config ${systemdQuote(join(roots.configRoot, 'gateway.json'))}`, roots) },
+      ...(hasConnect(manifest) ? [{ id: 'connect', unit: linuxUnit('XYvirtual CONNECT', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'connect'))} --project-root ${systemdQuote(join(data, 'connect'))} --port ${config.connectPort}`, roots) }] : []),
       { id: 'forgejo', unit: linuxUnit('XYvirtual Project Git', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'forgejo'))} --work-path ${systemdQuote(join(data, 'forgejo'))} --config ${systemdQuote(join(roots.configRoot, 'forgejo.app.ini'))} web`, roots) },
       { id: 'influxdb', unit: linuxUnit('XYvirtual Historian', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'influxdb'))} --config ${systemdQuote(join(roots.configRoot, 'influxdb.toml'))}`, roots) },
       { id: 'edge', unit: linuxUnit('XYvirtual HTTPS Edge', `${systemdQuote(caddy)} run --config ${systemdQuote(join(roots.configRoot, 'Caddyfile'))} --adapter caddyfile`, roots, {
@@ -356,7 +408,7 @@ export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, co
       }) },
     ];
   }
-  return ['control', 'connect', 'forgejo', 'influxdb', 'edge'].map((id) => ({ id, wrapper: join(roots.configRoot, 'windows-services', `xyvirtual-${id}.exe`), xml: join(roots.configRoot, 'windows-services', `xyvirtual-${id}.xml`) }));
+  return managedServiceIds(manifest).map((id) => ({ id, wrapper: join(roots.configRoot, 'windows-services', `xyvirtual-${id}.exe`), xml: join(roots.configRoot, 'windows-services', `xyvirtual-${id}.xml`) }));
 }
 
 function prepareLinuxNativePermissions(roots, runImpl) {
@@ -389,6 +441,7 @@ function installNativeServices({ roots, releaseRoot, manifest, config, runImpl =
   const winsw = join(releaseRoot, 'runtime', 'winsw', 'winsw.exe');
   const commands = {
     control: [nodeBinary(releaseRoot, manifest.target), `&quot;${join(releaseRoot, 'runtime', 'control-plane.mjs')}&quot; --config &quot;${join(roots.configRoot, 'control.json')}&quot;`],
+    gateway: [nodeBinary(releaseRoot, manifest.target), `&quot;${join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs')}&quot; --config &quot;${join(roots.configRoot, 'gateway.json')}&quot;`],
     connect: [serviceBinary(releaseRoot, manifest.target, 'connect'), `--project-root &quot;${join(roots.stateRoot, 'data', 'connect')}&quot; --port ${config.connectPort}`],
     forgejo: [serviceBinary(releaseRoot, manifest.target, 'forgejo'), `web --config &quot;${join(roots.configRoot, 'forgejo.app.ini')}&quot;`],
     influxdb: [serviceBinary(releaseRoot, manifest.target, 'influxdb'), `--config &quot;${join(roots.configRoot, 'influxdb.toml')}&quot;`],
@@ -420,6 +473,8 @@ function installWindowsConnectService({ roots, releaseRoot, config, runImpl = ru
   runImpl(wrapper, ['start']);
 }
 
+const OPTIONAL_SERVICES = new Set(['gateway', 'connect']);
+
 function containerCommand(runtime, composeArgs) {
   return runtime === 'podman' ? { command: 'podman', args: ['compose', ...composeArgs] } : { command: 'docker', args: ['compose', ...composeArgs] };
 }
@@ -430,12 +485,13 @@ function composeProjectArgs(roots, releaseRoot) {
 
 function startContainer({ roots, releaseRoot, manifest, runtime = 'docker', runImpl = run }) {
   if (manifest.target.startsWith('linux-')) {
-    runImpl('chown', ['-R', '10001:10001', join(roots.stateRoot, 'data', 'connect')]);
+    if (hasConnect(manifest)) runImpl('chown', ['-R', '10001:10001', join(roots.stateRoot, 'data', 'connect')]);
+    runImpl('chown', ['-R', '10001:10001', join(roots.stateRoot, 'data', 'gateway')]);
     runImpl('chown', ['-R', '1000:1000', join(roots.stateRoot, 'data', 'forgejo'), join(roots.stateRoot, 'data', 'influxdb'), join(roots.stateRoot, 'config', 'influxdb'), join(roots.stateRoot, 'data', 'access')]);
   }
   runImpl(runtime, ['load', '--input', join(releaseRoot, 'images', 'appliance-images.tar')]);
   const args = composeProjectArgs(roots, releaseRoot);
-  if (manifest.target.startsWith('linux-')) args.push('--profile', 'linux-connect');
+  if (manifest.target.startsWith('linux-') && hasConnect(manifest)) args.push('--profile', 'linux-connect');
   args.push('up', '-d', '--pull', 'never');
   const command = containerCommand(runtime, args);
   runImpl(command.command, command.args);
@@ -452,9 +508,14 @@ function stopRuntime({ roots, releaseRoot, manifest, mode, runtime = 'docker', r
     return;
   }
   if (manifest.target.startsWith('linux-')) {
-    for (const id of ['edge', 'control', 'connect', 'forgejo', 'influxdb']) runImpl('systemctl', ['disable', '--now', `xyvirtual-${id}.service`]);
+    for (const id of ['edge', 'control', 'gateway', 'connect', 'forgejo', 'influxdb']) {
+      // gateway (added by ADR-0023) and connect (optional) may not exist on this host.
+      if (OPTIONAL_SERVICES.has(id)) {
+        try { runImpl('systemctl', ['disable', '--now', `xyvirtual-${id}.service`]); } catch { /* unit not installed */ }
+      } else runImpl('systemctl', ['disable', '--now', `xyvirtual-${id}.service`]);
+    }
   } else {
-    for (const id of ['edge', 'control', 'connect', 'forgejo', 'influxdb']) {
+    for (const id of ['edge', 'control', 'gateway', 'connect', 'forgejo', 'influxdb']) {
       const wrapper = join(roots.configRoot, 'windows-services', `xyvirtual-${id}.exe`);
       if (existsSync(wrapper)) { runImpl(wrapper, ['stop']); runImpl(wrapper, ['uninstall']); }
     }
@@ -464,7 +525,7 @@ function stopRuntime({ roots, releaseRoot, manifest, mode, runtime = 'docker', r
 function startInstalledRuntime({ roots, state, config, runtime = 'docker', runImpl = run, systemdUnitRoot }) {
   const manifest = JSON.parse(readFileSync(join(state.releaseRoot, 'appliance-manifest.json'), 'utf8'));
   if (state.mode === 'container') {
-    if (state.target.startsWith('windows-')) installWindowsConnectService({ roots, releaseRoot: state.releaseRoot, config, runImpl });
+    if (state.target.startsWith('windows-') && hasConnect(manifest)) installWindowsConnectService({ roots, releaseRoot: state.releaseRoot, config, runImpl });
     startContainer({ roots, releaseRoot: state.releaseRoot, manifest, runtime, runImpl });
   } else installNativeServices({ roots, releaseRoot: state.releaseRoot, manifest, config, runImpl, unitRoot: systemdUnitRoot });
 }
@@ -596,7 +657,7 @@ async function waitForReadiness(config, roots, timeoutMs = 300_000, fetchImpl = 
 }
 
 function ensureStateDirectories(roots) {
-  for (const rel of ['data/connect', 'data/forgejo', 'data/influxdb', 'config/influxdb', 'pki', 'backups', 'logs', 'license', 'secrets']) {
+  for (const rel of ['data/gateway', 'data/connect', 'data/forgejo', 'data/influxdb', 'config/influxdb', 'pki', 'backups', 'logs', 'license', 'secrets']) {
     mkdirSync(join(roots.stateRoot, rel), { recursive: true, mode: rel === 'secrets' ? 0o700 : 0o750 });
   }
 }
@@ -678,7 +739,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
       }
       if (mode === 'container') {
         candidateAttempted = true;
-        if (preflight.manifest.target.startsWith('windows-')) {
+        if (preflight.manifest.target.startsWith('windows-') && hasConnect(preflight.manifest)) {
           installWindowsConnectService({ roots, releaseRoot, config: preflight.config, runImpl });
         }
         startContainer({ roots, releaseRoot, manifest: preflight.manifest, runtime: options.containerRuntime, runImpl });
@@ -902,7 +963,7 @@ export function uninstallAppliance(options, dependencies = {}) {
   const runImpl = dependencies.runImpl ?? run;
   if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
   if (state.mode === 'native' && state.target.startsWith('linux-')) {
-    for (const id of ['edge', 'control', 'connect', 'forgejo', 'influxdb']) {
+    for (const id of ['edge', 'control', 'gateway', 'connect', 'forgejo', 'influxdb']) {
       const unit = join(options.systemdUnitRoot ?? dependencies.systemdUnitRoot ?? '/etc/systemd/system', `xyvirtual-${id}.service`);
       if (existsSync(unit)) rmSync(unit, { force: false });
     }

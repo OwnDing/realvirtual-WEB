@@ -70,6 +70,15 @@ describe('appliance control plane', () => {
     expect(await response.text()).toContain('HTTP_404');
   });
 
+  it('accepts the service links of a release without CONNECT and still validates present ones (ADR-0023)', () => {
+    const base = { web: 'https://a.example/', git: 'https://a.example/git/', influx: 'https://i.a.example/', diagnostics: 'https://a.example/diagnostics/' };
+    const parsed = validateControlConfig({ ...config(), urls: { ...base, gatewayHealth: 'https://a.example/gateway/health' } });
+    expect(parsed.urls).toMatchObject({ gatewayHealth: 'https://a.example/gateway/health' });
+    expect(parsed.urls?.connectHealth).toBeUndefined();
+    expect(() => validateControlConfig({ ...config(), urls: { ...base, gatewayHealth: 'http://a.example/gateway/health' } })).toThrow(/Unsafe control service URL: gatewayHealth/);
+    expect(() => validateControlConfig({ ...config(), urls: { ...base, git: undefined } })).toThrow();
+  });
+
   it('rejects credential-bearing health URLs', () => {
     expect(() => validateControlConfig(config([{ id: 'bad', url: 'http://user:secret@localhost/health', required: true }]))).toThrow(/Unsafe health probe URL/);
   });

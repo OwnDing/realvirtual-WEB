@@ -9,7 +9,7 @@ import { createServer } from 'node:net';
 import { chromium, expect } from 'playwright/test';
 import { createControlServer } from '../appliance/runtime/control-plane.mjs';
 import { AccessStore } from '../appliance/runtime/access/store.mjs';
-import { renderTemplate } from '../appliance/runtime/lib/config.mjs';
+import { renderCaddyfile } from '../appliance/runtime/lib/config.mjs';
 
 const root = await mkdtemp(join(tmpdir(), 'rv-access-e2e-'));
 const artifacts = resolve('test-results/access'); await mkdir(artifacts, { recursive: true });
@@ -44,10 +44,11 @@ try {
   await new Promise(r => control.listen(0, '127.0.0.1', r));
   const upstream = `127.0.0.1:${control.address().port}`;
   const passwordHash = run(['run','--rm','--network','none','-i',image,'caddy','hash-password','--algorithm','argon2id'], { input: 'test-operator-password\n' });
-  let config = renderTemplate(await readFile(resolve('appliance/config/Caddyfile.template'),'utf8'), {
+  // Same renderer as the installer; CONNECT routes included so they stay covered by this journey.
+  let config = renderCaddyfile(await readFile(resolve('appliance/config/Caddyfile.template'),'utf8'), { connect: true }, {
     HOSTNAME: '127.0.0.1', INFLUX_HOSTNAME: 'localhost', LISTEN_HTTP_PORT: httpPort, LISTEN_HTTPS_PORT: httpsPort, HTTPS_PORT_SUFFIX: `:${httpsPort}`,
     TLS_DIRECTIVE: 'tls internal', OPERATOR_USER: 'operator', OPERATOR_PASSWORD_HASH: passwordHash,
-    CONTROL_UPSTREAM: upstream, CONNECT_UPSTREAM: upstream, FORGEJO_UPSTREAM: upstream, INFLUX_UPSTREAM: upstream,
+    CONTROL_UPSTREAM: upstream, GATEWAY_UPSTREAM: upstream, CONNECT_UPSTREAM: upstream, FORGEJO_UPSTREAM: upstream, INFLUX_UPSTREAM: upstream,
     WEB_ROOT: '/web', PRESENT_ROOT: '/web/present', LICENSE_ROOT: '/license',
   });
   config = config.replace('admin 127.0.0.1:2019', 'admin off\n\tdefault_bind 127.0.0.1');

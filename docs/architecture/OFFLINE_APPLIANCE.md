@@ -17,12 +17,14 @@ Browser -- HTTPS --> Caddy edge
                        |-- /present/         --> isolated presentation WEB payload
                        |-- /api/access/v1/*  --> control plane access module + private SQLite/GLB
                        |-- /health,/appliance,/diagnostics --> control plane
-                       |-- /connect, WS      --> CONNECT
+                       |-- /gateway/*        --> XYvirtual Gateway (ws, history, health)
+                       |-- /connect, WS      --> CONNECT (optional, ADR-0023)
                        |-- /git              --> Forgejo
                        `-- /api/v2,/influx    --> InfluxDB
 
 control plane --> release hash verification + bounded service probes
-CONNECT       --> customer-approved OT interfaces
+Gateway       --> OPC UA controllers (explicit signal mapping, audited writes), InfluxDB history
+CONNECT       --> optional third-party gateway for other OT interfaces
 Forgejo       --> persistent project repositories
 InfluxDB      --> persistent signal history
 ```
@@ -33,8 +35,9 @@ Caddy 是唯一局域网入口。CONNECT、Forgejo、InfluxDB 和控制面默认
 
 ## 2. 运行拓扑
 
-- Linux container：Caddy/control/CONNECT/Forgejo/InfluxDB 五个容器，静态 WEB 作为只读发布卷。
-- Linux native：同样五个逻辑服务由 systemd 管理。
+- Linux container：Caddy/control/gateway/Forgejo/InfluxDB 五个容器（发布包含 CONNECT 时另加 CONNECT 容器），静态 WEB 作为只读发布卷；gateway 复用已锁定的 control 镜像，程序来自只读发布目录。
+- Linux native：同样的逻辑服务由 systemd 管理。
+- 自 [ADR-0023](../adr/ADR-0023-own-industrial-gateway.md) 起 CONNECT 为可选组件；不含 CONNECT 的发布不生成其服务、路由与健康检查。网关首次安装生成只读、未配置的 `config/gateway.json`，此后由管理员维护；Web 预设经 `/gateway/ws` 与 `/gateway/history` 访问它。
 - Windows container：Caddy/control/Forgejo/InfluxDB 在 Linux 容器；CONNECT 由 Windows SCM 管理，edge 通过 host gateway 访问。
 - Windows native：全部逻辑服务由 Windows SCM 管理。
 

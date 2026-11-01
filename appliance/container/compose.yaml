@@ -17,6 +17,7 @@ services:
       - "${RV_STATE_ROOT}/pki/caddy-config:/config"
     depends_on:
       - control
+      - gateway
       - forgejo
       - influxdb
     networks: [frontend, backend]
@@ -31,6 +32,22 @@ services:
       - "${RV_CONFIG_ROOT}/control.container.json:/state/control.json:ro"
       - "${RV_STATE_ROOT}/pki:/state-pki:ro"
       - "${RV_STATE_ROOT}/data/access:/state-access"
+    networks: [backend]
+
+  # XYvirtual Gateway (ADR-0023). Reuses the locked control image (Node 22); the
+  # program and its production node_modules come from the read-only release.
+  gateway:
+    image: xyvirtual-appliance/control:${RV_APPLIANCE_VERSION}
+    pull_policy: never
+    restart: unless-stopped
+    user: "10001:10001"
+    # The control image's ENTRYPOINT runs the control plane; override it.
+    entrypoint: ["node", "/release/runtime/gateway/src/main.mjs"]
+    command: ["--config", "/etc/xyvirtual-gateway/gateway.json"]
+    volumes:
+      - "${RV_RELEASE_ROOT}:/release:ro"
+      - "${RV_CONFIG_ROOT}/gateway.json:/etc/xyvirtual-gateway/gateway.json:ro"
+      - "${RV_STATE_ROOT}/data/gateway:/var/lib/xyvirtual-gateway"
     networks: [backend]
 
   connect:

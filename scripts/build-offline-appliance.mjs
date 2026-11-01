@@ -16,18 +16,31 @@ import {
   normalizeBundlePath,
   sha256File,
 } from '../appliance/runtime/lib/bundle.mjs';
+import { lockedEntries } from './security/inventory.mjs';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
 const applianceSource = join(repoRoot, 'appliance');
 const packageJson = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
 const releaseCompatibility = JSON.parse(readFileSync(join(applianceSource, 'release-compatibility.json'), 'utf8'));
-const REQUIRED_NATIVE_COMPONENTS = ['node', 'caddy', 'connect', 'forgejo', 'influxdb', 'influx-cli'];
+// CONNECT is optional since ADR-0023: the project's own gateway (runtime/gateway) is always
+// packaged; a dependency lock MAY add the third-party CONNECT component.
+const REQUIRED_NATIVE_COMPONENTS = ['node', 'caddy', 'forgejo', 'influxdb', 'influx-cli'];
 const REQUIRED_DESTINATIONS = {
-  'linux-x64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/connect/realvirtual-Connect', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
-  'linux-arm64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/connect/realvirtual-Connect', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
-  'windows-x64': ['runtime/node/node.exe', 'runtime/caddy/caddy.exe', 'runtime/connect/realvirtual-Connect.exe', 'runtime/forgejo/forgejo.exe', 'runtime/influxdb/influxd.exe', 'runtime/influx-cli/influx.exe', 'runtime/winsw/winsw.exe'],
+  'linux-x64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
+  'linux-arm64': ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'],
+  'windows-x64': ['runtime/node/node.exe', 'runtime/caddy/caddy.exe', 'runtime/forgejo/forgejo.exe', 'runtime/influxdb/influxd.exe', 'runtime/influx-cli/influx.exe', 'runtime/winsw/winsw.exe'],
 };
+const CONNECT_DESTINATION = {
+  'linux-x64': 'runtime/connect/realvirtual-Connect',
+  'linux-arm64': 'runtime/connect/realvirtual-Connect',
+  'windows-x64': 'runtime/connect/realvirtual-Connect.exe',
+};
+
+/** Entry points this lock must provide: the required set plus CONNECT when it is included. */
+function targetEntrypoints(target, components) {
+  return [...REQUIRED_DESTINATIONS[target], ...(components.has('connect') ? [CONNECT_DESTINATION[target]] : [])];
+}
 
 function arg(args, name, fallback = null) {
   const at = args.indexOf(`--${name}`);
@@ -95,9 +108,10 @@ function validateDependencyLock(lock, target, modes) {
     if (!Number.isSafeInteger(file.bytes) || file.bytes <= 0) throw new Error(`Dependency file must be non-empty: ${source}`);
     if (typeof file.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(file.sha256)) throw new Error(`Invalid dependency SHA-256: ${source}`);
   }
-  for (const id of required) {
+  for (const id of [...required, ...(components.has('connect') ? ['connect'] : [])]) {
     if (!lock.files.some((file) => file.component === id)) throw new Error(`Dependency component has no files: ${id}`);
   }
+  if (components.has('gateway')) throw new Error('The gateway is built from this repository and cannot come from a dependency lock.');
   for (const component of components.values()) {
     for (const licenseFile of component.licenseFiles) {
       const destination = normalizeBundlePath(licenseFile);
@@ -107,7 +121,7 @@ function validateDependencyLock(lock, target, modes) {
     }
   }
   const destinationsInLock = new Set(lock.files.map((file) => file.destination));
-  for (const destination of REQUIRED_DESTINATIONS[target]) {
+  for (const destination of targetEntrypoints(target, components)) {
     if (!destinationsInLock.has(destination)) throw new Error(`Dependency lock is missing runtime entrypoint: ${destination}`);
   }
   if (modes.includes('container') && !destinationsInLock.has('images/appliance-images.tar')) {
@@ -186,8 +200,8 @@ function generateRuntimeSbom(lock) {
   };
 }
 
-function assertTargetEntrypoints(stage, target) {
-  for (const destination of REQUIRED_DESTINATIONS[target]) {
+function assertTargetEntrypoints(stage, target, components) {
+  for (const destination of targetEntrypoints(target, components)) {
     const path = join(stage, destination);
     const bytes = readFileSync(path);
     if (target.startsWith('linux-')) {
@@ -204,6 +218,102 @@ function assertTargetEntrypoints(stage, target) {
       }
     }
   }
+}
+
+const GATEWAY_FILES = ['package.json', 'package-lock.json', 'README.md', 'gateway.example.json'];
+const LICENSE_NAME = /^(?:licen[sc]e|notice|copying|copyright)(?:[._-]|$)/i;
+
+/**
+ * Verify that `gatewayRoot/node_modules` is exactly the PRODUCTION install of
+ * gateway/package-lock.json (`npm ci --omit=dev --ignore-scripts`): every runtime
+ * package present at its locked path and version, no development package, nothing
+ * unlocked. Returns the runtime lock entries.
+ */
+async function verifyGatewayInstall(gatewayRoot) {
+  const lock = JSON.parse(readFileSync(join(gatewayRoot, 'package-lock.json'), 'utf8'));
+  const entries = lockedEntries(lock);
+  const runtime = entries.filter((entry) => !entry.dev);
+  const allowed = new Set(runtime.map((entry) => entry.path));
+  for (const entry of entries) {
+    const manifestPath = join(gatewayRoot, entry.path, 'package.json');
+    if (entry.dev) {
+      if (existsSync(manifestPath)) throw new Error(`Gateway install contains a development package: ${entry.path} (use npm ci --omit=dev)`);
+      continue;
+    }
+    if (!existsSync(manifestPath)) {
+      if (entry.optional) continue;
+      throw new Error(`Gateway install is missing ${entry.path}; run npm ci --prefix gateway --omit=dev --ignore-scripts`);
+    }
+    const installed = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    if (installed.name !== entry.name || installed.version !== entry.version) throw new Error(`Gateway install differs from lock at ${entry.path}`);
+  }
+  async function walk(dir, rel) {
+    for (const item of await readdir(dir, { withFileTypes: true })) {
+      if (item.name === '.bin' || item.name === '.package-lock.json') continue;
+      const childRel = `${rel}/${item.name}`;
+      if (item.isSymbolicLink()) throw new Error(`Gateway install contains a symlink: ${childRel}`);
+      if (!item.isDirectory()) continue;
+      if (item.name.startsWith('@')) { await walk(join(dir, item.name), childRel); continue; }
+      if (!allowed.has(childRel)) throw new Error(`Gateway install contains an unlocked package: ${childRel}`);
+      const nested = join(dir, item.name, 'node_modules');
+      if (existsSync(nested)) await walk(nested, `${childRel}/node_modules`);
+    }
+  }
+  await walk(join(gatewayRoot, 'node_modules'), 'node_modules');
+  return runtime;
+}
+
+/** Copy the gateway program and its verified production node_modules into runtime/gateway. */
+async function stageGateway(stage, gatewayRoot) {
+  const runtime = await verifyGatewayInstall(gatewayRoot);
+  const target = join(stage, 'runtime', 'gateway');
+  mkdirSync(target, { recursive: true });
+  cpSync(join(gatewayRoot, 'src'), join(target, 'src'), { recursive: true });
+  for (const file of GATEWAY_FILES) cpSync(join(gatewayRoot, file), join(target, file));
+  cpSync(join(gatewayRoot, 'node_modules'), join(target, 'node_modules'), {
+    recursive: true,
+    filter: (source) => !source.split(sep).includes('.bin') && basename(source) !== '.package-lock.json',
+  });
+  // Third-party notices: each runtime package's own license files, or the reviewed
+  // supplemental text from security/gateway/license-evidence.json (ADR-0022).
+  const evidence = JSON.parse(readFileSync(join(repoRoot, 'security', 'gateway', 'license-evidence.json'), 'utf8'));
+  const sections = [];
+  for (const entry of runtime) {
+    const dir = join(gatewayRoot, entry.path);
+    if (!existsSync(dir)) continue;
+    const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+    let texts = (await readdir(dir)).filter((name) => LICENSE_NAME.test(name)).sort().map((name) => readFileSync(join(dir, name), 'utf8'));
+    if (!texts.length) {
+      const supplemental = evidence.packages.find((p) => p.package === entry.name && p.version === entry.version && p.integrity === entry.integrity);
+      if (supplemental) texts = [readFileSync(join(repoRoot, 'security', 'license-texts', supplemental.text), 'utf8')];
+    }
+    if (!texts.length) throw new Error(`Gateway runtime package has no license text: ${entry.name}@${entry.version}`);
+    sections.push(`${entry.name}@${entry.version}\nDeclared: ${typeof manifest.license === 'string' ? manifest.license : 'UNDECLARED (see security/gateway/license-decisions.json)'}\n\n${texts.join('\n\n')}`);
+  }
+  const notices = join(stage, 'licenses', 'third-party', 'gateway-npm-notices.txt');
+  mkdirSync(dirname(notices), { recursive: true });
+  writeFileSync(notices, `XYvirtual Gateway — third-party npm packages (production install)\n\n${sections.join('\n\n----------------------------------------\n\n')}\n`);
+  const gatewayPackage = JSON.parse(readFileSync(join(gatewayRoot, 'package.json'), 'utf8'));
+  return {
+    component: { id: 'gateway', version: gatewayPackage.version, license: 'AGPL-3.0-only', licenseFiles: ['licenses/third-party/gateway-npm-notices.txt'] },
+    packages: runtime.map(({ name, version }) => ({ name, version })),
+  };
+}
+
+/**
+ * The Appliance always contains the gateway, so preset the WEB to reach it through
+ * the same HTTPS entry (ADR-0023). A deployment that already configured either
+ * block keeps its own value.
+ */
+function applyApplianceWebDefaults(stage) {
+  const path = join(stage, 'web', 'settings.json');
+  const settings = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
+  settings.services = settings.services ?? {};
+  if (settings.services.historian === undefined) settings.services.historian = { url: '/gateway/history' };
+  if (settings.interface === undefined) {
+    settings.interface = { activeType: 'websocket-realtime', autoConnect: true, wsAddress: '', wsPort: 0, wsUseSSL: true, wsPath: '/gateway/ws', wsAuthToken: '' };
+  }
+  writeFileSync(path, `${JSON.stringify(settings, null, 2)}\n`);
 }
 
 function copyApplianceSource(stage) {
@@ -254,6 +364,7 @@ export async function buildOfflineAppliance(options) {
   try {
     copyApplianceSource(temporary);
     cpSync(webDist, join(temporary, 'web'), { recursive: true, errorOnExist: true, force: false });
+    applyApplianceWebDefaults(temporary);
     const brandSettings = join(webDist, 'settings.json');
     const brandConfig = existsSync(brandSettings) ? JSON.parse(readFileSync(brandSettings, 'utf8')) : {};
     projectStandaloneBrand(join(temporary, 'runtime/static/dashboard'), webDist, brandConfig, '/appliance/');
@@ -265,7 +376,9 @@ export async function buildOfflineAppliance(options) {
     writeFileSync(join(temporary, 'sbom', 'web-production.cdx.json'), `${JSON.stringify(generateNpmSbom(), null, 2)}\n`);
     writeFileSync(join(temporary, 'sbom', 'appliance-runtime.cdx.json'), `${JSON.stringify(generateRuntimeSbom(dependencyLock), null, 2)}\n`);
     await copyDependencies(dependencyRoot, dependencyLock, temporary, validation);
-    assertTargetEntrypoints(temporary, target);
+    assertTargetEntrypoints(temporary, target, validation.components);
+    const gateway = await stageGateway(temporary, resolve(options.gatewayRoot ?? join(repoRoot, 'gateway')));
+    writeFileSync(join(temporary, 'sbom', 'gateway-runtime.json'), `${JSON.stringify({ schemaVersion: 1, component: gateway.component, packages: gateway.packages }, null, 2)}\n`);
     exposeLifecycleWrappers(temporary, target);
     const inventory = await createFileInventory(temporary);
     const manifest = {
@@ -277,8 +390,8 @@ export async function buildOfflineAppliance(options) {
       modes,
       originIdentity: 'scheme-host-port',
       compatibility: releaseCompatibility,
-      services: ['edge', 'control', 'web', 'connect', 'forgejo', 'influxdb'],
-      components: dependencyLock.components
+      services: ['edge', 'control', 'web', 'gateway', ...(validation.components.has('connect') ? ['connect'] : []), 'forgejo', 'influxdb'],
+      components: [...dependencyLock.components, gateway.component]
         .map(({ id, version, license, licenseFiles }) => ({ id, version, license, licenseFiles }))
         .sort((a, b) => a.id.localeCompare(b.id)),
       files: inventory,
@@ -299,7 +412,7 @@ export async function buildOfflineAppliance(options) {
 async function main() {
   const args = process.argv.slice(2);
   if (has(args, 'help')) {
-    console.log('Usage: node scripts/build-offline-appliance.mjs --target <linux-x64|linux-arm64|windows-x64> --dependency-root <dir> --dependency-lock <json> [--web-dist dist] [--no-build] [--output dir] [--modes container,native] [--no-archive]');
+    console.log('Usage: node scripts/build-offline-appliance.mjs --target <linux-x64|linux-arm64|windows-x64> --dependency-root <dir> --dependency-lock <json> [--web-dist dist] [--no-build] [--output dir] [--modes container,native] [--no-archive] [--gateway-root gateway]');
     return;
   }
   const target = requiredArg(args, 'target');
@@ -316,6 +429,8 @@ async function main() {
     output,
     archive: !has(args, 'no-archive'),
     createdAt: safeCreatedAt(args),
+    // A production install of gateway/ (npm ci --prefix gateway --omit=dev --ignore-scripts).
+    gatewayRoot: arg(args, 'gateway-root', join(repoRoot, 'gateway')),
   });
   console.log(JSON.stringify({ bundle: result.bundleDir, archive: result.archive, files: result.manifest.files.length }, null, 2));
 }

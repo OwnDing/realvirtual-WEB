@@ -28,19 +28,34 @@ describe('appliance runtime topology', () => {
     expect(() => renderTemplate('{{MISSING}}', {})).toThrow(/missing/);
   });
 
-  it('defines all five native services for Linux and Windows', () => {
+  it('defines the native services for Linux and Windows, with CONNECT only when the release has it', () => {
     const roots = { installRoot: '/opt/xyvirtual', configRoot: '/etc/xyvirtual', stateRoot: '/var/lib/xyvirtual' };
-    const linux = buildNativeServiceDefinitions({ roots, releaseRoot: '/opt/xyvirtual/releases/1', manifest: { target: 'linux-x64' } as any, config: CONFIG as any });
-    expect(linux.map((item) => item.id)).toEqual(['control', 'connect', 'forgejo', 'influxdb', 'edge']);
+    const withConnect = ['edge', 'control', 'web', 'gateway', 'connect', 'forgejo', 'influxdb'];
+    const withoutConnect = withConnect.filter((id) => id !== 'connect');
+    const linux = buildNativeServiceDefinitions({ roots, releaseRoot: '/opt/xyvirtual/releases/1', manifest: { target: 'linux-x64', services: withConnect } as any, config: CONFIG as any });
+    expect(linux.map((item) => item.id)).toEqual(['control', 'gateway', 'connect', 'forgejo', 'influxdb', 'edge']);
     expect(linux.every((item) => item.unit?.includes('Restart=on-failure'))).toBe(true);
-    const windows = buildNativeServiceDefinitions({ roots, releaseRoot: 'C:\\XYvirtual\\releases\\1', manifest: { target: 'windows-x64' } as any, config: CONFIG as any });
-    expect(windows.map((item) => item.id)).toEqual(['control', 'connect', 'forgejo', 'influxdb', 'edge']);
+    const gateway = linux.find((item) => item.id === 'gateway')!;
+    expect(gateway.unit).toContain('runtime/gateway/src/main.mjs');
+    expect(gateway.unit).toContain('User=xyvirtual');
+    const linuxNoConnect = buildNativeServiceDefinitions({ roots, releaseRoot: '/opt/xyvirtual/releases/1', manifest: { target: 'linux-x64', services: withoutConnect } as any, config: CONFIG as any });
+    expect(linuxNoConnect.map((item) => item.id)).toEqual(['control', 'gateway', 'forgejo', 'influxdb', 'edge']);
+    const windows = buildNativeServiceDefinitions({ roots, releaseRoot: 'C:\\XYvirtual\\releases\\1', manifest: { target: 'windows-x64', services: withoutConnect } as any, config: CONFIG as any });
+    expect(windows.map((item) => item.id)).toEqual(['control', 'gateway', 'forgejo', 'influxdb', 'edge']);
     expect(windows.every((item) => item.wrapper?.endsWith('.exe'))).toBe(true);
+  });
+
+  it('keeps the HTTPS journey test rendering every Caddyfile variable through the installer renderer', () => {
+    const template = readFileSync(resolve(root, 'appliance/config/Caddyfile.template'), 'utf8');
+    const script = readFileSync(resolve(root, 'scripts/test-protected-presentations.mjs'), 'utf8');
+    expect(script).toContain('renderCaddyfile(');
+    const names = new Set([...template.matchAll(/\{\{([A-Z0-9_]+)\}\}/g)].map((m) => m[1]).filter((n) => n !== 'CONNECT_ROUTES'));
+    for (const name of names) expect(script, `scripts/test-protected-presentations.mjs does not set ${name}`).toMatch(new RegExp(`\\b${name}:`));
   });
 
   it('has no customer-side package or image downloads', () => {
     const files = [
-      'appliance/runtime/manager.mjs', 'appliance/native/linux/install.sh',
+      'appliance/runtime/manager.mjs', 'appliance/runtime/lib/config.mjs', 'appliance/native/linux/install.sh',
       'appliance/native/windows/Invoke-ApplianceManager.ps1', 'appliance/container/compose.yaml',
       'appliance/config/Caddyfile.template',
     ];

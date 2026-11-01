@@ -12,11 +12,18 @@
 <p>disabled. Native mode uses only the signed runtimes inside <code>runtime/</code>.</p>
 <p>After installation, trust the internal CA root through an approved out-of-band GPO/MDM/manual</p>
 <p>process, verify its SHA-256 fingerprint, and open <code>/diagnostics/</code> from a real operator device. HTTPS,</p>
-<p>secure context, WebGL2, OPFS round trip, release integrity, CONNECT, Forgejo and InfluxDB are the</p>
-<p>baseline checks. File System Access, WebGPU and WebXR are feature-scoped.</p>
+<p>secure context, WebGL2, OPFS round trip, release integrity, the industrial gateway (and CONNECT when</p>
+<p>the release includes it), Forgejo and InfluxDB are the baseline checks. File System Access, WebGPU and WebXR are feature-scoped.</p>
 <p>Always run <code>backup</code> before <code>upgrade</code>. <code>rollback</code> switches to the retained release without deleting</p>
 <p>shared data. <code>uninstall</code> preserves state unless the exact install id is supplied with the explicit</p>
 <p>purge flags. Never bypass a certificate warning, disable TLS validation, expose CONNECT/PLC ports,</p>
 <p>or change scheme/host/port during an ordinary upgrade.</p>
+<p>The first install writes <code>config/gateway.json</code> as a <strong>read-only, unconfigured</strong> gateway. The</p>
+<p>customer&#39;s OT owner fills in the OPC UA <code>source</code> and the explicit <code>signals</code> mapping per</p>
+<p><code>docs/contracts/GATEWAY.md</code>, then restarts the gateway service; upgrades keep the file. Writes stay</p>
+<p>off unless a <code>PLCInput*</code> signal is marked <code>writable</code> and <code>readOnly</code> is set to <code>false</code> after site</p>
+<p>authorization. Every write attempt is audited in <code>state/data/gateway/audit/writes.jsonl</code>; a timed-out</p>
+<p>write is <code>unknown</code> and is never retried automatically. Real controllers require their own on-site</p>
+<p>acceptance.</p>
 <p>Browser, hardware and trust acceptance: L3-2 guide.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 2e2726842d6f</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 366333651025</span></footer></main></div></body></html>

@@ -30,7 +30,7 @@ function render(data) {
 }
 
 function renderLinks(urls) {
-  const labels = { web: '打开 WEB', git: '项目 Git', connectHealth: 'CONNECT 健康', influx: 'InfluxDB', diagnostics: '环境检查' };
+  const labels = { web: '打开 WEB', git: '项目 Git', gatewayHealth: '工业网关健康', connectHealth: 'CONNECT 健康', influx: 'InfluxDB', diagnostics: '环境检查' };
   links.replaceChildren(...Object.entries(labels).flatMap(([id, label]) => {
     if (typeof urls?.[id] !== 'string') return [];
     const anchor = document.createElement('a');

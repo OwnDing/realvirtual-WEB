@@ -1,0 +1,26 @@
+{
+  "name": "@xyvirtual/gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "XYvirtual Gateway: OPC UA to WebSocket Realtime v2 bridge with InfluxDB signal history",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "xyvirtual-gateway": "src/main.mjs"
+  },
+  "scripts": {
+    "start": "node src/main.mjs",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "node-opcua-certificate-manager": "2.187.16",
+    "node-opcua-client": "2.187.18",
+    "ws": "8.22.1"
+  },
+  "devDependencies": {
+    "node-opcua-server": "2.187.18"
+  }
+}

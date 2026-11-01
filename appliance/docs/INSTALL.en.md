@@ -14,12 +14,20 @@ disabled. Native mode uses only the signed runtimes inside `runtime/`.
 
 After installation, trust the internal CA root through an approved out-of-band GPO/MDM/manual
 process, verify its SHA-256 fingerprint, and open `/diagnostics/` from a real operator device. HTTPS,
-secure context, WebGL2, OPFS round trip, release integrity, CONNECT, Forgejo and InfluxDB are the
-baseline checks. File System Access, WebGPU and WebXR are feature-scoped.
+secure context, WebGL2, OPFS round trip, release integrity, the industrial gateway (and CONNECT when
+the release includes it), Forgejo and InfluxDB are the baseline checks. File System Access, WebGPU and WebXR are feature-scoped.
 
 Always run `backup` before `upgrade`. `rollback` switches to the retained release without deleting
 shared data. `uninstall` preserves state unless the exact install id is supplied with the explicit
 purge flags. Never bypass a certificate warning, disable TLS validation, expose CONNECT/PLC ports,
 or change scheme/host/port during an ordinary upgrade.
+
+The first install writes `config/gateway.json` as a **read-only, unconfigured** gateway. The
+customer's OT owner fills in the OPC UA `source` and the explicit `signals` mapping per
+`docs/contracts/GATEWAY.md`, then restarts the gateway service; upgrades keep the file. Writes stay
+off unless a `PLCInput*` signal is marked `writable` and `readOnly` is set to `false` after site
+authorization. Every write attempt is audited in `state/data/gateway/audit/writes.jsonl`; a timed-out
+write is `unknown` and is never retried automatically. Real controllers require their own on-site
+acceptance.
 
 Browser, hardware and trust acceptance: [L3-2 guide](BROWSER_SUPPORT.md).

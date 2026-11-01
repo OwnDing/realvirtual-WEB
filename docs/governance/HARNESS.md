@@ -97,4 +97,4 @@ Harness 不自动安装依赖、不升级工具、不启动真实工业连接、
 
 ## 9. Supply Chain Gate（ADR-0019）
 
-新增 `./scripts/verify.sh supply-chain`，并纳入 `all`。漏洞、许可证和完整性分别报告，政策反例自检在扫描前执行。具体范围、退出语义、固定工具版本与数据外发边界见 [安全规范](../architecture/SCRIPT_SECURITY.md) 和 [运维说明](../delivery/SECURITY_OPERATIONS.md)。第六 job 已在 PR 中定义；远程 required check 配置仍需独立授权和读回，不能从 YAML 推断已强制。
+新增 `./scripts/verify.sh supply-chain`，并纳入 `all`。漏洞、许可证和完整性分别报告，政策反例自检在扫描前执行。具体范围、退出语义、固定工具版本与数据外发边界见 [安全规范](../architecture/SCRIPT_SECURITY.md) 和 [运维说明](../delivery/SECURITY_OPERATIONS.md)。第六 job 已在 PR 中定义；远程 required check 配置仍需独立授权和读回，不能从 YAML 推断已强制。2026-11-01 依用户指令把 `Supply Chain Gate` 加入 `develop` required checks，读回六项、strict、管理员不可绕过；`main` 未改（用户指令只合并到 develop）。扫描覆盖 `web` 与 `gateway` 两个作用域（ADR-0023），`./scripts/verify.sh supply-chain` 两个都跑。

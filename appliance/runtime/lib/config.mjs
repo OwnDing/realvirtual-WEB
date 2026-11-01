@@ -4,7 +4,9 @@ import { X509Certificate, createPrivateKey, createPublicKey } from 'node:crypto'
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 
-const PORT_FIELDS = ['httpsPort', 'httpPort', 'controlPort', 'connectPort', 'forgejoPort', 'influxPort'];
+const PORT_FIELDS = ['httpsPort', 'httpPort', 'controlPort', 'gatewayPort', 'connectPort', 'forgejoPort', 'influxPort'];
+/** Ports added after a release shipped get a default so existing appliance.json files stay valid. */
+const PORT_DEFAULTS = { gatewayPort: 5200 };
 
 function hostname(value, field) {
   if (typeof value !== 'string' || !value || value.length > 253 || /[\s/:]/.test(value)) throw new Error(`${field} must be a DNS name or IP without scheme, path, or port.`);
@@ -26,7 +28,7 @@ export function validateApplianceConfig(raw, { baseDir = process.cwd() } = {}) {
   if (!raw || raw.schemaVersion !== 1) throw new Error('Appliance config must use schemaVersion 1.');
   const hostnameValue = hostname(raw.hostname, 'hostname');
   const influxHostname = hostname(raw.influxHostname, 'influxHostname');
-  const ports = Object.fromEntries(PORT_FIELDS.map((field) => [field, port(raw[field], field)]));
+  const ports = Object.fromEntries(PORT_FIELDS.map((field) => [field, port(raw[field] ?? PORT_DEFAULTS[field], field)]));
   const seenPorts = new Map();
   for (const [field, value] of Object.entries(ports)) {
     if (seenPorts.has(value)) throw new Error(`${field} conflicts with ${seenPorts.get(value)} on port ${value}.`);
@@ -102,4 +104,22 @@ export function renderTemplate(source, variables) {
 
 export function httpsPortSuffix(portValue) {
   return portValue === 443 ? '' : `:${portValue}`;
+}
+
+/** CONNECT's routes, present in the entry only when the release includes CONNECT (ADR-0023). */
+export const CONNECT_ROUTES = `handle_path /connect/* {
+			reverse_proxy {{CONNECT_UPSTREAM}}
+		}
+		@connectRoot path /health /ws /webviewer /mcp /mcp/* /interface-types /config /config/* /discover/* /signals/* /model /logs /status /history /history/* /update/* /news /news/* /diagnose/* /comments /comments/* /docs/*
+		handle @connectRoot {
+			reverse_proxy {{CONNECT_UPSTREAM}}
+		}`;
+
+/**
+ * Render the Caddyfile template. The one place that decides whether the optional CONNECT
+ * routes exist, so the installer and the HTTPS journey test render the same entry.
+ */
+export function renderCaddyfile(source, { connect }, variables) {
+  const routes = connect ? CONNECT_ROUTES : '# CONNECT is not part of this release (ADR-0023).';
+  return renderTemplate(source.replace('{{CONNECT_ROUTES}}', routes), variables);
 }
