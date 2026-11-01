@@ -18,6 +18,18 @@ import { OpcUaSource } from './sources/opcua-source.mjs';
 import { IdleSource } from './sources/idle-source.mjs';
 
 export const GATEWAY_PRODUCT = 'xyvirtual-gateway';
+
+/** HMI roles (ADR-0024) and which of them may write PLC signals. */
+const HMI_ROLES = ['viewer', 'operator', 'engineer', 'admin'];
+const WRITE_ROLES = new Set(['operator', 'engineer', 'admin']);
+
+/** Identity from the entry proxy's headers, or null when absent or malformed. */
+export function proxyIdentity(req) {
+  const user = req.headers['x-rv-user'];
+  const role = req.headers['x-rv-role'];
+  if (typeof user !== 'string' || !/^[a-z0-9][a-z0-9._-]{2,63}$/.test(user) || !HMI_ROLES.includes(role)) return null;
+  return { user, role, canWrite: WRITE_ROLES.has(role) };
+}
 export const GATEWAY_VERSION = '0.1.0';
 
 function json(res, status, body, headers = {}) {
@@ -39,7 +51,7 @@ export function createGateway(config, secrets, overrides = {}) {
   const realtime = new RealtimeServer({
     registry, source, audit, apiKey: secrets.apiKey, readOnly: config.readOnly,
     maxClients: config.maxClients, allowedOrigins: config.allowedOrigins, path: config.websocketPath,
-    identify: overrides.identify,
+    identify: overrides.identify ?? (config.trustProxyIdentity ? async (req) => proxyIdentity(req) : undefined),
   });
 
   const cors = (req) => {
@@ -63,6 +75,7 @@ export function createGateway(config, secrets, overrides = {}) {
     }
     if (!url.pathname.startsWith('/history/')) return json(res, 404, { error: 'not found' }, headers);
     if (secrets.apiKey && !keyMatches(req.headers['x-api-key'], secrets.apiKey)) return json(res, 401, { error: 'unauthorized' }, headers);
+    if (config.trustProxyIdentity && !proxyIdentity(req)) return json(res, 401, { error: 'unauthorized' }, headers);
     try {
       if (url.pathname === '/history/status') return json(res, 200, history.status(), headers);
       if (url.pathname === '/history/signals') return json(res, 200, history.signals(), headers);

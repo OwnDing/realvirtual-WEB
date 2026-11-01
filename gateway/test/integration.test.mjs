@@ -258,3 +258,51 @@ test('losing the PLC marks the source down; writes become outcome-unknown; it re
   await until(() => client.values.Speed === 7.75, 30_000, 'values flow after reconnect');
   client.ws.close();
 });
+
+test('behind the Appliance entry: identity comes only from proxy headers and viewer cannot write (ADR-0024)', async () => {
+  const config = validateConfig({
+    schemaVersion: 1,
+    listen: { host: '127.0.0.1', port: 0 },
+    trustProxyIdentity: true,
+    audit: { path: join(dir, 'audit', 'identity.jsonl') },
+    source: { kind: 'opcua', endpointUrl: `opc.tcp://127.0.0.1:${opcPort}/UA/TestPLC`, publishingIntervalMs: 50, samplingIntervalMs: 20, pkiDir: join(dir, 'client-pki-2') },
+    signals: [{ name: 'Start', nodeId: 'ns=1;s=Conveyor.Start', type: 'PLCInputBool', writable: true }],
+  });
+  const second = createGateway(config, resolveSecrets(config, {}));
+  const port = (await second.start()).port;
+  try {
+    await until(() => second.source.state === 'connected', 30_000, 'second gateway connection');
+    const open = (headers) => new Promise((resolve, reject) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, { headers });
+      const client = { ws, messages: [] };
+      ws.on('message', (data) => client.messages.push(JSON.parse(data.toString())));
+      ws.on('open', () => resolve(client));
+      ws.on('unexpected-response', (_req, res) => reject(Object.assign(new Error(`HTTP ${res.statusCode}`), { statusCode: res.statusCode })));
+      ws.on('error', reject);
+    });
+    await assert.rejects(open({}), (e) => e.statusCode === 401, 'no identity, no connection');
+    await assert.rejects(open({ 'x-rv-user': 'mallory', 'x-rv-role': 'superuser' }), (e) => e.statusCode === 401, 'unknown role');
+    const write = async (client, signals) => {
+      client.ws.send(JSON.stringify({ type: 'data', version: 2, signals }));
+      await until(() => client.messages.some((m) => m.type === 'write_result'), 10_000, 'write_result');
+      return client.messages.find((m) => m.type === 'write_result').results;
+    };
+    plc.start = false;
+    const viewer = await open({ 'x-rv-user': 'vera', 'x-rv-role': 'viewer' });
+    assert.equal((await write(viewer, { Start: true })).Start.reason, 'forbidden-role');
+    assert.equal(plc.start, false);
+    viewer.ws.close();
+    const operator = await open({ 'x-rv-user': 'otto', 'x-rv-role': 'operator' });
+    assert.equal((await write(operator, { Start: true })).Start.outcome, 'written');
+    assert.equal(plc.start, true);
+    operator.ws.close();
+    const history = await fetch(`http://127.0.0.1:${port}/history/status`);
+    assert.equal(history.status, 401, 'history also requires an identity');
+    await second.audit.flush();
+    const lines = readFileSync(join(dir, 'audit', 'identity.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    assert.ok(lines.some((l) => l.user === 'vera' && l.role === 'viewer' && l.outcome === 'rejected' && l.reason === 'forbidden-role'));
+    assert.ok(lines.some((l) => l.user === 'otto' && l.role === 'operator' && l.outcome === 'written'));
+  } finally {
+    await second.stop();
+  }
+});

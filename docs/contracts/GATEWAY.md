@@ -23,6 +23,7 @@ authority: normative
 | `apiKeyEnv` | 否 | 环境变量名；设置后 WebSocket 需 `?apikey=`、`/history/*` 需 `X-API-Key` |
 | `allowedOrigins` | 否 | 浏览器 Origin 白名单（CORS 与 WebSocket）；为空时不做 Origin 限制，依赖入口代理 |
 | `readOnly` | 否 | 默认 `false`；为 `true` 时拒绝全部写入 |
+| `trustProxyIdentity` | 否 | 默认 `false`；`true` 时只接受入口代理注入的 `X-Rv-User`/`X-Rv-Role`（[ADR-0024](../adr/ADR-0024-hmi-roles-and-server-projects.md)），无身份的 WebSocket 与 `/history/*` 返回 401；只能在网关仅经 Appliance HTTPS 入口可达时开启 |
 | `maxClients` | 否 | 默认 200 |
 | `audit.path` | 是 | 写入审计 JSON Lines 文件 |
 | `source` | 视情况 | 缺省 = 未配置网关，此时 `signals` 必须为空；当前只支持 `kind: "opcua"` |
@@ -45,13 +46,13 @@ authority: normative
 
 ## 3. 写入语义（IO-2、IO-3）
 
-一次写入仅在以下条件同时满足时到达 PLC：非 `readOnly`；信号已配置、为 `PLCInput*` 且 `writable: true`；值的类型精确匹配（`"1"` 不是 Bool，`1.5` 不是 Int）且在 `dataType` 与 `min/max` 范围内。拒绝原因代码稳定：`read-only`、`unknown-signal`、`not-writable-direction`、`not-writable`、`invalid-type`、`out-of-range`（第 3 步起另有 `forbidden-role`）。
+一次写入仅在以下条件同时满足时到达 PLC：非 `readOnly`；信号已配置、为 `PLCInput*` 且 `writable: true`；值的类型精确匹配（`"1"` 不是 Bool，`1.5` 不是 Int）且在 `dataType` 与 `min/max` 范围内。拒绝原因代码稳定：`read-only`、`unknown-signal`、`not-writable-direction`、`not-writable`、`invalid-type`、`out-of-range`，以及 `trustProxyIdentity` 下角色低于 operator 时的 `forbidden-role`。
 
 源侧结果：`written`（OPC UA 返回 Good）、`failed`（返回 Bad，附状态名）、`unknown`（超时、断线或会话丢失）。**`unknown` 绝不自动重试**；调用方须先读回状态再决定。
 
 ## 4. 审计记录
 
-`audit.path` 中每次写尝试（含拒绝）一行 JSON：`time`、`client`（连接 ID@远端地址/客户端名）、`user`、`role`（第 3 步之前为 `null`）、`signal`、`requested`、`value`（被接受时的规范化值）、`outcome`（`rejected|written|failed|unknown`）、`reason` 或 `status`。行按写入顺序串行追加，文件权限 0640；追加失败计入 `/health` 的 `auditFailures`。
+`audit.path` 中每次写尝试（含拒绝）一行 JSON：`time`、`client`（连接 ID@远端地址/客户端名）、`user`、`role`（来自入口身份；未启用 `trustProxyIdentity` 时为 `null`）、`signal`、`requested`、`value`（被接受时的规范化值）、`outcome`（`rejected|written|failed|unknown`）、`reason` 或 `status`。行按写入顺序串行追加，文件权限 0640；追加失败计入 `/health` 的 `auditFailures`。
 
 ## 5. 历史存储
 

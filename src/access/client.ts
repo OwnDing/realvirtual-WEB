@@ -5,7 +5,7 @@ export interface AccessSession { username: string | null; role: 'admin' | 'visit
 export interface Presentation { id: string; name: string; size: number; created: number; }
 export interface Share { id: string; presentation: string; user: string | null; expires: number; revoked: number; }
 export interface Visitor { id: string; username: string; role: string; disabled: number; }
-export interface Audit { id: number; time: number; actor: string; action: string; target: string; outcome: string; }
+export interface Audit { id: number; time: number; actor: string; action: string; target: string; outcome: string; detail?: string; }
 export interface ShareInfo { id: string; name: string; expiresAt: number; serverTime: number; visitor: string; identity: 'account' | 'link'; size: number; }
 export class AccessFailure extends Error { constructor(public code: string) { super(code); } }
 export const accessRoot = '/api/access/v1';

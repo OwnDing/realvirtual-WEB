@@ -7,6 +7,7 @@ import { basename, dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyBundle } from './lib/bundle.mjs';
 import { createAccessHandler } from './access/http.mjs';
+import { createProjectsHandler } from './access/projects.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_STATIC = resolve(here, 'static');
@@ -204,10 +205,18 @@ export function createControlServer(rawConfig, dependencies = {}) {
   const readiness = createReadiness(config, dependencies);
   // Disabled/failed initialization never falls through to a public file handler.
   const access = config.access ? createAccessHandler(config.access) : null;
+  // ADR-0024: project API shares the access store (sessions, roles, audit).
+  const projects = access && config.projects
+    ? createProjectsHandler(config.projects, { store: access.store, origin: config.access.origin, fetchImpl: dependencies.fetchImpl })
+    : null;
   const server = createServer(async (req, res) => {
     if (req.url?.startsWith('/api/access/')) {
       if (access && await access.handle(req, res)) return;
       json(res, 503, { error: { code: 'ACCESS_UNAVAILABLE' } }); return;
+    }
+    if (req.url?.startsWith('/api/projects/')) {
+      if (projects && await projects.handle(req, res)) return;
+      json(res, 503, { error: { code: 'PROJECTS_UNAVAILABLE' } }); return;
     }
     const pathname = new URL(req.url ?? '/', 'http://appliance.invalid').pathname;
     if (req.method !== 'GET' && req.method !== 'HEAD') {

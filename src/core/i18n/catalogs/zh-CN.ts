@@ -20,6 +20,7 @@
 import { diagnosticsChinese } from './diagnostics';
 import { loadingPerformanceChinese } from './loading-performance';
 import { demoPackageChinese } from './demo-package';
+import { hmiAccountChinese } from './hmi-account';
 
 export const zhCN = {
   common: {
@@ -784,6 +785,7 @@ export const zhCN = {
   shell: {
     diagnostics: diagnosticsChinese,
     demoExport: demoPackageChinese,
+    account: hmiAccountChinese,
     access: {
       title: '受保护演示',
       admin: '演示管理',

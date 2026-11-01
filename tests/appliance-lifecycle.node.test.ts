@@ -123,6 +123,7 @@ function dependencies(readiness: () => Promise<void>, commands: string[] = []) {
       commands.push(`${command} ${args.join(' ')}`);
       if (command.includes('caddy') && args[0] === 'hash-password') return '$argon2id$v=19$m=65536,t=3,p=2$fixture$fixture';
       if (command === 'runuser' && args.includes('create')) return 'generated random password: fixture-forgejo-password';
+      if (command === 'runuser' && args.includes('generate-access-token')) return 'fixtureforgejotoken0123456789abcdef\n';
       return '';
     },
     bootstrapFetchImpl: async () => new Response('{"allowed":false}', { status: 200, headers: { 'content-type': 'application/json' } }),
@@ -153,6 +154,16 @@ describe('appliance lifecycle', () => {
     const second = await installOrUpgrade(installOptions, deps);
     expect(JSON.parse(readFileSync(gatewayConfigPath, 'utf8')).readOnly).toBe(false);
     expect(readFileSync(join(first.roots.configRoot, 'Caddyfile'), 'utf8')).toContain('handle_path /gateway/*');
+    // ADR-0024: HMI sessions at the entry, an HMI admin bootstrapped once, a 0600 project token.
+    expect(gatewayConfig.trustProxyIdentity).toBe(true);
+    const caddy = readFileSync(join(first.roots.configRoot, 'Caddyfile'), 'utf8');
+    expect(caddy).toContain('forward_auth @hmi');
+    expect(caddy).toContain('request_header -X-Rv-Role');
+    expect(first.bootstrapAdmin).toBe('operator');
+    expect(second.bootstrapAdmin).toBeNull();
+    const tokenFile = join(first.roots.stateRoot, 'data', 'access', 'forgejo-token');
+    expect(readFileSync(tokenFile, 'utf8')).toBe('fixtureforgejotoken0123456789abcdef');
+    expect(statSync(tokenFile).mode & 0o777).toBe(0o600);
     expect(second.generatedOperatorPassword).toBeNull();
     expect(second.state.installId).toBe(installId);
     expect(readFileSync(join(first.roots.stateRoot, 'secrets', 'operator-password'), 'utf8')).toBe(password);

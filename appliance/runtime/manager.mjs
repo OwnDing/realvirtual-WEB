@@ -11,6 +11,7 @@ import { runPreflight } from './lib/preflight.mjs';
 import { httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
 import { isRollbackDataCompatible } from './lib/compatibility.mjs';
+import { AccessStore } from './access/store.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bundleFromRuntime = resolve(here, '..');
@@ -225,13 +226,21 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
   const tokenPath = join(data, 'influx-token');
   if (!existsSync(tokenPath) || readFileSync(tokenPath, 'utf8') !== secrets.influxToken) writeFileSync(tokenPath, secrets.influxToken, { mode: 0o600 });
   const path = join(roots.configRoot, 'gateway.json');
-  if (existsSync(path)) return path;
+  if (existsSync(path)) {
+    // ADR-0024 migration: a gateway behind the HTTPS entry must take the user identity from it.
+    // Only an ABSENT key is added; an administrator's explicit `false` is respected.
+    const current = JSON.parse(readFileSync(path, 'utf8'));
+    if (current.trustProxyIdentity === undefined) writeFileSync(path, `${JSON.stringify({ ...current, trustProxyIdentity: true }, null, 2)}\n`, { mode: 0o644 });
+    return path;
+  }
   const inside = container ? '/var/lib/xyvirtual-gateway' : data;
   const gateway = {
     schemaVersion: 1,
     listen: container ? { host: '0.0.0.0', port: 5200 } : { host: '127.0.0.1', port: config.gatewayPort },
     websocketPath: '/ws',
     readOnly: true,
+    // Reachable only through the HTTPS entry, which injects the session identity (ADR-0024).
+    trustProxyIdentity: true,
     audit: { path: container ? `${inside}/audit/writes.jsonl` : join(inside, 'audit', 'writes.jsonl') },
     signals: [],
     history: {
@@ -245,6 +254,37 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
   // No secret in this file (the token is in tokenFile, 0600), so the service user may read it.
   writeFileSync(path, `${JSON.stringify(gateway, null, 2)}\n`, { mode: 0o644 });
   return path;
+}
+
+/**
+ * ADR-0024: the HMI needs a personal account. When the access store has no enabled admin
+ * (fresh install, or an upgrade from the shared-Basic-Auth era) the installer creates one
+ * from the operator credential the customer already holds, so an upgrade never locks
+ * everyone out. Returns the created username, or null.
+ */
+async function ensureHmiAdmin({ roots, config, secrets }) {
+  const store = new AccessStore(join(roots.stateRoot, 'data', 'access'));
+  try {
+    if (store.get("SELECT id FROM users WHERE role='admin' AND disabled=0")) return null;
+    const username = config.authentication.operatorUser.toLowerCase();
+    if (store.get('SELECT id FROM users WHERE username=?', username)) return null;
+    await store.createUser(username, secrets.operatorPassword, 'admin', 'installer');
+    return username;
+  } finally {
+    store.close();
+  }
+}
+
+function forgejoTokenPath(roots) {
+  return join(roots.stateRoot, 'data', 'access', 'forgejo-token');
+}
+
+const FORGEJO_TOKEN_ARGS = ['admin', 'user', 'generate-access-token', '--username', 'appliance', '--token-name', 'xyvirtual-projects', '--scopes', 'write:repository,write:user', '--raw'];
+
+function persistForgejoToken(roots, output) {
+  const token = typeof output === 'string' ? output.trim().split(/\s+/).at(-1) : '';
+  if (!token) throw new Error('Forgejo did not return the project service token.');
+  writeFileSync(forgejoTokenPath(roots), token, { mode: 0o600, flag: 'wx' });
 }
 
 function tlsDirective(config, roots, container, windows) {
@@ -316,6 +356,12 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     access: {
       root: container ? '/state-access' : accessRoot,
       origin: `https://${config.hostname}${httpsPortSuffix(config.httpsPort)}`,
+    },
+    // ADR-0024: server-side projects in Forgejo, one repository per project.
+    projects: {
+      forgejoUrl: container ? 'http://forgejo:3000' : `http://127.0.0.1:${config.forgejoPort}`,
+      owner: 'appliance',
+      tokenFile: container ? '/state-access/forgejo-token' : join(accessRoot, 'forgejo-token'),
     },
     certificate: {
       mode: config.tls.mode,
@@ -546,16 +592,24 @@ function bootstrapNativeForgejo({ roots, releaseRoot, manifest, runImpl = run })
     ? runImpl('runuser', ['-u', 'xyvirtual', '--', binary, ...globalArgs, ...args], options)
     : runImpl(binary, [...globalArgs, ...args], options);
   invoke(['migrate'], { capture: true });
-  if (existsSync(forgejoBootstrapPath(roots))) return;
-  const output = invoke([
-    'admin', 'user', 'create', '--username', 'appliance', '--email', 'appliance@localhost.invalid',
-    '--admin', '--random-password', '--random-password-length', '24', '--must-change-password=false',
-  ], { capture: true });
-  persistForgejoBootstrap(roots, output);
+  if (!existsSync(forgejoBootstrapPath(roots))) {
+    const output = invoke([
+      'admin', 'user', 'create', '--username', 'appliance', '--email', 'appliance@localhost.invalid',
+      '--admin', '--random-password', '--random-password-length', '24', '--must-change-password=false',
+    ], { capture: true });
+    persistForgejoBootstrap(roots, output);
+  }
+  if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, invoke(FORGEJO_TOKEN_ARGS, { capture: true }));
 }
 
 async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker', runImpl = run, waitImpl = null }) {
-  if (existsSync(forgejoBootstrapPath(roots))) return;
+  if (existsSync(forgejoBootstrapPath(roots))) {
+    if (!existsSync(forgejoTokenPath(roots))) {
+      const command = containerCommand(runtime, [...composeProjectArgs(roots, releaseRoot), 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
+      persistForgejoToken(roots, runImpl(command.command, command.args, { capture: true }));
+    }
+    return;
+  }
   const delay = waitImpl ?? ((milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)));
   const base = composeProjectArgs(roots, releaseRoot);
   let lastError = null;
@@ -567,6 +621,8 @@ async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker
         '--admin', '--random-password', '--random-password-length', '24', '--must-change-password=false',
       ]);
       persistForgejoBootstrap(roots, runImpl(command.command, command.args, { capture: true }));
+      const tokenCommand = containerCommand(runtime, [...base, 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
+      if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, runImpl(tokenCommand.command, tokenCommand.args, { capture: true }));
       return;
     } catch (error) {
       lastError = error;
@@ -708,6 +764,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
   const readinessImpl = dependencies.waitForReadinessImpl ?? waitForReadiness;
   const initialized = initializeSecrets(roots, preflight.config, releaseRoot, preflight.manifest.target, runImpl);
   const runtimeConfig = renderRuntimeConfiguration({ config: preflight.config, roots, releaseRoot, manifest: preflight.manifest, mode, secrets: initialized.values });
+  const bootstrapAdmin = await ensureHmiAdmin({ roots, config: preflight.config, secrets: initialized.values });
   cpSync(resolve(options.configPath), join(roots.configRoot, 'appliance.json'), { force: true });
   const next = {
     schemaVersion: 1,
@@ -782,7 +839,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
   atomicJson(join(roots.installRoot, 'current.json'), { schemaVersion: 1, version: committed.version, releaseRoot: committed.releaseRoot });
   const candidate = join(roots.stateRoot, 'candidate.json');
   if (existsSync(candidate)) rmSync(candidate);
-  return { state: committed, preflight, roots, runtimeConfig, generatedOperatorPassword: initialized.generatedOperatorPassword };
+  return { state: committed, preflight, roots, runtimeConfig, generatedOperatorPassword: initialized.generatedOperatorPassword, bootstrapAdmin };
 }
 
 function readInstalledSecrets(roots) {
@@ -1021,6 +1078,7 @@ async function main() {
     const result = await installOrUpgrade(common);
     console.log(`XYvirtual Appliance ${result.state.version} is installed at ${result.state.origin}.`);
     if (result.generatedOperatorPassword) console.log(`Operator password (shown once): ${result.generatedOperatorPassword}`);
+    if (result.bootstrapAdmin) console.log(`HMI administrator "${result.bootstrapAdmin}" was created with the operator password; sign in at /login/, create personal accounts and change this password.`);
     if (result.state.mode === 'container') console.log('Container images were loaded locally with pull disabled.');
     return;
   }

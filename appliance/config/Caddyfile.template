@@ -13,16 +13,34 @@ https://{{HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
 	encode zstd gzip
 
 	route {
+		# Identity headers are set ONLY by forward_auth below; never accept a client's copy.
+		request_header -X-Rv-User
+		request_header -X-Rv-Role
+
 		@health path /health/live /health/ready
 		handle @health {
 			reverse_proxy {{CONTROL_UPSTREAM}}
 		}
 
-		@protected {
-			not path /health/live /health/ready /present /present/* /api/access/v1 /api/access/v1/*
-		}
-		basic_auth @protected {
+		# IT/operations surfaces keep the shared operator Basic Auth.
+		@it path /appliance /appliance/* /diagnostics /diagnostics/* /git /git/*
+		basic_auth @it {
 			{{OPERATOR_USER}} {{OPERATOR_PASSWORD_HASH}}
+		}
+
+		# HMI surfaces (WEB, gateway, project API) require a personal session with an HMI
+		# role (ADR-0024). The access service answers 204 + identity, 401, or a redirect
+		# of a navigation to /login/.
+		@hmi {
+			not path /health/live /health/ready /present /present/* /api/access/v1 /api/access/v1/* /login /login/* /appliance /appliance/* /diagnostics /diagnostics/* /git /git/*
+		}
+		forward_auth @hmi {{CONTROL_UPSTREAM}} {
+			uri /api/access/v1/authz?need=viewer
+			copy_headers X-Rv-User X-Rv-Role
+		}
+		redir /login /login/
+		handle /api/projects/v1* {
+			reverse_proxy {{CONTROL_UPSTREAM}}
 		}
 
 		header {

@@ -19,6 +19,7 @@ import { useLeftWindowWidth, useRightWindowWidth } from '../../hooks/use-left-wi
 import { useViewportInsets } from '../../hooks/use-viewport-insets';
 import { useUIVisible } from './ui-context-store';
 import { ModeDropdown } from './ModeDropdown';
+import { AccountBadge } from './AccountBadge';
 import { CameraBookmarks, HmiToggleButton, FpvBarButton, FollowCamButton, SitOnCamButton } from './CameraBar';
 import { useOverlayVisibilityState } from '../../hooks/use-overlay-visible';
 import { ActionGroupPill, ActionSegment, ActionDivider } from './action-group';
@@ -250,6 +251,7 @@ export function TopBar() {
         }}
       >
         <SlotRenderer slot="toolbar-button-trailing" />
+        <AccountBadge />
         <ActionGroupPill>
           <CameraBookmarks />
           {/* Follow / Sit-On sit next to the camera bookmarks. Right-click drag

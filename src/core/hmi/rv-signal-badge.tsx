@@ -22,6 +22,8 @@ import { getViewerMode, getConnectSnapshot } from './connect-store';
 import { componentColor } from './rv-inspector-helpers';
 import { navigateToRef } from './rv-reference-display';
 import { requestForceConfirm } from './force-confirm-store';
+import { hmiCan, reportHmiEvent } from './hmi-session-store';
+import { useHmiCan } from '../../hooks/use-hmi-session';
 import {
   AUTHORITY_SENTENCE,
   provenanceDrivesTitle,
@@ -216,6 +218,9 @@ export interface SignalForceController {
  */
 export function useSignalForce(viewer: RVViewer | undefined, name: string | undefined): SignalForceController {
   const store = viewer?.signalStore ?? null;
+  // ADR-0024: forcing is an engineer capability. The server boundary is the gateway's
+  // write check; this keeps the control from being offered to lower roles at all.
+  const mayForce = useHmiCan('force-signals');
   const [forced, setForced] = useState<boolean>(() => !!(name && store?.isForced(name)));
   const [forcedValue, setForcedValue] = useState<boolean | number | undefined>(
     () => (name ? store?.getForcedValue(name) : undefined),
@@ -233,7 +238,7 @@ export function useSignalForce(viewer: RVViewer | undefined, name: string | unde
   }, [store, name]);
 
   const toggle = useCallback(async () => {
-    if (!store || !name) return;
+    if (!store || !name || !hmiCan('force-signals')) return;
     // First force in a session is gated by a confirmation (until reload).
     if (!(await requestForceConfirm())) return;
     const raw = store.get(name);
@@ -243,24 +248,31 @@ export function useSignalForce(viewer: RVViewer | undefined, name: string | unde
       // Flip relative to the currently shown value, then hold it.
       const cur = store.isForced(name) ? store.getForcedValue(name) === true : raw === true;
       store.forceSignal(name, !cur);
+      void reportHmiEvent('signal.force', name, { value: !cur });
     } else if (!store.isForced(name)) {
       // Pin the current live numeric value (explicit editing comes later).
-      store.forceSignal(name, typeof raw === 'number' ? raw : 0);
+      const pinned = typeof raw === 'number' ? raw : 0;
+      store.forceSignal(name, pinned);
+      void reportHmiEvent('signal.force', name, { value: pinned });
     }
     // forced numeric + toggle → keep value (release is a separate action)
   }, [store, name]);
 
   const force = useCallback(async (value: boolean | number) => {
-    if (!store || !name) return;
+    if (!store || !name || !hmiCan('force-signals')) return;
     if (!(await requestForceConfirm())) return;
     store.forceSignal(name, value);
+    void reportHmiEvent('signal.force', name, { value });
   }, [store, name]);
 
   const release = useCallback(() => {
-    if (store && name) store.unforce(name);
+    if (!store || !name) return;
+    const wasForced = store.isForced(name);
+    store.unforce(name);
+    if (wasForced) void reportHmiEvent('signal.unforce', name);
   }, [store, name]);
 
-  return { forced, forcedValue, enabled: !!(store && name), toggle, force, release };
+  return { forced, forcedValue, enabled: !!(store && name) && mayForce, toggle, force, release };
 }
 
 // ── Numeric signal helpers ────────────────────────────────────────────

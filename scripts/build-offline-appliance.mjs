@@ -310,6 +310,9 @@ function applyApplianceWebDefaults(stage) {
   const settings = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
   settings.services = settings.services ?? {};
   if (settings.services.historian === undefined) settings.services.historian = { url: '/gateway/history' };
+  // ADR-0024: personal HMI sessions and server-side projects on the Appliance.
+  if (settings.services.access === undefined) settings.services.access = { url: '/api/access/v1' };
+  if (settings.services.projects === undefined) settings.services.projects = { url: '/api/projects/v1' };
   if (settings.interface === undefined) {
     settings.interface = { activeType: 'websocket-realtime', autoConnect: true, wsAddress: '', wsPort: 0, wsUseSSL: true, wsPath: '/gateway/ws', wsAuthToken: '' };
   }
@@ -365,6 +368,10 @@ export async function buildOfflineAppliance(options) {
     copyApplianceSource(temporary);
     cpSync(webDist, join(temporary, 'web'), { recursive: true, errorOnExist: true, force: false });
     applyApplianceWebDefaults(temporary);
+    // The HMI login page (ADR-0024) is served from the WEB root without a session.
+    cpSync(join(applianceSource, 'runtime', 'static', 'login'), join(temporary, 'web', 'login'), {
+      recursive: true, errorOnExist: true, force: false, filter: (source) => !source.endsWith('.d.mts'),
+    });
     const brandSettings = join(webDist, 'settings.json');
     const brandConfig = existsSync(brandSettings) ? JSON.parse(readFileSync(brandSettings, 'utf8')) : {};
     projectStandaloneBrand(join(temporary, 'runtime/static/dashboard'), webDist, brandConfig, '/appliance/');

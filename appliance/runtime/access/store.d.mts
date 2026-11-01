@@ -1,3 +1,6 @@
+export const HMI_ROLES: readonly ['viewer', 'operator', 'engineer', 'admin'];
+export const ROLES: readonly ['viewer', 'operator', 'engineer', 'admin', 'visitor'];
+export function roleAtLeast(role: unknown, needed: string): boolean;
 export function digest(value: string | Uint8Array): string;
 export function id(): string;
 export function randomToken(): string;
@@ -13,7 +16,8 @@ export class AccessStore {
   all(sql: string, ...args: unknown[]): any[];
   run(sql: string, ...args: unknown[]): any;
   transaction<T>(action: () => T): T;
-  audit(actor: string, action: string, target?: string, outcome?: string): void;
+  audit(actor: string, action: string, target?: string, outcome?: string, detail?: string): void;
+  migrateV1toV2(): void;
   prune(): void;
   session(raw?: string): any;
   share(id: string, session: any): any;

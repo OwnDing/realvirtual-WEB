@@ -121,8 +121,22 @@ try {
   await expect(view.locator('.viewport')).toHaveCount(0,{timeout:20000});
   await expect(view.getByRole('alert')).toContainText('presentation was cleared');
   assert.deepEqual([...origins],[origin]); assert.deepEqual(failures,[]);
+
+  // ADR-0024 on the real entry: HMI surfaces need a personal session with an HMI role.
+  const anonymous = await browser.newContext({ ignoreHTTPSErrors: true });
+  const hmiPage = await anonymous.request.get(origin+'/index.html?model=x', { maxRedirects: 0, headers: { accept: 'text/html' } });
+  assert.equal(hmiPage.status(), 302);
+  assert.equal(hmiPage.headers().location, '/login/?next=%2Findex.html%3Fmodel%3Dx');
+  assert.equal((await anonymous.request.get(origin+'/gateway/health', { headers: { 'x-rv-user': 'admin', 'x-rv-role': 'admin' } })).status(), 401, 'forged identity headers are stripped');
+  assert.equal((await anonymous.request.get(origin+'/api/projects/v1/projects')).status(), 401);
+  // A presentation visitor's session is not an HMI session.
+  assert.equal((await view.request.get(origin+'/gateway/health')).status(), 401);
+  // The admin's session holds an HMI role: the entry lets it through to the upstream.
+  assert.notEqual((await page.request.get(origin+'/gateway/health')).status(), 401);
+  await anonymous.close();
+
   await page.screenshot({path:join(artifacts,'admin.png'),mask:[page.getByLabel('Share link',{exact:true})]});
-  await writeFile(join(artifacts,'result.json'),JSON.stringify({passed:true,checks:['publish','cookie-httpOnly','localStorage-bypass-denied','scope','operator-isolation','range','watermarked-screenshot','revoke-existing-session','visitor-cleared','designated-account','refresh-session','network-failure-clears','same-origin-only'],engine:'RVEmbedViewer',edge:image},null,2));
+  await writeFile(join(artifacts,'result.json'),JSON.stringify({passed:true,checks:['publish','cookie-httpOnly','localStorage-bypass-denied','scope','operator-isolation','range','watermarked-screenshot','revoke-existing-session','visitor-cleared','designated-account','refresh-session','network-failure-clears','same-origin-only','hmi-session-gate','forged-identity-stripped'],engine:'RVEmbedViewer',edge:image},null,2));
   await writeFile(join(artifacts,'caddy.log'),caddyLogs);
   console.log('Protected presentations: real Caddy HTTPS + Node + Chromium journey passed.');
 } catch(error) {

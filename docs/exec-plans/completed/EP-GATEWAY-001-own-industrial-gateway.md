@@ -2,7 +2,7 @@
 doc_id: EP-GATEWAY-001
 title: 缺口整改第 2 步：自有工业网关（OPC UA），CONNECT 可选
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-11-01
 authority: normative-process
@@ -70,7 +70,7 @@ authority: normative-process
 - [x] M2：Historian 解耦与 `services.historian`；同源 WebSocket 端点。
 - [x] M3：`ws` 8.18.3 的两个 High 漏洞被门禁拦截后升级至 8.22.1；3 条网关逐包许可判定、2 份补充正文；`gateway` 作用域退出 0。
 - [x] M4：打包器/运行时/控制面/容器编排改造及测试。
-- [ ] 远程 CI 与合并。
+- [x] 远程 CI 与合并。
 
 ## Surprises & Discoveries
 
@@ -113,4 +113,6 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-（远程 CI 与合并后补齐。）
+- 远程：PR [#22](https://github.com/OwnDing/realvirtual-WEB/pull/22) 首轮 run `41269779013` 的 Browser Gate 失败（受保护演示旅程缺模板变量，见 Discoveries），修复提交 `c66f491` 后 run `41285411739` 七项全部通过（含六项 required 与 Windows 兼容性）。
+- 合并：2026-11-01T09:06:16Z 合入 `develop`，merge commit `e422bc6`。
+- 遗留：真实 PLC / OPC UA 服务器 / 客户 PKI 验收；Appliance 实机（Linux/Windows、原生/容器）安装；Windows 容器路径的 CONNECT 判断仅经代码审查；S7、Modbus 等协议另立计划。

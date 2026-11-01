@@ -22,6 +22,13 @@ shared data. `uninstall` preserves state unless the exact install id is supplied
 purge flags. Never bypass a certificate warning, disable TLS validation, expose CONNECT/PLC ports,
 or change scheme/host/port during an ordinary upgrade.
 
+From this release the HMI requires a personal account (unauthenticated requests are sent to
+`/login/`); `/appliance/`, `/diagnostics/` and `/git/` keep the shared operator credential. When no
+HMI administrator exists, the installer creates one from the operator credential; sign in, create
+personal accounts (viewer, operator, engineer, administrator) in `/present/`, and change that
+password. The access database is format 2: rolling back to an earlier release requires restoring the
+consistency backup.
+
 The first install writes `config/gateway.json` as a **read-only, unconfigured** gateway. The
 customer's OT owner fills in the OPC UA `source` and the explicit `signals` mapping per
 `docs/contracts/GATEWAY.md`, then restarts the gateway service; upgrades keep the file. Writes stay

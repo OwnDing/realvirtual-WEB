@@ -7626,6 +7626,84 @@
         "src/plugins/web-component-plugin.ts"
       ],
       "owner": "engineering"
+    },
+    {
+      "id": "7aebc84540d0442495d7b029",
+      "file": "src/core/project/backends/server-backend.ts",
+      "text": "Invalid server project id \" \".",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/backends/server-backend.ts",
+        "tests/server-backend.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "e78b2981d6d0edc882e834ea",
+      "file": "src/core/project/backends/server-backend.ts",
+      "text": "Server project API must be same-origin.",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/backends/server-backend.ts",
+        "tests/server-backend.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "34a44e77b4c8d9ee82840ad3",
+      "file": "src/core/project/backends/server-backend.ts",
+      "text": "writeScene needs a scene id.",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/backends/server-backend.ts",
+        "tests/server-backend.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "9ec969685e9efdb487249e55",
+      "file": "src/core/project/backends/server-backend.ts",
+      "text": "\" \" does not address scene .",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/backends/server-backend.ts",
+        "tests/server-backend.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "5ffc7e2d14b8d556b5748f96",
+      "file": "src/core/project/backends/server-backend.ts",
+      "text": "deleteScene needs a scene id.",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/backends/server-backend.ts",
+        "tests/server-backend.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "29b0b4003a587f52d8306f66",
+      "file": "src/core/project/server-projects-client.ts",
+      "text": "Server projects are not available in this deployment.",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Programmatic backend or API contract violation (invalid project id, cross-origin base, scene id mismatch, missing service). Preserve technical semantics; surfaced to developers and logs, not a customer-facing translation key (ADR-0024).",
+      "evidence": [
+        "src/core/project/server-projects-client.ts",
+        "src/core/hmi/projects/ServerProjectsSection.tsx"
+      ],
+      "owner": "engineering"
     }
   ]
 }

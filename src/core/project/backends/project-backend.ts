@@ -74,7 +74,8 @@ import type {
  * what is now `'bundled'`; at runtime a build root and an HTTP root are the
  * same `fetch`.
  */
-export type BackendKind = 'bundled' | 'browser' | 'folder';
+/** `server` = an Appliance project in Forgejo behind the project API (ADR-0024). */
+export type BackendKind = 'bundled' | 'browser' | 'folder' | 'server';
 
 // ─── Read surface (moved verbatim from project-store.ts) ────────────────
 

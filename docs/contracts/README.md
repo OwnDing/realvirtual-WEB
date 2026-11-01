@@ -39,3 +39,5 @@ authority: normative-registry
 - [发布兼容性与环境检查契约](COMPATIBILITY.md)
 
 - [CONTRACT-GATEWAY-001：XYvirtual Gateway 配置、接口与写入审计](GATEWAY.md)
+
+- [CONTRACT-ACCESS-002：HMI 账户、角色授权与服务端项目接口](HMI_ACCESS.md)

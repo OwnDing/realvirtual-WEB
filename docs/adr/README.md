@@ -51,3 +51,5 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0022：逐包许可证判定与补充正文证据](ADR-0022-exact-license-decisions.md)：Accepted（2026-11-01），Supply Chain Gate 的许可证结论按包/版本/integrity 精确判定，缺正文时以摘要绑定的补充证据补齐；不扩大全局白名单，不关闭 A-06/A-07。
 
 - [ADR-0023：自有工业网关（OPC UA 优先），CONNECT 降为可选](ADR-0023-own-industrial-gateway.md)：Accepted（2026-11-01），用户在缺口整改第 2 步选择自研网关；浏览器协议不变，Historian 不再要求 CONNECT，Appliance 中 CONNECT 改为可选组件。
+
+- [ADR-0024：HMI 四级角色、写操作审计与 Forgejo 服务端项目存储](ADR-0024-hmi-roles-and-server-projects.md)：Accepted（2026-11-01），落实 OD-001 的 Appliance 范围：访问服务为唯一身份源，Caddy forward_auth 强制 HMI 会话，网关按角色写入，项目存于 Forgejo；组织/多租户/云端仍待规格。
