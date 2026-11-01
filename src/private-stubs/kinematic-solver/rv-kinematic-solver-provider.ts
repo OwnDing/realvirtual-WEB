@@ -14,3 +14,6 @@
 
 export type KinematicSolverInstance = { [key: string]: any };
 export type KinematicSolverProvider = { [key: string]: any };
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

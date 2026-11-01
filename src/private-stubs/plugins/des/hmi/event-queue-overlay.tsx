@@ -13,3 +13,6 @@ import type { UISlotProps } from '../../../../core/rv-ui-plugin';
 export function EventQueueOverlay(_props: UISlotProps): null {
   return null;
 }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

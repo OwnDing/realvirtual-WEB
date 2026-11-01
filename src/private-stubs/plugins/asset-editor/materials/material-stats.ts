@@ -17,3 +17,6 @@ export type MaterialStats = { warnings: any[]; [key: string]: any };
 export function computeMaterialStats(..._args: any[]): MaterialStats {
   return { materialCount: 0, uniqueByAppearance: 0, meshCount: 0, textureCount: 0, warnings: [] };
 }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

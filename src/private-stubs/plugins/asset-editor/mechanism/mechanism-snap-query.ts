@@ -17,3 +17,6 @@ export type SnapCandidate = { kind: any; label: any; [key: string]: any };
 export function querySnapCandidates(..._args: any[]): { nodePath: any; candidates: SnapCandidate[] } | null {
   return null;
 }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

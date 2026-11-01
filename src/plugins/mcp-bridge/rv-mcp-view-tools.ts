@@ -31,6 +31,8 @@ import {
   computeInvertPaths,
   expandToUniverseMeshes,
 } from '@rv-private/plugins/asset-editor/select-actions';
+import * as selectActionsModule from '@rv-private/plugins/asset-editor/select-actions';
+import { capabilityUnavailable, isPublicStub } from '../../core/rv-public-stub';
 
 const r3 = (n: number): number => +n.toFixed(3);
 const vec3 = (v: Vector3): [number, number, number] => [r3(v.x), r3(v.y), r3(v.z)];
@@ -463,6 +465,7 @@ export class McpViewTools {
     if (!['identical', 'material', 'invert'].includes(k)) {
       return JSON.stringify({ error: `Unknown kind "${kind}" — use identical | material | invert` });
     }
+    if (isPublicStub(selectActionsModule)) return JSON.stringify(capabilityUnavailable('Select similar'));
     const universe = buildMeshUniverse(v);
     if (universe.size === 0) return JSON.stringify({ error: 'No selectable meshes in the scene' });
     const selected = sm.getSnapshot().selectedPaths;

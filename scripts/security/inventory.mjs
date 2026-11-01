@@ -108,7 +108,48 @@ async function optionalEvidence(entry, cache, policy) {
   return evidence;
 }
 
-export async function collectInventory(root, entries, cache, policy) {
+const TEXT_NAME = /^[a-z0-9@][a-z0-9@._+-]{0,159}$/i;
+/**
+ * Supplemental license text for a package whose published archive ships none
+ * (platform binaries of esbuild/rollup, README-only licences). Every entry binds
+ * one package version + integrity to one stored text, and the stored text is
+ * bound by SHA-256; `readText(name)` returns the bytes of `security/license-texts/<name>`.
+ */
+export function validateSupplementalEvidence(document, readText) {
+  if (document?.schemaVersion !== 1 || !document.texts || typeof document.texts !== 'object' || !Array.isArray(document.packages)) throw new Error('Invalid supplemental license evidence document');
+  const texts = new Map();
+  for (const [name, meta] of Object.entries(document.texts)) {
+    if (!TEXT_NAME.test(name) || name.includes('..')) throw new Error(`Invalid supplemental text name: ${name}`);
+    if (!/^[0-9a-f]{64}$/.test(meta?.sha256 ?? '') || typeof meta.source !== 'string' || !meta.source.trim()) throw new Error(`Invalid supplemental text metadata: ${name}`);
+    const bytes = readText(name);
+    if (!bytes?.length || sha256(bytes) !== meta.sha256) throw new Error(`Supplemental text digest mismatch: ${name}`);
+    texts.set(name, { sha256: meta.sha256, source: meta.source, text: bytes.toString('utf8') });
+  }
+  const packages = new Map();
+  for (const p of document.packages) {
+    for (const field of ['package', 'version', 'integrity', 'text', 'reason']) {
+      if (typeof p?.[field] !== 'string' || !p[field].trim()) throw new Error(`Invalid supplemental evidence field: ${field}`);
+    }
+    if (/[*?]/.test(p.package + p.version + p.integrity)) throw new Error(`Wildcard supplemental evidence: ${p.package}`);
+    if (!texts.has(p.text)) throw new Error(`Unknown supplemental text: ${p.text}`);
+    const key = [p.package, p.version, p.integrity].join('|');
+    if (packages.has(key)) throw new Error(`Duplicate supplemental evidence: ${p.package}@${p.version}`);
+    packages.set(key, p);
+  }
+  return { texts, packages, used: new Set() };
+}
+
+export function applySupplementalEvidence(details, entry, registry) {
+  const key = [entry.name, entry.version, entry.integrity].join('|');
+  const item = registry?.packages.get(key);
+  if (!item) return details;
+  if (details.evidence.length) throw new Error(`Supplemental license evidence is redundant: ${entry.name}@${entry.version}`);
+  registry.used.add(key);
+  const text = registry.texts.get(item.text);
+  return { ...details, evidence: [{ path: `supplemental:${item.text}`, sha256: text.sha256, text: text.text, source: text.source }], evidenceSource: 'supplemental' };
+}
+
+export async function collectInventory(root, entries, cache, policy, supplemental = null) {
   await mkdir(cache, { recursive: true });
   const results = new Array(entries.length); let cursor = 0;
   await Promise.all(Array.from({ length: 4 }, async () => {
@@ -120,6 +161,7 @@ export async function collectInventory(root, entries, cache, policy) {
           if (!entry.optional) throw new Error(`Required installed dependency missing: ${entry.name}`);
           details = await optionalEvidence(entry, cache, policy);
         }
+        details = applySupplementalEvidence(details, entry, supplemental);
         const license = typeof details.manifest.license === 'string' ? details.manifest.license : null;
         const errors = [];
         if (entry.lockedLicense && license && entry.lockedLicense !== license) errors.push('lock-manifest-license-conflict');

@@ -17,3 +17,6 @@ export type CsgGrid = { [key: string]: any };
 export type CsgChunkMesh = { [key: string]: any };
 export type CsgToolSegment = { [key: string]: any };
 export type CsgKernelLike = { [key: string]: any };
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

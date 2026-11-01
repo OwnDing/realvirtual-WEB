@@ -24,3 +24,6 @@ export type geometrySignature = any;
 export const geometrySignature: any = () => undefined;
 export type signaturesMatch = any;
 export const signaturesMatch: any = () => undefined;
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

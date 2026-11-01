@@ -28,6 +28,8 @@ import { getDriveDragDriver } from '../../core/engine/drive-drag-driver';
 import { NodeRegistry } from '../../core/engine/rv-node-registry';
 import { isModelRoot } from '../../core/engine/rv-model-root';
 import { computeMaterialStats } from '@rv-private/plugins/asset-editor/materials/material-stats';
+import * as materialStatsModule from '@rv-private/plugins/asset-editor/materials/material-stats';
+import { capabilityUnavailable, isPublicStub } from '../../core/rv-public-stub';
 import {
   indexMeshPathsByMaterialValue,
   materialToValue,
@@ -62,6 +64,7 @@ import {
   computeInvertPaths,
   expandToUniverseMeshes,
 } from '@rv-private/plugins/asset-editor/select-actions';
+import * as selectActionsModule from '@rv-private/plugins/asset-editor/select-actions';
 
 const r3 = (n: number): number => +n.toFixed(3);
 
@@ -97,13 +100,16 @@ const MECHANISM_KEY_RE = /^KinematicMechanism(_\d+)?$/;
  * The one refusal every mechanism tool gives without the private bundle.
  *
  * It names the ALTERNATIVE, not just the absence: an agent that reads only
- * "not available" retries the same call three times before giving up, whereas
- * the axis-group system is right there and is what most single-axis authoring
- * actually wants.
+ * "not available" retries the same call three times before giving up. The
+ * alternative is named only when it is itself real — pointing at an axis-group
+ * tool that is a public no-op stub sends the agent round in circles.
  */
-const MECHANISM_UNAVAILABLE =
-  'Rigid-body mechanisms are not available in this build (private bundle missing). '
-  + 'Axis-group kinematics are available via web_editor_create_kinematic.';
+function mechanismUnavailable(axisGroupAvailable: boolean): string {
+  return 'Rigid-body mechanisms are not available in this build (private bundle missing). '
+    + (axisGroupAvailable
+      ? 'Axis-group kinematics are available via web_editor_create_kinematic.'
+      : 'Axis-group kinematic authoring (web_editor_create_kinematic) is not available in this build either.');
+}
 
 /**
  * Narrow the `_requireMechanismBridge` union. Deliberately NOT `isGuardError`:
@@ -242,6 +248,15 @@ export class McpEditorTools {
     return requireEditor(this.viewer);
   }
 
+  /**
+   * Refusal JSON when any module this tool would call is a public no-op stub
+   * (src/core/rv-public-stub.ts), else null. Checked BEFORE any write, so a stub
+   * never yields `{ ok: true }` for an edit that did not happen.
+   */
+  private _stubRefusal(capability: string, ...mods: unknown[]): string | null {
+    return mods.some(isPublicStub) ? JSON.stringify(capabilityUnavailable(capability)) : null;
+  }
+
   /** Handle unsaved changes per the ifDirty policy. Returns an error string or null. */
   private async _handleDirty(
     ctx: ActiveAssetContext, ifDirty: string | undefined, saveName?: string,
@@ -294,10 +309,11 @@ export class McpEditorTools {
     // own — a whole extra entry in the roster for one enum is a worse trade for
     // the agent's tool-selection budget than one more field on the status it
     // already reads.
-    const { getTestSessionState } = await import('@rv-private/plugins/asset-editor/test-session-store');
+    const testSessionModule = await import('@rv-private/plugins/asset-editor/test-session-store');
+    const { getTestSessionState } = testSessionModule;
     return JSON.stringify({
       active: true,
-      testSession: getTestSessionState(),
+      testSession: isPublicStub(testSessionModule) ? 'unavailable' : getTestSessionState(),
       name: snap.name,
       base: snap.base,
       dirty: snap.dirty,
@@ -507,6 +523,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Zero local position', mods.transform);
+    if (refused) return refused;
     const list = parsePathsParam(paths);
     await mods.transform.zeroLocalPosition(ctx.viewer, ctx.doc, list);
     return JSON.stringify({ ok: true, count: list.length });
@@ -523,6 +541,8 @@ export class McpEditorTools {
     const a = (axis || '').toLowerCase();
     if (!['x', 'y', 'z'].includes(a)) return JSON.stringify({ error: 'axis must be x|y|z' });
     const mods = await this._load();
+    const refused = this._stubRefusal('Rotate 90°', mods.transform);
+    if (refused) return refused;
     mods.transform.rotate90(ctx.viewer, ctx.doc, path, a as 'x' | 'y' | 'z', sign === -1 ? -1 : 1);
     await ctx.doc.whenIdle();
     return JSON.stringify({ ok: true, path, axis: a, sign: sign === -1 ? -1 : 1 });
@@ -535,6 +555,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('To ground', mods.transform);
+    if (refused) return refused;
     mods.transform.toGround(ctx.viewer, ctx.doc, path);
     await ctx.doc.whenIdle();
     return JSON.stringify({ ok: true, path });
@@ -549,6 +571,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Pivot editing', mods.transform);
+    if (refused) return refused;
     const m = (mode || '').toLowerCase();
     if (m === 'bottom') await mods.transform.pivotToBottom(ctx.viewer, ctx.doc, path);
     else if (m === 'group_center') await mods.transform.centerKinematicToGroup(ctx.viewer, ctx.doc, path);
@@ -985,7 +1009,10 @@ export class McpEditorTools {
    */
   private async _requireMechanismBridge(): Promise<MechanismUiBridge | { error: string }> {
     const { getMechanismUiBridge } = await import('../../core/engine/rv-kinematic-registry');
-    return getMechanismUiBridge() ?? { error: MECHANISM_UNAVAILABLE };
+    const bridge = getMechanismUiBridge();
+    if (bridge) return bridge;
+    const mods = await this._load();
+    return { error: mechanismUnavailable(!isPublicStub(mods.create) && !isPublicStub(mods.transform)) };
   }
 
   /**
@@ -1587,8 +1614,10 @@ export class McpEditorTools {
   async webEditorTestStart(): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const { getActiveTestSession } = await import('@rv-private/plugins/asset-editor/test-session-store');
-    const session = getActiveTestSession();
+    const testSessionModule = await import('@rv-private/plugins/asset-editor/test-session-store');
+    const refused = this._stubRefusal('In-place test session', testSessionModule);
+    if (refused) return refused;
+    const session = testSessionModule.getActiveTestSession();
     if (!session) {
       return JSON.stringify({ error: 'No test session available — open the asset editor first (web_editor_open)' });
     }
@@ -1606,8 +1635,10 @@ export class McpEditorTools {
   async webEditorTestStop(): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const { getActiveTestSession } = await import('@rv-private/plugins/asset-editor/test-session-store');
-    const session = getActiveTestSession();
+    const testSessionModule = await import('@rv-private/plugins/asset-editor/test-session-store');
+    const refused = this._stubRefusal('In-place test session', testSessionModule);
+    if (refused) return refused;
+    const session = testSessionModule.getActiveTestSession();
     if (!session) {
       return JSON.stringify({ error: 'No test session available — open the asset editor first (web_editor_open)' });
     }
@@ -1626,6 +1657,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Axis-group kinematic creation', mods.create, mods.transform);
+    if (refused) return refused;
     const path = await mods.create.createKinematicWithGroup(ctx.viewer, ctx.doc, name);
     if (!path) return JSON.stringify({ error: 'Kinematic creation failed' });
     const node = ctx.viewer.registry?.getNode(path);
@@ -1645,6 +1678,8 @@ export class McpEditorTools {
       return JSON.stringify({ error: `No kinematic references group "${groupName}" — create one first` });
     }
     const mods = await this._load();
+    const refused = this._stubRefusal('Kinematic group assignment', mods.group, mods.transform);
+    if (refused) return refused;
     await mods.group.autoAssignToKinematic(ctx.viewer, ctx.doc, parsePathsParam(paths), groupName, kinPath);
     const node = ctx.viewer.registry?.getNode(kinPath);
     const members = node ? mods.transform.kinematicGroupMemberCount(ctx.viewer, node) : 0;
@@ -1669,7 +1704,9 @@ export class McpEditorTools {
           path: NodeRegistry.computeNodePath(node),
           name: node.name,
           groupName: gn,
-          members: mods.transform.kinematicGroupMemberCount(ctx.viewer, node),
+          // The listing itself is read from rv_extras; only the member count needs
+          // the editor module, so a stub degrades to null instead of refusing.
+          members: isPublicStub(mods.transform) ? null : mods.transform.kinematicGroupMemberCount(ctx.viewer, node),
           drive: drive ? {
             direction: drive['Direction'] ?? null,
             targetSpeed: drive['TargetSpeed'] ?? null,
@@ -1694,6 +1731,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Signal node creation', mods.create);
+    if (refused) return refused;
     if (!ctx.viewer.registry?.getNode(parentPath)) {
       return JSON.stringify({ error: `Node not found: ${parentPath}` });
     }
@@ -1721,6 +1760,8 @@ export class McpEditorTools {
     const t = (target || '').trim();
     if (!['Bool', 'Int', 'Float'].includes(t)) return JSON.stringify({ error: 'target must be Bool | Int | Float' });
     const mods = await this._load();
+    const refused = this._stubRefusal('Signal type conversion', mods.create);
+    if (refused) return refused;
     await mods.create.convertSignalType(ctx.viewer, ctx.doc, path, t as 'Bool' | 'Int' | 'Float');
     return JSON.stringify({ ok: true, path });
   }
@@ -1732,6 +1773,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Signal direction toggle', mods.create);
+    if (refused) return refused;
     await mods.create.toggleSignalDirection(ctx.viewer, ctx.doc, path);
     return JSON.stringify({ ok: true, path });
   }
@@ -1744,6 +1787,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('LogicStep authoring', mods.create, mods.quickEdit);
+    if (refused) return refused;
     if (!mods.create.LOGIC_STEP_PALETTE.some((s) => s.type === stepType)) {
       return JSON.stringify({
         error: `Unknown stepType "${stepType}"`,
@@ -1807,6 +1852,8 @@ export class McpEditorTools {
 
     switch (combo) {
       case 'S>I': case 'S>M': case 'S>V': {
+        const refused = this._stubRefusal('Select identical / same material / invert', selectActionsModule);
+        if (refused) return refused;
         const err = combo === 'S>V' ? null : needSelection();
         if (err) return JSON.stringify({ error: err });
         const universe = buildMeshUniverse(v);
@@ -1833,6 +1880,8 @@ export class McpEditorTools {
             existing: await this._kinematicNames(v),
           });
         }
+        const refused = this._stubRefusal('Assign to kinematic (K)', mods.group);
+        if (refused) return refused;
         await mods.group.groupSelection(v, ctx.doc, selection, name);
         const kinPath = findKinematicPathForGroup(v, name);
         return JSON.stringify({ shortcut: 'K', groupName: name, kinematicPath: kinPath });
@@ -1848,6 +1897,8 @@ export class McpEditorTools {
       case 'DELETE': {
         const err = needSelection();
         if (err) return JSON.stringify({ error: err });
+        const refused = this._stubRefusal('Delete selection', mods.del);
+        if (refused) return refused;
         await mods.del.deleteSelectedNodes(v, ctx.doc);
         return JSON.stringify({ shortcut: 'Delete', deleted: selection.length });
       }
@@ -1886,6 +1937,8 @@ export class McpEditorTools {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
     const mods = await this._load();
+    const refused = this._stubRefusal('Material presets', mods.presets);
+    if (refused) return refused;
     const all = [...mods.presets.BUILTIN_MATERIAL_PRESETS, ...mods.presets.loadCustomPresets()];
     return JSON.stringify(all.map((p) => ({
       id: p.id, name: p.name, category: p.category,
@@ -1897,6 +1950,8 @@ export class McpEditorTools {
   async webEditorMaterialStats(): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
+    const refused = this._stubRefusal('Material statistics', materialStatsModule);
+    if (refused) return refused;
     const root = ctx.viewer.currentModelRoot ?? null;
     const stats = computeMaterialStats(root);
     const groups = this._appearanceGroups(root);
@@ -1961,6 +2016,7 @@ export class McpEditorTools {
   ): Promise<MaterialValue | { error: string }> {
     const mods = await this._load();
     if (presetId) {
+      if (isPublicStub(mods.presets)) return capabilityUnavailable('Material presets');
       const all = [...mods.presets.BUILTIN_MATERIAL_PRESETS, ...mods.presets.loadCustomPresets()];
       const p = all.find((x) => x.id === presetId);
       if (!p) return { error: `Unknown presetId "${presetId}" — see web_editor_material_presets` };
@@ -2005,6 +2061,8 @@ export class McpEditorTools {
     const parts = parsePathsParam(paths).filter((p) => ctx.viewer.registry?.getNode(p));
     if (parts.length === 0) return JSON.stringify({ error: 'No resolvable part paths given' });
     const mods = await this._load();
+    const refused = this._stubRefusal('Kinematize', mods.group, mods.transform);
+    if (refused) return refused;
 
     let kinPath: string | null = null;
     await ctx.doc.withTransaction(`Kinematize "${name}"`, async () => {
@@ -2142,6 +2200,8 @@ export class McpEditorTools {
     const node = v.registry?.getNode(kinematicPath);
     if (!node) return JSON.stringify({ error: `Node not found: ${kinematicPath}` });
     const mods = await this._load();
+    const refused = this._stubRefusal('Drive verification sweep', mods.gizmoSource, mods.transform);
+    if (refused) return refused;
     const source = mods.gizmoSource.resolveEditorDriveGizmoSource(v, kinematicPath);
     if (!source) return JSON.stringify({ error: `No Drive component on ${kinematicPath}` });
     const driver = getDriveDragDriver();

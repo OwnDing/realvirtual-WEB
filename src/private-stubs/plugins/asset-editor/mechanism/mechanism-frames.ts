@@ -17,3 +17,6 @@ export const axisIsTranslation: any = () => undefined;
 export const snapAxisToPrincipal: any = () => undefined;
 export const worldDirectionToAxisField: any = () => undefined;
 export const worldPointToAnchorField: any = () => undefined;
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

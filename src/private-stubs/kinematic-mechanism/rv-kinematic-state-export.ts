@@ -13,3 +13,6 @@
  */
 
 export function exportMechanismStateBlob(..._args: any[]): any { return null; }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

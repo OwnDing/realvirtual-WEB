@@ -21,3 +21,5 @@ authority: normative-registry
 - [EP-SEC-001：供应链与脚本安全](EP-SEC-001-supply-chain-and-script-security.md)：用户于 2026-10-20 批准实施及开 PR。
 
 - [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。
+
+- [EP-REMED-001](EP-REMED-001-stop-the-bleeding.md)：缺口整改第 1 步——Supply Chain Gate 转绿并纳入 required checks、公开 Stub 如实报告、上游部署流水线改手动；2026-11-01 依用户指令激活。

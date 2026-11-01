@@ -18,3 +18,6 @@ export type InPlaceTestSessionLike = { state: TestSessionState; start: () => Pro
 export function getTestSessionState(): TestSessionState { return 'idle'; }
 export function getActiveTestSession(): InPlaceTestSessionLike | null { return null; }
 export function subscribeTestSession(_listener: () => void): () => void { return () => undefined; }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

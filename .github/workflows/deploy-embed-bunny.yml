@@ -2,11 +2,10 @@ name: Publish rv-embed to realvirtual.io
 
 # Separate release gate: never runs on a normal main push. Configure the
 # rv-embed-production environment with required reviewers for manual approval.
+# Manual-only: tag pushes must not publish to the upstream Bunny zone; this
+# repository holds no BUNNY_* secrets (see deploy-bunny.yml).
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'rv-embed-v*.*.*'
 
 permissions:
   contents: read

@@ -21,3 +21,6 @@ export function setDialogAutoResponder(_responder: DialogAutoResponder): DialogA
 export function takeDialogAutoLog(): any[] { return []; }
 export function getPendingDialog(): null { return null; }
 export function subscribeEditorDialogs(_l: () => void): () => void { return () => undefined; }
+
+/** Public no-op stub marker — see src/core/rv-public-stub.ts. */
+export const RV_PUBLIC_STUB = true;

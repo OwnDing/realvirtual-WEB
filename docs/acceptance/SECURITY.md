@@ -15,7 +15,7 @@ authority: normative
 | --- | --- | --- | --- |
 | SEC-01 | 完整公开依赖树；私有源、缺 integrity、别名/平台包遗漏被拒 | `./scripts/verify.sh supply-chain` | inventory、CycloneDX、completeness 对账 |
 | SEC-02 | 已知 High 阻断；精确限期例外；过期/通配/Critical 例外拒绝；较低风险无分诊拒绝 | `tests/security-policy.node.test.ts` | fixture 只证明判定器；真实 npm-audit.json 另外证明查询 |
-| SEC-03 | SPDX OR/AND/WITH；缺许可、缺正文、无效表达式阻断 | 同上 + licenses.json | 每条失败不得被空清单掩盖 |
+| SEC-03 | SPDX OR/AND/WITH；缺许可、缺正文、无效表达式阻断；逐包判定只接受精确包/版本/integrity/表达式，补充正文摘要不符、冗余或未使用均阻断（ADR-0022） | 同上 + licenses.json | 每条失败不得被空清单掩盖；判定/补充证据的 unused 列表为空 |
 | SEC-04 | 网络/工具/JSON/schema 失败非零；lockfile 扫描期间变化拒绝 | `scripts/security/run-supply-chain.mjs` | summary exit 2 表示扫描失败，exit 1 表示策略失败 |
 | SEC-05 | 正常 guest 计算/桥接/生命周期；循环、内存、getter、toJSON、宽对象、循环对象、嵌套调用 | `node scripts/security/test-script-boundaries.mjs` | 真实 QuickJS + Chromium；120 秒外部进程树 watchdog，不依赖页面定时器 |
 | SEC-06 | URL 只请求；部署禁用；模型切换/撤销/编辑/销毁与 WASM 初始化竞争 | `tests/web-component-security.test.ts`、`node scripts/security/test-script-production.mjs` | 单元竞争反例 + 实际构建与 UI 确认；无 stale registry、无未授权实例 |

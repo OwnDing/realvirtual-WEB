@@ -253,7 +253,12 @@ export class McpObserveTools {
       if (grouping === 'geometry') {
         // All copies of an identical part (geometry-signature match — the same
         // identity select_similar 'identical' uses) share one color.
-        const { geometrySignature, signaturesMatch } = await import('@rv-private/plugins/asset-editor/select-actions');
+        const selectActions = await import('@rv-private/plugins/asset-editor/select-actions');
+        const { isPublicStub, capabilityUnavailable } = await import('../../core/rv-public-stub');
+        if (isPublicStub(selectActions)) {
+          return JSON.stringify(capabilityUnavailable('Geometry grouping (groupBy="geometry")', 'Use groupBy="hierarchy" (default) instead.'));
+        }
+        const { geometrySignature, signaturesMatch } = selectActions;
         const reps: Array<{ sig: ReturnType<typeof geometrySignature>; path: string; meshes: Mesh[]; paths: string[] }> = [];
         traverseMeshes(rootNode, (mesh) => {
           if (!mesh.geometry) return;
