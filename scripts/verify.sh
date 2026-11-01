@@ -60,13 +60,24 @@ run_static() {
   )
 }
 
+require_gateway_dependencies() {
+  test -f "$verify_repo_root/gateway/node_modules/node-opcua-client/package.json" \
+    || fail "gateway dependencies missing: run npm ci --prefix gateway --ignore-scripts"
+}
+
 run_node_tests() {
   require_command npm
   require_file "$verify_repo_root/node_modules/.bin/vitest"
+  require_gateway_dependencies
   say "Node test suite"
   (
     cd "$verify_repo_root"
     npm run test:node
+  )
+  say "Gateway test suite (in-process OPC UA server; not a real-PLC acceptance)"
+  (
+    cd "$verify_repo_root/gateway"
+    npm test
   )
 }
 
@@ -85,11 +96,17 @@ run_browser_tests() {
 run_supply_chain() {
   require_command node
   require_file "$verify_repo_root/node_modules/.bin/vitest"
+  require_gateway_dependencies
   say "Supply-chain policy self-tests and public dependency evidence"
   (
     cd "$verify_repo_root"
     node node_modules/vitest/vitest.mjs run --config vitest.node.config.ts tests/security-policy.node.test.ts
-    node scripts/security/run-supply-chain.mjs
+    status=0
+    node scripts/security/run-supply-chain.mjs --scope web || status=$?
+    node scripts/security/run-supply-chain.mjs --scope gateway || gateway_status=$?
+    # A tool error (2) outranks a policy failure (1); both scopes always run.
+    if [ "${gateway_status:-0}" -gt "$status" ]; then status=$gateway_status; fi
+    exit "$status"
   )
 }
 

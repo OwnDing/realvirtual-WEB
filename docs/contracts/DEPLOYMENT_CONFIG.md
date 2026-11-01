@@ -18,6 +18,8 @@ authority: normative
 - `legal`: 对应源码、许可证、隐私与条款链接；是否必需由部署许可证配置决定。
 - `egress`: `deny-external` 或 `allow-listed`，以及逐项 `origin + purposes[]`。
 - `services`: Analytics、新闻、文档、CONNECT 发布信息、Firebase Demo、GitHub 与 CAD 链接。`null` 或缺失为关闭。
+- `services.historian`（2026-11-01，[ADR-0023](../adr/ADR-0023-own-industrial-gateway.md)）：`{ url }`，同源路径（如 `/gateway/history`，不得含 `..`）或绝对 http(s) URL。配置后 Historian 直接轮询该端点，不再要求 CONNECT 已连接；请求仍经过 `industrial-interface` 外呼判定。无效值记录 issue 并关闭该项。
+- `interface.wsAddress` 为空字符串表示“提供本页面的服务器”：主机、协议（https → `wss`）与未配置时的端口跟随页面，供 Appliance 用同一份静态 `settings.json` 经 HTTPS 入口连接 `/gateway/ws`。
 - `license`: 签名许可证文件的期望。`required` 缺省 `false`；`path` 缺省 `license.rvlic`，按 `relativeAssetUrl` 校验以锁死同源；`installId` 为自述安装标识。完整语义见 [`LICENSE_FILE.md`](LICENSE_FILE.md) §8。
 
 ## 2. Purpose

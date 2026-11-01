@@ -233,8 +233,8 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - [x] 只读核对治理、当前门禁、依赖/交付基础和脚本相关代码。
 - [x] 起草本方案，登记历史材料与当前实现的差异。
 - [x] 用户认可方案与 D1–D5；M0 形成 ADR-0019、安全规范、验收矩阵和运维任务书。
-- [ ] M1 公共依赖门禁落地并验证强制性。
-- 2026-11-01（缺口整改第 1 步，见 [EP-REMED-001](EP-REMED-001-stop-the-bleeding.md)）：非破坏性 `npm audit fix` 升级 vite、serialize-javascript、eslint/typescript-eslint 补丁版本；剩余 25 条 Low/Moderate 全部为开发工具链并逐条分诊入 `triage.json`；按 ADR-0022 登记 18 条逐包许可判定与 93 条补充正文。本地 Node 22.22.2/npm 10.9.7 扫描退出 0。远程绿灯与 required check 读回见 EP-REMED-001。
+- [x] M1 公共依赖门禁落地并验证强制性（2026-11-01：远程 run `41266860571` 绿色，`develop` required checks 读回含 Supply Chain Gate；`main` 按用户指令不加）。
+- 2026-11-01（缺口整改第 1 步，见 [EP-REMED-001](../completed/EP-REMED-001-stop-the-bleeding.md)）：非破坏性 `npm audit fix` 升级 vite、serialize-javascript、eslint/typescript-eslint 补丁版本；剩余 25 条 Low/Moderate 全部为开发工具链并逐条分诊入 `triage.json`；按 ADR-0022 登记 18 条逐包许可判定与 93 条补充正文。本地 Node 22.22.2/npm 10.9.7 扫描退出 0。远程绿灯与 required check 读回见 EP-REMED-001。
 - [ ] M2 脚本安全测试与经批准加固完成。
 - 本地 M2 实现、真实 VM 专项、生产授权旅程及完整 Browser 已通过；等待修复提交的远程门禁结果后确认里程碑。
 - [ ] M3 实际发布制品证据、许可证义务和运维流程闭环。

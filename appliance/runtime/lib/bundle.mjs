@@ -108,7 +108,11 @@ export function validateManifestShape(manifest) {
   if (!Array.isArray(manifest.modes) || manifest.modes.length === 0 || manifest.modes.some((mode) => !['container', 'native'].includes(mode))) {
     throw new Error('Appliance manifest modes must contain native and/or container.');
   }
-  if (!Array.isArray(manifest.services) || !['edge', 'control', 'web', 'connect', 'forgejo', 'influxdb'].every((id) => manifest.services.includes(id))) {
+  // Since ADR-0023 the industrial gateway is the project's own `gateway`; CONNECT is
+  // optional. Releases from before ADR-0023 carry only `connect` and must stay valid
+  // so a rollback to them is still possible: at least one of the two is required.
+  if (!Array.isArray(manifest.services) || !['edge', 'control', 'web', 'forgejo', 'influxdb'].every((id) => manifest.services.includes(id))
+    || !['gateway', 'connect'].some((id) => manifest.services.includes(id))) {
     throw new Error('Appliance manifest does not contain the complete service set.');
   }
   if (!Array.isArray(manifest.components)) throw new Error('Appliance manifest components must be an array.');
@@ -125,8 +129,11 @@ export function validateManifestShape(manifest) {
     }
     componentIds.add(component.id);
   }
-  for (const id of ['node', 'caddy', 'connect', 'forgejo', 'influxdb', 'influx-cli']) {
+  for (const id of ['node', 'caddy', 'forgejo', 'influxdb', 'influx-cli']) {
     if (!componentIds.has(id)) throw new Error(`Appliance manifest is missing component: ${id}`);
+  }
+  for (const id of ['gateway', 'connect']) {
+    if (manifest.services.includes(id) !== componentIds.has(id)) throw new Error(`Appliance service and component disagree: ${id}`);
   }
   if (!Array.isArray(manifest.files)) throw new Error('Appliance manifest files must be an array.');
   let previous = '';

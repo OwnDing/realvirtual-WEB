@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2025 realvirtual GmbH <https://realvirtual.io>
 
-/** State and authenticated CONNECT REST access for historian trend data. */
+/**
+ * State and authenticated REST access for historian trend data.
+ *
+ * Two endpoint sources (ADR-0023):
+ *   - a deployment-configured history endpoint (`services.historian.url`), e.g. the
+ *     XYvirtual Gateway behind the Appliance entry at `/gateway/history`, or a URL the
+ *     user typed — these are INDEPENDENT of CONNECT and polled directly;
+ *   - the CONNECT-derived default `<CONNECT>/history`, which is only asked while
+ *     CONNECT itself is connected (unchanged behavior).
+ */
 
 import { createStore } from './create-store';
 import { connectRestJson } from './connect-rest';
 import { getConnectSnapshot } from './connect-store';
 import { lsLoad, lsSave } from './ls-store-utils';
+import { getAppConfig } from '../rv-app-config';
 
 export const HISTORIAN_STORAGE_KEY = 'historian';
 export const HISTORIAN_TIMEOUT_MS = 30_000;
@@ -81,8 +91,24 @@ const DISCONNECTED_STATUS: HistorianStatus = {
   disabledReason: 'CONNECT is not connected.',
 };
 
-function defaultHistorianUrl(): string {
+function connectHistorianUrl(): string {
   return `${getConnectSnapshot().serverUrl.replace(/\/$/, '')}/history`;
+}
+
+/** Absolute URL of the deployment-configured history endpoint, or null. */
+export function deploymentHistorianUrl(): string | null {
+  const configured = getAppConfig().services?.historian?.url;
+  if (!configured) return null;
+  try {
+    const base = typeof window !== 'undefined' && window.location?.href ? window.location.href : 'http://localhost/';
+    return new URL(configured, base).href.replace(/\/$/, '');
+  } catch {
+    return null;
+  }
+}
+
+function defaultHistorianUrl(): string {
+  return deploymentHistorianUrl() ?? connectHistorianUrl();
 }
 
 function loadHistorianSettings(): HistorianSettings {
@@ -241,8 +267,17 @@ export const historianStore = {
     _store.set({ status: DISCONNECTED_STATUS, signals: [], loading: false });
   },
 
+  /**
+   * True when the effective endpoint does not depend on CONNECT: it comes from the
+   * deployment, or the user pointed the historian somewhere other than CONNECT.
+   */
+  usesIndependentEndpoint(): boolean {
+    return requestBaseUrl() !== connectHistorianUrl().replace(/\/$/, '');
+  },
+
   async refreshStatus(): Promise<HistorianStatus> {
-    if (getConnectSnapshot().state !== 'connected' || getConnectSnapshot().gatewayUnreachable) {
+    const connectDown = getConnectSnapshot().state !== 'connected' || getConnectSnapshot().gatewayUnreachable;
+    if (connectDown && !this.usesIndependentEndpoint()) {
       this.markConnectUnavailable();
       return DISCONNECTED_STATUS;
     }

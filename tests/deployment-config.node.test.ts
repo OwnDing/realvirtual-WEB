@@ -80,6 +80,21 @@ describe('Deployment Config v1/v2', () => {
     expect(migrateDeploymentConfigV1ToV2(migrated)).toEqual(migrated);
   });
 
+  it('accepts a historian endpoint as a same-origin path or http(s) URL only', () => {
+    const parse = (historian: unknown) => validateDeploymentConfig({ schemaVersion: 2, services: { historian } });
+    expect(parse({ url: '/gateway/history' }).config.services?.historian).toEqual({ url: '/gateway/history' });
+    expect(parse({ url: 'https://plant.example/gateway/history' }).config.services?.historian?.url).toBe('https://plant.example/gateway/history');
+    expect(parse(null).config.services?.historian).toBeNull();
+    for (const bad of [{ url: '../history' }, { url: '/a/../b' }, { url: 'javascript:alert(1)' }, { url: 42 }, 'x']) {
+      const result = parse(bad);
+      expect(result.config.services?.historian).toBeUndefined();
+      expect(result.issues.join(' ')).toMatch(/services\.historian/);
+    }
+    // Re-validating the output is a no-op (the config is validated twice per boot).
+    const once = parse({ url: '/gateway/history' }).config;
+    expect(validateDeploymentConfig(once as unknown as Record<string, unknown>).config.services?.historian).toEqual({ url: '/gateway/history' });
+  });
+
   it('rejects remote identity assets', () => {
     const result = validateDeploymentConfig({
       schemaVersion: 1,

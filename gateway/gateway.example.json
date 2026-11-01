@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "listen": { "host": "127.0.0.1", "port": 5200 },
+  "websocketPath": "/ws",
+  "apiKeyEnv": "XYV_GATEWAY_API_KEY",
+  "readOnly": true,
+  "audit": { "path": "/var/lib/xyvirtual-gateway/audit/writes.jsonl" },
+  "source": {
+    "kind": "opcua",
+    "endpointUrl": "opc.tcp://plc.example.invalid:4840",
+    "securityMode": "SignAndEncrypt",
+    "securityPolicy": "Basic256Sha256",
+    "identity": { "type": "username", "username": "hmi", "passwordEnv": "XYV_OPCUA_PASSWORD" },
+    "publishingIntervalMs": 100,
+    "samplingIntervalMs": 100,
+    "writeTimeoutMs": 5000,
+    "pkiDir": "/var/lib/xyvirtual-gateway/pki"
+  },
+  "signals": [
+    { "name": "ConveyorStart", "nodeId": "ns=2;s=Line1.Conveyor.Start", "type": "PLCInputBool", "writable": true, "description": "HMI start button" },
+    { "name": "SpeedSetpoint", "nodeId": "ns=2;s=Line1.Drive.Setpoint", "type": "PLCInputFloat", "writable": true, "min": 0, "max": 1500 },
+    { "name": "DriveSpeed", "nodeId": "ns=2;s=Line1.Drive.Speed", "type": "PLCOutputFloat" },
+    { "name": "SensorOccupied", "nodeId": "ns=2;s=Line1.Sensor1.Occupied", "type": "PLCOutputBool" }
+  ],
+  "history": {
+    "enabled": true,
+    "url": "http://127.0.0.1:8086",
+    "org": "xyvirtual",
+    "bucket": "signals",
+    "tokenEnv": "XYV_INFLUX_TOKEN"
+  }
+}

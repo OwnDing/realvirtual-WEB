@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "productVersion": "6.3.27",
   "revision": "2026-10-23.1",
-  "contentDigest": "2e2726842d6f8c051417c80c04232da0ccc09d78f8119a5a5b333efa1843b620",
+  "contentDigest": "36633365102566ab1951eae663bdb94e7fb11d8570400af3e77da0f7f70f55ed",
   "inputs": {
-    "appliance/docs/INSTALL.en.md": "b035459c003bc3394fd9dffb306cd5eb8240b12e7f5e8f6234ff1d8a48c7326f",
-    "appliance/docs/INSTALL.zh-CN.md": "859f41ae63992d9b0693161edbbd92c876420b8f35fa776aee070ec138cbeb0e",
+    "appliance/docs/INSTALL.en.md": "35613b762bd8a9b10136baa8a57eee8d5c31ddf734b9512cb014dd25e4f8efd0",
+    "appliance/docs/INSTALL.zh-CN.md": "5d35e8392fe516b9f2da729b84e8e71aeefdfdeba831a802bd3171029fda94da",
     "docs/delivery/SECURITY_OPERATIONS.md": "5e5e1b76939700f4a3959148c31977f9f195542cfb74717545501ccef722596e",
     "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md": "f6aeb5eac222599e472f996b2b52e0e9e7d6368ec401a7bbb1ecaae591ff03b2",
     "docs/generated/COMPATIBILITY_MATRIX.en-US.md": "50ffb82cef3a253e839972bf5dbd4616e09fceedb7f9d45a4a61d70eea9a7029",
@@ -244,6 +244,7 @@
         "4-安装",
         "5-internal-ca-信任",
         "6-安装验收",
+        "61-工业网关配置",
         "7-升级回滚备份和卸载",
         "8-常见问题"
       ]

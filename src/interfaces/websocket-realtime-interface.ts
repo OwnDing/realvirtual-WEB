@@ -118,6 +118,27 @@ export function parseWsTarget(
   }
 }
 
+/**
+ * Resolve the dialled endpoint. An EMPTY `wsAddress` means "the server that served
+ * this page" (ADR-0023): the Offline Appliance ships one static `settings.json` for
+ * every hostname, so it presets `wsAddress: ''` + `wsPath: '/gateway/ws'` and the
+ * gateway is reached through the same HTTPS entry. Host, scheme and — unless a
+ * port is configured — port then follow the page; `wsUseSSL` is ignored because a
+ * plain `ws:` from an `https:` page would be blocked as mixed content anyway.
+ */
+export function resolveWsEndpoint(
+  settings: Pick<InterfaceSettings, 'wsAddress' | 'wsPort' | 'wsUseSSL'>,
+  page: Pick<Location, 'hostname' | 'port' | 'protocol'> | null = typeof location !== 'undefined' ? location : null,
+): { scheme: 'ws' | 'wss'; address: string; port: number } {
+  const address = settings.wsAddress.trim();
+  if (address || !page) {
+    return { scheme: settings.wsUseSSL ? 'wss' : 'ws', address, port: settings.wsPort };
+  }
+  const secure = page.protocol === 'https:';
+  const pagePort = page.port ? Number(page.port) : secure ? 443 : 80;
+  return { scheme: secure ? 'wss' : 'ws', address: page.hostname, port: settings.wsPort > 0 ? settings.wsPort : pagePort };
+}
+
 export class WebSocketRealtimeInterface extends BaseIndustrialInterface {
   readonly id: string = 'websocket-realtime';
   readonly protocolName: string = 'WebSocket Realtime';
@@ -151,12 +172,13 @@ export class WebSocketRealtimeInterface extends BaseIndustrialInterface {
   // ── Protocol Implementation ──
 
   protected async doConnect(settings: InterfaceSettings): Promise<void> {
-    const scheme = settings.wsUseSSL ? 'wss' : 'ws';
+    const endpoint = resolveWsEndpoint(settings);
+    const scheme = endpoint.scheme;
     const path = settings.wsPath.startsWith('/') ? settings.wsPath : '/' + settings.wsPath;
-    const requestedUrl = this.buildUrl(scheme, settings.wsAddress, settings.wsPort, path, settings);
+    const requestedUrl = this.buildUrl(scheme, endpoint.address, endpoint.port, path, settings);
     const allowedUrl = requireRuntimeEgressUrl(requestedUrl, 'industrial-interface');
     const url = allowedUrl.href;
-    const target = parseWsTarget(url, scheme, settings.wsAddress, settings.wsPort);
+    const target = parseWsTarget(url, scheme, endpoint.address, endpoint.port);
     this._wsScheme = target.scheme;
     this._wsHost = target.host;
     this._wsPort = target.port;
@@ -166,8 +188,8 @@ export class WebSocketRealtimeInterface extends BaseIndustrialInterface {
 
     const transportSettings: TransportConnectSettings = {
       url,
-      host: settings.wsAddress,
-      port: settings.wsPort,
+      host: endpoint.address,
+      port: endpoint.port,
       // Reconnect is owned by the base class — the worker must not run a second
       // reconnect engine, or two workers would race.
       autoReconnect: false,

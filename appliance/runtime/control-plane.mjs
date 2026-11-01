@@ -42,7 +42,10 @@ export function validateControlConfig(raw) {
   if (raw.urls !== undefined) {
     if (!raw.urls || typeof raw.urls !== 'object' || Array.isArray(raw.urls)) throw new Error('Control service URLs are invalid.');
     urls = {};
-    for (const id of ['web', 'git', 'connectHealth', 'influx', 'diagnostics']) {
+    // gatewayHealth (ADR-0023) and connectHealth (optional CONNECT) exist only when the
+    // release contains that service; the other links are always present.
+    for (const id of ['web', 'git', 'gatewayHealth', 'connectHealth', 'influx', 'diagnostics']) {
+      if (raw.urls[id] === undefined && (id === 'gatewayHealth' || id === 'connectHealth')) continue;
       const url = new URL(raw.urls[id]);
       if (url.protocol !== 'https:' || url.username || url.password) throw new Error(`Unsafe control service URL: ${id}`);
       urls[id] = url.href;

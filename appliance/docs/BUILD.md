@@ -36,13 +36,24 @@ run in the Linux Docker/WSL backend; Windows CONNECT remains a native service.
 
 Create one dependency directory and schema-version-1 lock as documented in
 `appliance/dependencies/README.md`. Include the complete target Node tree and dynamic libraries,
-Caddy, CONNECT, Forgejo, InfluxDB server and CLI, WinSW on Windows, the image archive for container
-mode, and every declared third-party license/notice file. Every ordinary input file must have an
+Caddy, Forgejo, InfluxDB server and CLI, WinSW on Windows, the image archive for container
+mode, optionally CONNECT, and every declared third-party license/notice file. Every ordinary input file must have an
 exact byte length and SHA-256 declaration; undeclared extras are rejected.
 
-Do not use the public Windows CONNECT artifact for Linux. A Linux package requires an approved
-Linux CONNECT release for the exact architecture. Missing `linux-x64` or `linux-arm64` CONNECT is a
-release blocker.
+CONNECT is optional since ADR-0023. A package without CONNECT omits the component from the lock
+and `--connect` from the image builder; it ships the XYvirtual Gateway instead. If CONNECT is
+included, do not use the public Windows CONNECT artifact for Linux: a Linux package then requires an
+approved Linux CONNECT release for the exact architecture.
+
+The gateway is built from this repository. Before running the bundle builder, create its production
+install from the locked tree and pass it with `--gateway-root` (default `gateway/`):
+
+```bash
+npm ci --prefix gateway --omit=dev --ignore-scripts
+```
+
+The builder refuses a gateway tree that contains development packages, unlocked packages or
+symlinks, and writes `licenses/third-party/gateway-npm-notices.txt` plus `sbom/gateway-runtime.json`.
 
 ## 3. Build and verify the transport archive
 

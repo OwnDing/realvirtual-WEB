@@ -19,6 +19,8 @@ export interface ControlConfig {
   probeTimeoutMs: number;
   integrityTtlMs: number;
   services: HealthService[];
+  /** Operator links; gatewayHealth/connectHealth only when the release has that service (ADR-0023). */
+  urls?: { web: string; git: string; influx: string; diagnostics: string; gatewayHealth?: string; connectHealth?: string } | null;
   [key: string]: unknown;
 }
 

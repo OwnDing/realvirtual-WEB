@@ -1,5 +1,5 @@
 export interface LicenseDecision { status: 'allow' | 'review' | 'deny'; reason?: string; selected?: string }
-export interface LicenseDecisionRecord { id: string; package: string; version: string; integrity: string; license: string; decision: 'accept'; rationale: string; obligations: string; tracking: string; owner: string; approvedBy: string; approval: string; createdAt: string }
+export interface LicenseDecisionRecord { declared?: null; id: string; package: string; version: string; integrity: string; license: string; decision: 'accept'; rationale: string; obligations: string; tracking: string; owner: string; approvedBy: string; approval: string; createdAt: string }
 export interface LicenseFinding { package: string; version: string; path: string; declared: string | null; selected: string | null; status: 'passed' | 'failed'; reasons: string[]; decision: string | null; obligations: string | null; evidenceSource: string | null }
 export function validatePolicy(policy: unknown): unknown;
 export function licenseDecision(expression: unknown, policy: unknown): LicenseDecision;

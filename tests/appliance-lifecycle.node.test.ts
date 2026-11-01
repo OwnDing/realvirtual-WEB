@@ -2,10 +2,11 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, statSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
+import { gatewayFixture } from './helpers/gateway-fixture';
 import { backupAppliance, installOrUpgrade, restoreAppliance, uninstallAppliance } from '../appliance/runtime/manager.mjs';
 import { AccessStore, digest as accessDigest } from '../appliance/runtime/access/store.mjs';
 
@@ -77,7 +78,7 @@ async function bundle(root: string, name: string, connectVersion: string) {
   const lockPath = join(root, `${name}-lock.json`);
   writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
   await buildOfflineAppliance({
-    target: 'linux-arm64', modes: 'native', dependencyRoot, dependencyLock: lockPath,
+    target: 'linux-arm64', modes: 'native', dependencyRoot, dependencyLock: lockPath, gatewayRoot: gatewayFixture(join(root, `${name}-gateway-fixture`)),
     webDist: web, output, archive: false, createdAt: '2026-08-30T00:00:00.000Z',
   });
   return output;
@@ -140,7 +141,18 @@ describe('appliance lifecycle', () => {
     const first = await installOrUpgrade(installOptions, deps);
     const password = readFileSync(join(first.roots.stateRoot, 'secrets', 'operator-password'), 'utf8');
     const installId = first.state.installId;
+    // ADR-0023: the first install writes an unconfigured, read-only gateway config and a
+    // service-only token file; the administrator owns gateway.json afterwards.
+    const gatewayConfigPath = join(first.roots.configRoot, 'gateway.json');
+    const gatewayConfig = JSON.parse(readFileSync(gatewayConfigPath, 'utf8'));
+    expect(gatewayConfig).toMatchObject({ readOnly: true, signals: [], history: { enabled: true, bucket: 'signals' } });
+    expect(gatewayConfig.source).toBeUndefined();
+    expect(JSON.stringify(gatewayConfig)).not.toContain(readFileSync(join(first.roots.stateRoot, 'secrets', 'influx-token'), 'utf8'));
+    expect(statSync(gatewayConfig.history.tokenFile).mode & 0o777).toBe(0o600);
+    writeFileSync(gatewayConfigPath, JSON.stringify({ ...gatewayConfig, readOnly: false }));
     const second = await installOrUpgrade(installOptions, deps);
+    expect(JSON.parse(readFileSync(gatewayConfigPath, 'utf8')).readOnly).toBe(false);
+    expect(readFileSync(join(first.roots.configRoot, 'Caddyfile'), 'utf8')).toContain('handle_path /gateway/*');
     expect(second.generatedOperatorPassword).toBeNull();
     expect(second.state.installId).toBe(installId);
     expect(readFileSync(join(first.roots.stateRoot, 'secrets', 'operator-password'), 'utf8')).toBe(password);
@@ -219,7 +231,9 @@ describe('appliance lifecycle', () => {
     expect(upgraded.state.lastUpgrade).toMatchObject({
       sourceVersion: '6.3.16', targetVersion: '6.3.28', outcome: 'committed',
     });
-    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(5);
+    // control, gateway (ADR-0023), connect (in this fixture release), forgejo, influxdb, edge
+    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(6);
+    expect(commands).toContain('systemctl enable --now xyvirtual-gateway.service');
   });
 
   it('restarts the old runtime when the required consistency backup fails verification', async () => {
@@ -237,8 +251,9 @@ describe('appliance lifecycle', () => {
       ...options(root, release, configPath), leaveStopped: true,
     }, deps)).rejects.toThrow(/Symlinks are not allowed/);
 
-    expect(commands.filter(command => command.startsWith('systemctl disable --now'))).toHaveLength(5);
-    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(5);
+    expect(commands.filter(command => command.startsWith('systemctl disable --now'))).toHaveLength(6);
+    expect(commands.filter(command => command.startsWith('systemctl enable --now'))).toHaveLength(6);
+    expect(commands).toContain('systemctl disable --now xyvirtual-gateway.service');
   });
 
   it('refuses downgrade before creating another release or backup', async () => {

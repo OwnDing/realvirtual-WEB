@@ -84,6 +84,18 @@ describe('exact license decisions never widen the global policy', () => {
     expect(stale.status).toBe('failed');
     expect(stale.unusedDecisions).toEqual(['LIC-test']);
   });
+  it('identifies a license from text only for a package that declares none', () => {
+    const undeclared = { ...entry, license: null, evidence: text };
+    const identified = { ...decision, license: 'BSD-2-Clause', declared: null };
+    const decisions = validateLicenseDecisions({ schemaVersion: 1, decisions: [identified] });
+    expect(evaluateLicenses([undeclared], policy).status).toBe('failed');
+    expect(evaluateLicenses([undeclared], policy, decisions).status).toBe('passed');
+    // A declared expression is never overridden by an "identified" one.
+    expect(evaluateLicenses([{ ...undeclared, license: 'GPL-3.0-only' }], policy, decisions).status).toBe('failed');
+    expect(evaluateLicenses([undeclared], { ...policy, deniedLicenses: ['BSD-2-Clause'] }, decisions).status).toBe('failed');
+    expect(evaluateLicenses([{ ...undeclared, evidence: [] }], policy, decisions).status).toBe('failed');
+    expect(() => validateLicenseDecisions({ schemaVersion: 1, decisions: [{ ...identified, declared: 'MIT' }] })).toThrow();
+  });
   it('rejects incomplete, wildcard and duplicate decisions', () => {
     for (const change of [{ rationale: '' }, { package: 'ex*' }, { version: '*' }, { decision: 'waive' }, { obligations: undefined }]) {
       expect(() => validateLicenseDecisions({ schemaVersion: 1, decisions: [{ ...decision, ...change }] })).toThrow();

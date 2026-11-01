@@ -72,6 +72,12 @@ export interface DeploymentServicesConfig {
   };
   cadLinks?: null | Array<{ id: string; label: string; url: string }>;
   qr?: null | { mode: 'local' };
+  /**
+   * Signal-history endpoint independent of CONNECT (ADR-0023), e.g. the XYvirtual
+   * Gateway's `/history`. Absolute http(s) URL or a same-origin path such as
+   * `/gateway/history`; requests still pass the `industrial-interface` egress check.
+   */
+  historian?: null | { url: string };
 }
 
 export interface DeploymentLicenseConfig {
@@ -248,6 +254,15 @@ function parseServices(value: unknown, issues: string[]): DeploymentServicesConf
   if (value.qr === null) result.qr = null;
   else if (isRecord(value.qr) && value.qr.mode === 'local') result.qr = { mode: 'local' };
   else if (value.qr !== undefined) issues.push('services.qr is invalid and was disabled');
+
+  if (value.historian === null) result.historian = null;
+  else if (isRecord(value.historian)) {
+    const raw = value.historian.url;
+    const path = typeof raw === 'string' && /^\/[A-Za-z0-9/_.-]{0,200}$/.test(raw) && !raw.includes('..') ? raw : undefined;
+    const url = path ?? httpUrl(raw);
+    if (url) result.historian = { url };
+    else issues.push('services.historian is invalid and was disabled');
+  } else if (value.historian !== undefined) issues.push('services.historian is invalid and was disabled');
 
   return result;
 }

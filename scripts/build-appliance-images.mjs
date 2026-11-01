@@ -28,10 +28,11 @@ function run(command, args, options = {}) {
   if (result.status !== 0) throw new Error(`${command} exited with ${result.status}`);
 }
 
-function validateBaseLock(raw, target) {
+function validateBaseLock(raw, target, withConnect) {
   if (!raw || raw.schemaVersion !== 1 || raw.target !== target) throw new Error(`Base image lock must target ${target}.`);
   if (raw.testFixture === true) throw new Error('A test-fixture base image lock cannot produce formal appliance images.');
-  for (const id of ['edge', 'control', 'connect', 'forgejo', 'influxdb']) {
+  // CONNECT is optional since ADR-0023; its base image is required only when it is built.
+  for (const id of ['edge', 'control', ...(withConnect ? ['connect'] : []), 'forgejo', 'influxdb']) {
     const image = raw.images?.[id];
     if (typeof image !== 'string' || !/@sha256:[0-9a-f]{64}$/.test(image)) throw new Error(`Base image ${id} must be pinned by sha256 digest.`);
   }
@@ -61,27 +62,32 @@ async function main() {
   const target = requiredArg(args, 'target');
   if (!['linux-x64', 'linux-arm64'].includes(target)) throw new Error('Container images target linux-x64 or linux-arm64.');
   const platform = target === 'linux-x64' ? 'linux/amd64' : 'linux/arm64';
-  const lock = validateBaseLock(JSON.parse(readFileSync(resolve(requiredArg(args, 'base-lock')), 'utf8')), target);
+  const connectArg = arg(args, 'connect');
+  const withConnect = connectArg !== null;
+  const lock = validateBaseLock(JSON.parse(readFileSync(resolve(requiredArg(args, 'base-lock')), 'utf8')), target, withConnect);
+  if (!withConnect) delete lock.images.connect;
   assertLocalImages(lock, platform);
-  const connect = resolve(requiredArg(args, 'connect'));
-  const expectedConnectSha = requiredArg(args, 'connect-sha256').toLowerCase();
-  if (!existsSync(connect) || !/^[0-9a-f]{64}$/.test(expectedConnectSha) || await sha256File(connect) !== expectedConnectSha) {
-    throw new Error('Linux CONNECT binary is missing or does not match --connect-sha256.');
+  const connect = withConnect ? resolve(connectArg) : null;
+  if (withConnect) {
+    const expectedConnectSha = requiredArg(args, 'connect-sha256').toLowerCase();
+    if (!existsSync(connect) || !/^[0-9a-f]{64}$/.test(expectedConnectSha) || await sha256File(connect) !== expectedConnectSha) {
+      throw new Error('Linux CONNECT binary is missing or does not match --connect-sha256.');
+    }
+    assertLinuxConnectArchitecture(connect, target);
   }
-  assertLinuxConnectArchitecture(connect, target);
   const output = resolve(arg(args, 'output', join(root, 'artifacts', target, 'appliance-images.tar')));
   if (existsSync(output)) throw new Error(`Output already exists: ${output}`);
   mkdirSync(dirname(output), { recursive: true });
   const contextRoot = mkdtempSync(join(tmpdir(), 'rv-appliance-image-context-'));
   mkdirSync(join(contextRoot, 'appliance-image-input'), { recursive: true });
-  cpSync(connect, join(contextRoot, 'appliance-image-input', 'realvirtual-Connect'));
+  if (withConnect) cpSync(connect, join(contextRoot, 'appliance-image-input', 'realvirtual-Connect'));
   cpSync(join(root, 'appliance'), join(contextRoot, 'appliance'), {
     recursive: true,
     errorOnExist: true,
     force: false,
   });
   try {
-    for (const id of ['edge', 'control', 'connect']) {
+    for (const id of ['edge', 'control', ...(withConnect ? ['connect'] : [])]) {
       run('docker', [
         'build', '--pull=false', '--network=none', '--platform', platform,
         '--build-arg', `BASE_IMAGE=${lock.images[id]}`,
@@ -94,7 +100,7 @@ async function main() {
     run('docker', [
       'save', '--output', output,
       `xyvirtual-appliance/edge:${version}`, `xyvirtual-appliance/control:${version}`,
-      `xyvirtual-appliance/connect:${version}`, `xyvirtual-appliance/forgejo:${version}`,
+      ...(withConnect ? [`xyvirtual-appliance/connect:${version}`] : []), `xyvirtual-appliance/forgejo:${version}`,
       `xyvirtual-appliance/influxdb:${version}`,
     ]);
     console.log(JSON.stringify({ output, sha256: await sha256File(output), target, platform }, null, 2));

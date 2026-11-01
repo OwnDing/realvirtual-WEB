@@ -101,6 +101,29 @@ describe('historian-store', () => {
     expect(historianStore.getSnapshot().error).toBeNull();
   });
 
+  it('asks a deployment history endpoint directly while CONNECT is disconnected (ADR-0023)', async () => {
+    setAppConfig({ services: { historian: { url: '/gateway/history' } } });
+    __resetHistorianStore();
+    const status = { enabled: true, connected: true, bucket: 'signals', lastWriteUtc: null, droppedPoints: 0, authError: false, disabledReason: null };
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify(status), { status: 200 }));
+
+    expect(historianStore.usesIndependentEndpoint()).toBe(true);
+    const result = await historianStore.refreshStatus();
+
+    expect(result).toEqual(status);
+    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(`${window.location.origin}/gateway/history/status`);
+  });
+
+  it('keeps the CONNECT-derived endpoint gated on the CONNECT connection', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    expect(historianStore.usesIndependentEndpoint()).toBe(false);
+    const result = await historianStore.refreshStatus();
+
+    expect(result.enabled).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('keeps the query alert quiet when the status heartbeat fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
 

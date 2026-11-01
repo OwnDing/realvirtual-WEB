@@ -4,7 +4,9 @@ import { X509Certificate, createPrivateKey, createPublicKey } from 'node:crypto'
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 
-const PORT_FIELDS = ['httpsPort', 'httpPort', 'controlPort', 'connectPort', 'forgejoPort', 'influxPort'];
+const PORT_FIELDS = ['httpsPort', 'httpPort', 'controlPort', 'gatewayPort', 'connectPort', 'forgejoPort', 'influxPort'];
+/** Ports added after a release shipped get a default so existing appliance.json files stay valid. */
+const PORT_DEFAULTS = { gatewayPort: 5200 };
 
 function hostname(value, field) {
   if (typeof value !== 'string' || !value || value.length > 253 || /[\s/:]/.test(value)) throw new Error(`${field} must be a DNS name or IP without scheme, path, or port.`);
@@ -26,7 +28,7 @@ export function validateApplianceConfig(raw, { baseDir = process.cwd() } = {}) {
   if (!raw || raw.schemaVersion !== 1) throw new Error('Appliance config must use schemaVersion 1.');
   const hostnameValue = hostname(raw.hostname, 'hostname');
   const influxHostname = hostname(raw.influxHostname, 'influxHostname');
-  const ports = Object.fromEntries(PORT_FIELDS.map((field) => [field, port(raw[field], field)]));
+  const ports = Object.fromEntries(PORT_FIELDS.map((field) => [field, port(raw[field] ?? PORT_DEFAULTS[field], field)]));
   const seenPorts = new Map();
   for (const [field, value] of Object.entries(ports)) {
     if (seenPorts.has(value)) throw new Error(`${field} conflicts with ${seenPorts.get(value)} on port ${value}.`);

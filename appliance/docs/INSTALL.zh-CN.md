@@ -2,7 +2,7 @@
 
 ## 1. 范围和准备
 
-每个归档只支持文件名标明的目标：`linux-x64`、`linux-arm64` 或 `windows-x64`。归档同时包含原生运行时和 OCI 镜像；安装后提供 WEB、CONNECT、Forgejo 项目 Git、InfluxDB 历史库、HTTPS 入口、状态页和浏览器诊断。
+每个归档只支持文件名标明的目标：`linux-x64`、`linux-arm64` 或 `windows-x64`。归档同时包含原生运行时和 OCI 镜像；安装后提供 WEB、XYvirtual 工业网关（OPC UA）、Forgejo 项目 Git、InfluxDB 历史库、HTTPS 入口、状态页和浏览器诊断；发布包含 CONNECT 时另提供 CONNECT。
 
 客户 IT 需要在复制归档前决定：
 
@@ -10,7 +10,7 @@
 - 静态 IP 或 DHCP reservation，并让两个名称在操作终端和服务器上解析到该地址；
 - 企业 CA 证书，或批准 Appliance internal CA 根证书的分发流程；
 - `container` 或 `native` 模式；容器模式要求客户预装 Docker Engine/Compose、Docker Desktop/WSL2 或 Podman Compose，安装器不会修改这些平台；
-- 80/443 对操作网络开放，CONNECT/3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；
+- 80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行；
 - 至少 10 GiB 安装余量，另按模型、Git 和历史保留期规划数据盘与备份盘；
 - 系统时间和时区正确。离线环境也必须有可靠的 NTP/PTP 或人工校时流程。
 
@@ -97,11 +97,20 @@ CA 私钥是持久状态。丢失它会迫使所有终端重新信任新根，�
 从另一台与操作员相同网络/策略/浏览器的设备验证：
 
 1. HTTP 自动跳到 HTTPS，地址、SAN 和端口正确；
-2. `/health/live` 返回 200；`/health/ready` 返回 200 且 release、CONNECT、Forgejo、InfluxDB 都为 `ok`；
+2. `/health/live` 返回 200；`/health/ready` 返回 200 且 release、gateway、Forgejo、InfluxDB（以及发布包含时的 CONNECT）都为 `ok`；
 3. `/appliance/` 显示状态，`/git/` 进入项目 Git，`https://influx.<host>/` 进入历史库；
 4. `/diagnostics/` 的 HTTPS、WebGL2、OPFS 和 Appliance 为通过；按工位需求检查 File System Access、WebGPU 和 WebXR；
-5. 载入真实测试模型，完成 OPFS 保存重开和 CONNECT WebSocket 断开/重连；
+5. 载入真实测试模型，完成 OPFS 保存重开和网关 WebSocket（`/gateway/ws`）断开/重连；
 6. 在出口被阻断时重复启动和主要流程，确认没有外部请求或在线降级下载。
+
+### 6.1 工业网关配置
+
+首次安装生成 `config/gateway.json`：**只读、未连接任何 PLC**（`/gateway/health` 显示 `unconfigured`）。由客户 OT 负责人按 [网关契约](../../docs/contracts/GATEWAY.md) 填写 `source`（OPC UA 端点、安全模式、身份）和 `signals`（WEB 信号名 → NodeId、PLC 类型、是否可写），然后重启网关服务。此后升级不会覆盖该文件。
+
+- 写入默认关闭：只有 `PLCInput*` 且显式 `writable: true` 的信号可写，`readOnly` 改为 `false` 前须完成现场授权、联锁与急停确认；
+- 每次写尝试记录在 `state/data/gateway/audit/writes.jsonl`；超时或断线的写入记为 `unknown`，网关不会自动重试，须先读回 PLC 状态；
+- 用户名身份要求 `Sign` 或 `SignAndEncrypt`；密码通过环境变量提供，不写入文件；首次连接后把 PLC 证书从 `pki/rejected` 移到 `pki/trusted`；
+- 自动化测试只使用进程内 OPC UA 测试服务器，**现场 PLC 必须单独验收**。
 
 ## 7. 升级、回滚、备份和卸载
 

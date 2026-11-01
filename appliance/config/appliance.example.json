@@ -5,6 +5,7 @@
   "httpsPort": 443,
   "httpPort": 80,
   "controlPort": 8081,
+  "gatewayPort": 5200,
   "connectPort": 5100,
   "forgejoPort": 3000,
   "influxPort": 8086,

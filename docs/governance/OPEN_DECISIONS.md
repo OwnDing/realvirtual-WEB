@@ -22,6 +22,7 @@ authority: normative-registry
 | OD-007 | 自有离线授权系统的强制力边界：在 AGPL-3.0-only 前提下，许可证校验是「合同凭证 + 防篡改审计记录」还是「技术强制」；绑定维度（部署域名 / 部署身份 / 机器指纹）、有效期与宽限期长度、到期降级形态（只读、水印或两者）、并发上限在浏览器端的可执行性，以及是否保留上游 CONNECT 授权查询 | product、security | 替换 `src/core/hmi/license-store.ts` 的 CONNECT 授权查询、许可证文件契约、功能位与并发上限强制点、到期行为、销售合同条款 | closed |
 | OD-009 | AGPL 商业路线、独立发行身份及阶段 A 定性与清点的结案范围 | product、security | 已落入 ADR-0021 与完成计划 EP-LEGAL-001；法律/发布证据转 OD-010 | closed |
 | OD-010 | 阶段 A 遗留的权属事实、法律签收及实际交付履约 | product、security、engineering | A-01–A-08 对应的权利声明、实际制品与正式商业发布 | open |
+| OD-011 | 工业协议网关的归属：继续依赖上游 CONNECT，还是自有网关、CONNECT 可选 | product、architecture | 新服务端协议组件、Appliance 组件清单、Historian 数据源 | closed |
 
 ## 执行规则
 
@@ -39,6 +40,8 @@ OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独�
 4. 未触及阻塞范围的工作可以继续，不能把“有未决事项”当成无限暂停理由。
 
 ## 决策落地记录
+
+- OD-011 于 2026-11-01 关闭。批准来源为用户当前明确指令（缺口整改第 2 步选择“自研网关，CONNECT 可选”：Node.js 网关实现现有 WebSocket Realtime v2，首批 OPC UA（node-opcua，MIT），纳入 Appliance；Historian 直接读 Appliance 的 InfluxDB；CONNECT 降为可选第三方适配）。落地文档为 Accepted [ADR-0023](../adr/ADR-0023-own-industrial-gateway.md) 与 [CONTRACT-GATEWAY-001](../contracts/GATEWAY.md)，实施由 [EP-GATEWAY-001](../exec-plans/active/EP-GATEWAY-001-own-industrial-gateway.md) 驱动。决策关闭不代表真实 PLC 或现场网络已验收；AI Agents 等 CONNECT 专属功能仍只在 CONNECT 存在时提供。
 
 - 2026-08-19，用户当前明确指令确认 OD-002 的部分产品输入：首批正式语言为中文、英文，默认语言为中文。
 - 2026-08-19，用户确认进入下一步并明确翻译直接由 AI 完成；结合上一轮待确认方案，规范 locale 为 `zh-CN`/`en-US`，回退链为当前语言 → `zh-CN` → 稳定 key 与诊断，日期和数字随当前 locale，工业单位和稳定 ID 不本地化。

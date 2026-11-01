@@ -126,6 +126,9 @@ export function validateLicenseDecisions(document) {
     }
     if (/[*?]/.test(d.package + d.version + d.integrity)) throw new Error(`Wildcard license decision: ${d.id}`);
     if (d.decision !== 'accept') throw new Error(`Unsupported license decision: ${d.id}`);
+    // `declared: null` = the manifest declares no license; `license` is then the one
+    // identified from the evidence text. Any other `declared` value is meaningless.
+    if ('declared' in d && d.declared !== null) throw new Error(`Invalid license decision field: declared (${d.id})`);
     if (!Number.isFinite(Date.parse(d.createdAt))) throw new Error(`Invalid license decision date: ${d.id}`);
     try { parseSpdx(d.license); } catch { throw new Error(`Invalid license decision expression: ${d.id}`); }
     const key = [d.package, d.version, d.integrity].join('|');
@@ -142,7 +145,10 @@ export function evaluateLicenses(entries, policy, decisions = []) {
     const reasons = [...(e.errors ?? [])];
     let accepted = null;
     if (decision.status === 'review') {
-      accepted = decisions.find(d => d.package === e.name && d.version === e.version && d.integrity === e.integrity && d.license === e.license) ?? null;
+      const declaredMatches = d => (e.license == null ? d.declared === null : !('declared' in d) && d.license === e.license);
+      accepted = decisions.find(d => d.package === e.name && d.version === e.version && d.integrity === e.integrity && declaredMatches(d)) ?? null;
+      // An identified license must itself not be denied by policy.
+      if (accepted && e.license == null && licenseDecision(accepted.license, policy).status === 'deny') accepted = null;
       if (accepted) used.add(accepted.id);
     }
     if (decision.status !== 'allow' && !accepted) reasons.push(decision.reason);

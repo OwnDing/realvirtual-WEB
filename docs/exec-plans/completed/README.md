@@ -52,3 +52,4 @@ authority: normative-registry
 - [`EP-UPGRADE-001-versioned-upgrades.md`](EP-UPGRADE-001-versioned-upgrades.md)：交付 N-2/bridge 与数据格式版本门、服务器/浏览器写前校验备份、失败恢复、迁移注册表、兼容合同和运维手册；2026-09-02 完成，PR 审查三项恢复语义问题已修复并由 Quality Gates #82 五项全绿留证。
 
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。
+- [EP-REMED-001](EP-REMED-001-stop-the-bleeding.md)：缺口整改第 1 步——Supply Chain Gate 远程转绿并纳入 `develop` required checks、公开 Stub 如实报告、上游部署流水线改手动；2026-11-01 完成并合入 develop。
