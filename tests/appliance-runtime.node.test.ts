@@ -45,9 +45,17 @@ describe('appliance runtime topology', () => {
     expect(windows.every((item) => item.wrapper?.endsWith('.exe'))).toBe(true);
   });
 
+  it('keeps the HTTPS journey test rendering every Caddyfile variable through the installer renderer', () => {
+    const template = readFileSync(resolve(root, 'appliance/config/Caddyfile.template'), 'utf8');
+    const script = readFileSync(resolve(root, 'scripts/test-protected-presentations.mjs'), 'utf8');
+    expect(script).toContain('renderCaddyfile(');
+    const names = new Set([...template.matchAll(/\{\{([A-Z0-9_]+)\}\}/g)].map((m) => m[1]).filter((n) => n !== 'CONNECT_ROUTES'));
+    for (const name of names) expect(script, `scripts/test-protected-presentations.mjs does not set ${name}`).toMatch(new RegExp(`\\b${name}:`));
+  });
+
   it('has no customer-side package or image downloads', () => {
     const files = [
-      'appliance/runtime/manager.mjs', 'appliance/native/linux/install.sh',
+      'appliance/runtime/manager.mjs', 'appliance/runtime/lib/config.mjs', 'appliance/native/linux/install.sh',
       'appliance/native/windows/Invoke-ApplianceManager.ps1', 'appliance/container/compose.yaml',
       'appliance/config/Caddyfile.template',
     ];

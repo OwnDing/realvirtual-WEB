@@ -8,7 +8,7 @@ import { cp, readFile, rename } from 'node:fs/promises';
 import { dirname, join, parse, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPreflight } from './lib/preflight.mjs';
-import { httpsPortSuffix, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
+import { httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
 import { isRollbackDataCompatible } from './lib/compatibility.mjs';
 
@@ -212,13 +212,7 @@ export function managedServiceIds(manifest) {
   return ['control', 'gateway', ...(hasConnect(manifest) ? ['connect'] : []), 'forgejo', 'influxdb', 'edge'];
 }
 
-const CONNECT_ROUTES = `handle_path /connect/* {
-			reverse_proxy {{CONNECT_UPSTREAM}}
-		}
-		@connectRoot path /health /ws /webviewer /mcp /mcp/* /interface-types /config /config/* /discover/* /signals/* /model /logs /status /history /history/* /update/* /news /news/* /diagnose/* /comments /comments/* /docs/*
-		handle @connectRoot {
-			reverse_proxy {{CONNECT_UPSTREAM}}
-		}`;
+
 
 /**
  * Gateway configuration written on first install only: the administrator owns it
@@ -283,9 +277,8 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     influxdb: container ? 'influxdb:8086' : `127.0.0.1:${config.influxPort}`,
   };
   writeDefaultGatewayConfig({ roots, container, config, secrets });
-  const template = readFileSync(join(releaseRoot, 'config', 'Caddyfile.template'), 'utf8')
-    .replace('{{CONNECT_ROUTES}}', connectPresent ? CONNECT_ROUTES : '# CONNECT is not part of this release (ADR-0023).');
-  const caddyfile = renderTemplate(template, {
+  const template = readFileSync(join(releaseRoot, 'config', 'Caddyfile.template'), 'utf8');
+  const caddyfile = renderCaddyfile(template, { connect: connectPresent }, {
     HOSTNAME: config.hostname,
     INFLUX_HOSTNAME: config.influxHostname,
     LISTEN_HTTP_PORT: container ? 80 : config.httpPort,
@@ -746,7 +739,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
       }
       if (mode === 'container') {
         candidateAttempted = true;
-        if (preflight.manifest.target.startsWith('windows-')) {
+        if (preflight.manifest.target.startsWith('windows-') && hasConnect(preflight.manifest)) {
           installWindowsConnectService({ roots, releaseRoot, config: preflight.config, runImpl });
         }
         startContainer({ roots, releaseRoot, manifest: preflight.manifest, runtime: options.containerRuntime, runImpl });

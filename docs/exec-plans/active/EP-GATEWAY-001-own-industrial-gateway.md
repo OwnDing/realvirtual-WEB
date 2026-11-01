@@ -79,6 +79,8 @@ authority: normative-process
 - Appliance 控制面原把 `connectHealth` 作为必填 URL；不扩展会导致无 CONNECT 的 Appliance 控制面无法启动。
 - `control` 镜像有 `ENTRYPOINT`，容器内运行网关必须显式覆盖 `entrypoint`。
 - Appliance 入口除健康与演示外均有操作员 Basic Auth，`/gateway/*` 因而不对未认证局域网开放；精细角色在第 3 步。
+- PR #22 首轮远程 Browser Gate（run `41269779013`）失败：`scripts/test-protected-presentations.mjs` 自行渲染 Caddy 模板，缺新变量 `CONNECT_ROUTES`/`GATEWAY_UPSTREAM`。根因是模板渲染存在两份实现；改为共享的 `renderCaddyfile()`（`appliance/runtime/lib/config.mjs`），旅程脚本以含 CONNECT 的变体渲染，并新增 Node 守卫测试校验脚本覆盖全部模板变量。本机无 Docker 守护进程，该真实 HTTPS 旅程只能由远程 CI 验证。
+- 复查发现 `installOrUpgrade` 的 Windows 容器分支仍无条件安装 CONNECT 服务（`startInstalledRuntime` 已正确判断）；已改为仅在发布包含 CONNECT 时安装。该路径没有 Windows 打包夹具，修复仅经代码审查，未自动化验证。
 
 ## Decision Log
 
