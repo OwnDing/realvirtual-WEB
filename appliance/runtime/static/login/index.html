@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'">
+  <title>登录 · XYvirtual WEB</title>
+  <link rel="stylesheet" href="login.css">
+  <script type="module" src="login.mjs"></script>
+</head>
+<body>
+  <main>
+    <h1 data-i18n="title">登录 XYvirtual WEB</h1>
+    <p class="hint" data-i18n="hint">使用管理员分配给你的个人账户。共享的运维账户不能登录 HMI。</p>
+    <form id="login" novalidate>
+      <label for="username" data-i18n="username">用户名</label>
+      <input id="username" name="username" autocomplete="username" required autofocus>
+      <label for="password" data-i18n="password">密码</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button type="submit" data-i18n="submit">登录</button>
+      <p id="error" role="alert" hidden></p>
+    </form>
+  </main>
+</body>
+</html>

@@ -132,7 +132,9 @@ import {
   type BundledBackendOptions,
 } from './backends/bundled-backend';
 import { FolderBackend } from './backends/folder-backend';
-import type { ProjectBackend, ProjectReadProvider } from './backends/project-backend';
+import type { BackendKind, ProjectBackend, ProjectReadProvider } from './backends/project-backend';
+import { ServerBackend } from './backends/server-backend';
+import { hmiCan, hmiSessionStore } from '../hmi/hmi-session-store';
 import { isSelfContainedGlb, type ProjectAssetSource } from './rv-project-asset-source';
 import { revisionOfBytes, type SceneRecord } from './rv-scene-record';
 import {
@@ -211,7 +213,7 @@ export interface ProjectSnapshot {
   /** Non-fatal notes collected while opening (quota, unreadable scenes, …). */
   warnings: string[];
   /** Where the open project's bytes live. Null when nothing is open. */
-  backendKind: 'bundled' | 'browser' | 'folder' | null;
+  backendKind: BackendKind | null;
   /**
    * The project's own base models, tier-tagged (§2.3).
    *
@@ -298,7 +300,7 @@ export interface ResolvedActiveProject {
   models: RvProjectAssetEntry[];
   /** Feeds `viewer.availablePublishedScenes`. */
   scenes: RvProjectSceneEntry[];
-  kind: 'bundled' | 'browser' | 'folder';
+  kind: BackendKind;
 }
 
 /** Minimal view of SceneStore that this store needs. Keeps the import one-way. */
@@ -682,6 +684,52 @@ export class ProjectStore {
     if (this._backend) await this.closeProject();
     const project = await backend.readManifest();
     if (!project) return false;
+    await this._adoptProject(backend, project);
+    this._publish();
+    return true;
+  }
+
+  /**
+   * Open (or, for engineer+, create) a server-side Appliance project (ADR-0024).
+   * `baseUrl` is the deployment's same-origin project API. A role below engineer
+   * opens read-only; the project API enforces the same rule on every write.
+   */
+  async openServerProject(
+    projectId: string,
+    opts: { baseUrl: string; name?: string; createIfMissing?: boolean; skipDirtyGuard?: boolean; fetchImpl?: typeof fetch },
+  ): Promise<boolean> {
+    if (this._project && !opts.skipDirtyGuard) {
+      if (await this._runDirtyGuard('switch') === 'cancel') return false;
+    }
+    await this.closeProject();
+    this._warnings = [];
+    this._lastConflicts = [];
+    const writable = hmiCan('save-server-projects');
+    const backend = new ServerBackend(projectId, {
+      baseUrl: opts.baseUrl,
+      writable,
+      csrf: () => hmiSessionStore.getSnapshot().csrf,
+      fetchImpl: opts.fetchImpl,
+    });
+    if (!writable) this._warnings.push('Your role may not save server projects — the project opens read-only.');
+    let project: RvProject | null;
+    try {
+      project = await backend.readManifest();
+    } catch (error) {
+      this._warnings.push(`The server project could not be read: ${error instanceof Error ? error.message : String(error)}`);
+      this._publish();
+      return false;
+    }
+    if (!project) {
+      if (!opts.createIfMissing || !writable) {
+        this._warnings.push('This server project has no project.json yet.');
+        this._publish();
+        return false;
+      }
+      project = { ...newProject(opts.name ?? projectId), id: projectId };
+      await backend.writeManifest(project);
+    }
+    this._dir = null;
     await this._adoptProject(backend, project);
     this._publish();
     return true;

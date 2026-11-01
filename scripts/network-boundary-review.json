@@ -172,5 +172,11 @@
     "api": "navigation",
     "fingerprint": "8c64e9ee4a8e9db64f536d2a335c615b156740a56ccadc44783afca6be95cc49",
     "reason": "mailto hands off to the user mail application only in allow-listed deployment mode; offline reports policy denial before handoff."
+  },
+  {
+    "file": "src/core/project/backends/server-backend.ts",
+    "api": "fetch",
+    "fingerprint": "0694fbc44c8b06bfccad6db86a27dbb9ee517d72062196c4ab316761dc4ff109",
+    "reason": "Default transport of the server project backend (ADR-0024): the base URL is validated as a same-origin path in the constructor, and every request passes redirect:error and credentials:same-origin."
   }
 ]

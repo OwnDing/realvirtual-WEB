@@ -36,6 +36,7 @@ import {
 import type { InterfaceSettings } from './interface-settings-store';
 import { debug } from '../core/engine/rv-debug';
 import { reconnectDelay } from './reconnect-policy';
+import { hmiCan } from '../core/hmi/hmi-session-store';
 
 // ── Public Types ─────────────────────────────────────────────────────────
 
@@ -103,6 +104,7 @@ export abstract class BaseIndustrialInterface implements RVViewerPlugin {
   private _reconnectAttempt = 0;
   private _settings: InterfaceSettings | null = null;
   private _outgoingSubscriptions: (() => void)[] = [];
+  private _readOnlyNotified = false;
   private _providerProvenanceEnabled = true;
 
   // ── Initial-sync marker (plan-427 F2) ──
@@ -231,6 +233,14 @@ export abstract class BaseIndustrialInterface implements RVViewerPlugin {
    */
   onFixedUpdatePost(_dt: number): void {
     if (this.dirtyOutgoing.size === 0 || !this.isConnected) return;
+    // ADR-0024: a viewer session is a read-only client. The gateway would reject (and
+    // audit) every write anyway; not sending them keeps the PLC link and the audit clean.
+    if (!hmiCan('write-signals')) {
+      if (!this._readOnlyNotified) console.info(`[${this.id}] signed in without write permission; outgoing signals are not sent`);
+      this._readOnlyNotified = true;
+      this.dirtyOutgoing.clear();
+      return;
+    }
 
     const outgoing: Record<string, boolean | number> = {};
     for (const [name, value] of this.dirtyOutgoing) {

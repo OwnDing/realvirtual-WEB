@@ -78,6 +78,10 @@ export interface DeploymentServicesConfig {
    * `/gateway/history`; requests still pass the `industrial-interface` egress check.
    */
   historian?: null | { url: string };
+  /** Appliance access service for HMI sessions and roles (ADR-0024); same-origin path only. */
+  access?: null | { url: string };
+  /** Appliance server-side project API (ADR-0024); same-origin path only. */
+  projects?: null | { url: string };
 }
 
 export interface DeploymentLicenseConfig {
@@ -175,6 +179,11 @@ function parseLegal(value: unknown, issues: string[]): DeploymentLegalConfig | u
   return result;
 }
 
+/** A same-origin service path such as `/gateway/history`; never `..` or a protocol-relative URL. */
+function sameOriginServicePath(raw: unknown): string | undefined {
+  return typeof raw === 'string' && /^\/[A-Za-z0-9/_.-]{0,200}$/.test(raw) && !raw.includes('..') && !raw.startsWith('//') ? raw : undefined;
+}
+
 function parseServices(value: unknown, issues: string[]): DeploymentServicesConfig | undefined {
   if (value === undefined) return undefined;
   if (!isRecord(value)) {
@@ -255,11 +264,21 @@ function parseServices(value: unknown, issues: string[]): DeploymentServicesConf
   else if (isRecord(value.qr) && value.qr.mode === 'local') result.qr = { mode: 'local' };
   else if (value.qr !== undefined) issues.push('services.qr is invalid and was disabled');
 
+  for (const key of ['access', 'projects'] as const) {
+    const entry = value[key];
+    if (entry === null) result[key] = null;
+    else if (isRecord(entry)) {
+      // Session cookies are same-origin and SameSite=Strict: an absolute URL could never work.
+      const path = sameOriginServicePath(entry.url);
+      if (path) result[key] = { url: path };
+      else issues.push(`services.${key} is invalid and was disabled`);
+    } else if (entry !== undefined) issues.push(`services.${key} is invalid and was disabled`);
+  }
+
   if (value.historian === null) result.historian = null;
   else if (isRecord(value.historian)) {
     const raw = value.historian.url;
-    const path = typeof raw === 'string' && /^\/[A-Za-z0-9/_.-]{0,200}$/.test(raw) && !raw.includes('..') ? raw : undefined;
-    const url = path ?? httpUrl(raw);
+    const url = sameOriginServicePath(raw) ?? httpUrl(raw);
     if (url) result.historian = { url };
     else issues.push('services.historian is invalid and was disabled');
   } else if (value.historian !== undefined) issues.push('services.historian is invalid and was disabled');

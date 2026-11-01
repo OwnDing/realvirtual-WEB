@@ -15,6 +15,14 @@ describe('appliance release compatibility', () => {
     expect(isRollbackDataCompatible(compatibility, old)).toBe(false);
     expect(isRollbackDataCompatible(old, compatibility)).toBe(true);
   });
+  it('blocks a direct rollback across the HMI-account access database (ADR-0024, format 2)', () => {
+    expect(compatibility.dataFormats.protectedPresentations.current).toBe(2);
+    const previous = { ...compatibility, dataFormats: { ...compatibility.dataFormats, protectedPresentations: { minReadable: 1, maxReadable: 1, current: 1 } } };
+    expect(isRollbackDataCompatible(compatibility, previous)).toBe(false);
+    // ...while the new release still reads the format the previous one wrote (upgrade path).
+    expect(isRollbackDataCompatible(previous, compatibility)).toBe(true);
+  });
+
   it('allows the supported 6.3 to 6.4 path and repeat installs', () => {
     expect(assessReleaseUpgrade('6.3.16', '6.4.0', compatibility).code).toBe('DIRECT_UPGRADE_SUPPORTED');
     expect(assessReleaseUpgrade('6.4.0', '6.4.0', compatibility).code).toBe('REPEAT_INSTALL');

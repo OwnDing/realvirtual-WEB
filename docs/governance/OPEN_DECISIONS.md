@@ -41,7 +41,9 @@ OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独�
 
 ## 决策落地记录
 
-- OD-011 于 2026-11-01 关闭。批准来源为用户当前明确指令（缺口整改第 2 步选择“自研网关，CONNECT 可选”：Node.js 网关实现现有 WebSocket Realtime v2，首批 OPC UA（node-opcua，MIT），纳入 Appliance；Historian 直接读 Appliance 的 InfluxDB；CONNECT 降为可选第三方适配）。落地文档为 Accepted [ADR-0023](../adr/ADR-0023-own-industrial-gateway.md) 与 [CONTRACT-GATEWAY-001](../contracts/GATEWAY.md)，实施由 [EP-GATEWAY-001](../exec-plans/active/EP-GATEWAY-001-own-industrial-gateway.md) 驱动。决策关闭不代表真实 PLC 或现场网络已验收；AI Agents 等 CONNECT 专属功能仍只在 CONNECT 存在时提供。
+- 2026-11-01，用户在缺口整改第 3 步明确选择 OD-001 的 Appliance 范围方案：四级角色（viewer/operator/engineer/admin）、所有写操作与强制操作留审计、服务端扩展 Appliance 访问服务、项目存于 Appliance 内置 Forgejo 且每次保存一次提交。落地文档为 Accepted [ADR-0024](../adr/ADR-0024-hmi-roles-and-server-projects.md) 与 [CONTRACT-ACCESS-002](../contracts/HMI_ACCESS.md)，实施由 [EP-ACCESS-002](../exec-plans/active/EP-ACCESS-002-hmi-roles-and-server-projects.md) 驱动。组织/多租户与云端项目后端仍无规格，OD-001 继续保持 `decided-pending-spec`。
+
+- OD-011 于 2026-11-01 关闭。批准来源为用户当前明确指令（缺口整改第 2 步选择“自研网关，CONNECT 可选”：Node.js 网关实现现有 WebSocket Realtime v2，首批 OPC UA（node-opcua，MIT），纳入 Appliance；Historian 直接读 Appliance 的 InfluxDB；CONNECT 降为可选第三方适配）。落地文档为 Accepted [ADR-0023](../adr/ADR-0023-own-industrial-gateway.md) 与 [CONTRACT-GATEWAY-001](../contracts/GATEWAY.md)，实施由 [EP-GATEWAY-001](../exec-plans/completed/EP-GATEWAY-001-own-industrial-gateway.md) 驱动。决策关闭不代表真实 PLC 或现场网络已验收；AI Agents 等 CONNECT 专属功能仍只在 CONNECT 存在时提供。
 
 - 2026-08-19，用户当前明确指令确认 OD-002 的部分产品输入：首批正式语言为中文、英文，默认语言为中文。
 - 2026-08-19，用户确认进入下一步并明确翻译直接由 AI 完成；结合上一轮待确认方案，规范 locale 为 `zh-CN`/`en-US`，回退链为当前语言 → `zh-CN` → 稳定 key 与诊断，日期和数字随当前 locale，工业单位和稳定 ID 不本地化。

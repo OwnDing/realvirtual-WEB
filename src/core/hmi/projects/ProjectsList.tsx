@@ -32,6 +32,7 @@ import { ChevronRight, Close, FolderOpen, MoreVert } from '@mui/icons-material';
 import { RV_SCROLL_CLASS } from '../shared-sx';
 import { Trans } from 'react-i18next';
 import { useRvTranslation } from '../../i18n';
+import { ServerProjectsSection } from './ServerProjectsSection';
 
 /** Where a row came from — recents are forgettable, workspace entries are not. */
 export type ProjectOrigin = 'workspace' | 'recent';
@@ -102,6 +103,7 @@ export function ProjectsList({
   if (!hasWorkspace && rows.length === 0) {
     return (
       <Centered>
+        <Box sx={{ width: '100%', maxWidth: 460 }}><ServerProjectsSection /></Box>
         <Box
           sx={{
             width: '100%',
@@ -150,6 +152,7 @@ export function ProjectsList({
   return (
     <Box className={RV_SCROLL_CLASS} sx={{ flex: 1, overflowY: 'auto', minWidth: 0, p: 2 }}>
       <Box sx={{ maxWidth: ROW_MAX_WIDTH, mx: 'auto' }}>
+        <ServerProjectsSection />
         {workspaceName ? (
           <Typography sx={{ fontSize: 11, color: 'text.disabled', mb: 1 }}>
             {t('list.workspacePrefix', { name: workspaceName })}

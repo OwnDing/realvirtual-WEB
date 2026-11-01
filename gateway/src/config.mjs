@@ -125,7 +125,7 @@ function validateHistory(raw) {
 export function validateConfig(raw) {
   const c = object(raw, 'config');
   if (c.schemaVersion !== 1) fail('schemaVersion', 'must be 1');
-  only(c, 'config', ['schemaVersion', 'listen', 'apiKeyEnv', 'allowedOrigins', 'readOnly', 'audit', 'source', 'signals', 'history', 'websocketPath', 'maxClients']);
+  only(c, 'config', ['schemaVersion', 'listen', 'apiKeyEnv', 'allowedOrigins', 'readOnly', 'trustProxyIdentity', 'audit', 'source', 'signals', 'history', 'websocketPath', 'maxClients']);
   const listen = object(c.listen ?? {}, 'listen');
   only(listen, 'listen', ['host', 'port']);
   const signalsRaw = Array.isArray(c.signals) ? c.signals : fail('signals', 'must be an array');
@@ -151,6 +151,9 @@ export function validateConfig(raw) {
     apiKeyEnv: optional(c, 'apiKeyEnv', (v) => envName(v, 'apiKeyEnv'), null),
     allowedOrigins: origins,
     readOnly: optional(c, 'readOnly', (v) => bool(v, 'readOnly'), false),
+    // ADR-0024: behind the Appliance entry, identity arrives as X-Rv-User/X-Rv-Role set by
+    // Caddy forward_auth. Only enable when the gateway is reachable through that entry alone.
+    trustProxyIdentity: optional(c, 'trustProxyIdentity', (v) => bool(v, 'trustProxyIdentity'), false),
     maxClients: optional(c, 'maxClients', (v) => int(v, 'maxClients', 1, 10000), 200),
     audit: { path: string(audit.path, 'audit.path') },
     source: c.source === undefined ? null : validateSource(c.source),

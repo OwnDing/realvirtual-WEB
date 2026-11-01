@@ -23,4 +23,5 @@ authority: normative-registry
 - [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。
 
 
-- [EP-GATEWAY-001](EP-GATEWAY-001-own-industrial-gateway.md)：缺口整改第 2 步——自有 OPC UA 网关、Historian 独立于 CONNECT、Appliance 中 CONNECT 可选；2026-11-01 依用户指令激活。
+
+- [EP-ACCESS-002](EP-ACCESS-002-hmi-roles-and-server-projects.md)：缺口整改第 3 步——HMI 四级角色、写操作审计、Forgejo 服务端项目；2026-11-01 依用户指令激活。

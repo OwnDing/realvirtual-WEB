@@ -164,6 +164,7 @@ import {
   initializeConnectEmbedStore,
 } from './plugins/connect-embed/connect-embed-store';
 import { HistorianTrendPlugin } from './plugins/historian-trend-plugin';
+import { initHmiSession } from './core/hmi/hmi-session-store';
 import { SignalBindPlugin } from './plugins/signal-bind/SignalBindPlugin';
 
 // Shared asset links — `?glb=<url>` / `?glb=s:<id>` (plan-386).
@@ -499,6 +500,9 @@ async function init() {
   setAppConfig(appConfig);
   diagnosticErrorEntry.refresh();
   installRuntimeCsp(getAppConfig() as unknown as Record<string, unknown>);
+  // ADR-0024: personal HMI session where the deployment has an access service. Starts
+  // in `loading` synchronously, so no PLC write leaves before the role is known.
+  void initHmiSession();
 
   // --- Microsoft Teams integration ---
   // When running inside a Teams tab (?teams=1), dynamically import the Teams JS SDK

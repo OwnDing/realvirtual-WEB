@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { readFile, open, rename, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { AccessStore, AccessError, requireValue, id, randomToken, digest, checkPassword, hashPassword } from './store.mjs';
+import { AccessStore, AccessError, requireValue, id, randomToken, digest, checkPassword, hashPassword, HMI_ROLES, roleAtLeast } from './store.mjs';
 import { validatePresentationGlb } from './glb.mjs';
 
 const ROOT = '/api/access/v1';
 const COOKIE = '__Host-rv-access';
 const headers = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
 const json = (res, status, value) => { res.writeHead(status, headers); res.end(JSON.stringify(value)); };
-const cookie = (req) => /(?:^|;\s*)__Host-rv-access=([A-Za-z0-9_-]{43})(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
+export const cookie = (req) => /(?:^|;\s*)__Host-rv-access=([A-Za-z0-9_-]{43})(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
 function setSession(res, session) {
   res.setHeader('Set-Cookie', `${COOKIE}=${session?.token ?? ''}; Path=/; Secure; HttpOnly; SameSite=Strict${session ? '' : '; Max-Age=0'}`);
 }
-async function body(req, limit, asJson = true) {
+export async function body(req, limit, asJson = true) {
   requireValue(!req.headers['content-encoding'], 415, 'UNSUPPORTED_ENCODING');
   if (asJson) requireValue(req.headers['content-type']?.split(';')[0] === 'application/json', 415, 'JSON_REQUIRED');
   if (Number(req.headers['content-length'] ?? 0) > limit) { req.resume(); throw new AccessError(413, 'TOO_LARGE'); }
@@ -39,6 +39,9 @@ async function body(req, limit, asJson = true) {
     return value;
   } catch { throw new AccessError(400, 'BAD_JSON'); }
 }
+/** Browser-reported HMI events and the minimum role that may report them. */
+const REPORTED_EVENTS = Object.freeze({ 'signal.force': 'engineer', 'signal.unforce': 'engineer' });
+
 export function createAccessHandler(config, dependencies = {}) {
   const origin = new URL(config.origin);
   requireValue(origin.protocol === 'https:' && origin.origin === config.origin, 500, 'INVALID_ACCESS_ORIGIN');
@@ -60,6 +63,35 @@ export function createAccessHandler(config, dependencies = {}) {
     requireValue(hashing < 4, 429, 'RATE_LIMITED'); hashing++;
     try { return await fn(); } finally { hashing--; }
   };
+  /**
+   * Caddy `forward_auth` decision for HMI surfaces (ADR-0024). 204 + X-Rv-User/X-Rv-Role
+   * when the session holds an HMI role at least `need`; a browser navigation without a
+   * session is sent to /login/ with a same-origin `next`; other unauthenticated requests
+   * get a bare 401. Unauthenticated asset requests are the common case, so they are not
+   * written to the audit table.
+   */
+  function authorize(req, res, url) {
+    const need = url.searchParams.get('need') ?? 'viewer';
+    requireValue(HMI_ROLES.includes(need), 400, 'BAD_ROLE');
+    let session = null;
+    try { session = store.session(cookie(req)); } catch { session = null; }
+    const role = session && !session.share && HMI_ROLES.includes(session.role) ? session.role : null;
+    const headers = { 'Cache-Control': 'no-store' };
+    if (!role) {
+      if (String(req.headers.accept ?? '').includes('text/html')) {
+        const forwarded = String(req.headers['x-forwarded-uri'] ?? '/');
+        const next = forwarded.startsWith('/') && !forwarded.startsWith('//') && !/[\\\r\n]/.test(forwarded) ? forwarded : '/';
+        res.writeHead(302, { ...headers, Location: `/login/?next=${encodeURIComponent(next)}` });
+      } else res.writeHead(401, headers);
+      res.end();
+      return true;
+    }
+    if (!roleAtLeast(role, need)) { res.writeHead(403, headers); res.end(); return true; }
+    res.writeHead(204, { ...headers, 'X-Rv-User': session.username, 'X-Rv-Role': role });
+    res.end();
+    return true;
+  }
+
   async function handle(req, res) {
     if (!(req.url === ROOT || req.url?.startsWith(`${ROOT}/`) || req.url?.startsWith(`${ROOT}?`))) return false;
     let actor = 'anonymous';
@@ -73,6 +105,7 @@ export function createAccessHandler(config, dependencies = {}) {
       requireValue(['GET', 'HEAD', 'POST', 'PATCH'].includes(method), 405, 'METHOD_NOT_ALLOWED');
       const write = method === 'POST' || method === 'PATCH';
       if (write) requireValue(req.headers.origin === config.origin, 403, 'ORIGIN_DENIED');
+      if (path === '/authz' && method === 'GET') return authorize(req, res, url);
       if (path === '/login' && method === 'POST') {
         rate('login:global', 100);
         const input = await body(req, 16384);
@@ -146,6 +179,16 @@ export function createAccessHandler(config, dependencies = {}) {
         store.audit(actor, 'resource.read', share.id, method === 'HEAD' ? 'head' : 'delivered');
         res.writeHead(status, { ...headers, 'content-type': 'model/gltf-binary', 'content-length': end - start + 1, 'accept-ranges': 'bytes', ...(status === 206 ? { 'content-range': `bytes ${start}-${end}/${bytes.length}` } : {}) });
         res.end(method === 'HEAD' ? undefined : bytes.subarray(start, end + 1)); return true;
+      }
+      if (path === '/audit-events' && method === 'POST') {
+        const input = await body(req, 8192);
+        requireValue(input && typeof input.action === 'string' && Object.hasOwn(REPORTED_EVENTS, input.action)
+          && typeof input.target === 'string' && input.target.length > 0 && input.target.length <= 256, 422, 'INVALID_EVENT');
+        requireValue(!session.share && roleAtLeast(session.role, REPORTED_EVENTS[input.action]), 403, 'FORBIDDEN');
+        const extra = input.detail && typeof input.detail === 'object' && !Array.isArray(input.detail) ? input.detail : {};
+        // Identity comes from the session, never from the reported body.
+        store.audit(actor, input.action, input.target, 'reported', JSON.stringify({ ...extra, role: session.role, username: session.username }));
+        json(res, 201, { recorded: true }); return true;
       }
       requireValue(session.role === 'admin' && !session.share, 403, 'FORBIDDEN');
       if (path === '/users' && method === 'GET') { json(res, 200, store.all('SELECT id,username,role,disabled FROM users ORDER BY username')); return true; }

@@ -8,6 +8,20 @@ import { promisify } from 'node:util';
 export const randomToken = () => randomBytes(32).toString('base64url');
 export const digest = (value) => createHash('sha256').update(value).digest('hex');
 export const id = () => randomBytes(16).toString('hex');
+/**
+ * HMI roles in ascending order of capability (ADR-0024). `visitor` is separate:
+ * it only redeems presentation shares and never enters the HMI.
+ */
+export const HMI_ROLES = Object.freeze(['viewer', 'operator', 'engineer', 'admin']);
+export const ROLES = Object.freeze([...HMI_ROLES, 'visitor']);
+/** True when `role` is an HMI role at least as capable as `needed`. */
+export function roleAtLeast(role, needed) {
+  const have = HMI_ROLES.indexOf(role);
+  const want = HMI_ROLES.indexOf(needed);
+  return have >= 0 && want >= 0 && have >= want;
+}
+const ROLE_CHECK = `CHECK(role IN (${ROLES.map((r) => `'${r}'`).join(',')}))`;
+
 export class AccessError extends Error {
   constructor(status, code) { super(code); this.status = status; this.code = code; }
 }
@@ -41,16 +55,44 @@ export class AccessStore {
     chmodSync(path, 0o600);
     this.db.exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL;');
     const version = this.db.prepare('PRAGMA user_version').get().user_version;
-    if (version > 1) { this.db.close(); throw new Error('Unsupported access database version'); }
+    if (version > 2) { this.db.close(); throw new Error('Unsupported access database version'); }
+    if (version === 1) this.migrateV1toV2();
     if (version === 0) this.db.exec(`BEGIN IMMEDIATE;
-      CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','visitor')), disabled INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT NOT NULL ${ROLE_CHECK}, disabled INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE presentations (id TEXT PRIMARY KEY, name TEXT NOT NULL, size INTEGER NOT NULL, sha256 TEXT NOT NULL, operation TEXT UNIQUE NOT NULL, created INTEGER NOT NULL);
       CREATE TABLE shares (id TEXT PRIMARY KEY, presentation TEXT NOT NULL REFERENCES presentations(id), token TEXT NOT NULL, user TEXT REFERENCES users(id), expires INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL);
       CREATE TABLE sessions (token TEXT PRIMARY KEY, user TEXT REFERENCES users(id), share TEXT REFERENCES shares(id), csrf TEXT NOT NULL, visitor TEXT NOT NULL, expires INTEGER NOT NULL);
-      CREATE TABLE audit (id INTEGER PRIMARY KEY, time INTEGER NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, target TEXT NOT NULL, outcome TEXT NOT NULL);
+      CREATE TABLE audit (id INTEGER PRIMARY KEY, time INTEGER NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, target TEXT NOT NULL, outcome TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '');
       CREATE INDEX audit_time ON audit(time); CREATE INDEX sessions_expiry ON sessions(expires);
-      PRAGMA user_version=1; COMMIT;`);
+      PRAGMA user_version=2; COMMIT;`);
     this.prune();
+  }
+
+  /**
+   * v1 → v2 (ADR-0024): widen the role CHECK to the HMI roles and add audit.detail.
+   * SQLite cannot alter a CHECK, so `users` is rebuilt; foreign keys are switched
+   * off for the swap (they cannot change inside a transaction) and verified after.
+   * Existing accounts keep their role; nothing is deleted.
+   */
+  migrateV1toV2() {
+    this.db.exec('PRAGMA foreign_keys=OFF');
+    try {
+      this.db.exec(`BEGIN IMMEDIATE;
+        CREATE TABLE users_v2 (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT NOT NULL ${ROLE_CHECK}, disabled INTEGER NOT NULL DEFAULT 0);
+        INSERT INTO users_v2(id,username,password,role,disabled) SELECT id,username,password,role,disabled FROM users;
+        DROP TABLE users;
+        ALTER TABLE users_v2 RENAME TO users;
+        ALTER TABLE audit ADD COLUMN detail TEXT NOT NULL DEFAULT '';
+        PRAGMA user_version=2;
+        COMMIT;`);
+    } catch (error) {
+      try { this.db.exec('ROLLBACK'); } catch { /* not in a transaction */ }
+      throw error;
+    } finally {
+      this.db.exec('PRAGMA foreign_keys=ON');
+    }
+    const broken = this.db.prepare('PRAGMA foreign_key_check').all();
+    if (broken.length) throw new Error('Access database migration left dangling references');
   }
   run(sql, ...args) { return this.db.prepare(sql).run(...args); }
   get(sql, ...args) { return this.db.prepare(sql).get(...args); }
@@ -60,8 +102,8 @@ export class AccessStore {
     try { const result = action(); this.db.exec('COMMIT'); return result; }
     catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
-  audit(actor, action, target = '', outcome = 'ok') {
-    this.run('INSERT INTO audit(time,actor,action,target,outcome) VALUES(?,?,?,?,?)', this.now(), actor, action, target, outcome);
+  audit(actor, action, target = '', outcome = 'ok', detail = '') {
+    this.run('INSERT INTO audit(time,actor,action,target,outcome,detail) VALUES(?,?,?,?,?,?)', this.now(), actor, action, target, outcome, String(detail).slice(0, 2000));
   }
   prune() {
     this.run('DELETE FROM sessions WHERE expires<=?', this.now());
@@ -87,7 +129,7 @@ export class AccessStore {
     return session;
   }
   async createUser(username, password, role, actor = 'local-cli', authorize = () => {}) {
-    requireValue(typeof username === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}$/.test(username) && ['admin', 'visitor'].includes(role), 422, 'INVALID_USER');
+    requireValue(typeof username === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}$/.test(username) && ROLES.includes(role), 422, 'INVALID_USER');
     const normalized = username.toLowerCase();
     requireValue(!this.get('SELECT id FROM users WHERE username=?', normalized), 409, 'USER_EXISTS');
     const encoded = await hashPassword(password);

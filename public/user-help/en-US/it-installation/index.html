@@ -18,6 +18,12 @@
 <p>shared data. <code>uninstall</code> preserves state unless the exact install id is supplied with the explicit</p>
 <p>purge flags. Never bypass a certificate warning, disable TLS validation, expose CONNECT/PLC ports,</p>
 <p>or change scheme/host/port during an ordinary upgrade.</p>
+<p>From this release the HMI requires a personal account (unauthenticated requests are sent to</p>
+<p><code>/login/</code>); <code>/appliance/</code>, <code>/diagnostics/</code> and <code>/git/</code> keep the shared operator credential. When no</p>
+<p>HMI administrator exists, the installer creates one from the operator credential; sign in, create</p>
+<p>personal accounts (viewer, operator, engineer, administrator) in <code>/present/</code>, and change that</p>
+<p>password. The access database is format 2: rolling back to an earlier release requires restoring the</p>
+<p>consistency backup.</p>
 <p>The first install writes <code>config/gateway.json</code> as a <strong>read-only, unconfigured</strong> gateway. The</p>
 <p>customer&#39;s OT owner fills in the OPC UA <code>source</code> and the explicit <code>signals</code> mapping per</p>
 <p><code>docs/contracts/GATEWAY.md</code>, then restarts the gateway service; upgrades keep the file. Writes stay</p>
@@ -26,4 +32,4 @@
 <p>write is <code>unknown</code> and is never retried automatically. Real controllers require their own on-site</p>
 <p>acceptance.</p>
 <p>Browser, hardware and trust acceptance: L3-2 guide.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 366333651025</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 7dd897c8801d</span></footer></main></div></body></html>

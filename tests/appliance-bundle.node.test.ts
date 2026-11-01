@@ -96,6 +96,9 @@ describe('offline appliance bundle', () => {
     const settings = JSON.parse(readFileSync(join(f.output, 'web', 'settings.json'), 'utf8'));
     expect(settings.services.historian).toEqual({ url: '/gateway/history' });
     expect(settings.interface).toMatchObject({ activeType: 'websocket-realtime', wsAddress: '', wsPath: '/gateway/ws' });
+    expect(settings.services.access).toEqual({ url: '/api/access/v1' });
+    expect(settings.services.projects).toEqual({ url: '/api/projects/v1' });
+    expect(readFileSync(join(f.output, 'web', 'login', 'index.html'), 'utf8')).toContain('login.mjs');
     await expect(verifyBundle(f.output, { expectedTarget: 'linux-arm64' })).resolves.toBeTruthy();
   });
 

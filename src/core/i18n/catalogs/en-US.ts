@@ -26,6 +26,7 @@
 import { diagnosticsEnglish } from './diagnostics';
 import { loadingPerformanceEnglish } from './loading-performance';
 import { demoPackageEnglish } from './demo-package';
+import { hmiAccountEnglish } from './hmi-account';
 
 export const enUS = {
   common: {
@@ -67,6 +68,7 @@ export const enUS = {
   shell: {
     diagnostics: diagnosticsEnglish,
     demoExport: demoPackageEnglish,
+    account: hmiAccountEnglish,
     access: {
       title: 'Protected presentations',
       admin: 'Presentation management',

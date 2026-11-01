@@ -67,6 +67,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>载入真实测试模型，完成 OPFS 保存重开和网关 WebSocket（<code>/gateway/ws</code>）断开/重连；</li>
 <li>在出口被阻断时重复启动和主要流程，确认没有外部请求或在线降级下载。</li>
 </ol>
+<h3 id="60-hmi-账户与角色">6.0 HMI 账户与角色</h3>
+<p>自本版本起 HMI（WEB、<code>/gateway/*</code>、<code>/api/projects/v1/*</code>）要求个人账户登录，未登录访问会跳到 <code>/login/</code>；<code>/appliance/</code>、<code>/diagnostics/</code>、<code>/git/</code> 仍使用 operator 共享凭据（IT 运维面）。</p>
+<ul><li>若访问库中没有 admin 账户，安装器会以 operator 用户名和口令创建一个 HMI 管理员并在输出中提示。首次登录后立即在 <code>/present/</code> 管理页为每个人创建个人账户，并修改该管理员口令。</li>
+<li>角色：查看者（只看）、操作员（写 PLC 信号、点动）、工程师（另可强制信号、保存服务端项目）、管理员（另可管理账户、查看审计）。演示访客只能打开分享链接。</li>
+<li>网关以入口注入的身份判断写权限，每次写入记录用户与角色；强制设置/解除另记入访问审计。</li>
+<li>服务端项目保存在 Forgejo，每次保存一次提交，作者为登录用户。</li>
+<li>本版本的访问库格式为 2；回滚到更早版本必须按第 7 节使用一致性备份恢复，裸 <code>rollback</code> 会被兼容性检查拒绝。</li>
+</ul>
 <h3 id="61-工业网关配置">6.1 工业网关配置</h3>
 <p>首次安装生成 <code>config/gateway.json</code>：<strong>只读、未连接任何 PLC</strong>（<code>/gateway/health</code> 显示 <code>unconfigured</code>）。由客户 OT 负责人按 网关契约 填写 <code>source</code>（OPC UA 端点、安全模式、身份）和 <code>signals</code>（WEB 信号名 → NodeId、PLC 类型、是否可写），然后重启网关服务。此后升级不会覆盖该文件。</p>
 <ul><li>写入默认关闭：只有 <code>PLCInput*</code> 且显式 <code>writable: true</code> 的信号可写，<code>readOnly</code> 改为 <code>false</code> 前须完成现场授权、联锁与急停确认；</li>
@@ -100,4 +108,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>升级后浏览器项目看似消失：先检查 origin 是否变化。不要创建新项目覆盖原状态。</li>
 </ul>
 <p>浏览器、最低配置与信任验收见 L3-2 手册。</p>
-<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 366333651025</span></footer></main></div></body></html>
+<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 7dd897c8801d</span></footer></main></div></body></html>
