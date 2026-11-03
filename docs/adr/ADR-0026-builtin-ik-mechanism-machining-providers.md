@@ -60,7 +60,7 @@ authority: normative
 
 ## References
 
-- [EP-SIM-001](../exec-plans/active/EP-SIM-001-builtin-simulation-providers.md)
+- [EP-SIM-001](../exec-plans/completed/EP-SIM-001-builtin-simulation-providers.md)
 - `src/core/engine/rv-ik-solver.ts`、`rv-kinematic-registry.ts`、`rv-machining-registry.ts`
 - R. M. Murray, Z. Li, S. S. Sastry, *A Mathematical Introduction to Robotic Manipulation*（Paden–Kahan 子问题）
 - W. E. Lorensen, H. E. Cline, *Marching Cubes*（1987）

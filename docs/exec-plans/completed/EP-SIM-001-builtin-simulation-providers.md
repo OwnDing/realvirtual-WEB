@@ -2,7 +2,7 @@
 doc_id: EP-SIM-001
 title: 缺口整改第 5 步：自研机器人 IK、刚体机构求解与 CSG 加工
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-11-03
 authority: normative-process
@@ -60,7 +60,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 - [x] 5a IK：实现与测试（见 Validation）。
 - [x] 5b CSG 加工：实现与测试（见 Validation）。
 - [x] 5c 刚体机构：实现与测试（见 Validation）。
-- [ ] 远程 CI 与合并。
+- [x] 远程 CI 与合并（见 Outcomes & Retrospective）。
 
 ## Surprises & Discoveries
 
@@ -124,4 +124,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 
 ## Outcomes & Retrospective
 
-（远程 CI 与合并后补齐。）
+- 远程：PR [#25](https://github.com/OwnDing/realvirtual-WEB/pull/25) 提交 `8801f87`（叠在第 4 步 `35580ab` 之上；#24 合并后只含 `5a00cd3`、`d97bb4d`、`f307f5a`、`8801f87`），Quality Gates #145（run `41566656199`）七项全部首轮通过（六项 required 与 Windows 兼容性；Browser Gate 含新增 `ik-builtin-glb`、`machining-builtin-glb`、`mechanism-builtin-glb`）。
+- 合并：2026-11-03T03:03:30Z 合入 `develop`，merge commit `b5a84d5`。CI 测试的合并结果与合并后 `develop` 的文件树一致（#24 的 merge commit 与 `35580ab` 同树）。合并后 `develop` 推送触发的 Quality Gates #147（run `41569873187`，`b5a84d5`）七项全部通过。
+- 公共构建三个提供者槽位均已填充；许可构建的私有提供者优先，行为不变。
+- 遗留：机构逆向跟踪与逆动力学力分析、IK 连续混合、DualContouring；刀具坐标约定与 Unity 内核的逐项比对；不带 `Drive`/`Kinematic` 的被动连杆在合并加载中的静态合批（需入口体积预算）；交互拖动 IK 目标与 LIN 运行的人工体验——均需后续计划或实机验收。

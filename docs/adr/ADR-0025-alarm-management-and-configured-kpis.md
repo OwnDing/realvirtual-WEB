@@ -60,5 +60,5 @@ authority: normative
 ## References
 
 - [ADR-0024](ADR-0024-hmi-roles-and-server-projects.md)、[CONTRACT-ACCESS-002](../contracts/HMI_ACCESS.md)、[CONTRACT-HMI-001](../contracts/HMI_PROJECT_CONFIG.md)
-- [EP-HMI-001](../exec-plans/active/EP-HMI-001-alarm-management-and-kpis.md)
+- [EP-HMI-001](../exec-plans/completed/EP-HMI-001-alarm-management-and-kpis.md)
 - ANSI/ISA-18.2 告警管理（状态机为其简化子集）

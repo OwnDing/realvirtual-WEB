@@ -2,9 +2,9 @@
 doc_id: EP-HMI-001
 title: 缺口整改第 4 步：告警管理（锁存、确认、搁置、历史）与 KPI 配置化
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-03
 authority: normative-process
 ---
 
@@ -69,7 +69,7 @@ authority: normative-process
 ## Progress
 
 - [x] M1–M4 实现与测试（见 Validation）。
-- [ ] 远程 CI 与合并。
+- [x] 远程 CI 与合并（见 Outcomes & Retrospective）。
 
 ## Surprises & Discoveries
 
@@ -106,4 +106,7 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-（远程 CI 与合并后补齐。）
+- 远程：PR [#24](https://github.com/OwnDing/realvirtual-WEB/pull/24) 提交 `35580ab`，Quality Gates #144（run `41566511470`）七项全部首轮通过（六项 required 与 Windows 兼容性）。
+- 合并：2026-11-03T03:02:26Z 合入 `develop`，merge commit `c2809cb`。该提交的推送运行 #146 因随后 #25 合并被并发取消；包含本步的 `develop` 头 `b5a84d5` 的 Quality Gates #147（run `41569873187`）七项全部通过。
+- 入口 chunk 停在 3,519,135 字节；第 5 步之后为 3,519,856 字节，距预算仅 144 字节，后续新增入口文案需先决定预算或把文案移出入口（ADR-0001 要求 zh-CN 静态在入口）。
+- 遗留：告警集中存储与跨终端历史；ISA-18.2 高级功能（抑制组、首出、泛滥分析）；Appliance 实机上的确认/搁置审计、真实 PLC 信号驱动的 KPI 与长时间 OEE 准确性——均需后续计划或实机验收。
