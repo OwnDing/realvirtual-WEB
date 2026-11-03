@@ -542,7 +542,7 @@ export class RVIKPath implements RVComponent {
         sols = ikSolverRegistry.solveCobot(chain, this._p3, this._q4, this._cobotOpts);
       }
     } else {
-      sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4);
+      sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4, robot.getJointChain());
     }
     return sols ? ikSolverRegistry.selectClosest(sols, this._seed) : null;
   }

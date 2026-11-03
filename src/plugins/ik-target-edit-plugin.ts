@@ -1176,7 +1176,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
         return ikSolverRegistry.solveCobot(chain, this._p3, this._q4, this._cobotOpts);
       }
     }
-    return ikSolverRegistry.solvePieper(c.params, this._p3, this._q4);
+    return ikSolverRegistry.solvePieper(c.params, this._p3, this._q4, c.robot.getJointChain());
   }
 
   /** Re-solve the robot to the candidate's pose and apply the configuration

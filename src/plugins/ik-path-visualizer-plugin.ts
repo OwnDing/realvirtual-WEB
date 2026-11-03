@@ -350,7 +350,7 @@ export class IKPathVisualizerPlugin implements RVViewerPlugin {
     }
     // NOTE: solvePieper returns the full 8-branch set with per-branch reachable
     // flags — a bare truthiness check would ALWAYS pass once a solver is loaded.
-    const sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4);
+    const sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4, robot.getJointChain());
     return !!sols && sols.some((s) => s.reachable);
   }
 
