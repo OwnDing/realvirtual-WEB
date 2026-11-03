@@ -569,6 +569,7 @@ const PROTECTED_PRESENTATION_KEYS = [
 ];
 
 export const NEW_STRING_EXEMPTIONS = new Map([
+  ['shell.signature.invalidSummary', 'The model-signing trust root became this project\'s own key (gap remediation round 2, step 2): a model signed by another key now fails verification although its contents are intact, so the old "contents do not match" wording would be false for that case.'],
   ['tools.finalSweep.script.reentryDenied', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],
   ['tools.finalSweep.script.conversionFailed', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],
   ['tools.finalSweep.script.budgetExceeded', 'ADR-0019 adds a new script security failure diagnostic for resource/conversion/reentry checks; this wording did not exist at the migration baseline.'],

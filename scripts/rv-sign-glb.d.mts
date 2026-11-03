@@ -35,3 +35,8 @@ export function verifyGlbBytes(
 ): 'none' | 'valid' | 'invalid';
 
 export function signGlbFile(filePath: string, signing: RvSigningConfig): Buffer;
+
+export function generateTrustRootFile(
+  outPath: string,
+  options?: { repositoryRoot?: string },
+): string;

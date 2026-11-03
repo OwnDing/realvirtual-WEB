@@ -2166,6 +2166,24 @@ identity instead of their temporary `blob:` URL.
 Signed models are self-contained: if `rv_sig` exists, the loader never applies
 a neighboring `.kin.json` sidecar, regardless of whether verification succeeds.
 
+**Trust root.** The client trusts exactly one Ed25519 root, compiled in from
+`src/core/persistence/rv-sig-public-key.ts` and mirrored in
+`scripts/rv-sign-glb.mjs`; `tests/rv-sig-deploy.node.test.ts` fails if the two
+differ, if the root is the upstream realvirtual publish key, or if it equals the
+license root. The root belongs to this project and its private half is held by
+the repository owner. A model signed by any other root — including the upstream
+pipeline — reports `invalid`: geometry loads, logic stays gated until the user
+activates it. Create a new root with
+
+```bash
+node scripts/rv-sign-glb.mjs --keygen ~/.config/xyvirtual/rv-sig-root.pem
+```
+
+It writes the private key only to that file (mode 0600, refused inside the
+repository, never overwritten) and prints only the public key. Rotating the root
+means replacing both constants and shipping a new client build; models signed
+by the old root then report `invalid`.
+
 Deployment signing is Node-only:
 
 ```bash
