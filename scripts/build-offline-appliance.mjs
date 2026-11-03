@@ -313,6 +313,9 @@ function applyApplianceWebDefaults(stage) {
   // ADR-0024: personal HMI sessions and server-side projects on the Appliance.
   if (settings.services.access === undefined) settings.services.access = { url: '/api/access/v1' };
   if (settings.services.projects === undefined) settings.services.projects = { url: '/api/projects/v1' };
+  // ADR-0028: multiuser goes through the gateway guard (role from the session). The
+  // browser never auto-connects to this default, so an unconfigured upstream is quiet.
+  if (settings.services.multiuser === undefined) settings.services.multiuser = { url: '/gateway/multiuser' };
   if (settings.interface === undefined) {
     settings.interface = { activeType: 'websocket-realtime', autoConnect: true, wsAddress: '', wsPort: 0, wsUseSSL: true, wsPath: '/gateway/ws', wsAuthToken: '' };
   }

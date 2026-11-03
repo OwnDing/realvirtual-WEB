@@ -404,6 +404,7 @@ export const zhCN = {
       displayName: '显示名称',
       observer: '观察者（仅查看）',
       operator: '操作员（完全控制）',
+      roleCapped: '你的账户没有操作权限，因此以观察者身份加入。',
       connect: '连接',
       disconnect: '断开连接',
       connectedUsers: '已连接用户',

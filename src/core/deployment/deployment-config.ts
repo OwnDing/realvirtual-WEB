@@ -82,6 +82,12 @@ export interface DeploymentServicesConfig {
   access?: null | { url: string };
   /** Appliance server-side project API (ADR-0024); same-origin path only. */
   projects?: null | { url: string };
+  /**
+   * Authenticated multiuser endpoint (ADR-0028), e.g. the gateway guard at
+   * `/gateway/multiuser`; same-origin path only, because the role comes from the
+   * same-origin HMI session cookie.
+   */
+  multiuser?: null | { url: string };
 }
 
 export interface DeploymentLicenseConfig {
@@ -264,7 +270,7 @@ function parseServices(value: unknown, issues: string[]): DeploymentServicesConf
   else if (isRecord(value.qr) && value.qr.mode === 'local') result.qr = { mode: 'local' };
   else if (value.qr !== undefined) issues.push('services.qr is invalid and was disabled');
 
-  for (const key of ['access', 'projects'] as const) {
+  for (const key of ['access', 'projects', 'multiuser'] as const) {
     const entry = value[key];
     if (entry === null) result[key] = null;
     else if (isRecord(entry)) {

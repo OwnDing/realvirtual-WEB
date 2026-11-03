@@ -18,6 +18,19 @@ describe('Deployment Config v1/v2', () => {
     }
     expect(validateDeploymentConfig({ schemaVersion: 99, scripting }).config.scripting).toEqual({ sandbox: false, native: false });
   });
+  // ADR-0028: the multiuser guard authenticates with the same-origin HMI
+  // session, so only a same-origin path is accepted — like access/projects.
+  it('accepts services.multiuser only as a same-origin path', () => {
+    const ok = validateDeploymentConfig({ schemaVersion: 2, services: { multiuser: { url: '/gateway/multiuser' } } });
+    expect(ok.config.services?.multiuser).toEqual({ url: '/gateway/multiuser' });
+    for (const url of ['wss://unity.example.test:7000', '//evil.test/x', 'gateway/multiuser', 42]) {
+      const bad = validateDeploymentConfig({ schemaVersion: 2, services: { multiuser: { url } } });
+      expect(bad.config.services?.multiuser).toBeUndefined();
+      expect(bad.issues).toContain('services.multiuser is invalid and was disabled');
+    }
+    expect(validateDeploymentConfig({ schemaVersion: 2, services: { multiuser: null } }).config.services?.multiuser).toBeNull();
+  });
+
   it('fails closed when the deployment omits policy', () => {
     const result = validateDeploymentConfig({ defaultModel: 'demo.glb' });
     expect(result.config.egress).toEqual({ mode: 'deny-external', allow: [] });
