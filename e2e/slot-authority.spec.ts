@@ -12,10 +12,20 @@
  * NOTE (plan-325 coordination): the authority label currently lives on the
  * SignalBindPopover rows (`data-testid="slot-status-<slot>"`). After the
  * plan-325 inline inspector rows merge, the same state moves onto those rows.
+ *
+ * EP-E2E-001 #9. The popover builds its rows from the PERSISTED bindings
+ * (`persistence.read()`, plan-325 §9.10), so the bind goes through the same
+ * persisted path the `web_signal_bind` tool uses; a bare
+ * `signalBindingManager.bind()` is invisible to it. And a plainly LIVE binding
+ * carries no status token by design (plan-341 §2.8 c, user decision 30.07: the
+ * chips already show the live value) — the row proves the binding by naming its
+ * signal, the service proves the authority, and the token appears for the
+ * deviation the flow then produces ('forced').
  */
 
 import { expect, test, type Page } from 'playwright/test';
 import { DEV_GLB } from '../tests/fixtures/glb-paths.mjs';
+import { pinLocale } from './helpers/pin-locale';
 
 const TOGGLE = '[data-testid="signal-link-mode-toggle"]';
 
@@ -46,7 +56,7 @@ interface BoundSlotInfo {
 
 /** Bind the first mapped bool slot of a Drive_* element to a fake live CONNECT source. */
 async function bindFirstMappedSlot(page: Page): Promise<BoundSlotInfo | null> {
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
     const viewer = (window as unknown as {
       __rvViewer: {
         registry: {
@@ -60,11 +70,14 @@ async function bindFirstMappedSlot(page: Page): Promise<BoundSlotInfo | null> {
           getElementSlots: (id: string, node: unknown) => Array<{
             kind: string; type: string; componentPath: string; slot: string; targetName?: string;
           }>;
-          bind: (id: string, node: unknown, mapping: Record<string, unknown>) => void;
           tick: (dt: number) => void;
         };
       };
     }).__rvViewer;
+    // The persisted bind path (validation, apply, persist) the agent tool and
+    // the popover drop share — constructed here, not reached through privates.
+    const { McpSignalBindTools } = await import('/src/plugins/mcp-bridge/rv-mcp-signal-bind-tools.ts');
+    const tools = new McpSignalBindTools(() => viewer as never);
     for (const type of ['Drive_Simple', 'Drive_Cylinder', 'Drive_DestinationMotor']) {
       for (const entry of viewer.registry.getAll(type)) {
         const node = entry.instance.node;
@@ -74,15 +87,10 @@ async function bindFirstMappedSlot(page: Page): Promise<BoundSlotInfo | null> {
         if (!slot) continue;
         viewer.signalStore.register('E2E.Authority', '__e2e__/authority', true, 'PLCOutputBool');
         viewer.signalStore.registerSignalProvider({ interfaceId: 'e2e-connect', signal: 'E2E.Authority' }, true);
-        viewer.signalBindingManager.bind(entry.path, node, {
-          kind: 'mapped-signal',
-          componentPath: slot.componentPath,
-          slot: slot.slot,
-          signal: 'E2E.Authority',
-          interfaceId: 'e2e-connect',
-          direction: 'plcOutput',
-          enabled: true,
-        });
+        const result = JSON.parse(await tools.webSignalBind(entry.path, slot.componentPath, slot.slot, 'E2E.Authority')) as {
+          persisted?: boolean; error?: string;
+        };
+        if (result.persisted !== true) throw new Error(`bind was not persisted: ${JSON.stringify(result)}`);
         viewer.signalBindingManager.tick(1 / 60);
         return {
           path: entry.path,
@@ -136,6 +144,7 @@ test.describe('slot authority e2e (9.10)', () => {
   test.setTimeout(120_000);
 
   test.beforeEach(async ({ page }) => {
+    await pinLocale(page, 'en-US');
     await page.addInitScript(() => {
       localStorage.setItem('rv-welcome-dismissed', '1');
       localStorage.setItem('rv-auto-quality-applied', '1');
@@ -151,10 +160,13 @@ test.describe('slot authority e2e (9.10)', () => {
     expect(info).not.toBeNull();
     expect(await slotAuthority(page, info!)).toBe('bound');
 
-    // The popover row shows the authority label.
+    // The popover row names the bound signal; a plainly live binding carries
+    // no status token (plan-341 §2.8 c).
     await page.locator(TOGGLE).click();
     await openPopover(page, info!.path);
-    await expect(page.locator(`[data-testid="slot-status-${info!.slot}"]`)).toHaveText('bound');
+    const popover = page.locator('[data-testid="signal-bind-popover"]');
+    await expect(popover.getByRole('button', { name: /E2E\.Authority/ })).toBeVisible();
+    await expect(page.locator(`[data-testid="slot-status-${info!.slot}"]`)).toHaveCount(0);
 
     // 2) Operator force overlays → 'forced' (latent claim, bound kept).
     await page.evaluate((args) => {

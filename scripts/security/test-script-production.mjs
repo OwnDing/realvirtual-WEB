@@ -87,6 +87,10 @@ try {
       assert.equal(executions, 0); checks.push('deployment denial overrides explicit confirmation');
     } else {
       await expect.poll(async () => (await state()).count).toBe(1);
+      // The instance exists before its SECURITY_SETUP console event reaches this
+      // process; wait for the event too (PR #29 run 41647964686 read 0 here),
+      // then require that it happened exactly once.
+      await expect.poll(() => executions).toBe(1);
       assert.equal(executions, 1); checks.push('URL request is inert; explicit UI confirmation executes once');
       await page.evaluate(() => window.viewer.getPlugin('web-component').setAllowScripts(false));
       assert.deepEqual(await state(), { allowed: false, count: 0 }); checks.push('revocation disposes live instances');

@@ -306,8 +306,32 @@ The server sends the complete list of all active MUs every frame. The client:
 | Send cursor ray | Yes | Yes |
 | Write signals | No | Yes |
 | Jog/stop drives | No | Yes |
+| Start shared view | No | Yes |
 
-Enforcement is on the Unity server side. The relay forwards all messages regardless of role.
+### Who decides the role (ADR-0028)
+
+The role in `room_join` used to be whatever the browser claimed (`?role=operator` was enough),
+and Unity can only trust what it is told. Two layers now decide it:
+
+- **Browser (experience layer).** Where the deployment has personal accounts
+  (`services.access`, the Offline Appliance), the requested role is capped by the HMI session:
+  only a session that may write signals (`operator`, `engineer`, `admin`) can be an operator;
+  `viewer`, signed-out, loading or failed sessions are observers. A change of session rejoins
+  with the new role, and an observer sends no write-class message. The Settings role selector
+  shows the cap. Without an access service the requested role stands as before — that is
+  **not** a security boundary.
+- **Gateway guard (security boundary, Appliance).** The XYvirtual Gateway's optional
+  `multiuser` block proxies `/gateway/multiuser` to Unity (or a relay). The identity comes from
+  the HTTPS entry's forward_auth headers; `room_join.role` is overwritten, write-class messages
+  (`signal_write`, `drive_jog`, `drive_stop`, `shared_view_on`) from a viewer session are
+  dropped and answered with `error` / `permission_denied`, only known message types are
+  forwarded, and every write-class message is audited with the user. The browser defaults to
+  this endpoint when `services.multiuser` is set. It is a boundary only when Unity's multiuser
+  port is reachable from the Appliance alone — restrict it on site.
+
+Annotations (`annotation_*`) stay open to every role: they change the shared view, not the
+machine. Outside the Appliance, enforcement remains on the Unity server side, and a relay
+forwards all messages regardless of role.
 
 ---
 

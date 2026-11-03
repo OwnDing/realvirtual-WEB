@@ -222,6 +222,54 @@ jobs:
       - run: npm ci
       - run: ./scripts/verify.sh build
 
+  e2e:
+    # EP-E2E-001: the full Playwright suite — no retries, no continue-on-error,
+    # no subset. Specs that need the private sibling are excluded by the
+    # generated list in e2e/private-dependent-specs.json only when that sibling
+    # is absent (playwright.config.ts).
+    #
+    # Runs on a SELF-HOSTED runner with a GPU (user decision 2026-11-03): on
+    # GitHub's GPU-less hosted runners WebGL is software-rendered and the 3D
+    # pages starve (run 41638500304: 35-minute step timeout, clicks hanging in
+    # "scrolling into view", a 30 fps perf check that cannot pass there).
+    # The job is skipped until the repository variable E2E_GPU_RUNNER is
+    # 'true', and it NEVER runs a pull request from a fork: this repository is
+    # public, and a fork PR on a self-hosted runner would execute arbitrary
+    # code on the maintainer's machine.
+    if: >-
+      github.event_name != 'schedule' && vars.E2E_GPU_RUNNER == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    name: E2E Gate
+    runs-on: [self-hosted, gpu]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          lfs: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: ./node_modules/.bin/playwright install chromium
+        timeout-minutes: 10
+      - name: Run end-to-end suite
+        run: ./scripts/verify.sh e2e
+        timeout-minutes: 35
+      - name: Guard the formal rv-embed artifact the suite just built (KD-003)
+        env:
+          RV_REQUIRE_EMBED_DIST: '1'
+        run: node node_modules/vitest/vitest.mjs run --config vitest.node.config.ts tests/embed-spike.node.test.ts
+        timeout-minutes: 3
+      - name: Upload e2e evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-evidence
+          path: test-results/
+          if-no-files-found: ignore
+
   supply-chain:
     name: Supply Chain Gate
     runs-on: ubuntu-24.04

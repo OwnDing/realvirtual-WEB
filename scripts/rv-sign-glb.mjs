@@ -7,24 +7,34 @@
  * The signature covers the complete GLB with the compact rv_sig value replaced
  * by a fixed 88-character placeholder. RV_SIGN_CUSTOMER_CERT optionally points
  * to an RV-KEY-V1 customer certificate JSON file.
+ *
+ * `--keygen <file>` creates a new trust root: the private key goes ONLY into
+ * that file (mode 0600, outside this repository, never overwritten) and only
+ * the public key is printed, so running it through a terminal that is logged
+ * or shared does not disclose the secret.
  */
 
 import {
   createPrivateKey,
   createPublicKey,
+  generateKeyPairSync,
   sign,
   verify,
 } from 'node:crypto';
 import {
   existsSync,
+  mkdirSync,
   readFileSync,
+  realpathSync,
   writeFileSync,
 } from 'node:fs';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const RV_SIG_PLACEHOLDER = `${'A'.repeat(86)}==`;
-export const RV_SIG_ROOT_PUBLIC_KEY_BASE64 = '99rD6Wl3Jsk7w9D+WIN9/jfEXNXns0jDRV5yf4LX48U=';
+// This project's own root (issued 2026-11-03); must equal
+// src/core/persistence/rv-sig-public-key.ts — tests/rv-sig-deploy.node.test.ts pins both.
+export const RV_SIG_ROOT_PUBLIC_KEY_BASE64 = 'ovqirJ8h7sQ0eQLtGnb0AbMHScqcIPHDK45WoyJFjLA=';
 const GLB_MAGIC = 0x46546c67;
 const GLB_VERSION = 2;
 const JSON_CHUNK = 0x4e4f534a;
@@ -226,12 +236,60 @@ export function signGlbFile(filePath, signing) {
   return signed;
 }
 
+const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Nearest existing ancestor, resolved through symlinks, so a link cannot smuggle a path in. */
+function realAncestor(path) {
+  let current = path;
+  while (!existsSync(current)) {
+    const parent = dirname(current);
+    if (parent === current) return current;
+    current = parent;
+  }
+  return resolve(realpathSync(current), relative(current, path));
+}
+
+function isInside(root, path) {
+  const rel = relative(root, path);
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+/**
+ * Generate a new Ed25519 model-signing trust root. Writes the PKCS#8 private
+ * key to `outPath` and returns only the raw public key as Base64.
+ */
+export function generateTrustRootFile(outPath, { repositoryRoot = REPOSITORY_ROOT } = {}) {
+  if (typeof outPath !== 'string' || !outPath.trim()) throw new Error('a private-key output path is required');
+  const target = resolve(outPath);
+  const root = realAncestor(resolve(repositoryRoot));
+  if (isInside(root, realAncestor(target))) {
+    throw new Error('refusing to write a private key inside the repository; choose a path outside it');
+  }
+  if (existsSync(target)) throw new Error(`${target} already exists; refusing to overwrite a signing key`);
+  mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
+  const { privateKey } = generateKeyPairSync('ed25519');
+  // Derive everything that can fail BEFORE the secret touches disk.
+  const publicKeyBase64 = rawPublicKey(privateKey).toString('base64');
+  const pem = privateKey.export({ format: 'pem', type: 'pkcs8' });
+  writeFileSync(target, pem, { mode: 0o600, flag: 'wx' });
+  return publicKeyBase64;
+}
+
 function runCli() {
   const args = process.argv.slice(2);
+  if (args[0] === '--keygen') {
+    if (args.length !== 2) throw new Error('Usage: node scripts/rv-sign-glb.mjs --keygen <private-key file outside the repository>');
+    const publicKey = generateTrustRootFile(args[1]);
+    console.log(`Private key written to ${resolve(args[1])} (mode 0600). It is not printed.`);
+    console.log('Keep it in your secret store; signing reads it from RV_SIGN_PRIVATE_KEY (PEM text or its Base64).');
+    console.log('Public key (the new trust root, safe to share):');
+    console.log(publicKey);
+    return;
+  }
   const verifyMode = args[0] === '--verify';
   const files = verifyMode ? args.slice(1) : args;
   if (files.length === 0) {
-    throw new Error('Usage: node scripts/rv-sign-glb.mjs [--verify] <file.glb> [...]');
+    throw new Error('Usage: node scripts/rv-sign-glb.mjs [--verify] <file.glb> [...] | --keygen <private-key file>');
   }
   if (verifyMode) {
     let failed = false;

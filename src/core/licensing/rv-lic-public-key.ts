@@ -9,9 +9,10 @@
  * reach this repository, a build artifact, a log, or a test snapshot.
  *
  * It is deliberately NOT the rv_sig model-provenance root
- * (`rv-sig-public-key.ts`): that key's private half belongs to the upstream
- * publish pipeline, so signing this project's entitlements with it would put
- * our contract evidence under someone else's key.
+ * (`rv-sig-public-key.ts`): entitlements and model provenance are separate
+ * trust domains (ADR-0007), so compromising or rotating one never affects the
+ * other. (When this root was issued, the rv_sig root was still the upstream
+ * publish pipeline's key; it was replaced by this project's own on 2026-11-03.)
  *
  * Issued by the repository owner on 2026-08-28. Root-key rotation requires a
  * new client build; routine issuer rotation should use the delegated `cert`

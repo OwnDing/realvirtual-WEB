@@ -311,7 +311,7 @@ export const enUS = {
       unverifiableTitle: 'Model signature could not be verified',
       invalidTitle: 'Model signature is invalid',
       unverifiableSummary: 'Automation logic is disabled because this browser could not verify the model provenance.',
-      invalidSummary: 'Automation logic is disabled because the model contents do not match its signature.',
+      invalidSummary: 'Automation logic is disabled because the signature does not verify: the model was changed after signing, or it was signed by a key this installation does not trust.',
       model: 'Model: {{name}}',
       unknown: 'unknown',
       signer: ' · Signer: {{signer}}',

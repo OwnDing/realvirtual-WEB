@@ -37,10 +37,19 @@ function privateDependentSpecs(): RegExp[] {
 
 const PRIVATE_SPECS = privateDependentSpecs();
 
+const CI = !!process.env.CI;
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
+  // No retries anywhere (EP-GOV-004 / EP-E2E-001): a retry turns a real
+  // intermittent failure into a green run. `.only` left in a spec fails CI
+  // instead of silently shrinking the suite.
   retries: 0,
+  forbidOnly: CI,
+  // CI keeps a machine-readable result and a trace of every failure as the
+  // uploaded `e2e-evidence` artifact (test-results/).
+  reporter: CI ? [['list'], ['json', { outputFile: 'test-results/e2e-results.json' }]] : 'list',
   /**
    * `channel: 'chromium'` (set per project below) selects Chrome for Testing —
    * the FULL browser in new-headless mode — instead of Playwright's default
@@ -60,6 +69,7 @@ export default defineConfig({
     baseURL: 'http://localhost:5177',
     headless: true,
     viewport: { width: 1280, height: 720 },
+    trace: CI ? 'retain-on-failure' : 'off',
   },
   projects: [
     {
@@ -85,10 +95,14 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: 'npm run preview:embed',
+      // `embed-smoke` tests the production rv-embed ARTIFACT, so it is built
+      // first; previewing whatever `dist-embed/` happened to hold (or nothing —
+      // a clean checkout answered every request with a non-200, EP-E2E-001 #16)
+      // tested a stale build or none at all.
+      command: 'npm run build:embed && npm run preview:embed',
       port: 4178,
       reuseExistingServer: true,
-      timeout: 30_000,
+      timeout: 180_000,
     },
   ],
 });

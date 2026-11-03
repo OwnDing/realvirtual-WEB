@@ -17,6 +17,10 @@
  *   - no `defaultModel` in settings.json
  *   - the mode is not locked (kiosk)
  *   - `projects.suppress` is not set
+ *   - the deployment is not the CONNECT embedded demo (`ui.initialContexts`
+ *     contains `connect-embed`): its gate IS what the session shows, and a
+ *     dashboard that opened itself covered the running demo — on a phone it
+ *     covered the CONNECT panel's own close button (EP-E2E-001)
  *
  * The practical consequence is the one that matters: **every delivered customer
  * build either sets `defaultModel` or runs kiosk-locked**, so none of them
@@ -37,6 +41,8 @@ export interface AutoOpenInputs {
   modeLocked: boolean;
   /** `projects.suppress` — never auto-open. */
   suppress?: boolean | undefined;
+  /** The CONNECT embedded demo shell is configured — never auto-open. */
+  embeddedDemo?: boolean | undefined;
   /** `projects.force` — auto-open even with a default model. */
   force?: boolean | undefined;
 }
@@ -48,13 +54,14 @@ const ROUTING_PARAMS = ['project', 'scene', 'model'] as const;
  * True when the Projects dashboard should open itself at startup.
  *
  * Order matters: `suppress` is checked before `force` so a contradictory
- * configuration resolves to *not* showing a window, and `modeLocked` beats
- * `force` because a kiosk must never be talked into a project browser by a
- * stale config file.
+ * configuration resolves to *not* showing a window, and `modeLocked` and
+ * `embeddedDemo` beat `force` because neither a kiosk nor the embedded demo may
+ * be talked into a project browser by a stale config file.
  */
 export function shouldAutoOpenProjects(inputs: AutoOpenInputs): boolean {
   if (inputs.suppress) return false;
   if (inputs.modeLocked) return false;
+  if (inputs.embeddedDemo) return false;
   if (inputs.force) return true;
 
   const params = new URLSearchParams(inputs.search);

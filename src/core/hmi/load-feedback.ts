@@ -2,8 +2,24 @@
 import type { ModelLoadState } from '../engine/rv-load-session';
 import { rvT } from '../i18n';
 import type { PreviewViewport } from './performance-preview';
+/**
+ * A surface that owns load feedback for the current load instead of this layer.
+ *
+ * The CONNECT embedded demo's gate shows its own loading and error card (with a
+ * Retry that runs the gate's state machine). While the gate is on screen this
+ * layer stays hidden: drawn on top (`inset: 0`, z-index 22000) it covered the
+ * gate's error card and the CONNECT panel, and its generic Retry reloaded the
+ * model without telling the gate (EP-E2E-001).
+ */
+export interface LoadFeedbackOwner {
+  /** True while another surface shows load progress and errors. */
+  suppressed: () => boolean;
+  /** Re-evaluate when that answer can change. */
+  subscribe: (listener: () => void) => () => void;
+}
+
 /** Available before React mounts; shared by initial boot and subsequent viewer loads. */
-export function bindLoadFeedback(state: ModelLoadState, retry: () => void): () => void {
+export function bindLoadFeedback(state: ModelLoadState, retry: () => void, owner?: LoadFeedbackOwner): () => void {
   const root = document.createElement('section');
   root.dataset.testid = 'model-load-feedback';
   root.style.cssText =
@@ -42,7 +58,7 @@ export function bindLoadFeedback(state: ModelLoadState, retry: () => void): () =
     disposed = false;
   const update = () => {
     const s = state.getSnapshot(),
-      active = !['idle', 'ready', 'cancelled'].includes(s.phase);
+      active = !owner?.suppressed() && !['idle', 'ready', 'cancelled'].includes(s.phase);
     root.style.display = active ? 'block' : 'none';
     root.dataset.phase = s.phase;
     title.textContent = rvT('preboot', `performance.${s.phase}`);
@@ -98,10 +114,12 @@ export function bindLoadFeedback(state: ModelLoadState, retry: () => void): () =
     }
   };
   const unsubscribe = state.subscribe(update);
+  const unsubscribeOwner = owner?.subscribe(update);
   update();
   const cleanup = () => {
     disposed = true;
     unsubscribe();
+    unsubscribeOwner?.();
     preview?.dispose();
     root.remove();
   };
