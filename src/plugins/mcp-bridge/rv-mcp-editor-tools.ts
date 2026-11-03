@@ -111,6 +111,13 @@ function mechanismUnavailable(axisGroupAvailable: boolean): string {
       : 'Axis-group kinematic authoring (web_editor_create_kinematic) is not available in this build either.');
 }
 
+/** Refusal of the mechanism WRITING tools when only the built-in solver is present (ADR-0026). */
+function mechanismAuthoringUnavailable(): string {
+  return 'Rigid-body mechanism authoring is not available in this build (private bundle missing). '
+    + 'The built-in solver runs the mechanisms already in the model: web_editor_mechanism_inspect, '
+    + 'web_editor_mechanism_validate, web_editor_mechanism_jog, web_editor_mechanism_forces and web_editor_mechanism_statics work.';
+}
+
 /**
  * Narrow the `_requireMechanismBridge` union. Deliberately NOT `isGuardError`:
  * that one is typed for the editor-mode guard's own union, and widening it would
@@ -825,7 +832,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     if (!ctx.viewer.registry?.getNode(path)) return JSON.stringify({ error: `Node not found: ${path}` });
     const m = await import('@rv-private/plugins/asset-editor/mechanism/mechanism-authoring');
@@ -845,7 +852,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const m = await import('@rv-private/plugins/asset-editor/mechanism/mechanism-authoring');
     const kinds = m.JOINT_KINDS as readonly string[];
@@ -886,7 +893,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -916,7 +923,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -1007,9 +1014,17 @@ export class McpEditorTools {
    * with no solver behind them, which is document rubbish that only surfaces
    * when the asset reaches a Professional build.
    */
-  private async _requireMechanismBridge(): Promise<MechanismUiBridge | { error: string }> {
+  private async _requireMechanismBridge(needs: 'run' | 'authoring' | 'snap' = 'run'): Promise<MechanismUiBridge | { error: string }> {
     const { getMechanismUiBridge } = await import('../../core/engine/rv-kinematic-registry');
     const bridge = getMechanismUiBridge();
+    if (bridge && needs !== 'run') {
+      // ADR-0026: the built-in solver RUNS mechanisms; writing joints/anchors/bodies
+      // (and the 3D snap pick) still need the authoring bundle — refuse rather than
+      // write through a no-op stub.
+      const auth = await import('@rv-private/plugins/asset-editor/mechanism/mechanism-authoring');
+      const snap = needs === 'snap' ? await import('@rv-private/plugins/asset-editor/mechanism/mechanism-snap-query') : null;
+      if (isPublicStub(auth) || (snap && isPublicStub(snap))) return { error: mechanismAuthoringUnavailable() };
+    }
     if (bridge) return bridge;
     const mods = await this._load();
     return { error: mechanismUnavailable(!isPublicStub(mods.create) && !isPublicStub(mods.transform)) };
@@ -1151,7 +1166,7 @@ export class McpEditorTools {
     // than an error (plan-706 R9).
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('snap');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const v = ctx.viewer;
     const canvas = v.renderer?.domElement;
@@ -1209,7 +1224,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('snap');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const which = (side || '').trim().toUpperCase();
     if (which !== 'A' && which !== 'B') return JSON.stringify({ error: 'side must be "A" or "B"' });
@@ -1262,7 +1277,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -1332,7 +1347,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -1365,7 +1380,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -1446,7 +1461,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     const node = ctx.viewer.registry?.getNode(path);
     if (!node) return JSON.stringify({ error: `Node not found: ${path}` });
@@ -1575,7 +1590,7 @@ export class McpEditorTools {
   ): Promise<string> {
     const ctx = this._ctx();
     if (isGuardError(ctx)) return JSON.stringify(ctx);
-    const bridge = await this._requireMechanismBridge();
+    const bridge = await this._requireMechanismBridge('authoring');
     if (isMechError(bridge)) return JSON.stringify(bridge);
     if (!ctx.viewer.registry?.getNode(path)) return JSON.stringify({ error: `Node not found: ${path}` });
     const finding = (code || '').trim();

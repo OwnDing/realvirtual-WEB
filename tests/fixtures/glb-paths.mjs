@@ -40,5 +40,6 @@ export const DEV_GLB = {
   mechanismFourbar: `${DEV}/mechanism-fourbar.glb`,
   mechanismScissor: `${DEV}/mechanism-scissor.glb`,
   robotIK: `${DEV}/DemoRobotIK.glb`,
+  csgMachining: `${DEV}/DemoCSGMachining.glb`,
   europalletEmpty: `${DEV}/EuropalletEmpty.glb`,
 };

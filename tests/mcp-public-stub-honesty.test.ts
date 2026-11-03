@@ -121,6 +121,31 @@ describe.runIf(PUBLIC)('stub-backed MCP tools refuse instead of faking success',
     expect(String(result['error'])).toMatch(/not available in this build either/);
   });
 
+  it('with the built-in mechanism solver (ADR-0026) writing tools still refuse; reading tools work', async () => {
+    const { builtinMechanismManager, installBuiltinMechanismSupport } = await import('../src/core/engine/mechanism-builtin/mechanism-runtime');
+    const { setKinematicManager, setMechanismUiBridge } = await import('../src/core/engine/rv-kinematic-registry');
+    installBuiltinMechanismSupport(null);
+    try {
+      const before = env.doc.getSnapshot().opCount;
+      for (const write of [
+        () => env.tools.webEditorMechanismCreate(env.boxPath),
+        () => env.tools.webEditorMechanismAddBody(env.boxPath, 'steel'),
+      ]) {
+        const result = JSON.parse(await write()) as Record<string, unknown>;
+        expect(String(result['error'])).toMatch(/mechanism authoring is not available in this build/);
+        expect(String(result['error'])).toMatch(/web_editor_mechanism_jog/);
+      }
+      await env.doc.whenIdle();
+      expect(env.doc.getSnapshot().opCount).toBe(before);
+      const inspect = JSON.parse(await env.tools.webEditorMechanismInspect('', '')) as Record<string, unknown>;
+      expect(inspect['error']).toBeUndefined();
+    } finally {
+      builtinMechanismManager.clear();
+      setKinematicManager(null);
+      setMechanismUiBridge(null);
+    }
+  });
+
   it('the editor status reports the test session as unavailable, not idle', async () => {
     const status = JSON.parse(await env.tools.webEditorStatus()) as Record<string, unknown>;
     expect(status['testSession']).toBe('unavailable');

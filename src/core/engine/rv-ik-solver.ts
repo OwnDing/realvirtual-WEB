@@ -4,11 +4,12 @@
 /**
  * rv-ik-solver.ts — Public interface + registry for the interactive IK solver.
  *
- * The actual analytical solver is a PROTECTED, closed-source artifact (Rust →
- * WASM, plan-212) that ships only in licensed builds. The private side registers
- * a provider here; when absent (open-source / unlicensed build) the tier is
- * `'none'` (and `available` is false) and the viewer falls back to AxisPos replay
- * (no interactive re-solving).
+ * Licensed builds register their WASM solver (Rust → WASM, plan-212) here.
+ * Community builds register the built-in TypeScript solver
+ * (`ik-builtin/builtin-ik-solver.ts`, ADR-0026) — only when the slot is still
+ * empty, so a licensed provider always wins. With no provider at all the tier
+ * is `'none'` (and `available` is false) and the viewer falls back to AxisPos
+ * replay (no interactive re-solving).
  *
  * Capability tier (plan-233 §2.4): `'none'` (replay-only) → `'free'` (Pieper, ONE
  * live-solving robot) → `'pro'` (+ non-spherical Cobot solver, unlimited robots,
@@ -21,6 +22,8 @@
  */
 
 import { Matrix4, Vector3, Quaternion } from 'three';
+import type { Object3D } from 'three';
+import type { RVRobotIK } from './rv-robot-ik';
 
 /** Ortho-parallel-wrist kinematic parameters (serialized in rv_extras as RobotIK). */
 export interface OpwParams {
@@ -84,11 +87,16 @@ export interface IKSolverProvider {
   readonly maxRobots: number;
   /** True when continuous blending between targets may run (pro-only; plan-231 Phase 3). */
   readonly canBlend: boolean;
-  /** Returns up to 8 analytical solutions for the given robot-local TCP pose. */
+  /**
+   * Returns up to 8 analytical solutions for the given robot-local TCP pose.
+   * `chain` (ADR-0026) is the robot's scene-graph joint chain when it has one;
+   * a provider that solves from the OPW parameters alone may ignore it.
+   */
   solvePieper(
     params: OpwParams,
     pos: [number, number, number],
     quat: [number, number, number, number],
+    chain?: JointChainParams | null,
   ): IKSolution[];
   /**
    * Returns numerical solutions for a non-spherical (Cobot) wrist — pro tier only.
@@ -101,6 +109,13 @@ export interface IKSolverProvider {
     quat: [number, number, number, number],
     opts?: CobotSolveOpts,
   ): IKSolution[];
+  /**
+   * Optional (ADR-0026): the provider's own frame for target poses. Absent →
+   * `targetPoseInBase` (the convention the WASM solver was validated with).
+   */
+  poseInBase?(base: Object3D, target: Object3D | Matrix4, outPos: [number, number, number], outQuat: [number, number, number, number]): void;
+  /** Optional (ADR-0026): the provider's own joint chain for a robot. Absent → `robot.getJointChain()`. */
+  chainFor?(robot: RVRobotIK): JointChainParams | null;
 }
 
 class IKSolverRegistry {
@@ -188,8 +203,9 @@ class IKSolverRegistry {
     params: OpwParams,
     pos: [number, number, number],
     quat: [number, number, number, number],
+    chain?: JointChainParams | null,
   ): IKSolution[] | null {
-    return this.tier !== 'none' ? (this.provider?.solvePieper(params, pos, quat) ?? null) : null;
+    return this.tier !== 'none' ? (this.provider?.solvePieper(params, pos, quat, chain) ?? null) : null;
   }
 
   /**
@@ -205,6 +221,17 @@ class IKSolverRegistry {
   ): IKSolution[] | null {
     if (!this.canSolveCobot || !this.provider?.solveCobot) return null;
     return this.provider.solveCobot(chain, pos, quat, opts);
+  }
+
+  /** Target pose in the active provider's frame (see {@link IKSolverProvider.poseInBase}). */
+  poseInBase(base: Object3D, target: Object3D | Matrix4, outPos: [number, number, number], outQuat: [number, number, number, number]): void {
+    if (this.provider?.poseInBase) this.provider.poseInBase(base, target, outPos, outQuat);
+    else targetPoseInBase(base.matrixWorld, target instanceof Matrix4 ? target : target.matrixWorld, outPos, outQuat);
+  }
+
+  /** Joint chain in the active provider's frame (see {@link IKSolverProvider.chainFor}). */
+  chainFor(robot: RVRobotIK): JointChainParams | null {
+    return this.provider?.chainFor ? this.provider.chainFor(robot) : robot.getJointChain();
   }
 
   /**

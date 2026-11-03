@@ -1053,7 +1053,7 @@
     },
     "MachiningVolume": {
       "type": "object",
-      "description": "Workpiece with real-time CSG material removal: an SDF voxel grid that the listed MachiningTools subtract from every tick (result = max(workpiece, -sweptTool)). The changed 16^3 chunks are re-tessellated into per-chunk meshes. Requires the private machining provider (rv_csg WASM kernel); without it the authored mesh stays untouched.",
+      "description": "Workpiece with real-time CSG material removal: an SDF voxel grid that the listed MachiningTools subtract from every tick (result = max(workpiece, -sweptTool)). The changed 16^3 chunks are re-tessellated into per-chunk meshes. Requires a machining provider (the licensed rv_csg WASM kernel or the built-in kernel of community builds); without one the authored mesh stays untouched.",
       "properties": {
         "gridResolution": {
           "$ref": "#/$defs/Vector3",

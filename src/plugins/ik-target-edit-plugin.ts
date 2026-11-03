@@ -46,7 +46,7 @@ import type { Object3D, Material } from 'three';
 import type { RVViewerPlugin } from '../core/rv-plugin';
 import type { RVViewer } from '../core/rv-viewer';
 import type { SelectionSnapshot } from '../core/engine/rv-selection-manager';
-import { ikSolverRegistry, targetPoseInBase, type OpwParams, type CobotSolveOpts, type IKSolution } from '../core/engine/rv-ik-solver';
+import { ikSolverRegistry, type OpwParams, type CobotSolveOpts, type IKSolution } from '../core/engine/rv-ik-solver';
 import { reachableSolutions, closestSolutionIndex } from '../core/engine/rv-ik-solution-utils';
 import { HIGHLIGHT_OVERLAY_LAYER } from '../core/engine/rv-group-registry';
 import { ensureMovableTransform, applyLocalPose } from '../core/engine/rv-node-transform';
@@ -968,7 +968,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
     // claimLiveSolve already returns false when tier === 'none' (== !available),
     // so the extra `available &&` guard is redundant.
     if (ikSolverRegistry.claimLiveSolve(c.robot.node.uuid)) {
-      targetPoseInBase(c.robot.node.matrixWorld, newWorld, this._p3, this._q4);
+      ikSolverRegistry.poseInBase(c.robot.node, newWorld, this._p3, this._q4);
       for (let i = 0; i < 6; i++) this._seed[i] = c.drives[i]?.currentPosition ?? 0;
       const sols = this.solveFor(c, this._seed); // wrist-type routing (Cobot vs Pieper)
       const best = sols ? ikSolverRegistry.selectClosest(sols, this._seed) : null;
@@ -1158,7 +1158,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
 
   // ── Re-solve and apply ──
 
-  /** Solve the pose in this._p3/this._q4 (set via targetPoseInBase beforehand),
+  /** Solve the pose in this._p3/this._q4 (set via ikSolverRegistry.poseInBase beforehand),
    *  routed by wrist type (plan-233 Phase 2): NonSpherical robots use the
    *  numerical Cobot solver — with the OPW params as analytic cold-start and
    *  (optionally) `warmStart` joint angles — when a pro solver and a valid
@@ -1166,7 +1166,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
    *  solve. No allocation in the drag hot path (reused opts/warm). */
   private solveFor(c: Candidate, warmStart: readonly number[] | null): IKSolution[] | null {
     if (c.robot.WristType === 'NonSpherical' && ikSolverRegistry.canSolveCobot) {
-      const chain = c.robot.getJointChain();
+      const chain = ikSolverRegistry.chainFor(c.robot);
       if (chain) {
         if (warmStart) {
           for (let i = 0; i < 6; i++) this._warm[i] = warmStart[i] ?? 0;
@@ -1176,7 +1176,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
         return ikSolverRegistry.solveCobot(chain, this._p3, this._q4, this._cobotOpts);
       }
     }
-    return ikSolverRegistry.solvePieper(c.params, this._p3, this._q4);
+    return ikSolverRegistry.solvePieper(c.params, this._p3, this._q4, ikSolverRegistry.chainFor(c.robot));
   }
 
   /** Re-solve the robot to the candidate's pose and apply the configuration
@@ -1189,7 +1189,7 @@ export class IKTargetEditPlugin implements RVViewerPlugin {
     // live re-solving; further robots fall back to AxisPos replay. Claim is keyed
     // by the robot node uuid (stable per scene) and reset on model clear.
     if (!ikSolverRegistry.claimLiveSolve(c.robot.node.uuid)) return false;
-    targetPoseInBase(c.robot.node.matrixWorld, c.node.matrixWorld, this._p3, this._q4);
+    ikSolverRegistry.poseInBase(c.robot.node, c.node, this._p3, this._q4);
     // _seed doubles as Cobot warm start AND closest-selection reference.
     for (let i = 0; i < 6; i++) this._seed[i] = (seed ? seed[i] : c.drives[i].currentPosition) ?? 0;
     const solutions = this.solveFor(c, this._seed);

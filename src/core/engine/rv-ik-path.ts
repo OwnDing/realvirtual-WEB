@@ -49,7 +49,7 @@ import type { RVDrive } from './rv-drive';
 import { RVIKTarget } from './rv-ik-target';
 import { wireBoolSignal } from './rv-signal-wiring';
 import { debug } from './rv-debug';
-import { ikSolverRegistry, targetPoseInBase, type CobotSolveOpts, type IKSolution } from './rv-ik-solver';
+import { ikSolverRegistry, type CobotSolveOpts, type IKSolution } from './rv-ik-solver';
 import { getDriveSpeedOverride } from './rv-speed-override';
 import { MM_TO_METERS } from './rv-constants';
 import { axisTargetPosition } from './rv-axis-angle-utils';
@@ -132,7 +132,7 @@ export class RVIKPath implements RVComponent {
   private _ownershipUnregister: (() => void) | null = null;
 
   // ── LIN (cartesian) segment state — poses in the robot-local, scale-free
-  //    meter frame (the solver frame; see targetPoseInBase). ──
+  //    meter frame (the solver frame; see ikSolverRegistry.poseInBase). ──
   private _robot: RVRobotIK | null = null;
   private _linActive = false;
   private _linTarget: RVIKTarget | null = null;
@@ -396,10 +396,10 @@ export class RVIKPath implements RVComponent {
     // Segment endpoints in the robot-local, scale-free meter frame — BOTH from
     // target nodes (identical frame convention; matrixWorld read directly, no
     // updateWorldMatrix: frozen nodes have it baked).
-    targetPoseInBase(robot.node.matrixWorld, prev.node.matrixWorld, this._p3, this._q4);
+    ikSolverRegistry.poseInBase(robot.node, prev.node, this._p3, this._q4);
     this._linStartPos.set(this._p3[0], this._p3[1], this._p3[2]);
     this._linStartQuat.set(this._q4[0], this._q4[1], this._q4[2], this._q4[3]);
-    targetPoseInBase(robot.node.matrixWorld, target.node.matrixWorld, this._p3, this._q4);
+    ikSolverRegistry.poseInBase(robot.node, target.node, this._p3, this._q4);
     this._linEndPos.set(this._p3[0], this._p3[1], this._p3[2]);
     this._linEndQuat.set(this._q4[0], this._q4[1], this._q4[2], this._q4[3]);
 
@@ -535,14 +535,14 @@ export class RVIKPath implements RVComponent {
     let sols: IKSolution[] | null = null;
     if (robot.WristType === 'NonSpherical') {
       // Cobot-only (gated in tryStartLinear) — no Pieper fallback for replay.
-      const chain = robot.getJointChain();
+      const chain = ikSolverRegistry.chainFor(robot);
       if (chain && ikSolverRegistry.canSolveCobot) {
         this._cobotOpts.opw = params;
         this._cobotOpts.warmStart = this._warm;
         sols = ikSolverRegistry.solveCobot(chain, this._p3, this._q4, this._cobotOpts);
       }
     } else {
-      sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4);
+      sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4, ikSolverRegistry.chainFor(robot));
     }
     return sols ? ikSolverRegistry.selectClosest(sols, this._seed) : null;
   }

@@ -178,5 +178,11 @@
     "api": "fetch",
     "fingerprint": "0694fbc44c8b06bfccad6db86a27dbb9ee517d72062196c4ab316761dc4ff109",
     "reason": "Default transport of the server project backend (ADR-0024): the base URL is validated as a same-origin path in the constructor, and every request passes redirect:error and credentials:same-origin."
+  },
+  {
+    "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+    "api": "Worker",
+    "fingerprint": "eb03b698b84043e715af5027cc347eb8986eeaeec2517eb2e1b09dad1e7064cd",
+    "reason": "Bundled same-origin module worker hosting the built-in CSG kernel (ADR-0026); the worker only receives grid/tool data by message and has no network transport."
   }
 ]

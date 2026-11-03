@@ -11,6 +11,8 @@
 </ol>
 <h2 id="expected-result">Expected result</h2>
 <p>The full model is visible, not placeholder geometry. The project owns the edited copy and the published library source remains unchanged. Validate the exported result on the recipient device.</p>
+<h2 id="robots-mechanisms-machining">Robots, mechanisms and machining</h2>
+<p>Robots (RobotIK) in a model can be re-solved by dragging an IK target and move along linear (LIN) segments; every solution is checked against the robot&#39;s own joint chain, and a pose it cannot reach is shown as unreachable instead of being driven. The passive links of rigid-body mechanisms (KinematicMechanism) move with their drives. Machining workpieces (MachiningVolume) lose material where the tool moves, and <code>SignalReset</code> restores them. Inverse tracking and force analysis of mechanisms are not provided in this version; in models whose passive links are not marked as moving parts, those links may appear static in a normal load.</p>
 <h2 id="recovery">Recovery</h2>
 <p>Handle empty files, corrupt GLBs, missing references and policy-blocked addresses separately. Try the bundled example to check the environment. Do not weaken network policy to bypass a failed download. A timeout does not prove a write did not happen; read back the project before repeating a save. Keep the failing page open and export diagnostics if needed.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · b8d48cf72c10</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 3186c9b36e93</span></footer></main></div></body></html>

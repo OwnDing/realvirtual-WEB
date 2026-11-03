@@ -22,3 +22,4 @@ authority: normative-registry
 
 - [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。
 - [EP-HMI-001](EP-HMI-001-alarm-management-and-kpis.md)：缺口整改第 4 步——告警管理（锁存、确认、搁置、历史）与基于实时信号的可配置 KPI；2026-11-01 依用户指令激活。
+- [EP-SIM-001](EP-SIM-001-builtin-simulation-providers.md)：缺口整改第 5 步——自研机器人 IK、CSG 加工与刚体机构提供者；2026-11-03 依用户指令激活。

@@ -54,3 +54,4 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 
 - [ADR-0024：HMI 四级角色、写操作审计与 Forgejo 服务端项目存储](ADR-0024-hmi-roles-and-server-projects.md)：Accepted（2026-11-01），落实 OD-001 的 Appliance 范围：访问服务为唯一身份源，Caddy forward_auth 强制 HMI 会话，网关按角色写入，项目存于 Forgejo；组织/多租户/云端仍待规格。
 - [ADR-0025：告警管理与基于实时信号的可配置 KPI](ADR-0025-alarm-management-and-configured-kpis.md)：Accepted（2026-11-01），告警状态机（锁存、确认、限时搁置、浏览器内历史）建在 ErrorStore 之上，优先级与 KPI 定义存为项目文档 `hmi/*.json`，确认/搁置上报审计。
+- [ADR-0026：自研 IK、刚体机构与 CSG 加工提供者](ADR-0026-builtin-ik-mechanism-machining-providers.md)：Accepted（2026-11-03），公共构建以自研实现填充空的提供者槽位（许可提供者优先）；IK 在场景链上闭式求解并以 FK 复核，加工为 Worker 内 SDF + Marching Cubes，机构为关节坐标阻尼牛顿约束求解。
