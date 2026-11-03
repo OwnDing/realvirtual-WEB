@@ -705,6 +705,7 @@ export const NEW_STRING_EXEMPTIONS = new Map([
   ['operator.xr.replace', 'The English wording is unchanged, but the source encoded the leading circular arrow as the JavaScript escape `\\u21BB`; the catalog contains its decoded display character so translators see the glyph users see.'],
   ['operator.xr.enterVr', 'This label was previously owned by Three.js VRButton inside the installed dependency, not by a tracked repository source. The plugin now overrides that upstream English label so it can switch languages in place.'],
   ['operator.xr.exitVr', 'The session-active counterpart of operator.xr.enterVr; it was likewise generated inside Three.js VRButton and had no tracked repository source to move from.'],
+  ['connect.embed.rowStart', 'EP-E2E-001 restores the CONNECT embedded demo Models panel row (start/close); the row hint is new wording, the panel title, close label and running state reuse baseline strings verbatim.'],
 ]);
 
 function flatten(node, prefix = '') {

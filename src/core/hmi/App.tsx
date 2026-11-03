@@ -107,13 +107,14 @@ import { SensorHistoryPanel } from './SensorHistoryPanel';
 
 // Connect panel (XYvirtual CONNECT gateway)
 import { ConnectPanel } from './ConnectPanel';
-// Models panel host — shared by the full HMI (via TopBar) and the embed shell.
 // Dev-server-only badge naming the served checkout (eliminated from builds).
 import { ServeSessionBadge } from './ServeSessionBadge';
 import {
   ConnectEmbedDemoControls,
   ConnectEmbedGate,
 } from '../../plugins/connect-embed/ConnectEmbedGate';
+// Models panel host — shared by the full HMI and the embed shell (EP-E2E-001).
+import { ConnectEmbedModelsPanel } from '../../plugins/connect-embed/ConnectEmbedModelsPanel';
 import {
   getConnectEmbedSnapshot,
   isConnectEmbedMinimalShell,
@@ -254,6 +255,7 @@ function ConnectEmbedMinimalShell() {
       <ConnectPanel />
       {/* Same host as the full shell — one slot condition, so the Models panel
           and the CONNECT panel can never occupy the LEFT slot at once. */}
+      <ConnectEmbedModelsPanel />
       <ConnectEmbedGate />
       <NewsDialogHost includeWeb={false} />
       <SigWarningBanner compact />
@@ -387,6 +389,7 @@ function FullHmiShell({
         {hmiVisible && showOrderPanel && <OrderPanel />}
         {hmiVisible && showConnectPanel && <ConnectPanel />}
         <ConnectEmbedDemoControls />
+        <ConnectEmbedModelsPanel />
         {showAnnotationEditModal && <AnnotationEditModal />}
         {/* When the HMI is hidden, the eye toggle in the top bar's right
             region is gone too — keep a minimal always-present restore control

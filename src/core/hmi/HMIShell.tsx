@@ -66,7 +66,9 @@ export function HMIShell({ children }: HMIShellProps) {
   // `modes` declaration reaches them — they get their rules here (Schicht B).
   const showForceConfirm = useUIVisible('force-confirm-dialog', { hiddenIn: ['mode:viewer'] });
   const showProjectDialogs = useUIVisible('project-dialog-host', { hiddenIn: ['mode:viewer'] });
-  const showProjectsDashboard = useUIVisible('projects-dashboard', { hiddenIn: ['mode:viewer'] });
+  // The CONNECT embedded demo has no project browser; its Projects entry is
+  // redirected to the demo's Models panel (EP-E2E-001).
+  const showProjectsDashboard = useUIVisible('projects-dashboard', { hiddenIn: ['mode:viewer', 'connect-embed'] });
 
   // Apply zoom directly to DOM — avoids re-rendering the entire child tree on every slider tick.
   useEffect(() => {

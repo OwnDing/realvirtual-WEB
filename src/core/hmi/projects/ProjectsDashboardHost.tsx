@@ -62,6 +62,7 @@ import { useMode } from '../../../hooks/use-mode';
 import { getAppConfig } from '../rv-app-config';
 import { useStartupModalRegistration } from '../startup-modal-coordinator';
 import { shouldAutoOpenProjects } from './projects-auto-open';
+import { isConnectEmbedConfigured } from '../../../plugins/connect-embed/connect-embed-store';
 // The blob-only create/rename/duplicate/delete verbs are deliberately NOT
 // imported any more (plan-717 F1/F6/F7, F9's removal guard): every one of them
 // writes bytes past the manifest row, which is the split this plan closes. What
@@ -276,6 +277,7 @@ export function ProjectsDashboardHost() {
       defaultModel: cfg.defaultModel,
       modeLocked,
       suppress: cfg.projects?.suppress,
+      embeddedDemo: isConnectEmbedConfigured(cfg),
       force: cfg.projects?.force,
     })) {
       openProjectsDashboard();

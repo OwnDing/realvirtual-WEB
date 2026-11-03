@@ -70,7 +70,10 @@ async function openModelsPanel(page: Page): Promise<Locator> {
 
 async function startStandaloneDemo(page: Page, forceStart = false) {
   await page.goto('/');
-  await expect(page.getByTestId('connect-embed-gate')).toBeVisible();
+  // Boot readiness, not a UI assertion: a fresh context loads the whole dev
+  // module graph, which under a parallel full run exceeded the default 5 s
+  // (EP-E2E-001, full run 2). Same budget the other boot gates use.
+  await expect(page.getByTestId('connect-embed-gate')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('connect-embed-start')).toBeVisible();
   await expect(page.locator('[data-testid="top-bar"]')).toHaveCount(0);
 
@@ -172,6 +175,9 @@ test('on a coarse pointer the row close action is permanently visible and 44 px'
     viewport: { width: 900, height: 800 },
   });
   const page = await context.newPage();
+  // A new context does not inherit the beforeEach pin (EP-E2E-001 #13: the
+  // hint rendered in Chinese and the English assertion could not match).
+  await pinLocale(page, 'en-US');
   await page.addInitScript((key) => {
     localStorage.setItem('rv-welcome-dismissed', '1');
     localStorage.removeItem(key);
@@ -206,6 +212,11 @@ test('signal hint is visible and unobstructed after closing the mobile CONNECT p
 
   const connectPanel = getConnectPanel(page);
   await expect(connectPanel).toBeVisible();
+  // The dev-server-only checkout banner (ServeSessionBadge, removed from every
+  // build) spans the top strip at phone width and sits over the panel's close
+  // button; it is not product UI, so it is dismissed first (EP-E2E-001 #14).
+  const devBanner = page.getByRole('button', { name: 'Hide dev server banner until reload' });
+  if (await devBanner.isVisible()) await devBanner.click();
   await connectPanel.getByRole('button', { name: 'Close panel' }).click();
   await expect(connectPanel).toHaveCount(0);
 
