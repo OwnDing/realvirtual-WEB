@@ -4,7 +4,7 @@ title: 选择 i18next 多语言运行时与静态目录架构
 status: approved
 adr_status: accepted
 owner: architecture
-last_reviewed: 2026-08-21
+last_reviewed: 2026-11-03
 authority: normative
 ---
 
@@ -110,6 +110,12 @@ Approved `PS-I18N-001` 要求首批支持 `zh-CN`/`en-US`、默认中文、中�
 **范围限制**：本修订只授权按 namespace 切分 `en-US`。它**不**授权运行时远程目录、按需 HTTP 拉取、语言探测插件，也不授权把 `zh-CN` 移出入口。再扩大边界需要新的修订。
 
 **验证**：见 Validation 一节新增的分包条目。
+
+### R2（2026-11-03）：入口预算数值由 ADR-0027 调整
+
+**批准来源**：用户当前明确指令（2026-11-03，「入口体积预算先提高」）。
+
+R1 中「`ENTRY_BUDGET_BYTES` 保持 3_520_000」的**数值**由 [ADR-0027](ADR-0027-entry-budget-raise-2026-11.md) 改为 3_600_000；R1 的规则本身不变——分包腾出的空间不得再以放宽预算的方式重复花掉，本次提高是独立的用户决定。zh-CN 整体留在入口、非启动 en-US 分包及其断言均不变。
 
 ## Rollback or Supersession
 
