@@ -7704,6 +7704,84 @@
         "src/core/hmi/projects/ServerProjectsSection.tsx"
       ],
       "owner": "engineering"
+    },
+    {
+      "id": "b0e6c38c56b5466bf11add52",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining worker failed",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "c936456849339045735700ec",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining worker failed to start",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "4d8fda02c51256cdeb4704b9",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining provider disposed",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "6de4c2210fc27a01594b2138",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining worker is not running",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "dd3b967bce6308e1d90b89e1",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining grid is not available",
+      "occurrence": 1,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
+    },
+    {
+      "id": "13199d6ec0893bb46b4af9f8",
+      "file": "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+      "text": "machining worker failed",
+      "occurrence": 2,
+      "classification": "internal-contract",
+      "rationale": "Built-in simulation provider contract failure (worker not running, grid unavailable, worker trap). Consumed by the machining manager, which degrades the volume to its authored mesh and logs once; not a customer-facing translation key (ADR-0026).",
+      "evidence": [
+        "src/core/engine/machining-builtin/builtin-machining-provider.ts",
+        "tests/machining-builtin.node.test.ts"
+      ],
+      "owner": "engineering"
     }
   ]
 }

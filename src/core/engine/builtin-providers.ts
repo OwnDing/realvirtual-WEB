@@ -11,14 +11,21 @@
 
 import { ikSolverRegistry } from './rv-ik-solver';
 import { builtinIkSolver } from './ik-builtin/builtin-ik-solver';
+import { isMachiningWorkerSupported, machiningRegistry } from './rv-machining-registry';
+import { BuiltinMachiningProvider } from './machining-builtin/builtin-machining-provider';
 
-export interface BuiltinProviderReport { ik: boolean }
+export interface BuiltinProviderReport { ik: boolean; machining: boolean }
 
 export function registerBuiltinProviders(): BuiltinProviderReport {
-  const report: BuiltinProviderReport = { ik: false };
+  const report: BuiltinProviderReport = { ik: false, machining: false };
   if (ikSolverRegistry.tier === 'none') {
     ikSolverRegistry.register(builtinIkSolver);
     report.ik = true;
+  }
+  // The worker starts lazily (provider.init) — only when a model has a MachiningVolume.
+  if (!machiningRegistry.rawProvider && isMachiningWorkerSupported()) {
+    machiningRegistry.register(new BuiltinMachiningProvider());
+    report.machining = true;
   }
   return report;
 }

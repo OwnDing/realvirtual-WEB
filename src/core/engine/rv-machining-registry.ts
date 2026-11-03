@@ -5,10 +5,11 @@
  * rv-machining-registry.ts — Public interface + registry for the optional CSG
  * material-removal (machining) provider (plan-405).
  *
- * The compute kernel (`rv_csg.wasm`, the same Rust crate that produces the
- * Unity `rv_csg.dll`) is a PRIVATE provider that registers here from the
- * private side. When absent — the default for every open-source / public
- * deployment, and for any browser without Web Worker support — the registry's
+ * Licensed builds register the `rv_csg.wasm` kernel (the same Rust crate that
+ * produces the Unity `rv_csg.dll`) from the private side; community builds
+ * register the built-in TypeScript kernel (`machining-builtin/`, ADR-0026) when
+ * the slot is still empty. When neither is present — and in any browser
+ * without Web Worker support — the registry's
  * `provider` is `null`, `MachiningVolume` leaves the authored workpiece mesh
  * visible and nothing is machined (F10). No crash, no fallback compute: there
  * is exactly ONE compute path (the worker) by design, because a synchronous
@@ -231,7 +232,8 @@ export type MachiningUnsubscribe = () => void;
 // ─── Provider contract (implemented by the private rv-csg provider) ────────
 
 /**
- * Implemented by the private machining provider (plan-405 §2.3).
+ * Implemented by the licensed rv-csg provider (plan-405 §2.3) and by the
+ * built-in community kernel (ADR-0026).
  *
  * Lifecycle contract:
  * - `init()` is lazy and re-entrancy-safe (a pending promise is reused); it
@@ -284,7 +286,7 @@ class MachiningRegistry {
   private _provider: MachiningProvider | null = null;
   private _warned = false;
 
-  /** Register the private machining provider. `null` unregisters (no-op state). */
+  /** Register a machining provider. `null` unregisters (no-op state). */
   register(provider: MachiningProvider | null): void {
     this._provider = provider;
     this._warned = false;

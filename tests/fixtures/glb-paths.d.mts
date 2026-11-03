@@ -18,5 +18,6 @@ export const DEV_GLB: {
   readonly mechanismFourbar: string;
   readonly mechanismScissor: string;
   readonly robotIK: string;
+  readonly csgMachining: string;
   readonly europalletEmpty: string;
 };

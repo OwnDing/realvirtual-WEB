@@ -34,7 +34,8 @@ authority: normative
    - **求解坐标系**：注册表新增可选提供者钩子 `poseInBase(base, target)` 与 `chainFor(robot)`，缺省时仍是 `targetPoseInBase` 与 `getJointChain()`（许可 WASM 求解器验证时所用约定，输入不变）。内置提供者使用“作者坐标系”：旋转取各级本地四元数之积（Unity 对齐 `transform.rotation` 的语义），位置取真实世界位置并表达在机器人本地坐标。原因：导出的 TCP/目标节点可带负缩放或非均匀缩放（演示 IRB2400 的 TCP 缩放为 (0.5, 0.5, −0.5)、目标为 (−1, 1, 1)），分解世界矩阵会把反射归到 X 并得到相差 180° 的旋转，而按节点自身缩放除平移会移动位置。在演示模型上，Unity 烘焙的 AxisPos 在此坐标系中以 0.0° 复现全部 IK 目标（位置差为该机型 OPW 模型与网格链的固定 5 mm）。
    - 提供者声明 `tier = 'pro'`（无机器人数量限制、支持 Cobot），`canBlend = false`（未实现连续混合）。
 
-4. **CSG 加工：TypeScript Web Worker 中的 SDF 体素网格。** 毛坯（Box/Cylinder 解析、Mesh 体素化）初始化为有符号距离场；刀具扫掠按契约的刀具形状求 SDF 并做 `max(sdf, −tool)` 减法；脏块（16³）用 Marching Cubes 重建网格并按批回传。`DualContouring` 与折边分裂在本实现中退化为 Marching Cubes + SDF 梯度法线，并在文档中说明。只有一个计算路径（Worker）；没有 Worker 的环境保持“不可用”。
+4. **CSG 加工：TypeScript Web Worker 中的 SDF 体素网格。** 毛坯（Box/Cylinder 解析、Mesh 体素化：带宽两体素内为精确距离、X 向射线奇偶判内外）初始化为有符号距离场，格点几何与契约一致（`voxel = domain/(res−3)`，原点 `domainMin − 1.5·voxel`）；刀具扫掠按契约的刀具形状求 SDF 并做 `max(sdf, −tool)` 减法；脏块（16³）用 Marching Cubes 重建网格并按批（≤16 块）回传，Marching Cubes 的 256 种情形由“面线段追踪”在加载时生成（歧义面统一分离材料角，保证相邻单元一致、网格封闭），三角形按 SDF 梯度朝外。`DualContouring` 与折边分裂在本实现中退化为 Marching Cubes + SDF 梯度法线。只有一个计算路径（Worker）；没有 Worker 的环境保持“不可用”。
+   - **刀具坐标约定（未与 Unity 内核逐项比对）**：轴线为本地 +Y、以节点原点为中心（与 `boundingRadius = √(r² + (h/2)²)` 一致），切削端在 −Y；BallNose 以 `CornerRadius`（≤ 半径，等于半径即完整球头）倒圆切削端；ConicalEnd 由切削端半径 `radius` 过渡到柄端 `coneRadiusTop`；Torus 为 XZ 平面内外半径 `radius`、管半径 `CornerRadius` 的圆环。
 
 5. **刚体机构：关节坐标上的阻尼牛顿约束求解。** 由 `KinematicJoint` 图构建拓扑（生成树 + 闭环），驱动关节取 Drive 值，被动关节和闭环约束以阻尼最小二乘每 tick 固定迭代 `SolverIterations` 次求解，写回连杆位姿与 `Converged`/`ResidualError`/`SolveTimeMs`；实现 `MechanismUiBridge` 的列表、校验、点动、重建。逆动力学力分析不在本步范围：快照报告“关闭”，不伪造数值。
 

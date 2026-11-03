@@ -58,7 +58,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 ## Progress
 
 - [x] 5a IK：实现与测试（见 Validation）。
-- [ ] 5b CSG 加工。
+- [x] 5b CSG 加工：实现与测试（见 Validation）。
 - [ ] 5c 刚体机构。
 - [ ] 远程 CI 与合并。
 
@@ -92,6 +92,18 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 补充（作者坐标系修正后）：新增浏览器测试 `ik-builtin-glb`（4）——加载 `DemoRobotIK.glb`，ABB IRB2400（闭式）与 FANUC CRX（数值）的每个带烘焙 AxisPos 的目标都被精确求解（FK 误差 < 0.1 mm），且存在与 Unity 烘焙角度相差 < 3° 的解；CRX 以烘焙角度热启动收敛为单一邻近解。既有 IK 浏览器测试 51 条通过；入口 3,519,659 字节。
 
 未验证（需实机/真实模型）：交互拖动目标与 LIN 运行的人工体验（私有 `ik-cobot-glb-chain` 的 LIN 路径测试依赖私有 WASM，公共构建跳过）。
+
+### 5b CSG 加工（macOS arm64，2026-11-03，提交前）
+
+| 验证 | 实际结果 |
+| --- | --- |
+| `./scripts/verify.sh governance` | 通过 |
+| `./scripts/verify.sh static` | 通过；6 处提供者内部错误登记为 `internal-contract`，机加工 Worker 在 `network-boundary-review.json` 审计（同源打包模块 Worker，无网络传输） |
+| `./scripts/verify.sh node` | 93 文件 / 936 条通过。新增 `csg-kernel`（6：Box 格点几何与实体数精确等于 29³、封闭网格毛坯体素化等同 Box、球体与扫掠胶囊去除体积误差 < 7%/10%、重复切削去除 0、刀具 SDF 在约定坐标系下的取值、毛坯与切削后网格封闭且一致朝外、只标记被触及的块）、`machining-builtin`（6：初始网格分批 ≤16 块并以空闲 ack 结束、按序 ack、积压上限 8、只重建被触及的块、复位屏障与新纪元、销毁幂等、Worker 异常失效闩锁、超段数降低子步；以及通过真实 `MachiningManager`/`MachiningVolume`/`MachiningTool` 端到端替换毛坯网格并切削） |
+| `./scripts/verify.sh build` | 通过；Worker 独立产物 `csg-worker-*.js`，入口 3,519,706 字节 |
+| `./scripts/verify.sh browser` | 8 分片 + 性能套件全部通过；新增 `machining-builtin-glb`（3）：在**真实模块 Worker** 中加载 `DemoCSGMachining.glb` 的两个体积——128×32×128 Box（请求 DualContouring，按 Marching Cubes 提取）与 48×128×48 Mesh 毛坯（顶点均在毛坯包围盒内）——初始网格、Ø20 圆柱切入后去除体素 > 0 且实体数守恒 |
+
+已知限制：被动连杆不带 `Drive`/`Kinematic` 组件的合成模型在合并加载路径中会被静态合批（见 5c），与本步无关；刀具坐标约定未与 Unity 内核逐项比对（ADR-0026）。
 
 ## Rollback
 
