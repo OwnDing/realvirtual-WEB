@@ -76,6 +76,7 @@ authority: normative-process
 - `src/core/hmi/projects/projects-auto-open.ts`、`src/core/hmi/projects/ProjectsDashboardHost.tsx`、`src/core/hmi/projects/projects-dashboard-store.ts`（入口重定向）
 - `src/core/hmi/load-feedback.ts`、`src/main.ts`（加载反馈绑定与 `?model=` 解析两处）、`src/core/model-url-param.ts`（新增）
 - `vite.embed.config.ts`（仅 `define` 一项）
+- `scripts/security/test-script-production.mjs`（仅等待竞态修复，断言不变）
 - `src/core/i18n/catalogs/en-US.deferred.ts`、`zh-CN.ts`（`connect.embed` 新增键）、`scripts/i18n-verbatim-check.mjs`（新增键豁免）
 
 ## Forbidden Paths
@@ -104,6 +105,7 @@ authority: normative-process
 - 被欢迎框挡住的用例一旦能点击，就暴露了其后的真实缺陷（`?model=`）；`embed-smoke` 一旦有产物可测，就暴露了产物本身无法运行。“从未运行”的用例掩盖的不只是用例自身。
 - `hmi-panels` 三例原本在找不到按钮或面板时 `test.skip` 自己；改为按角色断言具体面板，删除三处 skip（e2e 目录 skip/fixme 由 19 降为 16，并由守卫锁定不再增长）。
 - `ActivityBar` 与 `App.tsx` 的注释仍描述上游的 Models 左侧面板（“Models panel host … shared by the full HMI and the embed shell”），但组件在导入时已不在本仓；connect-embed 下恢复的是同一位置的左侧面板。
+- PR #29 在合入 `develop`（含第 2 步）后，Browser Gate 的“生产工作台脚本同意”步骤失败（run `41647964686`）：`test-script-production.mjs` 在实例数变为 1 后立即断言控制台 `SECURITY_SETUP` 事件已到达，读到 0。该事件晚于实例创建抵达测试进程，属于既有用例的竞态（同一步骤在 #28、#29 首轮、#30、#31 均通过）。改为同样轮询该事件后再断言恰好 1 次；本地生产构建连续 3 次通过。
 - rv-embed 的 AGPL 横幅 `Corresponding Source:` 指向 `github.com/xyvirtual/XYvirtual-WEB`（404，改名遗留）。属 OD-010 / A-02 源码交付事项，本步不改，交付报告中列出。
 
 ## Decision Log
