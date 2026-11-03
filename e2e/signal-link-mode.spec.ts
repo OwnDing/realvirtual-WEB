@@ -3,6 +3,7 @@
 
 import { expect, test, type Page } from 'playwright/test';
 import { DEV_GLB } from '../tests/fixtures/glb-paths.mjs';
+import { pinLocale } from './helpers/pin-locale';
 
 const TOGGLE = '[data-testid="signal-link-mode-toggle"]';
 
@@ -143,6 +144,10 @@ test.describe('signal link mode e2e', () => {
   test.setTimeout(120_000);
 
   test.beforeEach(async ({ page }) => {
+    // English is pinned rather than inherited (ADR-0001 Validation): the
+    // pending case asserts on the English state label, and the product default
+    // is Chinese (EP-E2E-001 #8 received 等待中).
+    await pinLocale(page, 'en-US');
     await page.addInitScript(() => {
       localStorage.setItem('rv-welcome-dismissed', '1');
       localStorage.setItem('rv-auto-quality-applied', '1');
@@ -154,26 +159,37 @@ test.describe('signal link mode e2e', () => {
   });
 
   test('toggle is visible in hmi and planner mode, hidden in fpv', async ({ page }) => {
-    await expect(page.locator(TOGGLE)).toBeVisible();
-    await page.evaluate(() => {
-      const viewer = (window as unknown as {
+    const activeMode = () => page.evaluate(() => (window as unknown as {
+      __rvViewer: { modes: { activeMode: string | null } };
+    }).__rvViewer.modes.activeMode);
+    const setMode = (mode: string) => page.evaluate((id) => {
+      (window as unknown as {
         __rvViewer: { modes: { setMode: (mode: string) => void } };
-      }).__rvViewer;
-      viewer.modes.setMode('planner');
-    });
+      }).__rvViewer.modes.setMode(id);
+    }, mode);
+
     await expect(page.locator(TOGGLE)).toBeVisible();
+    await setMode('planner');
+    await expect.poll(activeMode).toBe('planner');
+    await expect(page.locator(TOGGLE)).toBeVisible();
+
+    // EP-E2E-001 #7. FPV is not a workspace mode: it is the `fpv` UI context
+    // the FPV plugin raises once the user clicks through its start overlay.
+    // The former version registered a fake `fpv` MODE, which the workspace mode
+    // cap (ADR-0008) now refuses ("setMode('fpv') ignored — unknown or
+    // unavailable mode"), so it asserted against a switch that never happened.
+    await setMode('hmi');
+    await expect.poll(activeMode).toBe('hmi');
     await page.evaluate(() => {
-      const viewer = (window as unknown as {
-        __rvViewer: {
-          modes: {
-            register: (mode: { id: string; label: string; order: number }) => unknown;
-            setMode: (mode: string) => void;
-          };
-        };
-      }).__rvViewer;
-      viewer.modes.register({ id: 'fpv', label: 'FPV', order: 90 });
-      viewer.modes.setMode('fpv');
+      (window as unknown as {
+        __rvViewer: { getPlugin: (id: string) => { enter: () => void } | undefined };
+      }).__rvViewer.getPlugin('fpv')!.enter();
     });
+    // The start overlay covers the viewport; clicking it activates FPV.
+    await page.mouse.click(640, 360);
+    await expect.poll(() => page.evaluate(() => (window as unknown as {
+      __rvViewer: { getPlugin: (id: string) => { isActive: boolean } | undefined };
+    }).__rvViewer.getPlugin('fpv')?.isActive ?? false)).toBe(true);
     await expect(page.locator(TOGGLE)).toBeHidden();
   });
 

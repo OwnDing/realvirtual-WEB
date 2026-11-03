@@ -794,13 +794,16 @@ built-in URL decides which autosave a reload resumes. Measured (plan-421 phase
 | `?scene=builtin:DemoRealvirtualWeb.glb` | `builtin:%2Fmodels%2FDemoRealvirtualWeb.glb` (same) |
 | `?scene=builtin:…&option=bosch` | `builtin:%2Fmodels%2FDemoRealvirtualWeb.glb%3Foption%3Dbosch` |
 | `?model=/models/DemoRealvirtualWeb.glb` | `builtin:%2Fmodels%2FDemoRealvirtualWeb.glb` (same) |
-| `?model=DemoRealvirtualWeb.glb` (bare filename) | `builtin:DemoRealvirtualWeb.glb` |
+| `?model=DemoRealvirtualWeb.glb` (bare filename) | `builtin:%2Fmodels%2FDemoRealvirtualWeb.glb` (same, since EP-E2E-001) |
 
 So the two entry paths people actually compare — default boot and
-`?scene=builtin:` — agree. The splits come from `?option=` (by design: a variant
-is a different scene body) and from `?model=` being taken **raw** at
-`main.ts:1397`, without the catalogue resolution every other path performs. The
-latter is a genuine identity split and is recorded, not fixed, here.
+`?scene=builtin:` — agree. The split comes from `?option=` (by design: a variant
+is a different scene body). `?model=` used to be taken **raw**, without the
+catalogue resolution every other path performs — a genuine identity split, and in
+this build a broken link: the bare filename was fetched as `/DemoRealvirtualWeb.glb`
+and failed. Since EP-E2E-001 a bare filename that names a catalogue entry resolves
+to that entry's URL (`src/core/model-url-param.ts`); paths, absolute URLs and
+unknown names are still taken as given.
 
 **The per-base draft key is still project-scoped**, and now for one reason
 only: so the leftovers of one project can be removed without touching another's.

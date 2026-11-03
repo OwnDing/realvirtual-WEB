@@ -2253,6 +2253,15 @@ panel still open. Both paths run through `connect-embed-actions.ts`, never throu
 `SceneStore.openBuiltin` (which would persist a draft the embed context does not want). There is
 no demo chip and no close button over the viewport.
 
+The panel is `src/plugins/connect-embed/ConnectEmbedModelsPanel.tsx`, a docked LEFT panel
+(`connect-embed-models`) that the activity-bar Projects entry opens in this context — an entry
+redirect installed by `main.ts`, while `HMIShell` never mounts the Projects dashboard under the
+`connect-embed` context; the row's close action is revealed by hover and by keyboard focus and is
+always visible at 44 px on a coarse pointer. In the same context the Projects dashboard never
+opens itself, and the full-screen load layer stays hidden while the gate is on screen, so the
+gate's own loading and error card (with its state-machine Retry) is the only load feedback
+(EP-E2E-001).
+
 ### AAS resolution contract
 
 An AAS surface only appears when the link can actually be resolved. The resolvability is decided

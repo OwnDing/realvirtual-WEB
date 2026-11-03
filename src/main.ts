@@ -19,6 +19,7 @@ import { bindDiagnosticErrorEntry } from './core/diagnostics/error-entry';
 import { DiagnosticsPlugin } from './plugins/diagnostics';
 import { readPerformanceQuality } from './core/hmi/performance-quality';
 import { bindLoadFeedback } from './core/hmi/load-feedback';
+import { resolveModelUrlParam } from './core/model-url-param';
 import { downloadModel } from './core/engine/rv-model-download';
 import type { ModelLoadSession } from './core/engine/rv-load-session';
 import { canInitializeTeams } from './core/deployment/teams-egress';
@@ -133,7 +134,8 @@ import { documentsOf } from './core/project/rv-project-documents';
 import { resolveResumeTarget } from './core/project/rv-project-open';
 import { forgetRememberedSession, readRememberedSession } from './core/project/rv-project-resume-store';
 import { reportMissingDocument } from './core/hmi/scene/rv-scene-live-sync';
-import { openProjectsDashboard } from './core/hmi/projects/projects-dashboard-store';
+import { openProjectsDashboard, setProjectsEntryRedirect } from './core/hmi/projects/projects-dashboard-store';
+import { connectEmbedModelsEntry } from './plugins/connect-embed/connect-embed-models-entry';
 import {
   DEMO_PROJECT_FOLDER,
   REALVIRTUAL_LIBRARY_PATH,
@@ -162,6 +164,8 @@ import {
   failConnectEmbedDemoLoad,
   getConnectEmbedSnapshot,
   initializeConnectEmbedStore,
+  isConnectEmbedMinimalShell,
+  subscribeConnectEmbedStore,
 } from './plugins/connect-embed/connect-embed-store';
 import { HistorianTrendPlugin } from './plugins/historian-trend-plugin';
 import { initHmiSession } from './core/hmi/hmi-session-store';
@@ -668,7 +672,13 @@ async function init() {
   // --- Create Viewer ---
   const viewer = await RVViewer.create(container, { renderer: rendererKind, antialias: wantAntialias, plannerSignalLinking: true });
   viewer.on('model-cleared', clearCustomBranding);
-  bindLoadFeedback(viewer.loading, () => loadingRetryBtn.click());
+  // The embedded demo's gate owns load feedback while it is on screen, and its
+  // Projects entry opens the demo's Models panel (EP-E2E-001).
+  bindLoadFeedback(viewer.loading, () => loadingRetryBtn.click(), {
+    suppressed: () => isConnectEmbedMinimalShell(),
+    subscribe: subscribeConnectEmbedStore,
+  });
+  if (connectEmbedEnabled) setProjectsEntryRedirect(connectEmbedModelsEntry(viewer.leftPanelManager));
 
   // Apply persisted DPR cap (runtime-changeable, no reload needed)
   viewer.maxDpr = initialSettings.maxDpr;
@@ -1785,7 +1795,8 @@ async function init() {
       localStorage.removeItem(LS_KEY_MODEL);
     }
 
-    let modelToLoad = urlModel
+    // A bare catalogue filename resolves like every other boot path (EP-E2E-001).
+    let modelToLoad = (urlModel === null ? null : resolveModelUrlParam(urlModel, entries))
       ?? savedEntry?.url
       ?? resolvedConfigModel
       ?? null;

@@ -32,6 +32,19 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = join(root, 'dist-embed');
 const entryPath = join(distDir, 'rv-embed.js');
 const hasDist = existsSync(entryPath);
+/**
+ * KD-003 / EP-E2E-001: the CI E2E Gate builds the formal artifact (the
+ * `embed-chromium` web server runs `build:embed`) and then runs this file with
+ * `RV_REQUIRE_EMBED_DIST=1`, where a missing build is a FAILURE instead of a
+ * skip. Every other run keeps the skip, so a clean Node Gate stays green.
+ */
+const requireDist = process.env.RV_REQUIRE_EMBED_DIST === '1';
+
+describe.runIf(requireDist)('rv-embed dist is required here', () => {
+  it('dist-embed/rv-embed.js exists', () => {
+    expect(hasDist, `${entryPath} must exist when RV_REQUIRE_EMBED_DIST=1`).toBe(true);
+  });
+});
 
 /** Marker that only occurs inside the three/webgpu WGSL compiler (same
  *  rationale as tests/bundle-chunk.node.test.ts). */
@@ -115,6 +128,16 @@ describe.skipIf(!hasDist)('rv-embed dist guards (plan-326 AP1)', () => {
       for (const marker of FORBIDDEN_MARKERS) {
         expect(code.includes(marker), `${f} must not contain "${marker}"`).toBe(false);
       }
+    }
+  });
+
+  // EP-E2E-001: a CDN artifact runs without a bundler, so a `process.env`
+  // reference left in the output is a ReferenceError in every browser. The
+  // marker list above never caught it — React core is not `react-dom`.
+  it('leaves no unreplaced process.env reference anywhere in the output', () => {
+    for (const f of allJsFiles()) {
+      const code = readFileSync(f, 'utf8');
+      expect(/\bprocess\.env\b/.test(code), `${f} must not reference process.env`).toBe(false);
     }
   });
 

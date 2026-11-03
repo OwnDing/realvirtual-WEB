@@ -65,6 +65,15 @@ describe('the two config flags', () => {
   it('a locked mode beats force — a kiosk is never talked into a browser', () => {
     expect(shouldAutoOpenProjects({ ...base, modeLocked: true, force: true })).toBe(false);
   });
+
+  // EP-E2E-001: the CONNECT embedded demo configures no defaultModel (its gate
+  // loads the demo on request), so the bare-start rule used to open the
+  // dashboard over the running demo.
+  it('the CONNECT embedded demo never auto-opens, even with force', () => {
+    expect(shouldAutoOpenProjects({ ...base, embeddedDemo: true })).toBe(false);
+    expect(shouldAutoOpenProjects({ ...base, embeddedDemo: true, force: true })).toBe(false);
+    expect(shouldAutoOpenProjects({ ...base, embeddedDemo: false })).toBe(true);
+  });
 });
 
 describe('delivered customer builds are unaffected', () => {

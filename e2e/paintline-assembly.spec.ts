@@ -209,8 +209,41 @@ test('Library drag → stable-port loop → runtime → saved rehydrate', async 
     timeout: 30_000,
     message: 'the assembled spray booth did not process and recolor a workpiece',
   }).toBe(true);
+  const clock = () => page.evaluate(async () => {
+    const viewer = (window as any).viewer;
+    // Frames actually delivered in the next 500 ms: tells a stopped loop from
+    // a stale FPS reading.
+    let frames = 0;
+    const until = performance.now() + 500;
+    await new Promise<void>((done) => {
+      const step = () => { frames++; if (performance.now() < until) requestAnimationFrame(step); else done(); };
+      requestAnimationFrame(step);
+    });
+    return {
+      simTime: viewer?.simTime ?? null,
+      simTickCount: viewer?.simTickCount ?? null,
+      logicRunState: viewer?.logicRunState ?? null,
+      attached: viewer?.runtime?.isAttached ?? null,
+      desDriven: !!viewer?._kernel?.desControl?.(),
+      framesIn500ms: frames,
+      paused: viewer?.runtime?.isPaused ?? null,
+      pauseReasons: viewer?.runtime?.pauseReasons ?? null,
+      run: [...(viewer?.signalStore?.getAll?.() ?? new Map()).entries()]
+        .find(([name]: [string]) => name.endsWith('PaintLine.Run'))?.[1] ?? null,
+      fps: viewer?.currentFps ?? null,
+    };
+  });
+  const clockBefore = await clock();
   await page.waitForTimeout(2_000);
-  expect((await runtimeState(page)).position).toBeGreaterThan(before.position);
+  const advanced = await runtimeState(page);
+  // EP-E2E-001: this step failed twice in full parallel local runs with the
+  // position frozen; never alone or with the heavy specs it overlapped. The
+  // message carries the simulation clock so a recurrence says whether the
+  // line stopped or the simulation did.
+  expect(advanced.position, JSON.stringify({
+    before: before.position, after: advanced.position, moving: advanced.moving,
+    clockBefore, clockAfter: await clock(), runtime: advanced.runtime,
+  })).toBeGreaterThan(before.position);
 
   // Read the real autosave, tear every live object/behavior/port out, reload the
   // persisted records through LayoutStore, and invoke the same applyPlacements
