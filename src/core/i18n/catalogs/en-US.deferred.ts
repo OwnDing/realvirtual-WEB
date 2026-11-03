@@ -373,6 +373,7 @@ export const enUSDeferred = {
       displayName: 'Display Name',
       observer: 'Observer (watch only)',
       operator: 'Operator (full control)',
+      roleCapped: 'Your account cannot operate the machine, so you join as observer.',
       connect: 'Connect',
       disconnect: 'Disconnect',
       connectedUsers: 'Connected Users',

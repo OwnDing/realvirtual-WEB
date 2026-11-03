@@ -26,6 +26,11 @@
  *   - sendCursorRay(origin, dir) — broadcasts cursor_ray to other clients
  *   - URL params: ?server=... &name=... &role=... (also multiuserServer/multiuserName for compat)
  *   - role field included in room_join ("operator" | "observer")
+ *
+ * ADR-0028: where the deployment has personal accounts, the requested role is
+ * capped by the HMI session (viewer → observer) and re-evaluated when the session
+ * changes; an observer sends no write-class messages. In the Appliance the
+ * gateway's multiuser guard enforces the same rule server-side.
  *   - state_snapshot applied on late join (signals, drives, existing avatars)
  */
 
@@ -42,6 +47,9 @@ import type { InstancedMovingUnit } from '../core/engine/rv-mu';
 import type { WebXRPlugin } from './webxr-plugin';
 import type { AnnotationPluginAPI } from '../core/types/plugin-types';
 import { allowRuntimeEgressUrl } from '../core/deployment/runtime-egress';
+import { hmiSessionStore } from '../core/hmi/hmi-session-store';
+import { effectiveMultiuserRole } from '../core/hmi/multiuser-role';
+import { getAppConfig } from '../core/rv-app-config';
 
 // ── Public snapshot emitted on every state transition ───────────────────────
 
@@ -171,6 +179,9 @@ export class MultiuserPlugin extends RVBehavior {
   private _localName: string = '';
   private _localColor: string = '#2196F3';
   private _localRole: string = 'observer';
+  /** What the user / URL / settings asked for; `_localRole` is this capped by the session. */
+  private _requestedRole: string = 'observer';
+  private _sessionUnsubscribe: (() => void) | null = null;
   private _joinCode: string = '';
 
   /**
@@ -250,7 +261,9 @@ export class MultiuserPlugin extends RVBehavior {
     this._serverUrl = serverUrl;
     this._localName = name;
     this._localColor = color;
-    this._localRole = role;
+    this._requestedRole = role;
+    this._localRole = effectiveMultiuserRole(role, hmiSessionStore.getSnapshot());
+    this._watchSession();
     this._joinCode = joinCode;
     this._disconnect();
     this._destroyed = false;
@@ -267,6 +280,7 @@ export class MultiuserPlugin extends RVBehavior {
    * @param value       Boolean or numeric value to write
    */
   writeSignal(signalPath: string, value: boolean | number): void {
+    if (!this._mayOperate('signal_write')) return;
     this._send({ type: 'signal_write', signalPath, value });
   }
 
@@ -277,6 +291,7 @@ export class MultiuserPlugin extends RVBehavior {
    * @param forward    true = Drive.Forward(), false = Drive.Backward()
    */
   jogDrive(drivePath: string, forward: boolean): void {
+    if (!this._mayOperate('drive_jog')) return;
     this._send({ type: 'drive_jog', drivePath, forward });
   }
 
@@ -286,6 +301,7 @@ export class MultiuserPlugin extends RVBehavior {
    * @param drivePath  Full hierarchy path to the Drive GameObject
    */
   stopDrive(drivePath: string): void {
+    if (!this._mayOperate('drive_stop')) return;
     this._send({ type: 'drive_stop', drivePath });
   }
 
@@ -308,6 +324,7 @@ export class MultiuserPlugin extends RVBehavior {
    */
   toggleSharedView(active: boolean): void {
     if (active) {
+      if (!this._mayOperate('shared_view_on')) return;
       this._isSharedViewOperator = true;
       this._send({ type: 'shared_view_on' });
     } else {
@@ -377,6 +394,32 @@ export class MultiuserPlugin extends RVBehavior {
     this._emitChanged();
   }
 
+  /** Observers send no write-class messages (ADR-0028; the server enforces it too). */
+  private _mayOperate(type: string): boolean {
+    if (this._localRole === 'operator') return true;
+    debug('multiuser', `${type} not sent: the multiuser role is ${this._localRole}`);
+    return false;
+  }
+
+  /**
+   * Re-cap the role whenever the HMI session changes (sign-in completes after an
+   * URL auto-join, a session expires, …). A role change while connected rejoins
+   * so the room learns the new role.
+   */
+  private _watchSession(): void {
+    if (this._sessionUnsubscribe) return;
+    this._sessionUnsubscribe = hmiSessionStore.subscribe(() => {
+      const next = effectiveMultiuserRole(this._requestedRole, hmiSessionStore.getSnapshot());
+      if (next === this._localRole) return;
+      this._localRole = next;
+      if (this._ws && !this._destroyed) {
+        this._disconnect();
+        this._connect();
+      }
+      this._emitChanged();
+    });
+  }
+
   /** Returns the list of currently visible remote players. */
   getConnectedUsers(): PlayerInfo[] {
     return this._avatarManager?.getPlayers() ?? [];
@@ -422,9 +465,14 @@ export class MultiuserPlugin extends RVBehavior {
       // URL was already set via joinSession() before model loaded
       this._connect();
     } else {
-      // Default: try same host on port 7000
+      // ADR-0028: a deployment with an authenticated multiuser endpoint (the
+      // Appliance's gateway guard) defaults to it, same origin over wss on HTTPS.
+      // Otherwise: try same host on port 7000. The default is never auto-joined.
+      const guarded = getAppConfig().services?.multiuser?.url;
       const host = window.location.hostname || 'localhost';
-      this._serverUrl = `ws://${host}:${DEFAULT_PORT}`;
+      this._serverUrl = guarded
+        ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${guarded}`
+        : `ws://${host}:${DEFAULT_PORT}`;
     }
   }
 
@@ -470,6 +518,8 @@ export class MultiuserPlugin extends RVBehavior {
 
   protected onDestroy(): void {
     this._destroyed = true;
+    this._sessionUnsubscribe?.();
+    this._sessionUnsubscribe = null;
     this._clearReconnect();
     this._sendLeave();
     this._disconnect();

@@ -9,6 +9,8 @@ import { loadMultiuserSettings, saveMultiuserSettings, useMultiuserEnabled, type
 import type { MultiuserPluginAPI } from '../../types/plugin-types';
 import { StatRow, SettingsSection, FieldRow } from './settings-helpers';
 import { useRvTranslation } from '../../i18n';
+import { useHmiSession } from '../../../hooks/use-hmi-session';
+import { multiuserRoleCeiling } from '../multiuser-role';
 
 export function MultiuserTab() {
   const { t } = useRvTranslation('settings');
@@ -17,6 +19,9 @@ export function MultiuserTab() {
   const muEnabled = useMultiuserEnabled();
   const mu = useMultiuser();
   const muPlugin = viewer.getPlugin<MultiuserPluginAPI>('multiuser');
+  // ADR-0028: with personal accounts, a session that may not write signals joins
+  // as observer whatever is selected here (and the Appliance gateway enforces it).
+  const roleCapped = multiuserRoleCeiling(useHmiSession()) === 'observer';
 
   // Load persisted settings
   const settingsRef = useRef(loadMultiuserSettings());
@@ -114,16 +119,16 @@ export function MultiuserTab() {
         </FieldRow>
 
         {/* Role */}
-        <FieldRow label={t('multiuser.role')}>
+        <FieldRow label={t('multiuser.role')} hint={roleCapped ? t('multiuser.roleCapped') : undefined}>
           <Select
             fullWidth size="small"
-            value={role}
+            value={roleCapped ? 'observer' : role}
             onChange={(e) => { setRole(e.target.value); persist({ role: e.target.value as 'observer' | 'operator' }); }}
             disabled={mu.connected}
             sx={{ fontSize: 12 }}
           >
             <MenuItem value="observer" sx={{ fontSize: 12 }}>{t('multiuser.observer')}</MenuItem>
-            <MenuItem value="operator" sx={{ fontSize: 12 }}>{t('multiuser.operator')}</MenuItem>
+            <MenuItem value="operator" disabled={roleCapped} sx={{ fontSize: 12 }}>{t('multiuser.operator')}</MenuItem>
           </Select>
         </FieldRow>
 

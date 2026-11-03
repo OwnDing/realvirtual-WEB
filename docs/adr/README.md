@@ -56,3 +56,4 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0025：告警管理与基于实时信号的可配置 KPI](ADR-0025-alarm-management-and-configured-kpis.md)：Accepted（2026-11-01），告警状态机（锁存、确认、限时搁置、浏览器内历史）建在 ErrorStore 之上，优先级与 KPI 定义存为项目文档 `hmi/*.json`，确认/搁置上报审计。
 - [ADR-0026：自研 IK、刚体机构与 CSG 加工提供者](ADR-0026-builtin-ik-mechanism-machining-providers.md)：Accepted（2026-11-03），公共构建以自研实现填充空的提供者槽位（许可提供者优先）；IK 在场景链上闭式求解并以 FK 复核，加工为 Worker 内 SDF + Marching Cubes，机构为关节坐标阻尼牛顿约束求解。
 - [ADR-0027：入口 chunk 体积预算提高到 3,600,000 字符](ADR-0027-entry-budget-raise-2026-11.md)：Accepted（2026-11-03），用户决定提高入口预算（实测 3,519,856，余量仅 144）；诊断合计守卫改为预算 + 25,000，T14 固定新值，预算继续作为棘轮；修订 ADR-0001 R1 的数值，不改其规则。
+- [ADR-0028：多人会话角色由登录会话决定，并由网关守卫强制](ADR-0028-multiuser-role-from-session.md)：Accepted（2026-11-03），用户在第二轮整改第 4 步选择“浏览器上限 + 网关守卫”；有账户的部署中角色以会话为上限，Appliance 网关 `/gateway/multiuser` 覆盖 `room_join` 角色、拦截 viewer 的写类消息并审计。

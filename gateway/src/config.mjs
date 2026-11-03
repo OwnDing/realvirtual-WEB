@@ -121,11 +121,29 @@ function validateHistory(raw) {
   };
 }
 
+/**
+ * Optional multiuser guard (ADR-0028). It is a security boundary only when the
+ * user identity comes from the Appliance entry, so it requires
+ * `trustProxyIdentity` — a guard that cannot tell users apart would just be an
+ * open relay with extra steps.
+ */
+function validateMultiuser(raw, trustProxyIdentity, websocketPath) {
+  if (raw === undefined) return null;
+  const m = object(raw, 'multiuser');
+  only(m, 'multiuser', ['upstream', 'path', 'maxClients']);
+  if (!trustProxyIdentity) fail('multiuser', 'requires trustProxyIdentity: true (the role comes from the entry proxy)');
+  const upstream = string(m.upstream, 'multiuser.upstream', /^wss?:\/\/[^\s/]+(?::\d+)?(?:\/\S*)?$/);
+  const path = optional(m, 'path', (v) => string(v, 'multiuser.path', /^\/[A-Za-z0-9/_-]*$/), '/multiuser');
+  if (path === websocketPath) fail('multiuser.path', 'must differ from websocketPath');
+  if (['/health'].includes(path) || path.startsWith('/history')) fail('multiuser.path', 'collides with an HTTP route');
+  return { upstream, path, maxClients: optional(m, 'maxClients', (v) => int(v, 'multiuser.maxClients', 1, 1000), 50) };
+}
+
 /** Validate a parsed config object; returns a normalized copy or throws ConfigError. */
 export function validateConfig(raw) {
   const c = object(raw, 'config');
   if (c.schemaVersion !== 1) fail('schemaVersion', 'must be 1');
-  only(c, 'config', ['schemaVersion', 'listen', 'apiKeyEnv', 'allowedOrigins', 'readOnly', 'trustProxyIdentity', 'audit', 'source', 'signals', 'history', 'websocketPath', 'maxClients']);
+  only(c, 'config', ['schemaVersion', 'listen', 'apiKeyEnv', 'allowedOrigins', 'readOnly', 'trustProxyIdentity', 'audit', 'source', 'signals', 'history', 'websocketPath', 'maxClients', 'multiuser']);
   const listen = object(c.listen ?? {}, 'listen');
   only(listen, 'listen', ['host', 'port']);
   const signalsRaw = Array.isArray(c.signals) ? c.signals : fail('signals', 'must be an array');
@@ -159,6 +177,11 @@ export function validateConfig(raw) {
     source: c.source === undefined ? null : validateSource(c.source),
     signals: signalsRaw.map((s, i) => validateSignal(s, i, seen)),
     history: validateHistory(c.history),
+    multiuser: validateMultiuser(
+      c.multiuser,
+      optional(c, 'trustProxyIdentity', (v) => bool(v, 'trustProxyIdentity'), false),
+      optional(c, 'websocketPath', (v) => string(v, 'websocketPath', /^\/[A-Za-z0-9/_-]*$/), '/ws'),
+    ),
   };
 }
 

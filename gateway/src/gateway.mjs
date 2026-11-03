@@ -8,6 +8,7 @@
  *   GET  /history/signals         } X-API-Key when an API key is configured
  *   GET  /history/query           /
  *   WS   <websocketPath>          ?apikey= when an API key is configured
+ *   WS   <multiuser.path>         optional multiuser guard (ADR-0028), proxied identity only
  */
 import { createServer } from 'node:http';
 import { SignalRegistry } from './signals.mjs';
@@ -16,6 +17,7 @@ import { InfluxHistory, HistoryError } from './history.mjs';
 import { RealtimeServer, keyMatches } from './realtime-server.mjs';
 import { OpcUaSource } from './sources/opcua-source.mjs';
 import { IdleSource } from './sources/idle-source.mjs';
+import { MultiuserGuard } from './multiuser-guard.mjs';
 
 export const GATEWAY_PRODUCT = 'xyvirtual-gateway';
 
@@ -41,7 +43,7 @@ function json(res, status, body, headers = {}) {
 /**
  * @param {ReturnType<import('./config.mjs').validateConfig>} config
  * @param {ReturnType<import('./config.mjs').resolveSecrets>} secrets
- * @param {{ source?: any, fetchImpl?: typeof fetch, identify?: any }} [overrides]
+ * @param {{ source?: any, fetchImpl?: typeof fetch, identify?: any, identifyMultiuser?: any, connectUpstream?: any }} [overrides]
  */
 export function createGateway(config, secrets, overrides = {}) {
   const registry = new SignalRegistry(config.signals);
@@ -53,6 +55,14 @@ export function createGateway(config, secrets, overrides = {}) {
     maxClients: config.maxClients, allowedOrigins: config.allowedOrigins, path: config.websocketPath,
     identify: overrides.identify ?? (config.trustProxyIdentity ? async (req) => proxyIdentity(req) : undefined),
   });
+
+  const multiuser = config.multiuser ? new MultiuserGuard({
+    ...config.multiuser,
+    allowedOrigins: config.allowedOrigins,
+    audit,
+    identify: overrides.identifyMultiuser ?? proxyIdentity,
+    ...(overrides.connectUpstream ? { connectUpstream: overrides.connectUpstream } : {}),
+  }) : null;
 
   const cors = (req) => {
     const origin = req.headers.origin;
@@ -71,6 +81,7 @@ export function createGateway(config, secrets, overrides = {}) {
         readOnly: config.readOnly, signals: registry.names().length, clients: realtime.clients.size,
         source: source.health(), history: { enabled: config.history.enabled, connected: history.connected },
         auditFailures: audit.failures,
+        multiuser: multiuser ? { enabled: true, clients: multiuser.clients.size } : { enabled: false },
       }, headers);
     }
     if (!url.pathname.startsWith('/history/')) return json(res, 404, { error: 'not found' }, headers);
@@ -87,11 +98,13 @@ export function createGateway(config, secrets, overrides = {}) {
     }
   });
   server.on('upgrade', (req, socket, head) => {
-    if (!realtime.handleUpgrade(req, socket, head)) socket.destroy();
+    if (realtime.handleUpgrade(req, socket, head)) return;
+    if (multiuser?.handleUpgrade(req, socket, head)) return;
+    socket.destroy();
   });
 
   return {
-    registry, audit, source, history, realtime, server,
+    registry, audit, source, history, realtime, multiuser, server,
     async start() {
       source.start();
       history.start();
@@ -104,6 +117,7 @@ export function createGateway(config, secrets, overrides = {}) {
     },
     async stop() {
       realtime.close();
+      multiuser?.close();
       await new Promise((resolve) => server.close(() => resolve()));
       await history.stop();
       await source.stop();
