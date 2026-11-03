@@ -17,7 +17,9 @@ import { createStore } from './create-store';
 import { getAppConfig } from '../rv-app-config';
 
 export type HmiRole = 'viewer' | 'operator' | 'engineer' | 'admin';
-export type HmiCapability = 'write-signals' | 'force-signals' | 'save-server-projects' | 'manage-users';
+export type HmiCapability =
+  | 'write-signals' | 'force-signals' | 'save-server-projects' | 'manage-users'
+  | 'ack-alarms' | 'shelve-alarms' | 'configure-hmi';
 
 const ROLE_ORDER: readonly HmiRole[] = ['viewer', 'operator', 'engineer', 'admin'];
 const MINIMUM_ROLE: Record<HmiCapability, HmiRole> = {
@@ -25,6 +27,10 @@ const MINIMUM_ROLE: Record<HmiCapability, HmiRole> = {
   'force-signals': 'engineer',
   'save-server-projects': 'engineer',
   'manage-users': 'admin',
+  // ADR-0025: acknowledging is an operator duty; shelving and HMI configuration are engineering.
+  'ack-alarms': 'operator',
+  'shelve-alarms': 'engineer',
+  'configure-hmi': 'engineer',
 };
 
 export interface HmiSessionSnapshot {
@@ -87,7 +93,7 @@ export async function initHmiSession(fetchImpl: typeof fetch = fetch): Promise<H
  * the gateway's write audit with the same user. Returns whether it was recorded.
  */
 export async function reportHmiEvent(
-  action: 'signal.force' | 'signal.unforce',
+  action: 'signal.force' | 'signal.unforce' | 'alarm.ack' | 'alarm.shelve' | 'alarm.unshelve',
   target: string,
   detail: Record<string, unknown> = {},
   fetchImpl: typeof fetch = fetch,

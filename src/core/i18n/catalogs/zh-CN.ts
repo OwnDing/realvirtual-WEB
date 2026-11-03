@@ -21,6 +21,7 @@ import { diagnosticsChinese } from './diagnostics';
 import { loadingPerformanceChinese } from './loading-performance';
 import { demoPackageChinese } from './demo-package';
 import { hmiAccountChinese } from './hmi-account';
+import { hmiAlarmsChinese } from './hmi-alarms';
 
 export const zhCN = {
   common: {
@@ -2705,6 +2706,7 @@ export const zhCN = {
     },
   },
   operator: {
+    alarms: hmiAlarmsChinese,
     machine: {
       title: '机器控制',
       demo: '演示',

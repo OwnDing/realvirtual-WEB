@@ -41,3 +41,5 @@ authority: normative-registry
 - [CONTRACT-GATEWAY-001：XYvirtual Gateway 配置、接口与写入审计](GATEWAY.md)
 
 - [CONTRACT-ACCESS-002：HMI 账户、角色授权与服务端项目接口](HMI_ACCESS.md)
+
+- [CONTRACT-HMI-001：项目内 HMI 配置文档（告警与 KPI）格式](HMI_PROJECT_CONFIG.md)

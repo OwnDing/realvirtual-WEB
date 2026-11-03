@@ -53,3 +53,4 @@ ADR 用于记录会长期影响多个模块、状态所有权、安全边界或�
 - [ADR-0023：自有工业网关（OPC UA 优先），CONNECT 降为可选](ADR-0023-own-industrial-gateway.md)：Accepted（2026-11-01），用户在缺口整改第 2 步选择自研网关；浏览器协议不变，Historian 不再要求 CONNECT，Appliance 中 CONNECT 改为可选组件。
 
 - [ADR-0024：HMI 四级角色、写操作审计与 Forgejo 服务端项目存储](ADR-0024-hmi-roles-and-server-projects.md)：Accepted（2026-11-01），落实 OD-001 的 Appliance 范围：访问服务为唯一身份源，Caddy forward_auth 强制 HMI 会话，网关按角色写入，项目存于 Forgejo；组织/多租户/云端仍待规格。
+- [ADR-0025：告警管理与基于实时信号的可配置 KPI](ADR-0025-alarm-management-and-configured-kpis.md)：Accepted（2026-11-01），告警状态机（锁存、确认、限时搁置、浏览器内历史）建在 ErrorStore 之上，优先级与 KPI 定义存为项目文档 `hmi/*.json`，确认/搁置上报审计。

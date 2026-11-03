@@ -54,3 +54,4 @@ authority: normative-registry
 完成计划是历史证据，不自动代表当前代码状态；复用结论前检查其日期、验证范围和后续变更。
 - [EP-REMED-001](EP-REMED-001-stop-the-bleeding.md)：缺口整改第 1 步——Supply Chain Gate 远程转绿并纳入 `develop` required checks、公开 Stub 如实报告、上游部署流水线改手动；2026-11-01 完成并合入 develop。
 - [EP-GATEWAY-001](EP-GATEWAY-001-own-industrial-gateway.md)：缺口整改第 2 步——自有 OPC UA 网关、Historian 独立于 CONNECT、Appliance 中 CONNECT 可选；2026-11-01 完成并合入 develop。
+- [EP-ACCESS-002](EP-ACCESS-002-hmi-roles-and-server-projects.md)：缺口整改第 3 步——HMI 四级角色、写操作审计、Forgejo 服务端项目；2026-11-01 完成并合入 develop。

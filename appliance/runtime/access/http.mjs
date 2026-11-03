@@ -40,7 +40,11 @@ export async function body(req, limit, asJson = true) {
   } catch { throw new AccessError(400, 'BAD_JSON'); }
 }
 /** Browser-reported HMI events and the minimum role that may report them. */
-const REPORTED_EVENTS = Object.freeze({ 'signal.force': 'engineer', 'signal.unforce': 'engineer' });
+const REPORTED_EVENTS = Object.freeze({
+  'signal.force': 'engineer', 'signal.unforce': 'engineer',
+  // ADR-0025 alarm actions.
+  'alarm.ack': 'operator', 'alarm.shelve': 'engineer', 'alarm.unshelve': 'engineer',
+});
 
 export function createAccessHandler(config, dependencies = {}) {
   const origin = new URL(config.origin);

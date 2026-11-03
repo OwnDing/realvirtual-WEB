@@ -144,5 +144,9 @@ describe('HMI roles (ADR-0024)', () => {
     expect(row).toMatchObject({ target: 'ConveyorStart', outcome: 'reported' });
     expect(JSON.parse(row.detail)).toEqual({ value: true, role: 'engineer', username: 'engineer' });
     expect((await f.call('/audit-events', { method: 'POST', body: { action: 'signal.unforce', target: 'ConveyorStart' }, session: engineer })).status).toBe(201);
+    // ADR-0025: an operator acknowledges alarms but may not shelve them.
+    expect((await f.call('/audit-events', { method: 'POST', body: { action: 'alarm.ack', target: 'Line/Motor' }, session: operator })).status).toBe(201);
+    expect((await f.call('/audit-events', { method: 'POST', body: { action: 'alarm.shelve', target: 'Line/Motor', detail: { minutes: 30 } }, session: operator })).status).toBe(403);
+    expect((await f.call('/audit-events', { method: 'POST', body: { action: 'alarm.shelve', target: 'Line/Motor', detail: { minutes: 30 } }, session: engineer })).status).toBe(201);
   });
 });

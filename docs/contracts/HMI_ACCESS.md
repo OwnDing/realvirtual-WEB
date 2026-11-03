@@ -20,6 +20,8 @@ authority: normative
 | 进入 HMI（WEB、`/gateway/*`、`/api/projects/v1/*`） | viewer | Caddy `forward_auth` → `GET /api/access/v1/authz?need=viewer` |
 | 写 PLC 信号 | operator | 网关 `trustProxyIdentity`；浏览器 viewer 不发送出站写入 |
 | 强制信号 | engineer | 浏览器强制控件；到达 PLC 的写入由网关按 operator 规则审计 |
+| 确认告警 | operator | 浏览器告警面板（[ADR-0025](../adr/ADR-0025-alarm-management-and-configured-kpis.md)）；上报 `alarm.ack` |
+| 搁置/解除搁置告警、修改告警与 KPI 配置 | engineer | 浏览器告警面板与“告警与 KPI”设置页；上报 `alarm.shelve` / `alarm.unshelve` |
 | 保存/新建/删除服务端项目 | engineer | 项目 API |
 | 用户管理、读审计 | admin | 访问 API |
 
@@ -32,7 +34,7 @@ authority: normative
 
 ## 3. 浏览器上报事件 `POST /api/access/v1/audit-events`
 
-需要会话、同源 `Origin` 与 `X-CSRF-Token`。正文 `{ action, target, detail? }`；`action` ∈ `signal.force`、`signal.unforce`（均需 engineer），`target` 1–256 字符。写入审计行 `outcome = reported`，`detail` 为 JSON，用户名与角色取自会话而非正文。返回 `201`。该记录是补充证据，不构成权限边界。
+需要会话、同源 `Origin` 与 `X-CSRF-Token`。正文 `{ action, target, detail? }`；`action` 与所需最低角色：`signal.force`、`signal.unforce`、`alarm.shelve`、`alarm.unshelve` 需 engineer，`alarm.ack` 需 operator；角色不足 `403`；未知 `action` 或 `target` 不在 1–256 字符内为 `422 INVALID_EVENT`。写入审计行 `outcome = reported`，`detail` 为 JSON，用户名与角色取自会话而非正文。返回 `201`。该记录是补充证据，不构成权限边界。
 
 ## 4. 服务端项目 `/api/projects/v1`
 

@@ -2,7 +2,7 @@
 doc_id: EP-ACCESS-002
 title: 缺口整改第 3 步：HMI 四级角色、写操作审计与 Forgejo 服务端项目
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
 last_reviewed: 2026-11-01
 authority: normative-process
@@ -68,7 +68,7 @@ authority: normative-process
 ## Progress
 
 - [x] M1–M4 实现与测试（见 Validation）。
-- [ ] 远程 CI（含真实 Caddy 的受保护演示旅程，其中新增 HMI 会话门控与伪造身份头断言）与合并。
+- [x] 远程 CI（含真实 Caddy 的受保护演示旅程，其中新增 HMI 会话门控与伪造身份头断言）与合并。
 
 ## Surprises & Discoveries
 
@@ -106,4 +106,6 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-（远程 CI 与合并后补齐。）
+- 远程：PR [#23](https://github.com/OwnDing/realvirtual-WEB/pull/23) 提交 `341dfbd`，run `41287912889` 七项全部首轮通过（含六项 required 与 Windows 兼容性；Browser Gate 中的受保护演示旅程在真实 Caddy 上验证了 `forward_auth` 会话门控与伪造身份头剥离）。
+- 合并：2026-11-01T09:34:38Z 合入 `develop`，merge commit `1b4f0b0`。
+- 遗留：真实 Forgejo contents API 与 CLI 令牌签发、Appliance 实机登录与角色、多用户并发编辑同一服务端项目——均需实机验收；OD-001 的组织/SSO 范围仍开放。
