@@ -17,6 +17,11 @@ test.describe('HMI panel interactions', () => {
     // Chinese — without the pin they would match nothing and the cases would
     // `test.skip` themselves into silence rather than fail.
     await pinLocale(page, 'en-US');
+    // A fresh browser profile is a first visit, so the product introduction
+    // opens itself and its backdrop takes every click (EP-E2E-001 #1–3: all
+    // three cases timed out on "<div …> intercepts pointer events"). These
+    // cases are about the panels, not the introduction.
+    await page.addInitScript(() => localStorage.setItem('rv-welcome-dismissed', '1'));
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     // Wait for UI to initialize
     await page.waitForSelector('canvas', { timeout: 30_000 });
@@ -33,88 +38,40 @@ test.describe('HMI panel interactions', () => {
     expect(hasBottomBar || hasPlayControls).toBeTruthy();
   });
 
+  /**
+   * EP-E2E-001 #1–3. These three cases used to guess at panels through CSS
+   * class fragments and `test.skip` themselves when a guess missed — so for as
+   * long as the introduction blocked every click they reported nothing at all.
+   * They now assert the panel the button is FOR, by role, and fail when it is
+   * absent instead of skipping.
+   */
+  async function leftPanel(page: import('playwright/test').Page): Promise<string | null> {
+    return page.evaluate(() => (window as unknown as {
+      __rvViewer: { leftPanelManager: { getSnapshot: () => { left: { activePanel: string | null } } } };
+    }).__rvViewer.leftPanelManager.getSnapshot().left.activePanel);
+  }
+
   test('settings button opens settings panel', async ({ page }) => {
-    // Find settings button by various selectors
-    const settingsButton = page.locator(
-      'button:has-text("Settings"), button[aria-label*="settings"], button[aria-label*="Settings"], [title*="Settings"], [title*="settings"]'
-    );
-
-    const buttonCount = await settingsButton.count();
-    if (buttonCount === 0) {
-      // Settings might be under a gear icon without text
-      const gearButton = page.locator('button svg, button img').first();
-      test.skip(true, 'Settings button not found by accessible name — UI may use icon-only buttons');
-      return;
-    }
-
-    await settingsButton.first().click();
-    await page.waitForTimeout(500);
-
-    // Verify a panel/overlay appeared
-    const panels = page.locator('[class*="panel"], [class*="Panel"], [class*="overlay"], [class*="Overlay"], [role="dialog"]');
-    const panelCount = await panels.count();
-    expect(panelCount).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page.getByRole('tab', { name: 'Start View', exact: true })).toBeVisible();
+    await expect.poll(() => leftPanel(page)).toBe('settings');
   });
 
   test('hierarchy button opens hierarchy panel', async ({ page }) => {
-    // Find hierarchy button
-    const hierarchyButton = page.locator(
-      'button:has-text("Hierarchy"), button[aria-label*="hierarchy"], button[aria-label*="Hierarchy"], [title*="Hierarchy"], [title*="hierarchy"]'
-    );
-
-    const buttonCount = await hierarchyButton.count();
-    if (buttonCount === 0) {
-      test.skip(true, 'Hierarchy button not found by accessible name');
-      return;
-    }
-
-    await hierarchyButton.first().click();
-    await page.waitForTimeout(500);
-
-    // Verify hierarchy content appeared (tree nodes, list items, etc.)
-    const treeContent = page.locator('[class*="hierarchy"], [class*="Hierarchy"], [class*="tree"], [role="tree"], [role="treeitem"]');
-    const contentCount = await treeContent.count();
-    expect(contentCount).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Hierarchy', exact: true }).click();
+    const tree = page.getByRole('tree');
+    await expect(tree).toBeVisible();
+    await expect(tree.getByRole('treeitem').first()).toBeVisible();
+    await expect.poll(() => leftPanel(page)).toBe('hierarchy');
   });
 
   test('panel can be closed after opening', async ({ page }) => {
-    // Try to open any panel
-    const buttons = page.locator('button:visible');
-    const buttonCount = await buttons.count();
+    const toggle = page.getByRole('button', { name: 'Hierarchy', exact: true });
+    await toggle.click();
+    await expect(page.getByRole('tree')).toBeVisible();
 
-    if (buttonCount < 2) {
-      test.skip(true, 'Not enough UI buttons found');
-      return;
-    }
-
-    // Count panels before click
-    const panelsBefore = await page.locator('[class*="panel"], [class*="Panel"], [role="dialog"]').count();
-
-    // Click first non-play/pause button (likely a panel toggle)
-    for (let i = 0; i < buttonCount; i++) {
-      const text = await buttons.nth(i).textContent();
-      const ariaLabel = await buttons.nth(i).getAttribute('aria-label');
-      const label = (text ?? '') + (ariaLabel ?? '');
-
-      // Skip play/pause/speed controls
-      if (label.match(/play|pause|speed|1x|2x|reset/i)) continue;
-
-      await buttons.nth(i).click();
-      await page.waitForTimeout(500);
-
-      const panelsAfter = await page.locator('[class*="panel"], [class*="Panel"], [role="dialog"]').count();
-      if (panelsAfter > panelsBefore) {
-        // Panel opened — now click the same button again to close
-        await buttons.nth(i).click();
-        await page.waitForTimeout(500);
-
-        const panelsAfterClose = await page.locator('[class*="panel"], [class*="Panel"], [role="dialog"]').count();
-        expect(panelsAfterClose).toBeLessThanOrEqual(panelsAfter);
-        return; // Test passed
-      }
-    }
-
-    // If no panel opened from any button, that's still ok (UI might work differently)
-    test.skip(true, 'No panel toggle button found');
+    await toggle.click();
+    await expect(page.getByRole('tree')).toBeHidden();
+    await expect.poll(() => leftPanel(page)).toBeNull();
   });
 });

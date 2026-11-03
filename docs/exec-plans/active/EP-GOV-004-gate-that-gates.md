@@ -4,7 +4,7 @@ title: 让质量门禁真正拦得住东西
 status: approved
 plan_status: active
 owner: engineering
-last_reviewed: 2026-08-25
+last_reviewed: 2026-11-03
 authority: normative
 ---
 
@@ -132,7 +132,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
-- [~] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余 13 个 e2e 失败未归因）
+- [x] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余失败已由 [`EP-E2E-001`](EP-E2E-001-attribute-fix-and-gate-e2e.md) 于 2026-11-03 逐条归因并修复，e2e 纳入 CI `E2E Gate`；本计划在 EP-E2E-001 远程证据留存后结案）
 - [x] M4 Browser Gate 稳定性（Vitest 4.1.11 + 官方强制每文件 GC 已连续两轮本地全量通过；同一实现提交远程 3/3 全绿）
 
 ## Surprises & Discoveries
@@ -177,6 +177,10 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 `camera-startpos` 的 2 个失败是**新增可见的**：该 spec 此前因导入 `@playwright/test` 从未运行过，修好收集后才第一次执行并失败。
 
 **不声称 e2e 套件通过。**
+
+### 2026-11-03 后续
+
+上述 13 个失败（2026-11-03 重测为 87 例中 19 个）由 [`EP-E2E-001`](EP-E2E-001-attribute-fix-and-gate-e2e.md) 逐条归因（按用例计）：用例侧 9 个、产品缺陷 6 个、测试基础设施 1 个（修复后又暴露一处产品缺陷）、基线采集伪影 3 个，共涉及 5 处产品缺陷（connect-embed 三处、`?model=` 裸文件名、rv-embed 产物 `process.env`）；全部修复，不新增 skip/fixme/retry。证据与 CI 接入见该计划。
 
 ## Decision Log
 

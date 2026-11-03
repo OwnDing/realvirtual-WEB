@@ -203,6 +203,13 @@ export default defineConfig({
     // Dev-server session badge gate — always off here: the embed build is a
     // library artifact, never a dev server.
     __RV_SERVE_INFO__: 'null',
+    // Library mode deliberately leaves `process.env.*` for a downstream bundler,
+    // but rv-embed is a browser-ready CDN artifact loaded straight from a
+    // <script type="module">: nothing downstream replaces it. The i18n runtime's
+    // React binding (react-i18next → react, CommonJS) reads
+    // `process.env.NODE_ENV` at module load, so the shipped bundle threw
+    // "process is not defined" before any viewer started (EP-E2E-001 #16).
+    'process.env.NODE_ENV': JSON.stringify('production'),
   },
   // Same as the main config: worker sub-builds (e.g. the signature-verify
   // worker in rv-sig-verify.ts) code-split and thus require the ES format.

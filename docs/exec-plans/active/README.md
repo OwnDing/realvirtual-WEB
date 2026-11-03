@@ -11,6 +11,7 @@ authority: normative-registry
 
 - [`EP-GOV-004-gate-that-gates.md`](EP-GOV-004-gate-that-gates.md)：让质量门禁真正拦得住东西——本机门禁与 CI 一致、OD-005 分支保护、反退化守卫；2026-08-23 依用户指令激活。
 - [`EP-APPLIANCE-001-offline-appliance.md`](EP-APPLIANCE-001-offline-appliance.md)：Linux/Windows、容器/原生完整离线 Appliance；2026-08-30 依用户指令激活。
+- [`EP-E2E-001-attribute-fix-and-gate-e2e.md`](EP-E2E-001-attribute-fix-and-gate-e2e.md)：第二轮整改第 3 步——e2e 失败逐条归因、修复（含 connect-embed 三处产品缺陷）并纳入 CI；2026-11-03 依用户指令激活。
 
 已完成计划见 [`../completed/`](../completed/README.md)。
 
@@ -23,3 +24,4 @@ authority: normative-registry
 - [EP-SEC-001：供应链与脚本安全](EP-SEC-001-supply-chain-and-script-security.md)：用户于 2026-10-20 批准实施及开 PR。
 
 - [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。
+- [EP-TRUST-001](EP-TRUST-001-own-model-signing-root-and-readme.md)：第二轮整改第 2 步——自有模型签名信任根（用户生成并保管）与 README 事实更正；2026-11-03 依用户指令激活。

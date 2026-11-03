@@ -152,7 +152,39 @@ export function getProjectsDashboardSnapshot(): ProjectsDashboardSnapshot {
  */
 let _everOpened = false;
 
+/**
+ * A shell that puts something else behind the Projects entry.
+ *
+ * The CONNECT embedded demo has no project browser: its activity-bar entry
+ * opens the demo's Models panel (the row that starts and closes the demo,
+ * EP-E2E-001), and `HMIShell` never mounts the dashboard in that context. While
+ * a redirect is installed, open/close/toggle go to it and the snapshot's `open`
+ * mirrors it, so every reader of the entry state (the activity bar's highlight)
+ * keeps working unchanged.
+ */
+export interface ProjectsEntryRedirect {
+  open(): void;
+  close(): void;
+  isOpen(): boolean;
+  subscribe(listener: () => void): () => void;
+}
+
+let _redirect: ProjectsEntryRedirect | null = null;
+let _redirectUnsubscribe: (() => void) | null = null;
+
+/** Install (or remove with `null`) the entry redirect. */
+export function setProjectsEntryRedirect(redirect: ProjectsEntryRedirect | null): void {
+  _redirectUnsubscribe?.();
+  _redirectUnsubscribe = null;
+  _redirect = redirect;
+  if (!redirect) return;
+  const mirror = () => { if (_snapshot.open !== redirect.isOpen()) publish({ open: redirect.isOpen() }); };
+  _redirectUnsubscribe = redirect.subscribe(mirror);
+  mirror();
+}
+
 export function openProjectsDashboard(group?: ProjectsRailGroup): void {
+  if (_redirect) { _redirect.open(); return; }
   const first = !_everOpened;
   _everOpened = true;
   publish({
@@ -173,6 +205,7 @@ export function openProjectsDashboard(group?: ProjectsRailGroup): void {
  * {@link setProjectsRailGroup}).
  */
 export function closeProjectsDashboard(): void {
+  if (_redirect) { _redirect.close(); return; }
   publish({ open: false });
 }
 
@@ -221,5 +254,8 @@ export function resetProjectsDashboardForTests(): void {
     search: '', chip: null, tag: null,
   };
   _everOpened = false;
+  _redirectUnsubscribe?.();
+  _redirectUnsubscribe = null;
+  _redirect = null;
   _listeners.clear();
 }
