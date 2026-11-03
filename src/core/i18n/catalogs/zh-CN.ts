@@ -1029,7 +1029,7 @@ export const zhCN = {
       unverifiableTitle: '无法验证模型签名',
       invalidTitle: '模型签名无效',
       unverifiableSummary: '自动化逻辑已被禁用，因为本浏览器无法验证模型来源。',
-      invalidSummary: '自动化逻辑已被禁用，因为模型内容与其签名不符。',
+      invalidSummary: '自动化逻辑已被禁用，因为签名校验未通过：模型在签名后被修改，或签名密钥不受本安装信任。',
       model: '模型：{{name}}',
       unknown: '未知',
       signer: ' · 签名者：{{signer}}',

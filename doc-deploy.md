@@ -229,7 +229,7 @@ Two independent protections can be armed on a deploy. Both are configured **only
 | Env | Effect |
 |-----|--------|
 | `RV_SIGN_PRIVATE_KEY` | Ed25519 private key (PKCS#8 PEM, or that PEM base64-encoded). Every GLB in the artifact is signed in place with an `rv_sig` provenance signature. Unset = models ship unsigned, and the deploy says so |
-| `RV_SIGN_CUSTOMER_CERT` | Path to an `RV-KEY-V1` customer certificate JSON, so the signature is attributed to the customer organisation instead of the realvirtual root key. The certificate's public key must match `RV_SIGN_PRIVATE_KEY` |
+| `RV_SIGN_CUSTOMER_CERT` | Path to an `RV-KEY-V1` customer certificate JSON, so the signature is attributed to the customer organisation instead of the root key. The certificate's public key must match `RV_SIGN_PRIVATE_KEY` |
 | `RV_DEPLOY_PASSWORD` | Private deploys only. Encrypts the project's GLBs with **AES-256-GCM** |
 | `RV_DEPLOY_FRAGMENT` | Reuses a given 32-byte fragment secret instead of generating a fresh one, so an in-place re-publish keeps the existing link working |
 
