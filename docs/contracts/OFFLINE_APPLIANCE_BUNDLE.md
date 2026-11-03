@@ -3,7 +3,7 @@ doc_id: CONTRACT-APPLIANCE-BUNDLE-001
 title: Offline Appliance Bundle v1 契约
 status: approved
 owner: architecture
-last_reviewed: 2026-09-01
+last_reviewed: 2026-11-03
 authority: normative
 ---
 
@@ -30,6 +30,7 @@ docs/
 licenses/
 sbom/
 images/                 # 支持 container 时必需
+acceptance/             # 可选：现场验收探针与记录模板（只读探针，见 docs/FIELD_ACCEPTANCE.zh-CN.md）
 ```
 
 `target` 稳定枚举为 `linux-x64`、`linux-arm64`、`windows-x64`。路径使用 POSIX `/`，不得包含绝对路径、`..`、设备名或符号链接逃逸。

@@ -37,4 +37,5 @@ authorization. Every write attempt is audited in `state/data/gateway/audit/write
 write is `unknown` and is never retried automatically. Real controllers require their own on-site
 acceptance.
 
-Browser, hardware and trust acceptance: [L3-2 guide](BROWSER_SUPPORT.md).
+Browser, hardware and trust acceptance: [L3-2 guide](BROWSER_SUPPORT.md). Hand-over acceptance:
+[field acceptance checklist](FIELD_ACCEPTANCE.en.md), with the read-only probe `acceptance/probe.mjs`.
