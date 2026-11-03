@@ -39,6 +39,11 @@ describe('E2E Gate (EP-E2E-001)', () => {
     expect(job).toContain('name: E2E Gate');
     expect(job).toContain('run: ./scripts/verify.sh e2e');
     expect(job).toContain('lfs: true');
+    // Self-hosted GPU runner, opt-in by repository variable, never for forks
+    // (public repository: a fork PR would run arbitrary code on the runner).
+    expect(job).toContain('runs-on: [self-hosted, gpu]');
+    expect(job).toContain("vars.E2E_GPU_RUNNER == 'true'");
+    expect(job).toContain('github.event.pull_request.head.repo.full_name == github.repository');
     expect(job).not.toMatch(/continue-on-error/);
     // KD-003: the formal embed artifact is guarded where it is built.
     expect(job).toMatch(/RV_REQUIRE_EMBED_DIST: '1'[\s\S]*tests\/embed-spike\.node\.test\.ts/);

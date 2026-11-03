@@ -223,14 +223,25 @@ jobs:
       - run: ./scripts/verify.sh build
 
   e2e:
-    # EP-E2E-001: the full Playwright suite on every PR — no retries, no
-    # continue-on-error, no subset. Specs that need the private sibling are
-    # excluded by the generated list in e2e/private-dependent-specs.json only
-    # when that sibling is absent (playwright.config.ts).
-    if: github.event_name != 'schedule'
+    # EP-E2E-001: the full Playwright suite — no retries, no continue-on-error,
+    # no subset. Specs that need the private sibling are excluded by the
+    # generated list in e2e/private-dependent-specs.json only when that sibling
+    # is absent (playwright.config.ts).
+    #
+    # Runs on a SELF-HOSTED runner with a GPU (user decision 2026-11-03): on
+    # GitHub's GPU-less hosted runners WebGL is software-rendered and the 3D
+    # pages starve (run 41638500304: 35-minute step timeout, clicks hanging in
+    # "scrolling into view", a 30 fps perf check that cannot pass there).
+    # The job is skipped until the repository variable E2E_GPU_RUNNER is
+    # 'true', and it NEVER runs a pull request from a fork: this repository is
+    # public, and a fork PR on a self-hosted runner would execute arbitrary
+    # code on the maintainer's machine.
+    if: >-
+      github.event_name != 'schedule' && vars.E2E_GPU_RUNNER == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     name: E2E Gate
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    runs-on: [self-hosted, gpu]
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:

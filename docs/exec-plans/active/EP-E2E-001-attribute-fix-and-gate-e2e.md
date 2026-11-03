@@ -94,7 +94,7 @@ authority: normative-process
 - [x] M1 归因（2026-11-03）
 - [x] M2 用例与基础设施修复（2026-11-03）
 - [x] M3 产品修复：缺陷 1–5（2026-11-03）
-- [~] M4 CI：`E2E Gate` 作业、结构守卫与 KD-003 产物守卫已加；本地全量见 Validation；远程待 PR
+- [~] M4 CI：`E2E Gate` 作业、结构守卫与 KD-003 产物守卫已加；托管 runner 证明不可行，改为自托管 GPU runner（待用户注册并设置 `E2E_GPU_RUNNER`）
 
 ## Surprises & Discoveries
 
@@ -115,6 +115,7 @@ authority: normative-process
 | 2026-11-03 | connect-embed 下“模型”入口打开演示行左侧面板，不再打开 Projects 面板 | 演示门按 `leftPanelManager` 左侧面板宽度居中（原设计即左侧面板）；嵌入演示不提供项目浏览 |
 | 2026-11-03 | 入口改道通过 Projects 面板 store 的入口重定向 + `HMIShell` 可见性规则实现，不改 `ActivityBar.tsx` | `ActivityBar.tsx` 被导航教程视频的源摘要钉住（`DOC_VIDEO_UI_DRIFT`）；改它须重录 23 MB 视频，而该教程根本不经过 connect-embed 路径；手改摘要等于伪造证据。代价：connect-embed 下入口提示文字仍为“项目”，记入遗留 |
 | 2026-11-03 | `E2E Gate` 是否加入 required checks 由用户决定 | OD-005：分支保护属仓库管理员操作 |
+| 2026-11-03 | `E2E Gate` 改为运行在带 GPU 的自托管 runner（`[self-hosted, gpu]`），以仓库变量 `E2E_GPU_RUNNER` 启用，且不运行 fork PR | 用户当前明确指令（选择“Self-hosted GPU runner”），依据 PR #29 首次 CI 证据（见 Validation）；公开仓库中 fork PR 不得进入自托管 runner |
 | 2026-11-03 | 一并修复缺陷 4（`?model=` 裸文件名）与缺陷 5（rv-embed `process.env`） | 用户“三项都修”的同一意图（让 e2e 因产品可用而通过）；两处修改面小且可独立回退；在交付报告中单列告知 |
 | 2026-11-03 | `slot-authority` 改断言“实时绑定无徽标”，不改产品去显示 `bound` | plan-341 §2.8 c 用户决定（07-30）是现行规则；服务侧权威断言全部保留 |
 | 2026-11-03 | CI 中以 `RV_REQUIRE_EMBED_DIST=1` 强制运行 rv-embed dist 守卫 | KD-003 的剩余工作即“正式构建 + 守卫的 CI 证据”；远程通过后在结案中关闭 KD-003 |
@@ -140,7 +141,7 @@ authority: normative-process
 
 **未解决（如实记录）**：`paintline-assembly` 在全量并行中间歇性失败（4 轮中 3 轮），单跑 3/3、与自身 5 并行 5/5、与重叠的重型用例混跑 28/28 均通过。第 3 轮诊断：`simTime` 冻结在 0.4833 s（29 个固定步）、无暂停原因、`PaintLine.Run` 为真、`AssemblyValid` 为真、渲染约 18 fps——即渲染继续而该页面的固定步不再推进。已在断言消息中加入 `simTickCount`、`logicRunState`、运行时挂接、是否由 DES 驱动和 500 ms 内实际帧数，供 CI 复现时定位；本计划不声称该用例稳定，M4 在远程多轮结果出来前保持未完成。`visual-presentation` 的编码失败与本机内存压力同时出现，同样记录待 CI 观察。
 
-远程 CI：待 PR。
+远程 CI（PR #29，run [`41638500304`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638500304)）：其余七项 Gate 全部通过；`E2E Gate` 在 GitHub 托管 `ubuntu-24.04`（2 workers、无 GPU）上于 35 分钟步骤上限处超时，仅完成约 63 例，约 24 例超时。证据 artifact 显示：点击停在“attempting click action → scrolling into view”（渲染进程被软件渲染的 WebGL 占满）；弱 GPU 判定触发自动画质提示框，拦截未预期它的用例；`sink-test` 在 240 s 内未完成一个机器人周期（模拟按帧推进）；`perf-smoke` 要求平均 ≥ 30 fps，在无 GPU 的 runner 上不可能通过。同一套件在本机 GPU 上全量 82/0（第 4 轮）。据此改为自托管 GPU runner（Decision Log）；该 runner 注册前作业跳过，M4 的远程验证待 runner 就绪后补记。
 
 ## Rollback
 
