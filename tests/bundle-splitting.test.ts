@@ -229,8 +229,22 @@ const distFiles = import.meta.glob('../dist/**/*.{html,js}', {
  *    rest are boot-order or i18n decisions documented elsewhere. The next time
  *    this number has to come down it costs a product decision, not a config
  *    line. Say so in the entry that has to make it.
+ *  - 03.11.2026 (ADR-0027): measured 3_519_856 on develop `51cf9b2` — 144 B of
+ *    headroom — with the diagnostics runtime at 23_483 (combined 3_543_339
+ *    against 3_545_000). Gap-remediation steps 4 and 5 already put all their
+ *    code in lazy chunks and their English in the deferred catalog; what is
+ *    left in the entry is zh-CN copy, which ADR-0001 keeps whole in the entry
+ *    as the fallback (T12). With 144 B, the next feature that adds any Chinese
+ *    UI text fails T5. RAISED to 3_600_000 by USER DECISION (03.11.2026,
+ *    ADR-0027) — +80_144, ~2.3 % over the measurement: room for several
+ *    features' zh-CN copy, still well under the 20–90 kB a panel falling back
+ *    into the entry would cost, so T5 keeps catching that. The diagnostics
+ *    combined guard is now expressed relative to this number (+25_000, the
+ *    allowance EP-DIAG-001 set) so the two guards cannot silently become each
+ *    other's real limit. The ratchet stands: T14 pins the new value, and the
+ *    next change in either direction needs its own decision and entry here.
  */
-const ENTRY_BUDGET_BYTES = 3_520_000;
+const ENTRY_BUDGET_BYTES = 3_600_000;
 
 /** Panels that MUST have their own chunk and be gone from the entry.
  *  `marker` is a literal that only exists in the panel's IMPLEMENTATION — the
@@ -349,7 +363,9 @@ describe('bundle splitting — panel chunks', () => {
     expect(text.length).toBeLessThan(32000);
     // Baseline entry: 3,519,720 chars. Account for the full added startup cost,
     // not just a transfer between chunks; leave the original entry gate intact.
-    expect(entryText.length + text.length).toBeLessThan(3545000);
+    // EP-DIAG-001 set the combined limit at the entry budget + 25,000; ADR-0027
+    // keeps that relation instead of a second absolute number.
+    expect(entryText.length + text.length).toBeLessThan(ENTRY_BUDGET_BYTES + 25_000);
   });
 
   // ── i18n catalog split (ADR-0001 R1) ────────────────────────────────────
@@ -395,10 +411,12 @@ describe('bundle splitting — panel chunks', () => {
     expect(entryText).toContain(STARTUP_EN_MARKER);
   });
 
-  it('T14 the budget was not relaxed to pay for the split', () => {
+  it('T14 the budget is pinned to its recorded decision', () => {
     // Splitting buys room for the remaining migration. If a later change also
-    // raises the ceiling, the room is spent twice.
-    expect(ENTRY_BUDGET_BYTES).toBe(3_520_000);
+    // raises the ceiling, the room is spent twice. ADR-0027 raised the ceiling
+    // once, by an explicit user decision that is not a split's payoff; the next
+    // change in either direction needs its own decision, not an edit here.
+    expect(ENTRY_BUDGET_BYTES).toBe(3_600_000);
   });
 
   it('T6 the deliberate non-targets are still in the entry', () => {
