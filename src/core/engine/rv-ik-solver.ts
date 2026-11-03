@@ -22,6 +22,8 @@
  */
 
 import { Matrix4, Vector3, Quaternion } from 'three';
+import type { Object3D } from 'three';
+import type { RVRobotIK } from './rv-robot-ik';
 
 /** Ortho-parallel-wrist kinematic parameters (serialized in rv_extras as RobotIK). */
 export interface OpwParams {
@@ -107,6 +109,13 @@ export interface IKSolverProvider {
     quat: [number, number, number, number],
     opts?: CobotSolveOpts,
   ): IKSolution[];
+  /**
+   * Optional (ADR-0026): the provider's own frame for target poses. Absent →
+   * `targetPoseInBase` (the convention the WASM solver was validated with).
+   */
+  poseInBase?(base: Object3D, target: Object3D | Matrix4, outPos: [number, number, number], outQuat: [number, number, number, number]): void;
+  /** Optional (ADR-0026): the provider's own joint chain for a robot. Absent → `robot.getJointChain()`. */
+  chainFor?(robot: RVRobotIK): JointChainParams | null;
 }
 
 class IKSolverRegistry {
@@ -212,6 +221,17 @@ class IKSolverRegistry {
   ): IKSolution[] | null {
     if (!this.canSolveCobot || !this.provider?.solveCobot) return null;
     return this.provider.solveCobot(chain, pos, quat, opts);
+  }
+
+  /** Target pose in the active provider's frame (see {@link IKSolverProvider.poseInBase}). */
+  poseInBase(base: Object3D, target: Object3D | Matrix4, outPos: [number, number, number], outQuat: [number, number, number, number]): void {
+    if (this.provider?.poseInBase) this.provider.poseInBase(base, target, outPos, outQuat);
+    else targetPoseInBase(base.matrixWorld, target instanceof Matrix4 ? target : target.matrixWorld, outPos, outQuat);
+  }
+
+  /** Joint chain in the active provider's frame (see {@link IKSolverProvider.chainFor}). */
+  chainFor(robot: RVRobotIK): JointChainParams | null {
+    return this.provider?.chainFor ? this.provider.chainFor(robot) : robot.getJointChain();
   }
 
   /**

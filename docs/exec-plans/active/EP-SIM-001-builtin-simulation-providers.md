@@ -66,6 +66,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 
 - 解析 Pieper 的 OPW 约定（`ElbowInUnityX`、轴反向、Unity→glTF 转换）无法在缺少参考实现的情况下证明正确；场景链在调用点就有，因此闭式解改为在链的 POE 模型上推导，任何坐标约定都由链本身携带。
 - 伸展较远的位姿中，带肩偏置的机器人后肩分支本就够不到；8 个槽位中只有 4 个可达是正确结果，测试据此区分紧凑与伸展位姿。
+- 用演示模型 `DemoRobotIK.glb` 做与 Unity 的对照时，球形手腕的 IRB2400 全部目标位姿都被精确求解，但最近解与 Unity 烘焙角度相差约 145°。排查发现该机型的 TCP 与目标节点带负缩放/半缩放：`targetPoseInBase` 与 `getJointChain()` 用节点自身缩放去除平移、并以矩阵分解取旋转，导致位置镜像/加倍、旋转相差 180°（CRX 为单位缩放，不受影响）。改为提供者钩子 `poseInBase`/`chainFor`，内置提供者使用“作者坐标系”（本地四元数之积 + 真实世界位置）后，Unity 烘焙角度以 0.0° 复现全部目标；许可提供者的输入保持不变。
 
 ## Decision Log
 
@@ -73,6 +74,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 | --- | --- | --- |
 | 2026-11-01 | 三项能力全部自研 | 用户在缺口整改计划中的明确选择 |
 | 2026-11-03 | IK 闭式解在场景链上推导，`solvePieper` 增加可选链参数 | ADR-0026 |
+| 2026-11-03 | 内置 IK 使用作者坐标系（提供者钩子 `poseInBase`/`chainFor`），许可提供者输入不变 | 与 Unity 烘焙角度的对照结果 |
 | 2026-11-03 | 第 5 步在第 4 步分支之上继续，按子步骤分别提交 | 第 4 步分支尚未推送；用户指令“继续” |
 
 ## Validation
@@ -87,7 +89,9 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 | `./scripts/verify.sh build` | 通过；入口 3,519,457 字节（预算 3,520,000），求解器位于独立 chunk `builtin-providers-*.js` |
 | `./scripts/verify.sh browser` | 8 分片 + 性能套件全部通过；既有 `ik-tier`、`rv-ik-path`、`plugin-toggle-gizmos`、`embed-dispose-leak`（47 条）在新签名下通过 |
 
-未验证（需实机/真实模型）：带 RobotIK 的真实 GLB 上的交互拖动与 LIN 运行（私有 `ik-cobot-glb-chain` 测试依赖私有模型与 WASM，公共构建跳过）。
+补充（作者坐标系修正后）：新增浏览器测试 `ik-builtin-glb`（4）——加载 `DemoRobotIK.glb`，ABB IRB2400（闭式）与 FANUC CRX（数值）的每个带烘焙 AxisPos 的目标都被精确求解（FK 误差 < 0.1 mm），且存在与 Unity 烘焙角度相差 < 3° 的解；CRX 以烘焙角度热启动收敛为单一邻近解。既有 IK 浏览器测试 51 条通过；入口 3,519,659 字节。
+
+未验证（需实机/真实模型）：交互拖动目标与 LIN 运行的人工体验（私有 `ik-cobot-glb-chain` 的 LIN 路径测试依赖私有 WASM，公共构建跳过）。
 
 ## Rollback
 

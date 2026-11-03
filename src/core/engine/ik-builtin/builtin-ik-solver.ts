@@ -16,7 +16,10 @@
  *   then analytic seeds from the best-fit wrist centre and quasi-random seeds.
  */
 
+import type { Matrix4, Object3D } from 'three';
 import type { CobotSolveOpts, IKSolution, IKSolverProvider, JointChainParams, OpwParams } from '../rv-ik-solver';
+import type { RVRobotIK } from '../rv-robot-ik';
+import { authoredChain, authoredPoseInBase } from './authored-frame';
 import {
   approximateWristCenter, chainScale, dot, fitLimits, forward, maxAngleDiff, norm, qNormalize, solveAnalytic,
   solveNumeric, sub, unit, verify, wrapDeg, type NumericOptions, type Q, type V3,
@@ -62,6 +65,15 @@ export class BuiltinIkSolver implements IKSolverProvider {
   readonly maxRobots = Number.POSITIVE_INFINITY;
   /** No continuous blending is implemented by this provider. */
   readonly canBlend = false;
+
+  /** Targets and chain in the authored frame (see authored-frame.ts). */
+  poseInBase(base: Object3D, target: Object3D | Matrix4, outPos: [number, number, number], outQuat: [number, number, number, number]): void {
+    authoredPoseInBase(base, target, outPos, outQuat);
+  }
+
+  chainFor(robot: RVRobotIK): JointChainParams | null {
+    return authoredChain(robot);
+  }
 
   solvePieper(params: OpwParams, pos: [number, number, number], quat: [number, number, number, number], chain?: JointChainParams | null): IKSolution[] {
     if (!chain) return Array.from({ length: SLOTS }, unreachable);

@@ -28,7 +28,7 @@ import type { GizmoHandle } from '../core/engine/rv-gizmo-manager';
 import type { RVRobotIK } from '../core/engine/rv-robot-ik';
 import type { RVIKPath } from '../core/engine/rv-ik-path';
 import type { RVIKTarget } from '../core/engine/rv-ik-target';
-import { ikSolverRegistry, targetPoseInBase, type OpwParams, type CobotSolveOpts } from '../core/engine/rv-ik-solver';
+import { ikSolverRegistry, type OpwParams, type CobotSolveOpts } from '../core/engine/rv-ik-solver';
 import { ikEditStore } from '../core/hmi/ik-edit-store';
 
 const MARKER_COLOR = 0xce93d8;      // IKTarget badge lavender (reachable)
@@ -338,9 +338,9 @@ export class IKPathVisualizerPlugin implements RVViewerPlugin {
    *  numerical Cobot solver (no warm start — cold, deterministic); spherical
    *  wrists — and any fallback (no chain / no pro solver) — via Pieper. */
   private isReachable(robot: RVRobotIK, params: OpwParams, targetNode: Object3D): boolean {
-    targetPoseInBase(robot.node.matrixWorld, targetNode.matrixWorld, this._p3, this._q4);
+    ikSolverRegistry.poseInBase(robot.node, targetNode, this._p3, this._q4);
     if (robot.WristType === 'NonSpherical' && ikSolverRegistry.canSolveCobot) {
-      const chain = robot.getJointChain();
+      const chain = ikSolverRegistry.chainFor(robot);
       if (chain) {
         this._cobotOpts.opw = params;
         this._cobotOpts.warmStart = undefined;
@@ -350,7 +350,7 @@ export class IKPathVisualizerPlugin implements RVViewerPlugin {
     }
     // NOTE: solvePieper returns the full 8-branch set with per-branch reachable
     // flags — a bare truthiness check would ALWAYS pass once a solver is loaded.
-    const sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4, robot.getJointChain());
+    const sols = ikSolverRegistry.solvePieper(params, this._p3, this._q4, ikSolverRegistry.chainFor(robot));
     return !!sols && sols.some((s) => s.reachable);
   }
 

@@ -31,6 +31,7 @@ authority: normative
    - 球形手腕：由链导出指数积（POE）螺旋轴，用 Paden–Kahan 子问题（腕心、肩、肘、腕）闭式求解，返回 8 个分支槽位（肩 × 肘 × 腕），每个分支用链 FK 复核；需要 A2∥A3、A4–A6 交于一点。
    - 非球形手腕（`solveCobot`）：在同一 FK 上做阻尼最小二乘（Levenberg–Marquardt），先用热启动，再用“最佳拟合腕心”的闭式分支、镜像种子与 Halton 准随机种子。
    - 无链时所有槽位不可达。无 TCP 节点时，OPW `toolOffset` 仅沿法兰法线（A6 轴，背离腕心）的 z 分量生效，x/y 无法映射而忽略。
+   - **求解坐标系**：注册表新增可选提供者钩子 `poseInBase(base, target)` 与 `chainFor(robot)`，缺省时仍是 `targetPoseInBase` 与 `getJointChain()`（许可 WASM 求解器验证时所用约定，输入不变）。内置提供者使用“作者坐标系”：旋转取各级本地四元数之积（Unity 对齐 `transform.rotation` 的语义），位置取真实世界位置并表达在机器人本地坐标。原因：导出的 TCP/目标节点可带负缩放或非均匀缩放（演示 IRB2400 的 TCP 缩放为 (0.5, 0.5, −0.5)、目标为 (−1, 1, 1)），分解世界矩阵会把反射归到 X 并得到相差 180° 的旋转，而按节点自身缩放除平移会移动位置。在演示模型上，Unity 烘焙的 AxisPos 在此坐标系中以 0.0° 复现全部 IK 目标（位置差为该机型 OPW 模型与网格链的固定 5 mm）。
    - 提供者声明 `tier = 'pro'`（无机器人数量限制、支持 Cobot），`canBlend = false`（未实现连续混合）。
 
 4. **CSG 加工：TypeScript Web Worker 中的 SDF 体素网格。** 毛坯（Box/Cylinder 解析、Mesh 体素化）初始化为有符号距离场；刀具扫掠按契约的刀具形状求 SDF 并做 `max(sdf, −tool)` 减法；脏块（16³）用 Marching Cubes 重建网格并按批回传。`DualContouring` 与折边分裂在本实现中退化为 Marching Cubes + SDF 梯度法线，并在文档中说明。只有一个计算路径（Worker）；没有 Worker 的环境保持“不可用”。
