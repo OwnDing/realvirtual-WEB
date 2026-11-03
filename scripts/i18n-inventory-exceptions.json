@@ -264,6 +264,60 @@
       "category": "plugin-registry",
       "match": "[free text omitted]",
       "reason": "Diagnostic Bundle v1 serialized log.message redaction marker, not a plugin label or UI sentence. It is intentionally locale-independent for support tooling; surrounding user-facing omission explanations are in the bilingual diagnostics catalog."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": \" \" not found",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": Body B is required",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": a Universal joint needs SecondaryAxisB",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": Body A and Body B are the same link",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": a joint is driven by a drive",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": "was merged into static geometry at load",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": AxisA is zero",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": anchors are mm apart in the authored pose",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
+    },
+    {
+      "file": "src/core/engine/mechanism-builtin/mechanism-runtime.ts",
+      "category": "dynamic-text",
+      "match": ": inverse tracking is not supported by the built-in solver",
+      "reason": "Rigid-body mechanism finding text of the built-in solver (ADR-0026). In community builds it is surfaced only to agents and developers through the MCP web_editor_mechanism_inspect/_validate JSON (the authoring panel that renders findings is part of the licensed bundle); the stable contract is the finding code, the text is diagnostic."
     }
   ]
 }

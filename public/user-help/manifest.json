@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productVersion": "6.3.27",
   "revision": "2026-10-23.1",
-  "contentDigest": "b8d48cf72c10fa8dcca6bc9822f6e1b220f91db6e38eb30816a462fbadc79e97",
+  "contentDigest": "3186c9b36e93717e6062a8ce53345690791c95443ccf2bfc94030315c0904c41",
   "inputs": {
     "appliance/docs/INSTALL.en.md": "9e290f1ec2fd7ab02eefaeab627c983e94b959b82d18869e4b1d86c55b16809d",
     "appliance/docs/INSTALL.zh-CN.md": "f81ba61fba02251971a27b414a23fe0d20493d9af2d618c298464f0995fada7b",
@@ -24,7 +24,7 @@
     "docs/user/en-US/faq.md": "5050a0335dbd32045a6f7b30e98466df2f31811cb62639c8146383297637a588",
     "docs/user/en-US/licensing.md": "ee3cdaea5e245d257c4d7e373bac39c7770335b168c3e991349d7332f08f670f",
     "docs/user/en-US/media.md": "05e35aba6c4d43fafea45bae86d02a9a95078ad37a4ca870d51a153c14a3f63f",
-    "docs/user/en-US/models.md": "48280ade457f9819c5ec3fd845ba6ba26c1ee35300dc504c0982ddca408f0c10",
+    "docs/user/en-US/models.md": "5647acc291f8ea4b20c2b0316e6b5d929f7562c2aed3e05a9609f0d145cc0e70",
     "docs/user/en-US/navigation.md": "e4c9da26190eaf031e8ff76a8cd93a2e886e69cbcb563c004a52ea86c587d8af",
     "docs/user/en-US/overview.md": "4fba2185733153bd27f141a19a632ae4966048dbd3f7b4d91858d9bd72e20445",
     "docs/user/en-US/projects.md": "0167532cc2237ef980b94e4a5f972398f443aa63a6f539016f76a995ee23abcb",
@@ -50,7 +50,7 @@
     "docs/user/zh-CN/faq.md": "b37347a7615a77962f4ddec165c22d870dfe41a4c3d27e3eff4dd1c75bc54d07",
     "docs/user/zh-CN/licensing.md": "24c62796778937c33d6a43fbeceda5f0187defb2c815ae043f12a642a5bcc3bd",
     "docs/user/zh-CN/media.md": "524b3d502d8db0f0cdab00888949e421f939b398bf337b46829b39b5c97733c3",
-    "docs/user/zh-CN/models.md": "5a15d65210efbea6fa7f709e0eb7150bb8afa5eb51246d742bdb8f3f4b80be4a",
+    "docs/user/zh-CN/models.md": "ed9182f8a5bbb422cbd3041f9a5c9697bfa001e6450d84bff59e9a4499e021ea",
     "docs/user/zh-CN/navigation.md": "59bb7e7b805d6b4d8812b189ae5455828f232b93fdf915a7508719ecb75f31c0",
     "docs/user/zh-CN/overview.md": "c91f102ab8fe27a73d7ca54b7683199502223a713ce67590238afa5b4f21f8ae",
     "docs/user/zh-CN/projects.md": "0908fcd9794b1ee0634c96829a5ef65b65dd7280126ddd3eec68da72b0676bb3",
@@ -122,6 +122,7 @@
         "准备",
         "操作",
         "预期结果",
+        "robots-mechanisms-machining",
         "失败处理"
       ]
     },
@@ -339,6 +340,7 @@
         "prepare",
         "steps",
         "expected-result",
+        "robots-mechanisms-machining",
         "recovery"
       ]
     },

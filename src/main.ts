@@ -814,7 +814,7 @@ async function init() {
 
   // --- Built-in IK / machining / mechanism providers (ADR-0026) ---
   // Only fills the provider slots the private plugins above left empty.
-  (await import('./core/engine/builtin-providers')).registerBuiltinProviders();
+  (await import('./plugins/builtin-providers')).registerBuiltinProviders(viewer);
 
   // --- Smart Asset Editor (EP-ASSET-001) ---
   // Public builds now carry the complete GLB/rv_extras authoring loop. Keep a

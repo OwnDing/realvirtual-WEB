@@ -22,7 +22,7 @@ authority: normative
 
 ## Decision
 
-1. **实现公共契约，不替换契约。** 自研代码实现既有的 `IKSolverProvider`、`KinematicManagerLike`/`MechanismUiBridge`、`MachiningProvider` 接口，在 `main.ts` 的 `registerPrivatePlugins()` 之后由 `src/core/engine/builtin-providers.ts` 注册，并且**只填仍为空的槽位**——许可构建的私有提供者始终优先。全部作为独立 chunk 懒加载，不增加入口体积。
+1. **实现公共契约，不替换契约。** 自研代码实现既有的 `IKSolverProvider`、`KinematicManagerLike`/`MechanismUiBridge`、`MachiningProvider` 接口，在 `main.ts` 的 `registerPrivatePlugins()` 之后由 `src/plugins/builtin-providers.ts` 注册，并且**只填仍为空的槽位**——许可构建的私有提供者始终优先。全部作为独立 chunk 懒加载，不增加入口体积。
 
 2. **验证优先。** 每个提供者只报告自己能证明的结果：IK 解经正向运动学复核且满足关节限位才标记 `reachable`；机构求解报告真实残差与收敛标志；加工只在 SDF 网格上做体积可计数的减法。无法证明时报告“不可达/未收敛/不可用”，由调用方回退到原有行为（AxisPos 回放、不移动、工件不变）。
 
@@ -37,7 +37,13 @@ authority: normative
 4. **CSG 加工：TypeScript Web Worker 中的 SDF 体素网格。** 毛坯（Box/Cylinder 解析、Mesh 体素化：带宽两体素内为精确距离、X 向射线奇偶判内外）初始化为有符号距离场，格点几何与契约一致（`voxel = domain/(res−3)`，原点 `domainMin − 1.5·voxel`）；刀具扫掠按契约的刀具形状求 SDF 并做 `max(sdf, −tool)` 减法；脏块（16³）用 Marching Cubes 重建网格并按批（≤16 块）回传，Marching Cubes 的 256 种情形由“面线段追踪”在加载时生成（歧义面统一分离材料角，保证相邻单元一致、网格封闭），三角形按 SDF 梯度朝外。`DualContouring` 与折边分裂在本实现中退化为 Marching Cubes + SDF 梯度法线。只有一个计算路径（Worker）；没有 Worker 的环境保持“不可用”。
    - **刀具坐标约定（未与 Unity 内核逐项比对）**：轴线为本地 +Y、以节点原点为中心（与 `boundingRadius = √(r² + (h/2)²)` 一致），切削端在 −Y；BallNose 以 `CornerRadius`（≤ 半径，等于半径即完整球头）倒圆切削端；ConicalEnd 由切削端半径 `radius` 过渡到柄端 `coneRadiusTop`；Torus 为 XZ 平面内外半径 `radius`、管半径 `CornerRadius` 的圆环。
 
-5. **刚体机构：关节坐标上的阻尼牛顿约束求解。** 由 `KinematicJoint` 图构建拓扑（生成树 + 闭环），驱动关节取 Drive 值，被动关节和闭环约束以阻尼最小二乘每 tick 固定迭代 `SolverIterations` 次求解，写回连杆位姿与 `Converged`/`ResidualError`/`SolveTimeMs`；实现 `MechanismUiBridge` 的列表、校验、点动、重建。逆动力学力分析不在本步范围：快照报告“关闭”，不伪造数值。
+5. **刚体机构：最大坐标上的阻尼高斯–牛顿约束求解。** 组件工厂（`KinematicMechanism`/`KinematicJoint`/`KinematicTarget`/`MechanismBody`）、管理器（`setKinematicManager`）与面板桥（`setMechanismUiBridge`）在模型加载前安装；每 tick 在驱动之后（`onFixedUpdatePost`）求解。
+   - **连杆分类**：世界与只作为 Body A 出现的连杆为静止；自身或祖先带 Drive 的连杆由层级驱动；其余 Body B 为自由连杆（各 6 个未知量）。
+   - **约束**：Revolute（锚点重合 3 + 轴平行 2）、Prismatic（相对旋转锁定 3 + 只沿轴偏移 2）、Spherical（3）、Universal（3 + 1）；DrivenBy 指向的驱动若不经层级移动 Body B，则以驱动值作为关节值约束。残差按机构特征长度归一化；每 tick 固定 `SolverIterations` 次阻尼迭代（带回溯），热启动于上一位姿；平面机构在 3D 中的冗余约束由最小二乘吸收，DOF 由雅可比秩给出。
+   - **数据约定**：锚点为 Unity 毫米、X 镜像（`unityCoords`），轴同样镜像；关节值以 Unity 单位与符号报告。
+   - **报告而不伪造**：逆向跟踪（`KinematicTarget.TrackingActive`）给出 `InverseModeUnsupported` 警告并按驱动运动；逆动力学力分析的快照状态为“关闭”（status 1，`dynamicsValid = false`），不给数值；质量属性不计算；被加载器烘焙为静态的连杆给出 `LinkFrozen` 警告。
+   - **编辑工具**：MCP 机构工具中，运行类（inspect/validate/jog/forces/statics）使用内置桥；写入类（创建、加关节、锚点、轴、驱动、刚体、质量、限位、修复与 3D 吸附）在编辑模块仍为公共存根时明确拒绝，不经存根写入文档。
+   - **已知限制**：加载器的网格合批只把带 `Drive`/`Kinematic` 的节点当作运动节点；Unity 导出的被动连杆带 `Kinematic`，但不带它的手工模型在合并加载路径中连杆网格会被静态合批（求解仍进行，并给出 `LinkFrozen`）。修改加载器分类需占用入口体积预算，本步不做。
 
 ## Consequences
 

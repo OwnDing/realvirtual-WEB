@@ -16,7 +16,7 @@ authority: normative-process
 
 ## Scope
 
-- 5a IK：`ik-builtin/`（场景链 FK、Paden–Kahan 闭式解、阻尼最小二乘），`solvePieper` 可选链参数，`builtin-providers.ts` 注册。
+- 5a IK：`ik-builtin/`（场景链 FK、Paden–Kahan 闭式解、阻尼最小二乘、作者坐标系），`solvePieper` 可选链参数与 `poseInBase`/`chainFor` 钩子，`src/plugins/builtin-providers.ts` 注册。
 - 5b CSG 加工：Worker 内 SDF 网格、刀具扫掠减法、Marching Cubes 块网格、`MachiningProvider` 实现。
 - 5c 刚体机构：拓扑、约束求解、组件工厂、`KinematicManagerLike` 与 `MechanismUiBridge`（列表/校验/点动/重建），MCP 工具的诚实可用性随之更新。
 
@@ -43,7 +43,7 @@ authority: normative-process
 
 ## Allowed Paths
 
-`src/core/engine/ik-builtin/**`、`src/core/engine/builtin-providers.ts`、`src/core/engine/rv-ik-solver.ts`、`src/core/engine/rv-ik-path.ts`（调用点）、`src/plugins/ik-*.ts`（调用点）、`src/core/engine/machining-builtin/**`、`src/core/engine/mechanism-builtin/**`、`src/plugins/mcp-bridge/**`（可用性说明）、`src/main.ts`（一处注册）、相关 `tests/**`、`docs/**`。
+`src/core/engine/ik-builtin/**`、`src/plugins/builtin-providers.ts`、`src/core/engine/rv-ik-solver.ts`、`src/core/engine/rv-ik-path.ts`（调用点）、`src/plugins/ik-*.ts`（调用点）、`src/core/engine/machining-builtin/**`、`src/core/engine/mechanism-builtin/**`、`src/plugins/mcp-bridge/**`（可用性说明）、`src/main.ts`（一处注册）、相关 `tests/**`、`docs/**`。
 
 ## Forbidden Paths
 
@@ -59,7 +59,7 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 
 - [x] 5a IK：实现与测试（见 Validation）。
 - [x] 5b CSG 加工：实现与测试（见 Validation）。
-- [ ] 5c 刚体机构。
+- [x] 5c 刚体机构：实现与测试（见 Validation）。
 - [ ] 远程 CI 与合并。
 
 ## Surprises & Discoveries
@@ -104,6 +104,19 @@ GLB/`rv_extras` 格式、提供者公共接口的既有字段语义、入口体�
 | `./scripts/verify.sh browser` | 8 分片 + 性能套件全部通过；新增 `machining-builtin-glb`（3）：在**真实模块 Worker** 中加载 `DemoCSGMachining.glb` 的两个体积——128×32×128 Box（请求 DualContouring，按 Marching Cubes 提取）与 48×128×48 Mesh 毛坯（顶点均在毛坯包围盒内）——初始网格、Ø20 圆柱切入后去除体素 > 0 且实体数守恒 |
 
 已知限制：被动连杆不带 `Drive`/`Kinematic` 组件的合成模型在合并加载路径中会被静态合批（见 5c），与本步无关；刀具坐标约定未与 Unity 内核逐项比对（ADR-0026）。
+
+### 5c 刚体机构（macOS arm64，2026-11-03，提交前）
+
+| 验证 | 实际结果 |
+| --- | --- |
+| `./scripts/verify.sh governance` | 通过（离线帮助因“打开与导入模型”新增“机器人、机构与加工”一节重新生成） |
+| `./scripts/verify.sh static` | 通过；机构诊断文本（仅经 MCP inspect/validate 面向智能体与开发者呈现）在 `i18n-inventory-exceptions.json` 逐条登记理由 |
+| `./scripts/verify.sh node` | 94 文件 / 940 条通过。新增 `mechanism-solver`（4）：演示四杆机构初始残差为 0、DOF（驱动曲柄时 0，曲柄自由时 1）与闭环数 1；曲柄每 2° 一个 tick、每 tick 4 次迭代，耦合点与闭式四杆解误差 < 0.1 mm；球铰拖动自由平台；施加值驱动自由转动体；移动副保持姿态只沿轴滑动 |
+| `./scripts/verify.sh build` | 通过；入口 3,519,856 字节（预算 3,520,000） |
+| `./scripts/verify.sh browser` | 8 分片 + 性能套件全部通过。新增 `mechanism-builtin-glb`（4）：`mechanism-fourbar.glb` 经面板桥点动曲柄 10°–55°，各连杆长度保持（0.2/0.5/0.3 m，误差 < 1 mm）且收敛；`mechanism-scissor.glb` 无自由连杆保持收敛；`mechanism-delta.glb` 平台锚点随球铰（< 1 mm），力分析报告 status 1 而不给数值；合并加载路径中连杆仍运动，人为冻结的连杆给出 `LinkFrozen` 警告。`mcp-public-stub-honesty` 新增：仅有内置求解器时机构写入工具拒绝且不追加文档操作、读取工具可用；`mechanism-mcp-inspect`（写入编排）在授权的编辑适配器替身下通过 |
+| `./scripts/verify.sh supply-chain`（Node 22.22.2） | `web`、`gateway` 均通过（第 5 步无依赖变化） |
+
+已知限制：逆向跟踪与逆动力学未实现（明确报告）；被动连杆不带 `Drive`/`Kinematic` 的模型在合并加载中会被静态合批；机构编辑（MCP 写入类工具）仍需许可编辑模块。
 
 ## Rollback
 
