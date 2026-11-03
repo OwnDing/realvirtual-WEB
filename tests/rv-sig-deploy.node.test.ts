@@ -12,16 +12,21 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import {
+  RV_SIG_ROOT_PUBLIC_KEY_BASE64 as NODE_SIGNER_ROOT,
+  generateTrustRootFile,
   loadSigningConfig,
   signGlbBytes,
   verifyGlbBytes,
 } from '../scripts/rv-sign-glb.mjs';
+import { RV_SIG_ROOT_PUBLIC_KEY_BASE64 as BROWSER_ROOT } from '../src/core/persistence/rv-sig-public-key';
+import { RV_LIC_ROOT_PUBLIC_KEY_BASE64 as LICENSE_ROOT } from '../src/core/licensing/rv-lic-public-key';
 import { selectFilesToUpload, stagePrivateProject } from '../scripts/_bunny-lib.mjs';
 // @ts-expect-error Node deploy modules intentionally have no declaration files.
 import { decryptGlb, generateFragmentSecret } from '../scripts/lib/rv-crypto.mjs';
@@ -168,6 +173,83 @@ describe('rv_sig Node signer', () => {
     }, rawPublicKey(root.publicKey));
     if (!signing) throw new Error('issued certificate was not accepted');
     expect(signing.customerCert?.org).toBe('Customer AG');
+  });
+});
+
+/**
+ * The upstream realvirtual publish pipeline's root. Its private half is the
+ * upstream `RV_SIGN_PRIVATE_KEY`, so trusting it would let someone else's
+ * pipeline vouch for models in this project's installations (OD-007 input,
+ * ADR-0007 §D3). Kept here only as the value the roots must NOT be.
+ */
+const UPSTREAM_RV_SIG_ROOT = '99rD6Wl3Jsk7w9D+WIN9/jfEXNXns0jDRV5yf4LX48U=';
+
+describe('rv_sig trust root', () => {
+  it('is this project\'s own key, identical in the browser verifier and the Node signer', () => {
+    expect(BROWSER_ROOT).toMatch(/^[A-Za-z0-9+/]{43}=$/);
+    expect(Buffer.from(BROWSER_ROOT, 'base64')).toHaveLength(32);
+    expect(NODE_SIGNER_ROOT).toBe(BROWSER_ROOT);
+    expect(BROWSER_ROOT).not.toBe(UPSTREAM_RV_SIG_ROOT);
+    // Domain separation: license evidence and model provenance use different keys.
+    expect(BROWSER_ROOT).not.toBe(LICENSE_ROOT);
+  });
+
+  it('a model signed by any other root (such as the upstream pipeline) does not verify', () => {
+    const foreign = generateKeyPairSync('ed25519');
+    const signing = loadSigningConfig(
+      { RV_SIGN_PRIVATE_KEY: privateKeyEnv(foreign.privateKey) },
+      rawPublicKey(foreign.publicKey),
+    );
+    if (!signing) throw new Error('test signing configuration was not created');
+    const signed = signGlbBytes(makeGlb(), signing);
+    expect(verifyGlbBytes(signed, rawPublicKey(foreign.publicKey))).toBe('valid');
+    // Default argument = the compiled root: a different signer is rejected.
+    expect(verifyGlbBytes(signed)).toBe('invalid');
+    expect(verifyGlbBytes(makeGlb())).toBe('none');
+  });
+});
+
+describe('rv_sig trust-root generation', () => {
+  it('writes the private key only to a 0600 file and returns the matching public key', () => {
+    const keyPath = join(work, 'keys', 'root.pem');
+    const publicKey = generateTrustRootFile(keyPath, { repositoryRoot: join(work, 'repo') });
+    expect(publicKey).toMatch(/^[A-Za-z0-9+/]{43}=$/);
+    const pem = readFileSync(keyPath, 'utf8');
+    expect(pem).toContain('BEGIN PRIVATE KEY');
+    if (process.platform !== 'win32') expect(statSync(keyPath).mode & 0o777).toBe(0o600);
+
+    const signing = loadSigningConfig({ RV_SIGN_PRIVATE_KEY: pem }, Buffer.from(publicKey, 'base64'));
+    if (!signing) throw new Error('generated key was not accepted');
+    expect(verifyGlbBytes(signGlbBytes(makeGlb(), signing), Buffer.from(publicKey, 'base64'))).toBe('valid');
+  });
+
+  it('refuses to overwrite an existing key or to write inside the repository', () => {
+    const keyPath = join(work, 'root.pem');
+    writeFileSync(keyPath, 'existing');
+    expect(() => generateTrustRootFile(keyPath, { repositoryRoot: join(work, 'repo') })).toThrow(/already exists/);
+    expect(readFileSync(keyPath, 'utf8')).toBe('existing');
+
+    const repo = join(work, 'repo');
+    mkdirSync(repo);
+    expect(() => generateTrustRootFile(join(repo, 'keys', 'root.pem'), { repositoryRoot: repo })).toThrow(/inside the repository/);
+    expect(() => generateTrustRootFile(join(repo, 'root.pem'), { repositoryRoot: repo })).toThrow(/inside the repository/);
+  });
+
+  it('the CLI prints the public key and never the private key', () => {
+    const keyPath = join(work, 'cli', 'root.pem');
+    const run = spawnSync(process.execPath, [join(process.cwd(), 'scripts', 'rv-sign-glb.mjs'), '--keygen', keyPath], { encoding: 'utf8' });
+    expect(run.status, run.stderr).toBe(0);
+    const output = `${run.stdout}\n${run.stderr}`;
+    expect(output).not.toContain('PRIVATE KEY');
+    const pemBody = readFileSync(keyPath, 'utf8').split('\n').filter((line) => line && !line.startsWith('-----')).join('');
+    expect(output).not.toContain(pemBody);
+    const printed = run.stdout.trim().split('\n').at(-1)!;
+    const signing = loadSigningConfig({ RV_SIGN_PRIVATE_KEY: readFileSync(keyPath, 'utf8') }, Buffer.from(printed, 'base64'));
+    expect(signing).not.toBeNull();
+    // Inside this repository it refuses and writes nothing.
+    const inside = spawnSync(process.execPath, [join(process.cwd(), 'scripts', 'rv-sign-glb.mjs'), '--keygen', join(process.cwd(), 'never-commit.pem')], { encoding: 'utf8' });
+    expect(inside.status).toBe(1);
+    expect(inside.stderr).toMatch(/inside the repository/);
   });
 });
 
