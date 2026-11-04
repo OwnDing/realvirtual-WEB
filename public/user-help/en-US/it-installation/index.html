@@ -33,6 +33,11 @@
 <p>authorization. Every write attempt is audited in <code>state/data/gateway/audit/writes.jsonl</code>; a timed-out</p>
 <p>write is <code>unknown</code> and is never retried automatically. Real controllers require their own on-site</p>
 <p>acceptance.</p>
+<p>In container mode the gateway reaches PLCs through its own network <code>ot</code> (Linux host bridge</p>
+<p><code>xyv-ot</code>), the only service network besides the edge&#39;s that leaves the host. The host firewall must</p>
+<p>restrict <code>xyv-ot</code> forwarding to the approved PLC endpoints and drop everything else, for example</p>
+<p><code>DOCKER-USER</code> rules accepting <code>-i xyv-ot -d &lt;PLC&gt; -p tcp --dport 4840</code> and established traffic, then</p>
+<p>dropping <code>-i xyv-ot</code> (ADR-0029; the authoritative steps are in <code>INSTALL.zh-CN.md</code> section 6.1).</p>
 <p>Browser, hardware and trust acceptance: L3-2 guide. Hand-over acceptance:</p>
 <p>field acceptance checklist, with the read-only probe <code>acceptance/probe.mjs</code>.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 974d754f8714</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 9cdd8557ea92</span></footer></main></div></body></html>

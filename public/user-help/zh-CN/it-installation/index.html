@@ -8,7 +8,7 @@
 <li>企业 CA 证书，或批准 Appliance internal CA 根证书的分发流程；</li>
 <li><code>container</code> 或 <code>native</code> 模式；容器模式要求客户预装 Docker Engine/Compose、Docker Desktop/WSL2 或 Podman Compose，安装器不会修改这些平台；</li>
 <li>原生模式要求主机已安装 <code>git</code>（Forgejo 运行时调用，归档不含 git；Windows 为 Git for Windows），预检会检查并在缺失时阻断；容器模式使用 Forgejo 镜像内的 git，不需要主机 git；</li>
-<li>80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行；</li>
+<li>80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行。容器模式下网关经专用网络 <code>ot</code>（Linux 宿主网桥 <code>xyv-ot</code>）出站，它是除 Edge 外唯一能离开容器网络的服务：宿主防火墙必须把 <code>xyv-ot</code> 的转发流量限制为批准的 PLC 端点，其余拒绝（示例见 6.1，ADR-0029）；</li>
 <li>至少 10 GiB 安装余量，另按模型、Git 和历史保留期规划数据盘与备份盘；</li>
 <li>系统时间和时区正确。离线环境也必须有可靠的 NTP/PTP 或人工校时流程。</li>
 </ul>
@@ -44,7 +44,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <p>Windows 原生模式：</p>
 <pre><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 --config &#39;C:\ProgramData\XYvirtual Appliance Input\appliance.json&#39; --mode native
 </code></pre>
-<p>安装器只使用 <code>images/appliance-images.tar</code> 和 <code>runtime/</code>。Compose 强制 <code>pull=never</code>；CONNECT、Forgejo、InfluxDB 和控制面只连接 internal backend，只有 edge 同时连接 frontend 并向宿主发布 HTTP/HTTPS 端口。首次安装会显示一次 operator 密码；立即记录到客户密码管理器。Influx token 保存在 <code>state/secrets/runtime.env</code>；Forgejo 初始管理员凭证保存在 <code>state/secrets/forgejo-admin-bootstrap.txt</code>。两者都只允许管理员和服务账户读取，初次登录后应把 Forgejo 密码轮换进客户密码管理器并删除引导文件。</p>
+<p>安装器只使用 <code>images/appliance-images.tar</code> 和 <code>runtime/</code>。Compose 强制 <code>pull=never</code>；CONNECT、Forgejo、InfluxDB 和控制面只连接 internal backend，只有 edge 同时连接 frontend 并向宿主发布 HTTP/HTTPS 端口；网关另接 <code>ot</code> 网络（<code>xyv-ot</code>）以出站到 PLC，不发布宿主端口。首次安装会显示一次 operator 密码；立即记录到客户密码管理器。Influx token 保存在 <code>state/secrets/runtime.env</code>；Forgejo 初始管理员凭证保存在 <code>state/secrets/forgejo-admin-bootstrap.txt</code>。两者都只允许管理员和服务账户读取，初次登录后应把 Forgejo 密码轮换进客户密码管理器并删除引导文件。</p>
 <p>默认持久位置：</p>
 <ul><li>Linux：程序 <code>/opt/xyvirtual-appliance</code>，配置 <code>/etc/xyvirtual-appliance</code>，状态 <code>/var/lib/xyvirtual-appliance</code>；</li>
 <li>Windows：程序 <code>%ProgramFiles%\XYvirtual Appliance</code>，配置/状态 <code>%ProgramData%\XYvirtual Appliance</code>。</li>
@@ -79,6 +79,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 </ul>
 <h3 id="61-工业网关配置">6.1 工业网关配置</h3>
 <p>首次安装生成 <code>config/gateway.json</code>：<strong>只读、未连接任何 PLC</strong>（<code>/gateway/health</code> 显示 <code>unconfigured</code>）。由客户 OT 负责人按 网关契约 填写 <code>source</code>（OPC UA 端点、安全模式、身份）和 <code>signals</code>（WEB 信号名 → NodeId、PLC 类型、是否可写），然后重启网关服务。此后升级不会覆盖该文件。</p>
+<ul><li>网络出口（容器模式）：网关从 <code>xyv-ot</code> 网桥出站。Linux 宿主示例（以 PLC <code>192.0.2.50:4840</code> 为例，按客户实际地址修改，并按客户防火墙工具持久化）：</li>
+</ul>
+<p>  ```bash</p>
+<p>  iptables -I DOCKER-USER 1 -i xyv-ot -j DROP</p>
+<p>  iptables -I DOCKER-USER 1 -i xyv-ot -d 192.0.2.50 -p tcp --dport 4840 -j ACCEPT</p>
+<p>  iptables -I DOCKER-USER 1 -i xyv-ot -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</p>
+<p>  ```</p>
+<p>  <code>source.endpointUrl</code> 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（<code>xyvirtual</code>）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。</p>
 <ul><li>写入默认关闭：只有 <code>PLCInput*</code> 且显式 <code>writable: true</code> 的信号可写，<code>readOnly</code> 改为 <code>false</code> 前须完成现场授权、联锁与急停确认；</li>
 <li>每次写尝试记录在 <code>state/data/gateway/audit/writes.jsonl</code>；超时或断线的写入记为 <code>unknown</code>，网关不会自动重试，须先读回 PLC 状态；</li>
 <li>用户名身份要求 <code>Sign</code> 或 <code>SignAndEncrypt</code>；密码通过环境变量提供，不写入文件；首次连接后把 PLC 证书从 <code>pki/rejected</code> 移到 <code>pki/trusted</code>；</li>
@@ -110,4 +118,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>升级后浏览器项目看似消失：先检查 origin 是否变化。不要创建新项目覆盖原状态。</li>
 </ul>
 <p>浏览器、最低配置与信任验收见 L3-2 手册。</p>
-<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 974d754f8714</span></footer></main></div></body></html>
+<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 9cdd8557ea92</span></footer></main></div></body></html>

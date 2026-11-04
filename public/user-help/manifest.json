@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "productVersion": "6.3.27",
   "revision": "2026-10-23.1",
-  "contentDigest": "974d754f8714beea8c977cc631184e47e3b5bc52e5f88517fb2247c191966d32",
+  "contentDigest": "9cdd8557ea92c5e88fe1a3bdfdd77bed6aeb20f6932b4ec3a2a2d73cd97daa5b",
   "inputs": {
-    "appliance/docs/INSTALL.en.md": "3c8632f26b25c8423e31020eaedec1700d3cf5657627ba1447fb2ae6c6a56244",
-    "appliance/docs/INSTALL.zh-CN.md": "57f249ee35c0adc70e1957d4caa968dd2723954f3a41f2385a3863909c7b6759",
+    "appliance/docs/INSTALL.en.md": "2d573aa43cee99927e10cae35a8c7aa604ee22fbf4aad220ba08c2745963e9c1",
+    "appliance/docs/INSTALL.zh-CN.md": "d7530c52568d434b798e7f17ab22505dd5c3969d34b049c0ec687ba892ec8f12",
     "docs/delivery/SECURITY_OPERATIONS.md": "5e5e1b76939700f4a3959148c31977f9f195542cfb74717545501ccef722596e",
     "docs/delivery/VISUAL_PRESENTATION_OPERATIONS.md": "f6aeb5eac222599e472f996b2b52e0e9e7d6368ec401a7bbb1ecaae591ff03b2",
     "docs/generated/COMPATIBILITY_MATRIX.en-US.md": "50ffb82cef3a253e839972bf5dbd4616e09fceedb7f9d45a4a61d70eea9a7029",

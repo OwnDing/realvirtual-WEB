@@ -3,7 +3,7 @@ doc_id: ARCH-APPLIANCE-001
 title: Offline Appliance 架构
 status: approved
 owner: architecture
-last_reviewed: 2026-09-29
+last_reviewed: 2026-11-04
 authority: normative
 ---
 
@@ -31,7 +31,7 @@ InfluxDB      --> persistent signal history
 
 Caddy 是唯一局域网入口。CONNECT、Forgejo、InfluxDB 和控制面默认只监听 loopback、容器网络或 Windows host/container 专用桥；不得直接暴露 PLC 控制端口。
 
-容器 backend 网络为 internal，CONNECT、Forgejo、InfluxDB 和控制面只连接 backend；只有 Edge 同时连接 frontend，并且只有 Edge 映射 80/443。单一 internal 网络会阻止部分 Docker 引擎发布宿主端口，因此不能让 Edge 只接 backend。默认 Caddy 配置只访问声明的内网 upstream；强制网络级零外呼仍由客户宿主防火墙/ACL 验收。
+容器 backend 网络为 internal，CONNECT、Forgejo、InfluxDB 和控制面只连接 backend；只有 Edge 同时连接 frontend，并且只有 Edge 映射 80/443。单一 internal 网络会阻止部分 Docker 引擎发布宿主端口，因此不能让 Edge 只接 backend。工业网关同时连接 backend 与专用非 internal 网络 `ot`（宿主网桥名 `xyv-ot`），这是它到达工厂/OT 网络上 PLC 的唯一路由，网关不发布宿主端口（[ADR-0029](../adr/ADR-0029-container-gateway-ot-network.md)；只接 backend 时一切 PLC 均 `ENETUNREACH`）。默认 Caddy 配置只访问声明的内网 upstream；强制网络级零外呼仍由客户宿主防火墙/ACL 验收，其中 `xyv-ot` 必须被限制为批准的 PLC 端点。
 
 ## 2. 运行拓扑
 

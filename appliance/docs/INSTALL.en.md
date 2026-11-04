@@ -39,5 +39,11 @@ authorization. Every write attempt is audited in `state/data/gateway/audit/write
 write is `unknown` and is never retried automatically. Real controllers require their own on-site
 acceptance.
 
+In container mode the gateway reaches PLCs through its own network `ot` (Linux host bridge
+`xyv-ot`), the only service network besides the edge's that leaves the host. The host firewall must
+restrict `xyv-ot` forwarding to the approved PLC endpoints and drop everything else, for example
+`DOCKER-USER` rules accepting `-i xyv-ot -d <PLC> -p tcp --dport 4840` and established traffic, then
+dropping `-i xyv-ot` (ADR-0029; the authoritative steps are in `INSTALL.zh-CN.md` section 6.1).
+
 Browser, hardware and trust acceptance: [L3-2 guide](BROWSER_SUPPORT.md). Hand-over acceptance:
 [field acceptance checklist](FIELD_ACCEPTANCE.en.md), with the read-only probe `acceptance/probe.mjs`.
