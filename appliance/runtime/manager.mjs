@@ -3,12 +3,12 @@
 import { spawnSync } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { request as httpsRequest } from 'node:https';
-import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, chownSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { cp, readFile, rename } from 'node:fs/promises';
 import { dirname, join, parse, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPreflight } from './lib/preflight.mjs';
-import { httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
+import { caddyHashAlgorithm, httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
 import { isRollbackDataCompatible } from './lib/compatibility.mjs';
 import { AccessStore } from './access/store.mjs';
@@ -57,11 +57,42 @@ function resolveRoots(options) {
   };
 }
 
-function atomicJson(path, value) {
+function atomicJson(path, value, mode = 0o600) {
   mkdirSync(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomBytes(4).toString('hex')}`;
-  writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
+  writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode });
+  // Explicit: the creation mode above is reduced by the installer's umask.
+  chmodSync(temporary, mode);
   renameSync(temporary, path);
+}
+
+/**
+ * Program files are public and read by unprivileged service users (container images run as
+ * `node`/uid 1000 and the gateway as uid 10001; native services as `xyvirtual`). Their modes
+ * must not depend on the umask of the shell that unpacked or installed the release: under a
+ * hardened umask the gateway could not even open its entry module (EP-APPLIANCE-001 rehearsal,
+ * 2026-11-04). Directories 0755, files 0644, owner-executable files 0755.
+ *
+ * The archive also carries the build host's numeric owner (uid 501 in that rehearsal), which a
+ * root extraction keeps; an installed program file owned by an arbitrary uid could be rewritten
+ * by whichever local user has that uid. A root installer therefore hands the tree to root.
+ */
+function normalizeProgramModes(root) {
+  if (process.platform === 'win32') return;
+  const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+  const settle = (path, mode) => {
+    if (asRoot) chownSync(path, 0, 0);
+    chmodSync(path, mode);
+  };
+  const walk = (directory) => {
+    settle(directory, 0o755);
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile()) settle(path, statSync(path).mode & 0o100 ? 0o755 : 0o644);
+    }
+  };
+  walk(root);
 }
 
 function readJsonOrNull(path) {
@@ -155,8 +186,10 @@ async function stageRelease(bundleRoot, roots, manifest) {
     return finalPath;
   }
   mkdirSync(releases, { recursive: true });
+  if (process.platform !== 'win32') { chmodSync(roots.installRoot, 0o755); chmodSync(releases, 0o755); }
   const temporary = join(releases, `.staging-${manifest.version}-${randomBytes(4).toString('hex')}`);
   await cp(bundleRoot, temporary, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true });
+  normalizeProgramModes(temporary);
   await verifyBundle(temporary, { expectedTarget: manifest.target });
   await rename(temporary, finalPath);
   return finalPath;
@@ -231,6 +264,7 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
     // Only an ABSENT key is added; an administrator's explicit `false` is respected.
     const current = JSON.parse(readFileSync(path, 'utf8'));
     if (current.trustProxyIdentity === undefined) writeFileSync(path, `${JSON.stringify({ ...current, trustProxyIdentity: true }, null, 2)}\n`, { mode: 0o644 });
+    if (process.platform !== 'win32') chmodSync(path, 0o644);
     return path;
   }
   const inside = container ? '/var/lib/xyvirtual-gateway' : data;
@@ -253,6 +287,7 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
   };
   // No secret in this file (the token is in tokenFile, 0600), so the service user may read it.
   writeFileSync(path, `${JSON.stringify(gateway, null, 2)}\n`, { mode: 0o644 });
+  if (process.platform !== 'win32') chmodSync(path, 0o644);
   return path;
 }
 
@@ -328,6 +363,7 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     TLS_DIRECTIVE: tlsDirective(config, roots, container, windows),
     OPERATOR_USER: config.authentication.operatorUser,
     OPERATOR_PASSWORD_HASH: secrets.operatorPasswordHash,
+    OPERATOR_HASH_ALGORITHM: caddyHashAlgorithm(secrets.operatorPasswordHash),
     CONTROL_UPSTREAM: upstream.control,
     GATEWAY_UPSTREAM: upstream.gateway,
     ...(connectPresent ? { CONNECT_UPSTREAM: upstream.connect } : {}),
@@ -389,7 +425,11 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
       { id: 'influxdb', url: `http://${upstream.influxdb}/health`, required: true },
     ],
   };
-  atomicJson(join(roots.configRoot, container ? 'control.container.json' : 'control.json'), control);
+  // The control image runs as `node` (uid 1000) and reads this file through a bind mount. It
+  // holds no secret (paths, URLs, the install id), so it is root-owned 0644 like gateway.json —
+  // never chowned to uid 1000, which may be a real login user on the host. Native services run
+  // as `xyvirtual`, which owns the config root, so control.json keeps 0600.
+  atomicJson(join(roots.configRoot, container ? 'control.container.json' : 'control.json'), control, container ? 0o644 : 0o600);
   const forgejoTemplate = readFileSync(join(releaseRoot, 'config', 'forgejo.app.ini.template'), 'utf8');
   writeFileSync(join(roots.configRoot, 'forgejo.app.ini'), renderTemplate(forgejoTemplate, {
     FORGEJO_DATA: portablePath(join(roots.stateRoot, 'data', 'forgejo'), windows), FORGEJO_PORT: config.forgejoPort,
@@ -602,11 +642,22 @@ function bootstrapNativeForgejo({ roots, releaseRoot, manifest, runImpl = run })
   if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, invoke(FORGEJO_TOKEN_ARGS, { capture: true }));
 }
 
-async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker', runImpl = run, waitImpl = null }) {
+// The Forgejo image's default exec user is root, and Forgejo's CLI refuses to run as root
+// ("Forgejo is not supposed to be run as root"); its server already runs as `git` (uid 1000).
+const FORGEJO_CONTAINER_CLI = ['exec', '-T', '--user', 'git', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini'];
+
+// The project token is read by the control image user (uid 1000). `startContainer` hands
+// data/access to that uid BEFORE Forgejo can issue the token, so the new file is handed over too.
+function persistContainerForgejoToken(roots, output, linux, runImpl) {
+  persistForgejoToken(roots, output);
+  if (linux) runImpl('chown', ['1000:1000', forgejoTokenPath(roots)]);
+}
+
+async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker', runImpl = run, waitImpl = null, linux = true }) {
   if (existsSync(forgejoBootstrapPath(roots))) {
     if (!existsSync(forgejoTokenPath(roots))) {
-      const command = containerCommand(runtime, [...composeProjectArgs(roots, releaseRoot), 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
-      persistForgejoToken(roots, runImpl(command.command, command.args, { capture: true }));
+      const command = containerCommand(runtime, [...composeProjectArgs(roots, releaseRoot), ...FORGEJO_CONTAINER_CLI, ...FORGEJO_TOKEN_ARGS]);
+      persistContainerForgejoToken(roots, runImpl(command.command, command.args, { capture: true }), linux, runImpl);
     }
     return;
   }
@@ -616,13 +667,13 @@ async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker
   for (let attempt = 0; attempt < 60; attempt += 1) {
     try {
       const command = containerCommand(runtime, [
-        ...base, 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini',
+        ...base, ...FORGEJO_CONTAINER_CLI,
         'admin', 'user', 'create', '--username', 'appliance', '--email', 'appliance@localhost.invalid',
         '--admin', '--random-password', '--random-password-length', '24', '--must-change-password=false',
       ]);
       persistForgejoBootstrap(roots, runImpl(command.command, command.args, { capture: true }));
-      const tokenCommand = containerCommand(runtime, [...base, 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
-      if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, runImpl(tokenCommand.command, tokenCommand.args, { capture: true }));
+      const tokenCommand = containerCommand(runtime, [...base, ...FORGEJO_CONTAINER_CLI, ...FORGEJO_TOKEN_ARGS]);
+      if (!existsSync(forgejoTokenPath(roots))) persistContainerForgejoToken(roots, runImpl(tokenCommand.command, tokenCommand.args, { capture: true }), linux, runImpl);
       return;
     } catch (error) {
       lastError = error;
@@ -693,21 +744,35 @@ async function probeHttpsEdge(config, roots) {
   });
 }
 
-async function waitForReadiness(config, roots, timeoutMs = 300_000, fetchImpl = fetch, httpsProbeImpl = probeHttpsEdge) {
+/**
+ * Native mode: the control plane listens on host loopback, and the HTTPS entry must also
+ * answer through the trusted chain. Container mode: the control plane sits only on the
+ * internal backend network, which Docker never publishes to the host, so a loopback probe
+ * can never succeed — every container install timed out and rolled back (EP-APPLIANCE-001
+ * rehearsal, 2026-11-04). There the HTTPS entry, which proxies /health/ready to the control
+ * plane, is the readiness signal.
+ */
+export async function waitForReadiness(config, roots, timeoutMs = 300_000, fetchImpl = fetch, httpsProbeImpl = probeHttpsEdge, mode = 'native', pauseMs = 1000) {
   const deadline = Date.now() + timeoutMs;
   let lastCode = 'UNREACHABLE';
   while (Date.now() < deadline) {
     try {
-      const response = await fetchImpl(`http://127.0.0.1:${config.controlPort}/health/ready`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
-      if (response.ok) {
+      let controlReady = true;
+      if (mode !== 'container') {
+        const response = await fetchImpl(`http://127.0.0.1:${config.controlPort}/health/ready`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+        controlReady = response.ok;
+        if (!response.ok) lastCode = `HTTP_${response.status}`;
+      }
+      if (controlReady) {
         const edge = await httpsProbeImpl(config, roots);
         if (edge.ok) return;
         lastCode = edge.code;
-      } else lastCode = `HTTP_${response.status}`;
+      }
     } catch (error) {
-      lastCode = error.code ?? error.name ?? 'UNREACHABLE';
+      // fetch() reports refused connections as a bare TypeError with the code in `cause`.
+      lastCode = error.code ?? error.cause?.code ?? error.name ?? 'UNREACHABLE';
     }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 1000));
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, pauseMs));
   }
   throw new Error(`Candidate release did not become ready: ${lastCode}`);
 }
@@ -800,7 +865,10 @@ export async function installOrUpgrade(options, dependencies = {}) {
           installWindowsConnectService({ roots, releaseRoot, config: preflight.config, runImpl });
         }
         startContainer({ roots, releaseRoot, manifest: preflight.manifest, runtime: options.containerRuntime, runImpl });
-        await bootstrapContainerForgejo({ roots, releaseRoot, runtime: options.containerRuntime, runImpl, waitImpl: dependencies.waitImpl });
+        await bootstrapContainerForgejo({
+          roots, releaseRoot, runtime: options.containerRuntime, runImpl, waitImpl: dependencies.waitImpl,
+          linux: preflight.manifest.target.startsWith('linux-'),
+        });
       } else {
         if (preflight.manifest.target.startsWith('linux-')) prepareLinuxNativePermissions(roots, runImpl);
         bootstrapNativeForgejo({ roots, releaseRoot, manifest: preflight.manifest, runImpl });
@@ -811,7 +879,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
           fetchImpl: dependencies.bootstrapFetchImpl ?? fetch, waitImpl: dependencies.waitImpl,
         });
       }
-      await readinessImpl(preflight.config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+      await readinessImpl(preflight.config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, mode);
     } catch (error) {
       try {
         if (candidateAttempted) stopRuntime({ roots, releaseRoot, manifest: preflight.manifest, mode, runtime: options.containerRuntime, runImpl });
@@ -824,7 +892,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
           } else restoreConfigurationSnapshot(roots, configurationSnapshot);
           const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
           startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-          await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+          await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, existing.mode);
         }
       } catch (recoveryError) {
         throw new AggregateError([error, recoveryError], `Candidate failed and automatic recovery was not safe: ${recoveryError.message}`);
@@ -872,7 +940,7 @@ export async function rollbackAppliance(options, dependencies = {}) {
   renderRuntimeConfiguration({ config, roots, releaseRoot: previousRoot, manifest, mode: state.mode, secrets });
   if (!options.noStart) {
     startInstalledRuntime({ roots, state: { ...state, releaseRoot: previousRoot }, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-    await readinessImpl(config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+    await readinessImpl(config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, state.mode);
   }
   const next = { ...state, version: state.previousVersion, previousVersion: state.version, releaseRoot: previousRoot, updatedAt: new Date().toISOString() };
   atomicJson(installStatePath(roots), next);
@@ -1002,7 +1070,7 @@ export async function restoreAppliance(options, dependencies = {}) {
     atomicJson(join(roots.installRoot, 'current.json'), { schemaVersion: 1, version: next.version, releaseRoot: next.releaseRoot });
     if (!options.noStop) {
       startInstalledRuntime({ roots, state: next, config: restoredConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-      await readinessImpl(restoredConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+      await readinessImpl(restoredConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, next.mode);
     }
   } catch (error) {
     throw Object.assign(error, { safetyBackup });

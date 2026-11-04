@@ -119,6 +119,18 @@ export const CONNECT_ROUTES = `handle_path /connect/* {
  * Render the Caddyfile template. The one place that decides whether the optional CONNECT
  * routes exist, so the installer and the HTTPS journey test render the same entry.
  */
+/**
+ * Caddy's `basic_auth` verifies with bcrypt unless the directive names another algorithm, so
+ * the installer's argon2id hash never matched and every operator surface answered 401 to the
+ * correct password (EP-APPLIANCE-001 rehearsal, 2026-11-04). The stored hash decides: installs
+ * that still carry an older bcrypt hash keep working after an upgrade.
+ */
+export function caddyHashAlgorithm(hash) {
+  if (typeof hash === 'string' && hash.startsWith('$argon2id$')) return 'argon2id';
+  if (typeof hash === 'string' && /^\$2[aby]\$/.test(hash)) return 'bcrypt';
+  throw new Error('Operator password hash is neither argon2id nor bcrypt.');
+}
+
 export function renderCaddyfile(source, { connect }, variables) {
   const routes = connect ? CONNECT_ROUTES : '# CONNECT is not part of this release (ADR-0023).';
   return renderTemplate(source.replace('{{CONNECT_ROUTES}}', routes), variables);
