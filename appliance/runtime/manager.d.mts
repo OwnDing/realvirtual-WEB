@@ -15,6 +15,8 @@ export interface ApplianceInstallState {
 }
 
 export function buildNativeServiceDefinitions(options: { roots: ManagedRoots; releaseRoot: string; manifest: { target: string }; config: ApplianceConfig }): NativeServiceDefinition[];
+/** A base64url secret whose first character is alphanumeric (never read as a CLI flag). */
+export function randomSecret(bytes?: number, source?: (bytes: number) => Buffer): string;
 export function installOrUpgrade(options: Record<string, unknown>, dependencies?: Record<string, unknown>): Promise<{ state: ApplianceInstallState; roots: ManagedRoots; generatedOperatorPassword: string | null; [key: string]: unknown }>;
 export function rollbackAppliance(options: Record<string, unknown>, dependencies?: Record<string, unknown>): Promise<ApplianceInstallState>;
 export function backupAppliance(options: Record<string, unknown>, dependencies?: Record<string, unknown>): Promise<string>;

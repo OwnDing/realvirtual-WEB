@@ -6,7 +6,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, st
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
-import { backupAppliance, installOrUpgrade, restoreAppliance, rollbackAppliance, uninstallAppliance, waitForReadiness } from '../appliance/runtime/manager.mjs';
+import { backupAppliance, installOrUpgrade, randomSecret, restoreAppliance, rollbackAppliance, uninstallAppliance, waitForReadiness } from '../appliance/runtime/manager.mjs';
 import { gatewayFixture } from './helpers/gateway-fixture';
 import { caddyHashAlgorithm } from '../appliance/runtime/lib/config.mjs';
 
@@ -283,5 +283,71 @@ describe('appliance reinstall after the default uninstall', () => {
     expect(commands.filter((line) => line.includes(' down'))).toEqual([]);
     expect(commands.some((line) => line.includes(' up -d --pull never'))).toBe(true);
     expect(existsSync(join(again.state.releaseRoot, 'appliance-manifest.json'))).toBe(true);
+  });
+});
+
+/**
+ * EP-APPLIANCE-001 rehearsal (2026-11-04): the 9th fresh install drew an InfluxDB password
+ * starting with `-`; the image's `influx setup --password <secret>` parsed it as a flag, setup
+ * failed and the install timed out (HTTPS_503). The persisted secret made every retry fail too.
+ */
+describe('appliance secrets are safe on a command line', () => {
+  it('never starts a secret with "-" or "_"', () => {
+    // 0xF8 encodes to a leading "-" and 0xFC to a leading "_" in base64url.
+    const draws = [Buffer.from([0xf8, 1, 2]), Buffer.from([0xfc, 1, 2]), Buffer.from([0x41, 1, 2])];
+    const source = () => draws.shift()!;
+    expect(randomSecret(3, source)).toMatch(/^[A-Za-z0-9]/);
+    expect(draws).toHaveLength(0);
+    for (let i = 0; i < 2000; i++) expect(randomSecret(24)).toMatch(/^[A-Za-z0-9][A-Za-z0-9_-]{31}$/);
+  });
+
+  it.each([
+    ['never initialized: replaced', false, true],
+    ['already set up: kept (it is the live credential)', true, false],
+  ])('a persisted InfluxDB setup secret starting with "-" is %s', async (_label, initialized, replaced) => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-secret-'));
+    cleanups.push(root);
+    const release = await containerRelease(root);
+    const configPath = join(root, 'appliance.json');
+    writeFileSync(configPath, JSON.stringify({
+      schemaVersion: 1, hostname: 'appliance.test.internal', influxHostname: 'influx.appliance.test.internal',
+      httpsPort: 443, httpPort: 80, controlPort: 8081, connectPort: 5100, forgejoPort: 3000, influxPort: 8086,
+      tls: { mode: 'internal-ca', certificate: null, privateKey: null }, authentication: { operatorUser: 'operator' },
+    }));
+    const stateRoot = join(root, 'state-root');
+    mkdirSync(join(stateRoot, 'secrets'), { recursive: true, mode: 0o700 });
+    writeFileSync(join(stateRoot, 'secrets', 'influx-password'), '-leading-dash-password\n', { mode: 0o600 });
+    writeFileSync(join(stateRoot, 'secrets', 'influx-token'), '-leading-dash-token\n', { mode: 0o600 });
+    if (initialized) {
+      mkdirSync(join(stateRoot, 'data', 'influxdb'), { recursive: true });
+      writeFileSync(join(stateRoot, 'data', 'influxdb', 'influxd.bolt'), 'bolt');
+    }
+    await installOrUpgrade({
+      bundleRoot: release, configPath, expectedTarget: 'linux-arm64', verifyPlatform: false, mode: 'container',
+      containerRuntime: 'docker', installRoot: join(root, 'install-root'), configRoot: join(root, 'config-root'),
+      stateRoot, minimumFreeBytes: 0,
+    }, {
+      lookupImpl: async () => [{ address: '127.0.0.1', family: 4 }],
+      canBindImpl: async () => ({ ok: true }),
+      isAdministratorImpl: async () => true,
+      containerRuntimeImpl: () => 'docker',
+      runImpl: (command: string, args: string[] = []) => {
+        if (command.includes('caddy') && args[0] === 'hash-password') return '$argon2id$v=19$m=65536,t=3,p=2$fixture$fixture';
+        if (command === 'docker' && args.includes('create')) return 'generated random password: fixture-forgejo-password';
+        if (command === 'docker' && args.includes('generate-access-token')) return 'fixtureforgejotoken0123456789abcdef\n';
+        return '';
+      },
+      waitImpl: async () => {},
+      waitForReadinessImpl: async () => {},
+    });
+    for (const name of ['influx-password', 'influx-token']) {
+      const value = readFileSync(join(stateRoot, 'secrets', name), 'utf8').trim();
+      if (replaced) expect(value, name).toMatch(/^[A-Za-z0-9]/);
+      else expect(value, name).toMatch(/^-leading-dash-/);
+    }
+    // The container env and the gateway's token file carry the same, current values.
+    const env = readFileSync(join(stateRoot, 'secrets', 'container.env'), 'utf8');
+    expect(env).toContain(`DOCKER_INFLUXDB_INIT_PASSWORD=${readFileSync(join(stateRoot, 'secrets', 'influx-password'), 'utf8').trim()}\n`);
+    expect(readFileSync(join(stateRoot, 'data', 'gateway', 'influx-token'), 'utf8')).toBe(readFileSync(join(stateRoot, 'secrets', 'influx-token'), 'utf8').trim());
   });
 });

@@ -26,8 +26,17 @@ function has(args, name) {
   return args.includes(`--${name}`);
 }
 
-function randomSecret(bytes = 32) {
-  return randomBytes(bytes).toString('base64url');
+// Secrets reach command lines: the InfluxDB image's first-start entrypoint runs
+// `influx setup --password <secret> --token <secret>`, and a base64url secret starting with `-`
+// (1 in 64 per secret) is parsed as a flag there: setup failed ("unknown command"), InfluxDB
+// restart-looped and the install timed out (EP-APPLIANCE-001 rehearsal, 2026-11-04). Draw again
+// until the first character is alphanumeric; this removes under 6 bits of a 192-bit+ secret.
+const CLI_SAFE_SECRET = /^[A-Za-z0-9]/;
+export function randomSecret(bytes = 32, source = randomBytes) {
+  for (;;) {
+    const value = source(bytes).toString('base64url');
+    if (CLI_SAFE_SECRET.test(value)) return value;
+  }
 }
 
 function safeManagedRoot(value, label) {
@@ -163,6 +172,19 @@ function writeSecret(path, value) {
   return readFileSync(path, 'utf8').trim();
 }
 
+/**
+ * An InfluxDB setup secret persisted by an earlier, failed install may still start with `-` and
+ * would fail every retry the same way. Until InfluxDB has been set up (no bolt store yet) it is
+ * not in use anywhere and is replaced; after setup it is the live credential and is kept.
+ */
+function writeInfluxSetupSecret(roots, path, bytes) {
+  const initialized = existsSync(join(roots.stateRoot, 'data', 'influxdb', 'influxd.bolt'));
+  if (!initialized && existsSync(path) && !CLI_SAFE_SECRET.test(readFileSync(path, 'utf8').trim())) {
+    writeFileSync(path, `${randomSecret(bytes)}\n`, { mode: 0o600 });
+  }
+  return writeSecret(path, randomSecret(bytes));
+}
+
 function caddyBinary(releaseRoot, target) {
   return join(releaseRoot, 'runtime', 'caddy', target.startsWith('windows-') ? 'caddy.exe' : 'caddy');
 }
@@ -252,8 +274,8 @@ function initializeSecrets(roots, config, releaseRoot, target, runImpl) {
     installId: writeSecret(join(secrets, 'install-id'), randomUUID()),
     operatorPassword: operator,
     operatorPasswordHash: readFileSync(passwordHashPath, 'utf8').trim(),
-    influxPassword: writeSecret(join(secrets, 'influx-password'), randomSecret(24)),
-    influxToken: writeSecret(join(secrets, 'influx-token'), randomSecret(36)),
+    influxPassword: writeInfluxSetupSecret(roots, join(secrets, 'influx-password'), 24),
+    influxToken: writeInfluxSetupSecret(roots, join(secrets, 'influx-token'), 36),
     forgejoSecret: writeSecret(join(secrets, 'forgejo-secret'), randomSecret(32)),
     forgejoInternalToken: writeSecret(join(secrets, 'forgejo-internal-token'), randomSecret(48)),
   };
