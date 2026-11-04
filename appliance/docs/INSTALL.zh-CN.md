@@ -126,9 +126,11 @@ CA 私钥是持久状态。丢失它会迫使所有终端重新信任新根，�
   iptables -I DOCKER-USER 1 -i xyv-ot -j DROP
   iptables -I DOCKER-USER 1 -i xyv-ot -d 192.0.2.50 -p tcp --dport 4840 -j ACCEPT
   iptables -I DOCKER-USER 1 -i xyv-ot -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  # 宿主本机的服务（sshd 等）走 INPUT，不经过 DOCKER-USER；网关不需要访问宿主本机任何端口
+  iptables -I INPUT 1 -i xyv-ot -j DROP
   ```
 
-  `source.endpointUrl` 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（`xyvirtual`）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。
+  只写 DOCKER-USER 规则时，网关仍可访问宿主本机的所有服务（2026-11-04 在 Oracle Linux 实测：DOCKER-USER 生效后网关到宿主 `:22` 仍可连接），因此 INPUT 规则必不可少。规则按网桥名匹配，升级、回滚重建网络后依然有效（同次实测）。`source.endpointUrl` 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（`xyvirtual`）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。
 - 写入默认关闭：只有 `PLCInput*` 且显式 `writable: true` 的信号可写，`readOnly` 改为 `false` 前须完成现场授权、联锁与急停确认；
 - 每次写尝试记录在 `state/data/gateway/audit/writes.jsonl`；超时或断线的写入记为 `unknown`，网关不会自动重试，须先读回 PLC 状态；
 - 用户名身份要求 `Sign` 或 `SignAndEncrypt`；密码通过环境变量提供，不写入文件；首次连接后把 PLC 证书从 `pki/rejected` 移到 `pki/trusted`；

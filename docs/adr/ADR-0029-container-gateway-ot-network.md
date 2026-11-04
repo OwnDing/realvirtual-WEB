@@ -23,7 +23,7 @@ EP-APPLIANCE-001 本机演练（2026-11-04，Debian 12 主机、Docker Engine 29
 - 新增 Compose 网络 `ot`：普通 bridge（非 internal），Linux 宿主网桥名固定为 `xyv-ot`（`com.docker.network.bridge.name`），供客户 ACL 精确匹配。
 - **只有** `gateway` 服务连接 `ot`（另保留 `backend`，供 Edge、控制面和 InfluxDB 访问网关）。控制面、Forgejo、InfluxDB、CONNECT 仍只接 internal `backend`；Edge 仍为 `frontend` + `backend`。
 - 网关不发布任何宿主端口；`ot` 只提供出站到 PLC 的路由。
-- 网络级出口约束由客户宿主防火墙负责（与 Edge/frontend 的现有原则一致）：客户必须把 `xyv-ot` 的转发流量限制为批准的 PLC OPC UA 端点（常为 TCP 4840）及必要的 DNS，其余拒绝。安装手册给出 Linux `DOCKER-USER` 示例；Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出口。
+- 网络级出口约束由客户宿主防火墙负责（与 Edge/frontend 的现有原则一致）：客户必须把 `xyv-ot` 的转发流量限制为批准的 PLC OPC UA 端点（常为 TCP 4840）及必要的 DNS，其余拒绝；并且拒绝 `xyv-ot` 到宿主本机的全部入站（`INPUT -i xyv-ot -j DROP`）——到宿主本机服务的流量走 INPUT，不经过 `DOCKER-USER`，网关也不需要宿主本机的任何端口。安装手册给出 Linux 示例；Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出口。
 - 禁止：把 `ot` 加给网关以外的服务；把 `backend` 改为非 internal；为网关发布宿主端口。
 
 ## Alternatives
@@ -44,7 +44,7 @@ EP-APPLIANCE-001 本机演练（2026-11-04，Debian 12 主机、Docker Engine 29
 ## Validation
 
 - `tests/appliance-runtime.node.test.ts`：逐服务断言只有网关接 `ot`、backend 仍为 internal、`ot` 非 internal 且网桥名为 `xyv-ot`、只有 Edge 发布端口；对旧拓扑该测试失败。
-- 实机：容器模式下网关经 `ot` 连接 OPC UA 模拟器/测试 PLC（`/gateway/health` 源为 connected），并验证按手册配置的 `DOCKER-USER` 规则在放行 PLC 的同时拒绝其他出站目的地。结果登记于 EP-APPLIANCE-001。
+- 实机（2026-11-04，Oracle Linux 10.2 aarch64，Docker 29.7.2，真实安装）：`ot` 非 internal、网桥 `xyv-ot`、成员只有网关；网关经 `ot` 连接同网段 OPC UA 模拟器（`source connected`），容器模式 F7–F10 通过。未配置 ACL 时网关可访问互联网（`1.1.1.1:443` OPEN），证明 ACL 不可省略；按手册加 `DOCKER-USER` 规则后 PLC 仍可达、互联网与其他私网主机被丢弃并计数，但**宿主本机 `:22` 仍可连接**——由此补上 `INPUT -i xyv-ot -j DROP`，之后宿主本机不可达、PLC 与网关重连不受影响。规则按网桥名匹配，升级到 6.3.28 与回滚重建网络后仍然有效。详见 EP-APPLIANCE-001。
 
 ## Rollback or Supersession
 

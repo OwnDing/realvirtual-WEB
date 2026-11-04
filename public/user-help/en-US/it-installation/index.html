@@ -37,7 +37,9 @@
 <p><code>xyv-ot</code>), the only service network besides the edge&#39;s that leaves the host. The host firewall must</p>
 <p>restrict <code>xyv-ot</code> forwarding to the approved PLC endpoints and drop everything else, for example</p>
 <p><code>DOCKER-USER</code> rules accepting <code>-i xyv-ot -d &lt;PLC&gt; -p tcp --dport 4840</code> and established traffic, then</p>
-<p>dropping <code>-i xyv-ot</code> (ADR-0029; the authoritative steps are in <code>INSTALL.zh-CN.md</code> section 6.1).</p>
+<p>dropping <code>-i xyv-ot</code>, <strong>plus</strong> <code>INPUT -i xyv-ot -j DROP</code>: services on the appliance host itself are</p>
+<p>reached through INPUT, not DOCKER-USER, and the gateway needs none of them (ADR-0029; the</p>
+<p>authoritative steps are in <code>INSTALL.zh-CN.md</code> section 6.1).</p>
 <p>Browser, hardware and trust acceptance: L3-2 guide. Hand-over acceptance:</p>
 <p>field acceptance checklist, with the read-only probe <code>acceptance/probe.mjs</code>.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 9cdd8557ea92</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 15bdb48b1f0b</span></footer></main></div></body></html>

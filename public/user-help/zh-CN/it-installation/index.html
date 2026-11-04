@@ -85,8 +85,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <p>  iptables -I DOCKER-USER 1 -i xyv-ot -j DROP</p>
 <p>  iptables -I DOCKER-USER 1 -i xyv-ot -d 192.0.2.50 -p tcp --dport 4840 -j ACCEPT</p>
 <p>  iptables -I DOCKER-USER 1 -i xyv-ot -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</p>
+<p>  # 宿主本机的服务（sshd 等）走 INPUT，不经过 DOCKER-USER；网关不需要访问宿主本机任何端口</p>
+<p>  iptables -I INPUT 1 -i xyv-ot -j DROP</p>
 <p>  ```</p>
-<p>  <code>source.endpointUrl</code> 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（<code>xyvirtual</code>）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。</p>
+<p>  只写 DOCKER-USER 规则时，网关仍可访问宿主本机的所有服务（2026-11-04 在 Oracle Linux 实测：DOCKER-USER 生效后网关到宿主 <code>:22</code> 仍可连接），因此 INPUT 规则必不可少。规则按网桥名匹配，升级、回滚重建网络后依然有效（同次实测）。<code>source.endpointUrl</code> 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（<code>xyvirtual</code>）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。</p>
 <ul><li>写入默认关闭：只有 <code>PLCInput*</code> 且显式 <code>writable: true</code> 的信号可写，<code>readOnly</code> 改为 <code>false</code> 前须完成现场授权、联锁与急停确认；</li>
 <li>每次写尝试记录在 <code>state/data/gateway/audit/writes.jsonl</code>；超时或断线的写入记为 <code>unknown</code>，网关不会自动重试，须先读回 PLC 状态；</li>
 <li>用户名身份要求 <code>Sign</code> 或 <code>SignAndEncrypt</code>；密码通过环境变量提供，不写入文件；首次连接后把 PLC 证书从 <code>pki/rejected</code> 移到 <code>pki/trusted</code>；</li>
@@ -118,4 +120,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>升级后浏览器项目看似消失：先检查 origin 是否变化。不要创建新项目覆盖原状态。</li>
 </ul>
 <p>浏览器、最低配置与信任验收见 L3-2 手册。</p>
-<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 9cdd8557ea92</span></footer></main></div></body></html>
+<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 15bdb48b1f0b</span></footer></main></div></body></html>
