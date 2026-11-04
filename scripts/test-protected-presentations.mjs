@@ -9,7 +9,7 @@ import { createServer } from 'node:net';
 import { chromium, expect } from 'playwright/test';
 import { createControlServer } from '../appliance/runtime/control-plane.mjs';
 import { AccessStore } from '../appliance/runtime/access/store.mjs';
-import { renderCaddyfile } from '../appliance/runtime/lib/config.mjs';
+import { caddyHashAlgorithm, renderCaddyfile } from '../appliance/runtime/lib/config.mjs';
 
 const root = await mkdtemp(join(tmpdir(), 'rv-access-e2e-'));
 const artifacts = resolve('test-results/access'); await mkdir(artifacts, { recursive: true });
@@ -47,7 +47,7 @@ try {
   // Same renderer as the installer; CONNECT routes included so they stay covered by this journey.
   let config = renderCaddyfile(await readFile(resolve('appliance/config/Caddyfile.template'),'utf8'), { connect: true }, {
     HOSTNAME: '127.0.0.1', INFLUX_HOSTNAME: 'localhost', LISTEN_HTTP_PORT: httpPort, LISTEN_HTTPS_PORT: httpsPort, HTTPS_PORT_SUFFIX: `:${httpsPort}`,
-    TLS_DIRECTIVE: 'tls internal', OPERATOR_USER: 'operator', OPERATOR_PASSWORD_HASH: passwordHash,
+    TLS_DIRECTIVE: 'tls internal', OPERATOR_USER: 'operator', OPERATOR_PASSWORD_HASH: passwordHash, OPERATOR_HASH_ALGORITHM: caddyHashAlgorithm(passwordHash),
     CONTROL_UPSTREAM: upstream, GATEWAY_UPSTREAM: upstream, CONNECT_UPSTREAM: upstream, FORGEJO_UPSTREAM: upstream, INFLUX_UPSTREAM: upstream,
     WEB_ROOT: '/web', PRESENT_ROOT: '/web/present', LICENSE_ROOT: '/license',
   });
@@ -89,6 +89,12 @@ try {
   assert.equal(await view.evaluate(()=>document.cookie.includes('__Host-rv-access')),false);
   for(const path of ['/settings.json','/models.json','/connect/health','/mcp','/git/','/api/v2/buckets','/appliance/api/info','/present/../settings.json']) assert.equal((await guest.request.get(origin+path)).status(),401,path);
   for(const path of ['/present/settings.json','/present/models.json','/present/access.sqlite','/present/%252e%252e/settings.json']) assert.equal((await guest.request.get(origin+path)).status(),404,path);
+  // The shared operator credential must actually open the IT surfaces, not only be demanded:
+  // with an argon2id hash under a bcrypt-default directive every request was 401 and the guest
+  // checks above still passed (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+  const operatorAuth = (password) => ({ Authorization: `Basic ${Buffer.from(`operator:${password}`).toString('base64')}` });
+  assert.equal((await guest.request.get(origin+'/appliance/api/info',{headers:operatorAuth('test-operator-password')})).status(),200,'operator credential opens /appliance/');
+  assert.equal((await guest.request.get(origin+'/appliance/api/info',{headers:operatorAuth('wrong-operator-password')})).status(),401,'a wrong operator password is refused');
   assert.equal((await guest.request.get(origin+`/api/access/v1/shares/${shareId}/model`,{headers:{Range:'bytes=0-3'}})).status(),206);
   assert.equal((await guest.request.get(origin+'/api/access/v1/users')).status(),403);
   const downloadEvent = view.waitForEvent('download'); await view.getByRole('button',{name:'保存带水印截图'}).click(); const download = await downloadEvent; await download.saveAs(join(artifacts,'watermarked.png'));

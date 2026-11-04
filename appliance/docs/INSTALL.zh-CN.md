@@ -10,6 +10,7 @@
 - 静态 IP 或 DHCP reservation，并让两个名称在操作终端和服务器上解析到该地址；
 - 企业 CA 证书，或批准 Appliance internal CA 根证书的分发流程；
 - `container` 或 `native` 模式；容器模式要求客户预装 Docker Engine/Compose、Docker Desktop/WSL2 或 Podman Compose，安装器不会修改这些平台；
+- 原生模式要求主机已安装 `git`（Forgejo 运行时调用，归档不含 git；Windows 为 Git for Windows），预检会检查并在缺失时阻断；容器模式使用 Forgejo 镜像内的 git，不需要主机 git；
 - 80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行；
 - 至少 10 GiB 安装余量，另按模型、Git 和历史保留期规划数据盘与备份盘；
 - 系统时间和时区正确。离线环境也必须有可靠的 NTP/PTP 或人工校时流程。

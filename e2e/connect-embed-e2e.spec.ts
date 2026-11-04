@@ -242,6 +242,11 @@ test('signal hint is visible and unobstructed after closing the mobile CONNECT p
 });
 
 test(PERSISTENCE_TEST_NAME, async ({ page }) => {
+  // Two complete demo starts (start, reload, start again) inside one test. Each start may take
+  // up to 60 s by this file's own limit (waitForDemoRunning), yet the test had the default 60 s
+  // in total: green runs used 38–46 s of it, and PR #34 run 41831300817 (whole suite ~40% slower)
+  // ran out before the reload. Give it the budget of its two starts; the assertions are unchanged.
+  test.slow();
   await startStandaloneDemo(page);
   await expect.poll(
     () => page.evaluate((key) => localStorage.getItem(key), SIGNAL_HINT_SEEN_KEY),

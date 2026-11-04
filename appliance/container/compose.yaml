@@ -30,7 +30,8 @@ services:
     volumes:
       - "${RV_RELEASE_ROOT}:/release:ro"
       - "${RV_CONFIG_ROOT}/control.container.json:/state/control.json:ro"
-      - "${RV_STATE_ROOT}/pki:/state-pki:ro"
+      # Public certificate evidence only; the PKI tree with the CA keys is not mounted.
+      - "${RV_STATE_ROOT}/public:/state-public:ro"
       - "${RV_STATE_ROOT}/data/access:/state-access"
     networks: [backend]
 

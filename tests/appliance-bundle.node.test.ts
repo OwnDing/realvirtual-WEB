@@ -5,7 +5,8 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
+import { gzipSync } from 'node:zlib';
+import { assertArchiveMatchesBundle, buildOfflineAppliance, readArchiveEntries } from '../scripts/build-offline-appliance.mjs';
 import { normalizeBundlePath, verifyBundle } from '../appliance/runtime/lib/bundle.mjs';
 import { gatewayFixture } from './helpers/gateway-fixture';
 
@@ -185,6 +186,78 @@ describe('offline appliance bundle', () => {
       dependencyLock: noticeTemplate.lockPath, webDist: noticeTemplate.web, output: noticeTemplate.output,
       archive: false, createdAt: '2026-08-30T00:00:00.000Z',
     })).rejects.toThrow(/release template/);
+  });
+
+  // EP-APPLIANCE-001 local rehearsal (2026-11-04): an archive built on macOS carried an
+  // AppleDouble `._*` entry and an xattr record for every file. GNU tar on the Linux host
+  // extracted 4,951 extra files and preflight correctly refused the bundle (BUNDLE_INVALID).
+  // macOS `tar -t` hides those entries, so the archive is read with the builder's own parser.
+  it('archives exactly the bundle inventory, with no platform metadata', async () => {
+    const f = fixture();
+    const built = await buildOfflineAppliance({
+      target: 'linux-arm64', modes: 'native', dependencyRoot: f.dependencies, gatewayRoot: f.gateway,
+      dependencyLock: f.lockPath, webDist: f.web, output: f.output,
+      archive: true, createdAt: '2026-08-30T00:00:00.000Z',
+    });
+    expect(built.archive).toBe(`${f.output}.tar.gz`);
+    const entries = await readArchiveEntries(built.archive!);
+    expect(entries.violations).toEqual([]);
+    const expected = [...built.manifest.files.map((file: any) => `bundle/${file.path}`), 'bundle/appliance-manifest.json', 'bundle/manifest.sha256'];
+    expect([...entries.files].sort()).toEqual(expected.sort());
+    expect(entries.directories.every((dir) => dir === 'bundle' || dir.startsWith('bundle/'))).toBe(true);
+  });
+
+  it('refuses an archive with entries or metadata outside the inventory', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-archive-'));
+    cleanups.push(root);
+    const tarHeader = (name: string, size: number, type: string, linkname = '') => {
+      const header = Buffer.alloc(512);
+      header.write(name, 0, 'utf8');
+      header.write('0000644\0', 100); header.write('0000000\0', 108); header.write('0000000\0', 116);
+      header.write(`${size.toString(8).padStart(11, '0')}\0`, 124);
+      header.write('00000000000\0', 136);
+      header.write(type, 156);
+      header.write(linkname, 157);
+      header.write('ustar\0', 257); header.write('00', 263);
+      header.fill(0x20, 148, 156);
+      let sum = 0; for (const byte of header) sum += byte;
+      header.write(`${sum.toString(8).padStart(6, '0')}\0 `, 148);
+      return header;
+    };
+    const entry = (name: string, body: Buffer, type = '0', linkname = '') => Buffer.concat([
+      tarHeader(name, type === '2' ? 0 : body.length, type, linkname),
+      ...(type === '2' ? [] : [body, Buffer.alloc((512 - (body.length % 512)) % 512)]),
+    ]);
+    const pax = (records: Record<string, string>) => {
+      const text = Object.entries(records).map(([key, value]) => {
+        const tail = ` ${key}=${value}\n`;
+        let length = tail.length + 1;
+        while (`${length}${tail}`.length !== length) length += 1;
+        return `${length}${tail}`;
+      }).join('');
+      return entry('PaxHeader/x', Buffer.from(text), 'x');
+    };
+    const write = (name: string, parts: Buffer[]) => {
+      const path = join(root, name);
+      writeFileSync(path, gzipSync(Buffer.concat([...parts, Buffer.alloc(1024)])));
+      return path;
+    };
+    const good = [entry('bundle/', Buffer.alloc(0), '5'), entry('bundle/a.txt', Buffer.from('a')), entry('bundle/manifest.sha256', Buffer.from('m'))];
+    await expect(assertArchiveMatchesBundle(write('good.tar.gz', good), 'bundle', ['a.txt', 'manifest.sha256'])).resolves.toEqual({ files: 2, directories: 1 });
+    const cases: Array<[string, Buffer[], RegExp]> = [
+      ['appledouble', [...good, entry('bundle/._a.txt', Buffer.from('Mac OS X        ATTR'))], /extra bundle\/\._a\.txt/],
+      ['root-appledouble', [entry('._bundle', Buffer.from('ATTR')), ...good], /extra \._bundle/],
+      ['xattr', [pax({ 'LIBARCHIVE.xattr.com.apple.provenance': 'AQ' }), ...good], /metadata LIBARCHIVE\.xattr/],
+      ['symlink', [...good, entry('bundle/link', Buffer.alloc(0), '2', 'a.txt')], /type 2 bundle\/link/],
+      ['missing', good.slice(0, 2), /missing bundle\/manifest\.sha256/],
+      ['duplicate', [...good, entry('bundle/a.txt', Buffer.from('b'))], /duplicate bundle\/a\.txt/],
+      ['pax-path', [...good.slice(0, 2), pax({ path: 'bundle/elsewhere.txt' }), entry('bundle/manifest.sha256', Buffer.from('m'))], /extra bundle\/elsewhere\.txt/],
+    ];
+    for (const [name, parts, message] of cases) {
+      await expect(assertArchiveMatchesBundle(write(`${name}.tar.gz`, parts), 'bundle', ['a.txt', 'manifest.sha256']), name).rejects.toThrow(message);
+    }
+    writeFileSync(join(root, 'cut.tar.gz'), gzipSync(Buffer.concat(good)));
+    await expect(readArchiveEntries(join(root, 'cut.tar.gz'))).rejects.toThrow(/end marker/);
   });
 
   it('rejects traversal and absolute bundle paths', () => {

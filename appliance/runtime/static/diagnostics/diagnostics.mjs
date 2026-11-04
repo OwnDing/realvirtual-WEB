@@ -139,9 +139,37 @@ async function applianceCheck() {
   }
 }
 
+// The control plane advertises the release's realtime path: /gateway/ws for a gateway-only
+// release (ADR-0023), /connect/webviewer with CONNECT. A hard-coded CONNECT path failed on every
+// gateway-only appliance (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+async function websocketPath() {
+  try {
+    const response = await fetch('/appliance/api/info', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const path = response.ok ? (await response.json())?.diagnostics?.websocketPath : null;
+    return typeof path === 'string' && /^\/[A-Za-z0-9/_-]+$/.test(path) ? path : '/connect/webviewer';
+  } catch {
+    return '/connect/webviewer';
+  }
+}
+
+// Realtime sockets are HMI surfaces and need a personal session (ADR-0024); this page itself is
+// opened with the shared operator credential. A browser hides the handshake's 401, so ask first.
+async function hmiSessionState() {
+  try {
+    const response = await fetch('/api/access/v1/session', { cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(5000) });
+    return response.status === 200 ? 'signed-in' : response.status === 401 ? 'signed-out' : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 async function websocketCheck(WebSocketImpl = WebSocket) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const endpoint = `${protocol}//${location.host}/connect/webviewer`;
+  const path = await websocketPath();
+  const endpoint = `${protocol}//${location.host}${path}`;
+  if (await hmiSessionState() === 'signed-out') {
+    return result('websocket', '实时 WebSocket', 'required', 'warn', 'WSS_NEEDS_HMI_SESSION', `${path} 需要 HMI 个人会话：请在同一浏览器登录 /login/ 后重新检查。`, { path });
+  }
   return new Promise((resolvePromise) => {
     let settled = false;
     let socket;
@@ -150,13 +178,13 @@ async function websocketCheck(WebSocketImpl = WebSocket) {
       settled = true;
       clearTimeout(timer);
       try { socket?.close(1000, 'diagnostic complete'); } catch { /* best effort close */ }
-      resolvePromise(result('websocket', 'CONNECT WSS', 'required', status, code, detail));
+      resolvePromise(result('websocket', '实时 WebSocket', 'required', status, code, detail, { path }));
     };
-    const timer = setTimeout(() => finish('fail', 'WSS_TIMEOUT', '同源 CONNECT WebSocket 握手超时。'), 3000);
+    const timer = setTimeout(() => finish('fail', 'WSS_TIMEOUT', `同源 WebSocket ${path} 握手超时。`), 3000);
     try {
       socket = new WebSocketImpl(endpoint);
-      socket.addEventListener('open', () => finish(protocol === 'wss:' ? 'pass' : 'fail', protocol === 'wss:' ? 'WSS_OK' : 'WSS_REQUIRED', `${protocol}//${location.host}/connect/webviewer`), { once: true });
-      socket.addEventListener('error', () => finish('fail', 'WSS_HANDSHAKE_FAILED', '同源 CONNECT WebSocket 握手失败。'), { once: true });
+      socket.addEventListener('open', () => finish(protocol === 'wss:' ? 'pass' : 'fail', protocol === 'wss:' ? 'WSS_OK' : 'WSS_REQUIRED', endpoint), { once: true });
+      socket.addEventListener('error', () => finish('fail', 'WSS_HANDSHAKE_FAILED', `同源 WebSocket ${path} 握手失败。`), { once: true });
     } catch (error) {
       finish('fail', 'WSS_CONSTRUCTION_FAILED', error instanceof Error ? error.message : String(error));
     }

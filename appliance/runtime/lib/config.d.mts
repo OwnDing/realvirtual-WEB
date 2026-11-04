@@ -17,6 +17,8 @@ export interface ApplianceConfig {
 export function validateApplianceConfig(raw: unknown, options?: { baseDir?: string }): ApplianceConfig;
 export function validateCustomerCertificate(config: ApplianceConfig, now?: Date): Promise<Record<string, unknown>>;
 export function renderTemplate(source: string, variables: Record<string, unknown>): string;
+/** The Caddy `basic_auth` algorithm for a stored operator hash: 'argon2id' or 'bcrypt'; throws otherwise. */
+export function caddyHashAlgorithm(hash: string): 'argon2id' | 'bcrypt';
 export const CONNECT_ROUTES: string;
 export function renderCaddyfile(source: string, options: { connect: boolean }, variables: Record<string, unknown>): string;
 export function httpsPortSuffix(portValue: number): string;

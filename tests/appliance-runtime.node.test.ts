@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { buildNativeServiceDefinitions } from '../appliance/runtime/manager.mjs';
 import { renderTemplate, validateApplianceConfig } from '../appliance/runtime/lib/config.mjs';
 
@@ -43,6 +45,31 @@ describe('appliance runtime topology', () => {
     const windows = buildNativeServiceDefinitions({ roots, releaseRoot: 'C:\\XYvirtual\\releases\\1', manifest: { target: 'windows-x64', services: withoutConnect } as any, config: CONFIG as any });
     expect(windows.map((item) => item.id)).toEqual(['control', 'gateway', 'forgejo', 'influxdb', 'edge']);
     expect(windows.every((item) => item.wrapper?.endsWith('.exe'))).toBe(true);
+  });
+
+  // EP-APPLIANCE-001 rehearsal (2026-11-04): systemd does not unquote WorkingDirectory=, so the
+  // quoted form was a fatal "path is not absolute" in every unit and no native install started.
+  it('renders systemd units that systemd itself accepts', () => {
+    const roots = { installRoot: '/opt/xy virtual', configRoot: '/etc/xy virtual', stateRoot: '/var/lib/xy virtual 100%' };
+    const units = buildNativeServiceDefinitions({ roots, releaseRoot: '/opt/xy virtual/releases/1', manifest: { target: 'linux-arm64', services: ['edge', 'control', 'web', 'gateway', 'forgejo', 'influxdb'] } as any, config: CONFIG as any });
+    for (const { id, unit } of units) {
+      expect(unit, id).toContain('\nWorkingDirectory=/var/lib/xy virtual 100%%\n');
+      expect(unit, id).toContain('\nReadWritePaths="/var/lib/xy virtual 100%%"\n');
+    }
+    // influxd 2.x has no --config flag (it exited on every start); the path goes in its env.
+    const influx = units.find(({ id }) => id === 'influxdb')!.unit!;
+    expect(influx).not.toContain('--config');
+    expect(influx).toContain('\nEnvironment="INFLUXD_CONFIG_PATH=/etc/xy virtual/influxdb.toml"\n');
+    expect(influx).toMatch(/\nExecStart="\/opt\/xy virtual\/releases\/1\/runtime\/influxdb\/influxd"\n/);
+    const analyze = spawnSync('systemd-analyze', ['--version'], { stdio: 'ignore' });
+    if (analyze.error || analyze.status !== 0) return; // not a systemd host (macOS/Windows dev machines)
+    const dir = mkdtempSync(join(tmpdir(), 'rv-units-'));
+    try {
+      for (const { id, unit } of units) writeFileSync(join(dir, `xyvirtual-${id}.service`), unit!);
+      const result = spawnSync('systemd-analyze', ['verify', ...units.map(({ id }) => join(dir, `xyvirtual-${id}.service`))], { encoding: 'utf8' });
+      const own = `${result.stdout}${result.stderr}`.split('\n').filter((line) => line.includes(dir));
+      expect(own.filter((line) => /bad unit file setting|fatal error|not absolute|Failed to parse/i.test(line))).toEqual([]);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
   it('keeps the HTTPS journey test rendering every Caddyfile variable through the installer renderer', () => {

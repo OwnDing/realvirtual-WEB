@@ -3,12 +3,12 @@
 import { spawnSync } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { request as httpsRequest } from 'node:https';
-import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, chownSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { cp, readFile, rename } from 'node:fs/promises';
 import { dirname, join, parse, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPreflight } from './lib/preflight.mjs';
-import { httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
+import { caddyHashAlgorithm, httpsPortSuffix, renderCaddyfile, renderTemplate, validateApplianceConfig } from './lib/config.mjs';
 import { createFileInventory, listBundleFiles, normalizeBundlePath, sha256File, targetForPlatform, verifyBundle } from './lib/bundle.mjs';
 import { isRollbackDataCompatible } from './lib/compatibility.mjs';
 import { AccessStore } from './access/store.mjs';
@@ -26,8 +26,17 @@ function has(args, name) {
   return args.includes(`--${name}`);
 }
 
-function randomSecret(bytes = 32) {
-  return randomBytes(bytes).toString('base64url');
+// Secrets reach command lines: the InfluxDB image's first-start entrypoint runs
+// `influx setup --password <secret> --token <secret>`, and a base64url secret starting with `-`
+// (1 in 64 per secret) is parsed as a flag there: setup failed ("unknown command"), InfluxDB
+// restart-looped and the install timed out (EP-APPLIANCE-001 rehearsal, 2026-11-04). Draw again
+// until the first character is alphanumeric; this removes under 6 bits of a 192-bit+ secret.
+const CLI_SAFE_SECRET = /^[A-Za-z0-9]/;
+export function randomSecret(bytes = 32, source = randomBytes) {
+  for (;;) {
+    const value = source(bytes).toString('base64url');
+    if (CLI_SAFE_SECRET.test(value)) return value;
+  }
 }
 
 function safeManagedRoot(value, label) {
@@ -57,11 +66,42 @@ function resolveRoots(options) {
   };
 }
 
-function atomicJson(path, value) {
+function atomicJson(path, value, mode = 0o600) {
   mkdirSync(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomBytes(4).toString('hex')}`;
-  writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
+  writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode });
+  // Explicit: the creation mode above is reduced by the installer's umask.
+  chmodSync(temporary, mode);
   renameSync(temporary, path);
+}
+
+/**
+ * Program files are public and read by unprivileged service users (container images run as
+ * `node`/uid 1000 and the gateway as uid 10001; native services as `xyvirtual`). Their modes
+ * must not depend on the umask of the shell that unpacked or installed the release: under a
+ * hardened umask the gateway could not even open its entry module (EP-APPLIANCE-001 rehearsal,
+ * 2026-11-04). Directories 0755, files 0644, owner-executable files 0755.
+ *
+ * The archive also carries the build host's numeric owner (uid 501 in that rehearsal), which a
+ * root extraction keeps; an installed program file owned by an arbitrary uid could be rewritten
+ * by whichever local user has that uid. A root installer therefore hands the tree to root.
+ */
+function normalizeProgramModes(root) {
+  if (process.platform === 'win32') return;
+  const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+  const settle = (path, mode) => {
+    if (asRoot) chownSync(path, 0, 0);
+    chmodSync(path, mode);
+  };
+  const walk = (directory) => {
+    settle(directory, 0o755);
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.isFile()) settle(path, statSync(path).mode & 0o100 ? 0o755 : 0o644);
+    }
+  };
+  walk(root);
 }
 
 function readJsonOrNull(path) {
@@ -74,7 +114,31 @@ function copyFileAtomicallyIfChanged(source, destination, mode) {
   mkdirSync(dirname(destination), { recursive: true });
   const temporary = `${destination}.tmp-${process.pid}-${randomBytes(4).toString('hex')}`;
   writeFileSync(temporary, bytes, { mode });
+  if (process.platform !== 'win32') chmodSync(temporary, mode);
   renameSync(temporary, destination);
+}
+
+function certificateEvidencePath(roots) {
+  return join(roots.stateRoot, 'public', 'certificate-evidence.crt');
+}
+
+/**
+ * /diagnostics/ shows the host certificate the browser should trust. The control plane runs
+ * unprivileged (uid 1000 in the container, `xyvirtual` natively) and could not read it from
+ * the PKI tree, where Caddy keeps the internal CA root 0600 beside its private keys: the check
+ * always failed with CERTIFICATE_EVIDENCE_UNAVAILABLE (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+ * Only the PUBLIC certificate is copied out, to a directory that holds nothing else. Called
+ * after the HTTPS entry is ready, because Caddy creates the internal CA on its first start.
+ */
+function publishCertificateEvidence(roots, config) {
+  const source = config.tls.mode === 'internal-ca'
+    ? join(roots.stateRoot, 'pki', 'caddy-data', 'caddy', 'pki', 'authorities', 'local', 'root.crt')
+    : join(roots.stateRoot, 'pki', 'customer', 'server.crt');
+  if (!existsSync(source)) return;
+  const directory = dirname(certificateEvidencePath(roots));
+  mkdirSync(directory, { recursive: true });
+  if (process.platform !== 'win32') chmodSync(directory, 0o755);
+  copyFileAtomicallyIfChanged(source, certificateEvidencePath(roots), 0o644);
 }
 
 function portablePath(path, windows = process.platform === 'win32') {
@@ -106,6 +170,19 @@ function writeSecret(path, value) {
   mkdirSync(dirname(path), { recursive: true });
   if (!existsSync(path)) writeFileSync(path, `${value}\n`, { mode: 0o600 });
   return readFileSync(path, 'utf8').trim();
+}
+
+/**
+ * An InfluxDB setup secret persisted by an earlier, failed install may still start with `-` and
+ * would fail every retry the same way. Until InfluxDB has been set up (no bolt store yet) it is
+ * not in use anywhere and is replaced; after setup it is the live credential and is kept.
+ */
+function writeInfluxSetupSecret(roots, path, bytes) {
+  const initialized = existsSync(join(roots.stateRoot, 'data', 'influxdb', 'influxd.bolt'));
+  if (!initialized && existsSync(path) && !CLI_SAFE_SECRET.test(readFileSync(path, 'utf8').trim())) {
+    writeFileSync(path, `${randomSecret(bytes)}\n`, { mode: 0o600 });
+  }
+  return writeSecret(path, randomSecret(bytes));
 }
 
 function caddyBinary(releaseRoot, target) {
@@ -155,8 +232,10 @@ async function stageRelease(bundleRoot, roots, manifest) {
     return finalPath;
   }
   mkdirSync(releases, { recursive: true });
+  if (process.platform !== 'win32') { chmodSync(roots.installRoot, 0o755); chmodSync(releases, 0o755); }
   const temporary = join(releases, `.staging-${manifest.version}-${randomBytes(4).toString('hex')}`);
   await cp(bundleRoot, temporary, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true });
+  normalizeProgramModes(temporary);
   await verifyBundle(temporary, { expectedTarget: manifest.target });
   await rename(temporary, finalPath);
   return finalPath;
@@ -195,10 +274,12 @@ function initializeSecrets(roots, config, releaseRoot, target, runImpl) {
     installId: writeSecret(join(secrets, 'install-id'), randomUUID()),
     operatorPassword: operator,
     operatorPasswordHash: readFileSync(passwordHashPath, 'utf8').trim(),
-    influxPassword: writeSecret(join(secrets, 'influx-password'), randomSecret(24)),
-    influxToken: writeSecret(join(secrets, 'influx-token'), randomSecret(36)),
+    influxPassword: writeInfluxSetupSecret(roots, join(secrets, 'influx-password'), 24),
+    influxToken: writeInfluxSetupSecret(roots, join(secrets, 'influx-token'), 36),
     forgejoSecret: writeSecret(join(secrets, 'forgejo-secret'), randomSecret(32)),
     forgejoInternalToken: writeSecret(join(secrets, 'forgejo-internal-token'), randomSecret(48)),
+    // [oauth2] JWT_SECRET_URI: raw-URL base64 of exactly 32 bytes, as Forgejo requires.
+    forgejoJwtSecret: writeSecret(join(secrets, 'forgejo-jwt-secret'), randomSecret(32)),
   };
   return { values, generatedOperatorPassword: operatorPassword };
 }
@@ -231,6 +312,7 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
     // Only an ABSENT key is added; an administrator's explicit `false` is respected.
     const current = JSON.parse(readFileSync(path, 'utf8'));
     if (current.trustProxyIdentity === undefined) writeFileSync(path, `${JSON.stringify({ ...current, trustProxyIdentity: true }, null, 2)}\n`, { mode: 0o644 });
+    if (process.platform !== 'win32') chmodSync(path, 0o644);
     return path;
   }
   const inside = container ? '/var/lib/xyvirtual-gateway' : data;
@@ -253,6 +335,7 @@ function writeDefaultGatewayConfig({ roots, container, config, secrets }) {
   };
   // No secret in this file (the token is in tokenFile, 0600), so the service user may read it.
   writeFileSync(path, `${JSON.stringify(gateway, null, 2)}\n`, { mode: 0o644 });
+  if (process.platform !== 'win32') chmodSync(path, 0o644);
   return path;
 }
 
@@ -328,6 +411,7 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     TLS_DIRECTIVE: tlsDirective(config, roots, container, windows),
     OPERATOR_USER: config.authentication.operatorUser,
     OPERATOR_PASSWORD_HASH: secrets.operatorPasswordHash,
+    OPERATOR_HASH_ALGORITHM: caddyHashAlgorithm(secrets.operatorPasswordHash),
     CONTROL_UPSTREAM: upstream.control,
     GATEWAY_UPSTREAM: upstream.gateway,
     ...(connectPresent ? { CONNECT_UPSTREAM: upstream.connect } : {}),
@@ -365,13 +449,8 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     },
     certificate: {
       mode: config.tls.mode,
-      path: container
-        ? config.tls.mode === 'customer'
-          ? '/state-pki/customer/server.crt'
-          : '/state-pki/caddy-data/caddy/pki/authorities/local/root.crt'
-        : config.tls.mode === 'customer'
-          ? join(roots.stateRoot, 'pki', 'customer', 'server.crt')
-          : join(roots.stateRoot, 'pki', 'caddy-data', 'caddy', 'pki', 'authorities', 'local', 'root.crt'),
+      // The public copy made by publishCertificateEvidence (internal CA root or customer chain).
+      path: container ? '/state-public/certificate-evidence.crt' : certificateEvidencePath(roots),
       hostnames: [config.hostname, config.influxHostname],
     },
     urls: {
@@ -389,13 +468,18 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
       { id: 'influxdb', url: `http://${upstream.influxdb}/health`, required: true },
     ],
   };
-  atomicJson(join(roots.configRoot, container ? 'control.container.json' : 'control.json'), control);
+  // The control image runs as `node` (uid 1000) and reads this file through a bind mount. It
+  // holds no secret (paths, URLs, the install id), so it is root-owned 0644 like gateway.json —
+  // never chowned to uid 1000, which may be a real login user on the host. Native services run
+  // as `xyvirtual`, which owns the config root, so control.json keeps 0600.
+  atomicJson(join(roots.configRoot, container ? 'control.container.json' : 'control.json'), control, container ? 0o644 : 0o600);
   const forgejoTemplate = readFileSync(join(releaseRoot, 'config', 'forgejo.app.ini.template'), 'utf8');
   writeFileSync(join(roots.configRoot, 'forgejo.app.ini'), renderTemplate(forgejoTemplate, {
     FORGEJO_DATA: portablePath(join(roots.stateRoot, 'data', 'forgejo'), windows), FORGEJO_PORT: config.forgejoPort,
     HOSTNAME: config.hostname, HTTPS_PORT_SUFFIX: httpsPortSuffix(config.httpsPort),
     FORGEJO_SECRET_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-secret'), windows),
     FORGEJO_INTERNAL_TOKEN_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-internal-token'), windows),
+    FORGEJO_JWT_SECRET_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-jwt-secret'), windows),
   }), { mode: 0o600 });
   const influxTemplate = readFileSync(join(releaseRoot, 'config', 'influxdb.toml.template'), 'utf8');
   writeFileSync(join(roots.configRoot, 'influxdb.toml'), renderTemplate(influxTemplate, {
@@ -425,12 +509,25 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
 
 function systemdQuote(value) {
   if (/[\r\n]/.test(value)) throw new Error('Systemd arguments cannot contain line breaks.');
-  return `"${String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+  // `%` starts a systemd specifier (%h, %n, ...): a literal one must be doubled.
+  return `"${String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('%', '%%')}"`;
+}
+
+/**
+ * WorkingDirectory= is not unquoted by systemd: the quoted form was rejected as "path is not
+ * absolute", every native unit had a fatal setting and no native Linux install could start
+ * (EP-APPLIANCE-001 rehearsal, 2026-11-04; checked with systemd-analyze verify). It takes the
+ * rest of the line verbatim, so a path with spaces needs no quoting; `%` is still a specifier.
+ */
+function systemdPath(value) {
+  const path = String(value);
+  if (/[\0\r\n]/.test(path) || !path.startsWith('/')) throw new Error(`Systemd paths must be absolute single-line paths: ${path}`);
+  return path.replaceAll('%', '%%');
 }
 
 function linuxUnit(description, command, roots, { user = 'xyvirtual', environment = {} } = {}) {
   const environmentLines = Object.entries(environment).map(([key, value]) => `Environment=${systemdQuote(`${key}=${value}`)}`).join('\n');
-  return `[Unit]\nDescription=${description}\nAfter=network.target\n\n[Service]\nType=simple\nUser=${user}\nWorkingDirectory=${systemdQuote(roots.stateRoot)}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\nUMask=0077\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths=${systemdQuote(roots.stateRoot)}\n${environmentLines ? `${environmentLines}\n` : ''}\n[Install]\nWantedBy=multi-user.target\n`;
+  return `[Unit]\nDescription=${description}\nAfter=network.target\n\n[Service]\nType=simple\nUser=${user}\nWorkingDirectory=${systemdPath(roots.stateRoot)}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\nUMask=0077\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths=${systemdQuote(roots.stateRoot)}\n${environmentLines ? `${environmentLines}\n` : ''}\n[Install]\nWantedBy=multi-user.target\n`;
 }
 
 export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, config }) {
@@ -444,7 +541,11 @@ export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, co
       { id: 'gateway', unit: linuxUnit('XYvirtual Industrial Gateway', `${systemdQuote(node)} ${systemdQuote(join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs'))} --config ${systemdQuote(join(roots.configRoot, 'gateway.json'))}`, roots) },
       ...(hasConnect(manifest) ? [{ id: 'connect', unit: linuxUnit('XYvirtual CONNECT', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'connect'))} --project-root ${systemdQuote(join(data, 'connect'))} --port ${config.connectPort}`, roots) }] : []),
       { id: 'forgejo', unit: linuxUnit('XYvirtual Project Git', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'forgejo'))} --work-path ${systemdQuote(join(data, 'forgejo'))} --config ${systemdQuote(join(roots.configRoot, 'forgejo.app.ini'))} web`, roots) },
-      { id: 'influxdb', unit: linuxUnit('XYvirtual Historian', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'influxdb'))} --config ${systemdQuote(join(roots.configRoot, 'influxdb.toml'))}`, roots) },
+      // influxd 2.x has no --config flag (it exited "unknown flag: --config" on every start,
+      // EP-APPLIANCE-001 rehearsal 2026-11-04); it reads INFLUXD_CONFIG_PATH.
+      { id: 'influxdb', unit: linuxUnit('XYvirtual Historian', systemdQuote(serviceBinary(releaseRoot, manifest.target, 'influxdb')), roots, {
+        environment: { INFLUXD_CONFIG_PATH: join(roots.configRoot, 'influxdb.toml') },
+      }) },
       { id: 'edge', unit: linuxUnit('XYvirtual HTTPS Edge', `${systemdQuote(caddy)} run --config ${systemdQuote(join(roots.configRoot, 'Caddyfile'))} --adapter caddyfile`, roots, {
         user: 'root',
         environment: {
@@ -466,9 +567,10 @@ function prepareLinuxNativePermissions(roots, runImpl) {
   runImpl('chown', ['-R', 'xyvirtual:xyvirtual', roots.configRoot, join(roots.stateRoot, 'data'), join(roots.stateRoot, 'logs'), join(roots.stateRoot, 'secrets')]);
 }
 
-function windowsServiceXml(id, executable, argumentsValue, logPath) {
+function windowsServiceXml(id, executable, argumentsValue, logPath, environment = {}) {
   const xml = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
-  return `<service>\n  <id>xyvirtual-${xml(id)}</id>\n  <name>XYvirtual Appliance ${xml(id)}</name>\n  <description>XYvirtual Appliance managed service.</description>\n  <executable>${xml(executable)}</executable>\n  <arguments>${xml(argumentsValue.replaceAll('&quot;', '"'))}</arguments>\n  <logpath>${xml(logPath)}</logpath>\n  <log mode="roll-by-size"><sizeThreshold>10485760</sizeThreshold><keepFiles>5</keepFiles></log>\n  <onfailure action="restart" delay="5 sec"/>\n  <stoptimeout>30 sec</stoptimeout>\n</service>\n`;
+  const env = Object.entries(environment).map(([name, value]) => `  <env name="${xml(name)}" value="${xml(value)}"/>\n`).join('');
+  return `<service>\n  <id>xyvirtual-${xml(id)}</id>\n  <name>XYvirtual Appliance ${xml(id)}</name>\n  <description>XYvirtual Appliance managed service.</description>\n  <executable>${xml(executable)}</executable>\n  <arguments>${xml(argumentsValue.replaceAll('&quot;', '"'))}</arguments>\n${env}  <logpath>${xml(logPath)}</logpath>\n  <log mode="roll-by-size"><sizeThreshold>10485760</sizeThreshold><keepFiles>5</keepFiles></log>\n  <onfailure action="restart" delay="5 sec"/>\n  <stoptimeout>30 sec</stoptimeout>\n</service>\n`;
 }
 
 function installNativeServices({ roots, releaseRoot, manifest, config, runImpl = run, unitRoot = '/etc/systemd/system' }) {
@@ -490,13 +592,14 @@ function installNativeServices({ roots, releaseRoot, manifest, config, runImpl =
     gateway: [nodeBinary(releaseRoot, manifest.target), `&quot;${join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs')}&quot; --config &quot;${join(roots.configRoot, 'gateway.json')}&quot;`],
     connect: [serviceBinary(releaseRoot, manifest.target, 'connect'), `--project-root &quot;${join(roots.stateRoot, 'data', 'connect')}&quot; --port ${config.connectPort}`],
     forgejo: [serviceBinary(releaseRoot, manifest.target, 'forgejo'), `web --config &quot;${join(roots.configRoot, 'forgejo.app.ini')}&quot;`],
-    influxdb: [serviceBinary(releaseRoot, manifest.target, 'influxdb'), `--config &quot;${join(roots.configRoot, 'influxdb.toml')}&quot;`],
+    // influxd 2.x has no --config flag; the config path goes through INFLUXD_CONFIG_PATH.
+    influxdb: [serviceBinary(releaseRoot, manifest.target, 'influxdb'), '', { INFLUXD_CONFIG_PATH: join(roots.configRoot, 'influxdb.toml') }],
     edge: [caddyBinary(releaseRoot, manifest.target), `run --config &quot;${join(roots.configRoot, 'Caddyfile')}&quot; --adapter caddyfile`],
   };
   for (const definition of definitions) {
     cpSync(winsw, definition.wrapper, { force: true });
-    const [executable, argumentsValue] = commands[definition.id];
-    writeFileSync(definition.xml, windowsServiceXml(definition.id, executable, argumentsValue, logRoot));
+    const [executable, argumentsValue, environment] = commands[definition.id];
+    writeFileSync(definition.xml, windowsServiceXml(definition.id, executable, argumentsValue, logRoot, environment));
     runImpl(definition.wrapper, ['install']);
     runImpl(definition.wrapper, ['start']);
   }
@@ -602,11 +705,22 @@ function bootstrapNativeForgejo({ roots, releaseRoot, manifest, runImpl = run })
   if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, invoke(FORGEJO_TOKEN_ARGS, { capture: true }));
 }
 
-async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker', runImpl = run, waitImpl = null }) {
+// The Forgejo image's default exec user is root, and Forgejo's CLI refuses to run as root
+// ("Forgejo is not supposed to be run as root"); its server already runs as `git` (uid 1000).
+const FORGEJO_CONTAINER_CLI = ['exec', '-T', '--user', 'git', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini'];
+
+// The project token is read by the control image user (uid 1000). `startContainer` hands
+// data/access to that uid BEFORE Forgejo can issue the token, so the new file is handed over too.
+function persistContainerForgejoToken(roots, output, linux, runImpl) {
+  persistForgejoToken(roots, output);
+  if (linux) runImpl('chown', ['1000:1000', forgejoTokenPath(roots)]);
+}
+
+async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker', runImpl = run, waitImpl = null, linux = true }) {
   if (existsSync(forgejoBootstrapPath(roots))) {
     if (!existsSync(forgejoTokenPath(roots))) {
-      const command = containerCommand(runtime, [...composeProjectArgs(roots, releaseRoot), 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
-      persistForgejoToken(roots, runImpl(command.command, command.args, { capture: true }));
+      const command = containerCommand(runtime, [...composeProjectArgs(roots, releaseRoot), ...FORGEJO_CONTAINER_CLI, ...FORGEJO_TOKEN_ARGS]);
+      persistContainerForgejoToken(roots, runImpl(command.command, command.args, { capture: true }), linux, runImpl);
     }
     return;
   }
@@ -616,13 +730,13 @@ async function bootstrapContainerForgejo({ roots, releaseRoot, runtime = 'docker
   for (let attempt = 0; attempt < 60; attempt += 1) {
     try {
       const command = containerCommand(runtime, [
-        ...base, 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini',
+        ...base, ...FORGEJO_CONTAINER_CLI,
         'admin', 'user', 'create', '--username', 'appliance', '--email', 'appliance@localhost.invalid',
         '--admin', '--random-password', '--random-password-length', '24', '--must-change-password=false',
       ]);
       persistForgejoBootstrap(roots, runImpl(command.command, command.args, { capture: true }));
-      const tokenCommand = containerCommand(runtime, [...base, 'exec', '-T', 'forgejo', 'forgejo', '--work-path', '/data/gitea', '--config', '/data/gitea/conf/app.ini', ...FORGEJO_TOKEN_ARGS]);
-      if (!existsSync(forgejoTokenPath(roots))) persistForgejoToken(roots, runImpl(tokenCommand.command, tokenCommand.args, { capture: true }));
+      const tokenCommand = containerCommand(runtime, [...base, ...FORGEJO_CONTAINER_CLI, ...FORGEJO_TOKEN_ARGS]);
+      if (!existsSync(forgejoTokenPath(roots))) persistContainerForgejoToken(roots, runImpl(tokenCommand.command, tokenCommand.args, { capture: true }), linux, runImpl);
       return;
     } catch (error) {
       lastError = error;
@@ -657,7 +771,7 @@ async function bootstrapNativeInflux({ config, secrets, fetchImpl = fetch, waitI
         }
       } else lastCode = `HTTP_${check.status}`;
     } catch (error) {
-      lastCode = error.code ?? error.name ?? 'UNREACHABLE';
+      lastCode = error.code ?? error.cause?.code ?? error.name ?? 'UNREACHABLE';
     }
     await delay(1000);
   }
@@ -693,29 +807,52 @@ async function probeHttpsEdge(config, roots) {
   });
 }
 
-async function waitForReadiness(config, roots, timeoutMs = 300_000, fetchImpl = fetch, httpsProbeImpl = probeHttpsEdge) {
+/**
+ * Native mode: the control plane listens on host loopback, and the HTTPS entry must also
+ * answer through the trusted chain. Container mode: the control plane sits only on the
+ * internal backend network, which Docker never publishes to the host, so a loopback probe
+ * can never succeed — every container install timed out and rolled back (EP-APPLIANCE-001
+ * rehearsal, 2026-11-04). There the HTTPS entry, which proxies /health/ready to the control
+ * plane, is the readiness signal.
+ */
+export async function waitForReadiness(config, roots, timeoutMs = 300_000, fetchImpl = fetch, httpsProbeImpl = probeHttpsEdge, mode = 'native', pauseMs = 1000) {
   const deadline = Date.now() + timeoutMs;
   let lastCode = 'UNREACHABLE';
   while (Date.now() < deadline) {
     try {
-      const response = await fetchImpl(`http://127.0.0.1:${config.controlPort}/health/ready`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
-      if (response.ok) {
+      let controlReady = true;
+      if (mode !== 'container') {
+        const response = await fetchImpl(`http://127.0.0.1:${config.controlPort}/health/ready`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+        controlReady = response.ok;
+        if (!response.ok) lastCode = `HTTP_${response.status}`;
+      }
+      if (controlReady) {
         const edge = await httpsProbeImpl(config, roots);
         if (edge.ok) return;
         lastCode = edge.code;
-      } else lastCode = `HTTP_${response.status}`;
+      }
     } catch (error) {
-      lastCode = error.code ?? error.name ?? 'UNREACHABLE';
+      // fetch() reports refused connections as a bare TypeError with the code in `cause`.
+      lastCode = error.code ?? error.cause?.code ?? error.name ?? 'UNREACHABLE';
     }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 1000));
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, pauseMs));
   }
   throw new Error(`Candidate release did not become ready: ${lastCode}`);
 }
 
 function ensureStateDirectories(roots) {
+  // The state root is only traversed: secrets/ (0700) and data/ (service-owned) protect their
+  // contents. Under a hardened installer umask it was created 0700 root, and the native service
+  // user could not reach its own data: `runuser -u xyvirtual forgejo migrate` failed
+  // (EP-APPLIANCE-001 rehearsal, 2026-11-04). Explicit, like the default umask would give.
+  mkdirSync(roots.stateRoot, { recursive: true });
+  if (process.platform !== 'win32') chmodSync(roots.stateRoot, 0o755);
   for (const rel of ['data/gateway', 'data/connect', 'data/forgejo', 'data/influxdb', 'config/influxdb', 'pki', 'backups', 'logs', 'license', 'secrets']) {
     mkdirSync(join(roots.stateRoot, rel), { recursive: true, mode: rel === 'secrets' ? 0o700 : 0o750 });
   }
+  // Public certificate evidence only (see publishCertificateEvidence); readable by service users.
+  mkdirSync(join(roots.stateRoot, 'public'), { recursive: true });
+  if (process.platform !== 'win32') chmodSync(join(roots.stateRoot, 'public'), 0o755);
 }
 
 function hardenWindowsRoots(roots, runImpl) {
@@ -733,11 +870,17 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!['container', 'native'].includes(mode)) throw new Error(`Unsupported mode: ${mode}`);
   const roots = resolveRoots(options);
   const existing = currentState(roots);
+  // A default uninstall keeps the persistent state (version, data formats, origin, data) but
+  // removes the program and its services. Reinstalling over it is a fresh program install that
+  // still honours the downgrade/format checks and the origin; nothing of the removed release may
+  // be verified, stopped or restarted (EP-APPLIANCE-001 rehearsal, 2026-11-04: ENOENT on the
+  // removed release's manifest made every reinstall after uninstall fail).
+  const running = existing && !existing.uninstalledAt ? existing : null;
   const preflight = await runPreflight({
     bundleRoot, configPath: resolve(options.configPath), expectedTarget: options.expectedTarget,
     mode, containerRuntime: options.containerRuntime, verifyPlatform: options.verifyPlatform,
     minimumFreeBytes: options.minimumFreeBytes, diskPath: roots.installRoot,
-    skipPortChecks: Boolean(existing) || options.skipPortChecks,
+    skipPortChecks: Boolean(running) || options.skipPortChecks,
     installedVersion: existing?.version ?? null,
     installedCompatibility: existing?.compatibility ?? null,
   }, dependencies);
@@ -747,14 +890,15 @@ export async function installOrUpgrade(options, dependencies = {}) {
   }
   if (!preflight.manifest.modes.includes(mode)) throw new Error(`Bundle does not contain ${mode} mode.`);
   assertStableOrigin(existing, preflight.config);
-  const existingManifest = existing ? await verifyBundle(existing.releaseRoot, { expectedTarget: existing.target }) : null;
+  if (running) await verifyBundle(running.releaseRoot, { expectedTarget: running.target });
   let safetyBackup = null;
   let existingStoppedForUpgrade = false;
   if (existing && existing.version !== preflight.manifest.version) {
     // The consistency point is only valid while the old release remains stopped.
     // Do not reopen a write window between the snapshot and candidate handoff.
-    safetyBackup = await backupAppliance({ ...options, noStop: false, leaveStopped: true }, dependencies);
-    existingStoppedForUpgrade = true;
+    // After an uninstall nothing runs, so the data is already quiescent.
+    safetyBackup = await backupAppliance({ ...options, noStop: !running, leaveStopped: Boolean(running) }, dependencies);
+    existingStoppedForUpgrade = Boolean(running);
   }
   const configurationSnapshot = existing ? backupConfiguration(roots, preflight.manifest.version) : null;
   ensureStateDirectories(roots);
@@ -770,7 +914,8 @@ export async function installOrUpgrade(options, dependencies = {}) {
     schemaVersion: 1,
     installId: initialized.values.installId,
     version: preflight.manifest.version,
-    previousVersion: existing?.version && existing.version !== preflight.manifest.version ? existing.version : existing?.previousVersion ?? null,
+    // The removed program's releases are gone after an uninstall: nothing to roll back to.
+    previousVersion: !running ? null : existing.version !== preflight.manifest.version ? existing.version : existing.previousVersion ?? null,
     target: preflight.manifest.target,
     mode,
     origin: `https://${preflight.config.hostname}${httpsPortSuffix(preflight.config.httpsPort)}`,
@@ -791,7 +936,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!options.noStart) {
     let candidateAttempted = false;
     try {
-      if (existing && !existingStoppedForUpgrade) {
+      if (running && !existingStoppedForUpgrade) {
         stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
       }
       if (mode === 'container') {
@@ -800,7 +945,10 @@ export async function installOrUpgrade(options, dependencies = {}) {
           installWindowsConnectService({ roots, releaseRoot, config: preflight.config, runImpl });
         }
         startContainer({ roots, releaseRoot, manifest: preflight.manifest, runtime: options.containerRuntime, runImpl });
-        await bootstrapContainerForgejo({ roots, releaseRoot, runtime: options.containerRuntime, runImpl, waitImpl: dependencies.waitImpl });
+        await bootstrapContainerForgejo({
+          roots, releaseRoot, runtime: options.containerRuntime, runImpl, waitImpl: dependencies.waitImpl,
+          linux: preflight.manifest.target.startsWith('linux-'),
+        });
       } else {
         if (preflight.manifest.target.startsWith('linux-')) prepareLinuxNativePermissions(roots, runImpl);
         bootstrapNativeForgejo({ roots, releaseRoot, manifest: preflight.manifest, runImpl });
@@ -811,7 +959,8 @@ export async function installOrUpgrade(options, dependencies = {}) {
           fetchImpl: dependencies.bootstrapFetchImpl ?? fetch, waitImpl: dependencies.waitImpl,
         });
       }
-      await readinessImpl(preflight.config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+      await readinessImpl(preflight.config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, mode);
+      publishCertificateEvidence(roots, preflight.config);
     } catch (error) {
       try {
         if (candidateAttempted) stopRuntime({ roots, releaseRoot, manifest: preflight.manifest, mode, runtime: options.containerRuntime, runImpl });
@@ -822,9 +971,15 @@ export async function installOrUpgrade(options, dependencies = {}) {
               noStop: true, skipSafetyBackup: true,
             }, dependencies);
           } else restoreConfigurationSnapshot(roots, configurationSnapshot);
-          const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
-          startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-          await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+          if (running) {
+            const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
+            startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+            await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, existing.mode);
+            publishCertificateEvidence(roots, previousConfig);
+          } else {
+            // Back to the uninstalled state it came from: data restored, no program to restart.
+            atomicJson(installStatePath(roots), { ...currentState(roots), uninstalledAt: existing.uninstalledAt });
+          }
         }
       } catch (recoveryError) {
         throw new AggregateError([error, recoveryError], `Candidate failed and automatic recovery was not safe: ${recoveryError.message}`);
@@ -857,6 +1012,7 @@ function readInstalledSecrets(roots) {
 export async function rollbackAppliance(options, dependencies = {}) {
   const roots = resolveRoots(options);
   const state = currentState(roots);
+  if (state?.uninstalledAt) throw new Error('The appliance program is uninstalled (state and data are kept); install a release first.');
   if (!state?.previousVersion) throw new Error('No previous appliance release is recorded.');
   const previousRoot = join(roots.installRoot, 'releases', state.previousVersion);
   const manifest = await verifyBundle(previousRoot, { expectedTarget: state.target });
@@ -872,7 +1028,8 @@ export async function rollbackAppliance(options, dependencies = {}) {
   renderRuntimeConfiguration({ config, roots, releaseRoot: previousRoot, manifest, mode: state.mode, secrets });
   if (!options.noStart) {
     startInstalledRuntime({ roots, state: { ...state, releaseRoot: previousRoot }, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-    await readinessImpl(config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+    await readinessImpl(config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, state.mode);
+    publishCertificateEvidence(roots, config);
   }
   const next = { ...state, version: state.previousVersion, previousVersion: state.version, releaseRoot: previousRoot, updatedAt: new Date().toISOString() };
   atomicJson(installStatePath(roots), next);
@@ -889,7 +1046,9 @@ export async function backupAppliance(options, dependencies = {}) {
   const stamp = new Date().toISOString().replaceAll(':', '-');
   const backupRoot = join(roots.stateRoot, 'backups', `${stamp}-${randomBytes(3).toString('hex')}-${state.version}`);
   if (existsSync(backupRoot)) throw new Error(`Backup already exists: ${backupRoot}`);
-  if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  // Nothing runs after an uninstall: the data is already quiescent and there is nothing to restart.
+  const stop = !options.noStop && !state.uninstalledAt;
+  if (stop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
   let verified = false;
   try {
     mkdirSync(backupRoot, { recursive: true, mode: 0o700 });
@@ -910,7 +1069,7 @@ export async function backupAppliance(options, dependencies = {}) {
   } finally {
     // A failed snapshot never authorizes an upgrade outage. Keep the runtime
     // stopped only after the requested consistency point was fully verified.
-    if (!options.noStop && (!options.leaveStopped || !verified)) {
+    if (stop && (!options.leaveStopped || !verified)) {
       startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
     }
   }
@@ -952,6 +1111,8 @@ export async function restoreAppliance(options, dependencies = {}) {
   const state = currentState(roots);
   if (!state) throw new Error('No appliance installation state was found.');
   if (options.confirmRestore !== state.installId) throw new Error('Restore requires --confirm-restore with the exact installId.');
+  // The internal recovery of a failed reinstall restores with noStop; the CLI needs a runtime.
+  if (state.uninstalledAt && !options.noStop) throw new Error('The appliance program is uninstalled (state and data are kept); install a release first.');
   const backupRoot = resolve(options.backupPath);
   const approvedRoot = `${resolve(roots.stateRoot, 'backups')}${sep}`;
   if (!backupRoot.startsWith(approvedRoot)) throw new Error('Restore source must be inside the appliance backups directory.');
@@ -1002,7 +1163,8 @@ export async function restoreAppliance(options, dependencies = {}) {
     atomicJson(join(roots.installRoot, 'current.json'), { schemaVersion: 1, version: next.version, releaseRoot: next.releaseRoot });
     if (!options.noStop) {
       startInstalledRuntime({ roots, state: next, config: restoredConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-      await readinessImpl(restoredConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl);
+      await readinessImpl(restoredConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, next.mode);
+      publishCertificateEvidence(roots, restoredConfig);
     }
   } catch (error) {
     throw Object.assign(error, { safetyBackup });
@@ -1018,18 +1180,24 @@ export function uninstallAppliance(options, dependencies = {}) {
     throw new Error('Data purge requires --confirm-purge with the exact installId.');
   }
   const runImpl = dependencies.runImpl ?? run;
-  if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
-  if (state.mode === 'native' && state.target.startsWith('linux-')) {
+  const installed = !state.uninstalledAt;
+  if (installed && !options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  if (installed && state.mode === 'native' && state.target.startsWith('linux-')) {
     for (const id of ['edge', 'control', 'gateway', 'connect', 'forgejo', 'influxdb']) {
       const unit = join(options.systemdUnitRoot ?? dependencies.systemdUnitRoot ?? '/etc/systemd/system', `xyvirtual-${id}.service`);
       if (existsSync(unit)) rmSync(unit, { force: false });
     }
     runImpl('systemctl', ['daemon-reload']);
   }
-  rmSync(roots.installRoot, { recursive: true, force: false });
+  // A failed reinstall after an uninstall may have staged a release again.
+  if (installed || existsSync(roots.installRoot)) rmSync(roots.installRoot, { recursive: true, force: false });
   if (options.purgeData) {
     rmSync(roots.stateRoot, { recursive: true, force: false });
     rmSync(roots.configRoot, { recursive: true, force: false });
+  } else if (installed) {
+    // The kept state still guards the next install (downgrade/format checks, origin, data), but
+    // it must say that no program is installed, or the reinstall verifies a removed release.
+    atomicJson(installStatePath(roots), { ...state, uninstalledAt: new Date().toISOString() });
   }
   return { removedPrograms: roots.installRoot, preservedState: !options.purgeData ? roots.stateRoot : null };
 }
@@ -1069,6 +1237,10 @@ async function main() {
       containerRuntime: common.containerRuntime,
       installedVersion: installed?.version ?? null,
       installedCompatibility: installed?.compatibility ?? null,
+      // The documented upgrade runs the candidate's own preflight on a running appliance, which
+      // holds its own ports; the installer already skips this check then. Without the same rule
+      // here the manual's step reported BLOCKED: EADDRINUSE (EP-APPLIANCE-001 rehearsal).
+      skipPortChecks: Boolean(installed && !installed.uninstalledAt),
     });
     printPreflight(report);
     if (!report.ok) process.exitCode = 2;

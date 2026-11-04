@@ -24,7 +24,7 @@ https://{{HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
 
 		# IT/operations surfaces keep the shared operator Basic Auth.
 		@it path /appliance /appliance/* /diagnostics /diagnostics/* /git /git/*
-		basic_auth @it {
+		basic_auth @it {{OPERATOR_HASH_ALGORITHM}} {
 			{{OPERATOR_USER}} {{OPERATOR_PASSWORD_HASH}}
 		}
 
@@ -109,7 +109,7 @@ https://{{HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
 
 https://{{INFLUX_HOSTNAME}}:{{LISTEN_HTTPS_PORT}} {
 	{{TLS_DIRECTIVE}}
-	basic_auth {
+	basic_auth {{OPERATOR_HASH_ALGORITHM}} {
 		{{OPERATOR_USER}} {{OPERATOR_PASSWORD_HASH}}
 	}
 	header {
