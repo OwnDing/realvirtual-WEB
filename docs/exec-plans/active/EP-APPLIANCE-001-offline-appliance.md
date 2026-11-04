@@ -197,7 +197,9 @@ OCI 基础镜像按锁定的 arm64 child digest 拉取并核对 `linux/arm64`；
 19. 原生：Forgejo 首次启动要把 `oauth2.JWT_SECRET` 写回只读的 app.ini，循环重启。
 20. 原生：Forgejo 要在状态根下维护 `~/.ssh/authorized_keys` 并失败；关闭 SSH。
 
-未执行或未验证（不得写成通过）：Windows x64 container/native、linux-x64、真实 PLC/OT 网络与 OPC UA 安全模式/证书信任、F12 多人与 Unity、客户证书模式、真实操作终端的 CA 信任与 HMI 界面、容器模式 F7–F10（OD-012）、CONNECT（本轮发布不含）、Browser Gate 中修改后的 HTTPS 旅程（本机 Docker Desktop 不支持 `--network host`，以远程 CI 为准）、原生生命周期测试（需 Linux 主机工具，以远程 Node Gate 为准）。本轮演练脚本与原始证据保存在会话临时目录，未入库。
+Linux 实机补充（2026-11-04，用户提供的 Oracle Linux 10.2 aarch64 主机，systemd 257，Docker 29.7.2，分支 `d5bffc2`）：完整 `./scripts/verify.sh node` 102/102 文件、988 通过 / 1 跳过，其中 `tests/appliance-lifecycle.node.test.ts` 7/7（macOS 上因缺 Linux 主机工具无法运行）；`tests/appliance-runtime.node.test.ts` 的 `systemd-analyze verify` 分支在真实 systemd 上执行并通过，且对旧的带引号 `WorkingDirectory` 单元确实报错（反例成立）；真实 Caddy HTTPS 旅程 `scripts/test-protected-presentations.mjs` 通过（36 s），把模板临时换回 develop 的裸 `basic_auth` 后在新断言 “operator credential opens /appliance/”（实际 401、期望 200）处失败，随后恢复；`tests/appliance-diagnostics.test.ts` 5/5。首轮 Node 门禁的 3 项失败（`bundle-chunk`、`embed-spike`、`user-help`）来自该工作副本 2026-10-24 的陈旧 `dist/`、`dist-embed/`；在本分支重新构建后 3/3 通过，完整门禁复跑全绿。
+
+未执行或未验证（不得写成通过）：Windows x64 container/native、linux-x64、真实 PLC/OT 网络与 OPC UA 安全模式/证书信任、F12 多人与 Unity、客户证书模式、真实操作终端的 CA 信任与 HMI 界面、容器模式 F7–F10（OD-012）、CONNECT（本轮发布不含）、原生模式安装尚未在 Oracle Linux（SELinux、RHEL 系 `useradd`）实机执行。本轮演练脚本与原始证据保存在会话临时目录，未入库。
 
 ## Rollback
 
