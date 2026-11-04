@@ -3,7 +3,7 @@ doc_id: GOV-OPEN-DECISIONS
 title: 当前未决事项与实施闸口
 status: approved
 owner: architecture
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-04
 authority: normative-registry
 ---
 
@@ -23,6 +23,7 @@ authority: normative-registry
 | OD-009 | AGPL 商业路线、独立发行身份及阶段 A 定性与清点的结案范围 | product、security | 已落入 ADR-0021 与完成计划 EP-LEGAL-001；法律/发布证据转 OD-010 | closed |
 | OD-010 | 阶段 A 遗留的权属事实、法律签收及实际交付履约 | product、security、engineering | A-01–A-08 对应的权利声明、实际制品与正式商业发布 | open |
 | OD-011 | 工业协议网关的归属：继续依赖上游 CONNECT，还是自有网关、CONNECT 可选 | product、architecture | 新服务端协议组件、Appliance 组件清单、Historian 数据源 | closed |
+| OD-012 | 容器模式下工业网关到 PLC（OT 网络）的网络通路，及原生模式是否随包提供 git | product、architecture、security | 容器模式 F7–F10（网关读写 PLC）；原生模式主机前置条件；EP-APPLIANCE-001 关闭 | open |
 
 ## 执行规则
 
@@ -33,6 +34,8 @@ OD-009：商业化阶段 A 的许可路径与结案范围，Owner 为 product/se
 OD-010：遗留权属、法律与发布证据，Owner 为 product/security/engineering，状态 **open**。按 2026-10-27 用户确认的结案范围，完整接收原 OD-009/M4 中尚未完成的 A-01–A-08，详见 [商业发布证据登记](COMMERCIAL_RELEASE_GATES.md)。签约主体、贡献/雇佣事实、历史交付、署名、对应源码、特殊依赖/素材/独立组件权利和法律签收尚需证据。阻塞范围仍为相关权利声明、变更 LICENSE/贡献权属及正式商业发布；不阻断不依赖未知授权的合规工程准备。须由实际权利人/审核方提供证据、产品负责人签收后逐项关闭；阶段 A 的接收不是代签，也不豁免原供应链门禁。
 
 OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独立测试证据，Owner 为 security/product/maintainers，状态 **closed**。2026-10-20 用户明确“同意，开 pr 实施”，认可 EP-SEC-001 D1–D5；落地 [ADR-0019](../adr/ADR-0019-supply-chain-and-script-trust.md) 与 [活动计划](../exec-plans/active/EP-SEC-001-supply-chain-and-script-security.md)。需同步门禁/策略/运行时/授权迁移/验收；决策关闭不代表代码、远程保护设置或第三方测试完成。OD-005 的原五项保护不撤销，新增检查的远程强制单独留证。
+
+OD-012：容器模式网关的 PLC 通路与原生模式的 git 依赖，Owner 为 product/architecture/security，状态 **open**（2026-11-04 由 EP-APPLIANCE-001 本机演练登记）。实测（Debian 12 主机、Docker 29.9.3）：容器模式的 `gateway` 服务只接 `internal: true` 的 `backend` 网络，容器内仅有 backend 子网路由，对演练“工厂网络”上 OPC UA 模拟器 `172.30.0.20:4840` 的 TCP 连接得到 `ENETUNREACH`，而宿主本身可达；因此容器模式下网关无法连接位于容器网络之外的任何 PLC，F7–F10 在容器模式不可能通过。同一模拟器在原生模式下连接成功（`source connected`）。可选方案（未实施，需决策）：(a) 仅给网关增加一个非 internal 的 `ot` 网络，网络级零外呼继续由客户宿主 ACL 兜底（与 Edge 现状一致）；(b) 声明容器模式不支持网关直连 PLC，工业连接只在原生模式交付；(c) 网关使用宿主网络。三者改变的是已文档化的网络边界（[架构](../architecture/OFFLINE_APPLIANCE.md)“backend 为 internal”），按 AI_SAFETY §1 由 Owner 决定，Agent 不自行选择。同时登记：原生 Forgejo 运行时调用主机 `git`，归档不含 git；本轮已让预检在原生模式要求主机 git 并写入安装手册，是否改为随包提供（GPLv2 来源义务）待决。
 
 1. 任务碰到阻塞范围时，ExecPlan 必须引用对应 OD。
 2. 决策完成后创建或更新 ADR/产品规格/契约，再把状态改为 `closed`。
