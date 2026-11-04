@@ -2,9 +2,9 @@
 doc_id: EP-MULTI-001
 title: 第二轮整改第 4 步：多人会话角色接入登录会话并由网关守卫强制
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 authority: normative-process
 ---
 
@@ -71,7 +71,7 @@ authority: normative-process
 - [x] M1（2026-11-03）
 - [x] M2（2026-11-03）
 - [x] M3（2026-11-03）
-- [~] M4 本地门禁全部通过；远程 CI 待 PR
+- [x] M4 本地门禁与远程 CI（PR #30）
 
 ## Surprises & Discoveries
 
@@ -100,8 +100,12 @@ authority: normative-process
 
 未验证（如实记录）：真实 Unity MultiplayerWEB 服务与中继；Appliance 中 Caddy → 网关 → Unity 的完整链路与现场防火墙；真实 PLC 经 Unity 的写入。纳入第 5 步实机验收清单。
 
-远程 CI：待 PR。
+远程 CI：PR #30 首轮（`ba5b9af`）run [`41638510855`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638510855) 七项通过；合入第 3 步后更新的 `5aa83c3` 在 run [`41662550666`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41662550666) 七项通过（E2E Gate 按设计跳过）；2026-11-03T15:52:17Z 合入 `develop`，merge commit `1b15163`；合并后 `develop` run [`41668335474`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41668335474) 通过。
 
 ## Rollback
 
 删除 `gateway.json` 的 `multiuser` 键即关闭守卫；浏览器上限与 `services.multiuser` 按提交回退。回退浏览器上限会恢复自报角色，不推荐。
+
+## Outcomes & Retrospective
+
+在有账户的部署中，多人角色由会话决定：浏览器以会话为上限，Appliance 网关守卫覆盖 `room_join` 角色、拦截 viewer 的写类消息并审计。Appliance 的多人协作也因此能在 HTTPS 下工作。遗留：真实 Unity / 中继、Caddy → 网关 → Unity 全链路与现场防火墙，归入 EP-APPLIANCE-001 现场验收 F12；无访问服务的部署仍为自报角色（文档写明不是边界）。

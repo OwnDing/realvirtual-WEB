@@ -9,6 +9,10 @@ authority: normative-registry
 
 # 已完成 ExecPlan 索引
 
+- [EP-MULTI-001-multiuser-role-from-session.md](EP-MULTI-001-multiuser-role-from-session.md)：第二轮整改第 4 步——多人会话角色由登录会话决定、Appliance 网关守卫强制（ADR-0028）；PR #30 远程七项通过，2026-11-03 合入 `develop`（`1b15163`）；真实 Unity 与现场防火墙归入 Appliance 现场验收。
+
+- [EP-TRUST-001-own-model-signing-root-and-readme.md](EP-TRUST-001-own-model-signing-root-and-readme.md)：第二轮整改第 2 步——自有模型签名信任根与 README 事实更正；PR #28 远程七项首轮通过，2026-11-03 合入 `develop`（`d542821`）。
+
 - [EP-LEGAL-001-phase-a-commercialization.md](EP-LEGAL-001-phase-a-commercialization.md)：2026-10-27 经用户确认，阶段 A 定性与现有范围清点结案；OD-009 关闭，OD-010/A-01–A-08 保留法律与发布阻断。
 
 - [EP-DIAG-001-local-diagnostics.md](EP-DIAG-001-local-diagnostics.md)：L3-1 本地脱敏诊断包、设置与故障入口、ZIP/JSON 降级；2026-10-14 完成本地门禁与隔离网络下载验收，2026-10-15 在 PR #16 补齐嵌入/启动锁定可见性回归，真实 WebGPU/移动设备另验。

@@ -2,9 +2,9 @@
 doc_id: EP-TRUST-001
 title: 第二轮整改第 2 步：自有模型签名信任根与 README 事实更正
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 authority: normative-process
 ---
 
@@ -65,7 +65,7 @@ OD-007 产品输入（2026-08-26：“`rv-sig-public-key.ts` 的信任根是上�
 - [x] M1 生成 CLI 与测试。
 - [x] M2 用户于 2026-11-03 在本机运行 `--keygen` 生成根密钥（私钥只写入其本机仓库外的 0600 文件，未进入会话、仓库或日志）；公钥 `ovqirJ8h7sQ0eQLtGnb0AbMHScqcIPHDK45WoyJFjLA=` 已写入两处常量，信任根测试转绿。
 - [x] M3 README 更正（文档门禁见 Validation）。
-- [ ] 远程 CI 与合并。
+- [x] 远程 CI 与合并（2026-11-03，PR #28）。
 
 ## Surprises & Discoveries
 
@@ -93,8 +93,12 @@ OD-007 产品输入（2026-08-26：“`rv-sig-public-key.ts` 的信任根是上�
 - `./scripts/verify.sh governance`（191 份受治理文档）、`static`、`node`（94 文件 / 945 例通过，2 文件 / 7 例按既有条件 skip）、`build` 均退出 0。
 - `CI=1 ./scripts/verify.sh browser`：八个主 shard 与独立性能套件全部通过，合计 1,062 文件 / 11,125 例通过、3 文件跳过、零失败。
 
-远程 CI：待 PR。
+远程 CI：PR #28（`56f4661`）的 Quality Gates run [`41638488288`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638488288) 七项全部首轮通过（Browser 25m32s）；2026-11-03T13:17:29Z 合入 `develop`，merge commit `d542821`；合并后 `develop` run [`41643034224`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41643034224) 通过。
 
 ## Rollback
 
 恢复两处根公钥常量即回到上游根（不推荐：会重新信任上游流水线签名）；`--keygen` 为新增入口，删除不影响签名与校验；README 与文案可按提交回退。
+
+## Outcomes & Retrospective
+
+浏览器与签名器只信任本项目根；上游流水线签名的模型校验为 `invalid`，按既有门控只加载几何。私钥由仓库所有者以 `--keygen` 生成，未进入会话、仓库或日志。README 不再宣称 REST 接口，也不再指向不存在的站点与仓库。遗留：许可证 CLI 的 `--keygen` 仍把私钥打印到标准输出；README 的 Commercial License 段落仍有 `xyvirtual.io` 死链（OD-010 / A-01）。

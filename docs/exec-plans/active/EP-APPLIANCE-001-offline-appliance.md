@@ -125,7 +125,7 @@ Linux ARM64 实机证据（Oracle Linux 10.2、AArch64、Docker 29.7.2、Compose
 - Compose 展开确认 Edge 网络为 `backend,frontend`，CONNECT 仅 `backend`，backend `internal=true`，frontend 非 internal，五项 `pull_policy=never`。
 - 镜像构建器使用真实 ARM64 base lock 完成输入平台检查，并按设计在缺少 CONNECT ELF 时以 `Linux CONNECT binary is missing or does not match` 失败关闭。
 
-第二轮整改第 5 步（2026-11-03，本地）：`tests/appliance-acceptance-probe.node.test.ts` 6/6——对回环上的仿真 Appliance（Caddy forward_auth 跳转与 401、访问服务登录/会话/账户列表/登出、网关多人守卫）验证：正确的 Appliance 全部通过、仅未提供的角色记为 skipped；故意破坏的 Appliance（网关对无会话开放、查看者在多人房间获得 operator、会话角色错误）恰好 3 项失败；探针只发送 `room_join` / `room_leave`、登出全部会话；证据中不含口令、Cookie 与 CSRF；非回环明文 HTTP 被拒，缺少 `--url https` 或 `--ca` 时拒绝运行。**这不是实机验收**，实机结果待按 FIELD_ACCEPTANCE 执行后登记。
+第二轮整改第 5 步（2026-11-03，本地）：`tests/appliance-acceptance-probe.node.test.ts` 6/6——对回环上的仿真 Appliance（Caddy forward_auth 跳转与 401、访问服务登录/会话/账户列表/登出、网关多人守卫）验证：正确的 Appliance 全部通过、仅未提供的角色记为 skipped；故意破坏的 Appliance（网关对无会话开放、查看者在多人房间获得 operator、会话角色错误）恰好 3 项失败；探针只发送 `room_join` / `room_leave`、登出全部会话；证据中不含口令、Cookie 与 CSRF；非回环明文 HTTP 被拒，缺少 `--url https` 或 `--ca` 时拒绝运行。**这不是实机验收**，实机结果待按 FIELD_ACCEPTANCE 执行后登记。远程：PR #31 首轮（`01798e9`）run [`41638516396`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638516396) 与合入第 4 步后的 `7304421` run [`41743146964`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41743146964) 七项均通过；2026-11-04T00:31:13Z 合入 `develop`，merge commit `dc7457d`。
 
 ## Rollback
 
