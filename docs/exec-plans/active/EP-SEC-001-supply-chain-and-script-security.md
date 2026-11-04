@@ -4,7 +4,7 @@ title: L3-3 供应链门禁与脚本安全验证方案
 status: approved
 plan_status: active
 owner: security
-last_reviewed: 2026-10-22
+last_reviewed: 2026-11-04
 authority: normative-process
 ---
 
@@ -254,6 +254,7 @@ Owner 落实测试方与授权，按冻结的任务书在隔离环境执行。�
 - 原生制品须用 Trivy rootfs 路径；源码目录 fs 扫描不能替代它。对锁定 Caddy 的真实二进制和包含同一文件的本地测试镜像分别扫描，两者均识别 146 个包，但主模块版本缺失且有漏洞，按 incomplete 阻断；镜像仅验证适配器，不代表完整 Appliance。
 - 合并前读取远程 `f03e399` 结果，Browser 授权旅程仍因首次 SDK setup 超过 5 ms 失败，本地性能采样复现。此前 bare noop 预热未覆盖真实参数读取、预算检查与返回值转换；补齐使用同一桥接实现的可信常量预热，独立限时 1 秒且不运行用户代码/能力，不改变用户预算、poison 或生产旅程断言。新增默认预算下首次 SDK setup 与初始化入口不泄漏的回归。
 - 后续 `9ba0603` 的远程 Browser 和本地 2 倍 CPU 降速采样仍复现首次 SDK setup 超时，通用桥接预热未覆盖 SDK 构造/分派/包装。补充每个 host 一次、独立临时 context 的固定 SDK 初始化；不接入调用者环境，每次调用限时 1 秒并释放全部句柄。保留用户 5 ms、生产执行次数和 poison 断言，增加初始化后无限 setup 仍超时且无信号写入的回归。
+- **复发，未归因（2026-11-04）**：PR #33 run [`41806165048`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41806165048) attempt 1 的 Browser shard 5/8 中，`tests/sdk-resource-limits.test.ts` 的“runs the first SDK setup at the default deadline…”以 `setup: interrupt deadline (5 ms) exceeded` 失败（该文件 1234 ms，同 job 前面脚本边界步骤单独运行时 5/5 通过、568 ms；该 shard `import 116.20s`）。该 PR 只改文档与 E2E 作业，不涉及脚本宿主。本地 Apple M5 上 10 次均未复现：单文件 6 次（其中 6 次在 2 倍核数忙循环下）、完整 shard 5/8 4 次（2 次在同样负载下）。仅重跑失败作业的 attempt 2 通过后合入；重跑不是修复。结论：现有预热仍未覆盖托管 runner 上某条冷启动路径，产品含义是慢速客户端上首个脚本组件可能被误判超时而停用。未放宽 5 ms 期限、未改测试；归因与修复留在本计划 M2 范围内。
 
 ## Decision Log
 
