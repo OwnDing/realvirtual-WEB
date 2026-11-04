@@ -2,9 +2,9 @@
 doc_id: EP-GOV-004
 title: 让质量门禁真正拦得住东西
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 authority: normative
 ---
 
@@ -132,7 +132,7 @@ reviews_required: false   单人仓库无法自审，要求 review 会使 main �
 
 - [x] M1 本机门禁 = CI
 - [x] M2 OD-005 分支保护（`main` 与 `develop` 均已配置）
-- [x] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余失败已由 [`EP-E2E-001`](EP-E2E-001-attribute-fix-and-gate-e2e.md) 于 2026-11-03 逐条归因并修复，e2e 纳入 CI `E2E Gate`；本计划在 EP-E2E-001 远程证据留存后结案）
+- [x] M3 反退化守卫（可收集性、GPU、私有依赖排除三项已修并加守卫；剩余失败已由 [`EP-E2E-001`](EP-E2E-001-attribute-fix-and-gate-e2e.md) 于 2026-11-03 逐条归因并修复，e2e 纳入 CI `E2E Gate`；2026-11-04 `E2E Gate` 在自托管 GPU runner 上远程全绿——PR #33 run [`41789510169`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41789510169)，87 例 82 / 0 / 5 跳过，本计划据此结案）
 - [x] M4 Browser Gate 稳定性（Vitest 4.1.11 + 官方强制每文件 GC 已连续两轮本地全量通过；同一实现提交远程 3/3 全绿）
 
 ## Surprises & Discoveries
@@ -230,4 +230,4 @@ M1 是 `vite.config.ts` 中 `test.browser.provider` 一行的改动。M4 回滚�
 
 ## Outcomes & Retrospective
 
-M1、M2、M4 已完成。M3 部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因，因此本计划继续留在 active。M4 的两、四、八分片都曾在绿色证据后再次出现同形态基础设施失败，证明单靠猜测进程长度不能形成稳定契约；最终采用正式回移到 Vitest 4.1.11 的上游根因修复并强制每文件 GC，八分片作为第二层边界，完成本地连续两轮与同一实现提交远程三轮全量验证。Browser required、全量与失败关闭语义始终保持不变。
+M1–M4 全部完成（2026-11-04 结案）。M3 原先部分完成：e2e 可收集性与全局浏览器已修并加守卫，剩余 13 个 e2e 失败未归因；这部分由 [`EP-E2E-001`](EP-E2E-001-attribute-fix-and-gate-e2e.md) 逐条归因、修复并以 `E2E Gate` 纳入 CI，自托管 GPU runner 上的远程全绿（run `41789510169`）作为结案证据。限制：`E2E Gate` 不是 required check（OD-005 由仓库管理员决定），且 runner 仅在维护者手动运行时在线。M4 的两、四、八分片都曾在绿色证据后再次出现同形态基础设施失败，证明单靠猜测进程长度不能形成稳定契约；最终采用正式回移到 Vitest 4.1.11 的上游根因修复并强制每文件 GC，八分片作为第二层边界，完成本地连续两轮与同一实现提交远程三轮全量验证。Browser required、全量与失败关闭语义始终保持不变。

@@ -2,9 +2,9 @@
 doc_id: EP-E2E-001
 title: 第二轮整改第 3 步：e2e 失败逐条归因、修复并纳入 CI
 status: approved
-plan_status: active
+plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 authority: normative-process
 ---
 
@@ -95,7 +95,7 @@ authority: normative-process
 - [x] M1 归因（2026-11-03）
 - [x] M2 用例与基础设施修复（2026-11-03）
 - [x] M3 产品修复：缺陷 1–5（2026-11-03）
-- [~] M4 CI：`E2E Gate` 作业、结构守卫与 KD-003 产物守卫已加；托管 runner 证明不可行，改为自托管 GPU runner（待用户注册并设置 `E2E_GPU_RUNNER`）
+- [x] M4 CI：`E2E Gate` 作业、结构守卫与 KD-003 产物守卫；托管 runner 证明不可行，改为自托管 GPU runner。2026-11-04 用户指令“e2e plan……都进行，要测试的话就在本机上进行测试”并选择“仅会话期运行”的 runner；首轮暴露 2 个用例前提错误并修复，第二轮 PR #33 run `41789510169` 82 / 0 / 5 跳过（2026-11-04）
 
 ## Surprises & Discoveries
 
@@ -121,6 +121,9 @@ authority: normative-process
 | 2026-11-03 | 一并修复缺陷 4（`?model=` 裸文件名）与缺陷 5（rv-embed `process.env`） | 用户“三项都修”的同一意图（让 e2e 因产品可用而通过）；两处修改面小且可独立回退；在交付报告中单列告知 |
 | 2026-11-03 | `slot-authority` 改断言“实时绑定无徽标”，不改产品去显示 `bound` | plan-341 §2.8 c 用户决定（07-30）是现行规则；服务侧权威断言全部保留 |
 | 2026-11-03 | CI 中以 `RV_REQUIRE_EMBED_DIST=1` 强制运行 rv-embed dist 守卫 | KD-003 的剩余工作即“正式构建 + 守卫的 CI 证据”；远程通过后在结案中关闭 KD-003 |
+| 2026-11-04 | 本机（Apple M5 / macOS）注册为自托管 runner `xyvirtual-m5-session`，仅会话期运行、不装登录服务；设置 `E2E_GPU_RUNNER=true`；fork PR 工作流一律需维护者批准（原为仅首次贡献者） | 用户当前明确指令（“要测试的话就在本机上进行测试”，并选择 “Session-only runner”）；该 runner 以维护者账户运行，可读其主目录，审批策略是公开仓库的额外一层隔离 |
+| 2026-11-04 | `paintline-assembly`、`overhead-conveyor-render` 的墙钟等待改为等待仿真时钟 / 组件 `Moving` 信号；hmi-panels 空断言改为断言真实 `BottomBar` | P0：断言期望不变（位置须增加、静止后两帧须相同），仅修正以墙钟代替仿真进度的前提；hmi-panels 原断言靠子串碰巧通过，新断言更严格 |
+| 2026-11-04 | `E2E Gate` 去掉 `setup-node` 的 `cache: npm` | run `41789510169` 中缓存上传占 33 / 42 分钟；自托管机器上 npm 缓存本就本地持久 |
 
 ## Validation
 
@@ -143,9 +146,22 @@ authority: normative-process
 
 **未解决（如实记录）**：`paintline-assembly` 在全量并行中间歇性失败（4 轮中 3 轮），单跑 3/3、与自身 5 并行 5/5、与重叠的重型用例混跑 28/28 均通过。第 3 轮诊断：`simTime` 冻结在 0.4833 s（29 个固定步）、无暂停原因、`PaintLine.Run` 为真、`AssemblyValid` 为真、渲染约 18 fps——即渲染继续而该页面的固定步不再推进。已在断言消息中加入 `simTickCount`、`logicRunState`、运行时挂接、是否由 DES 驱动和 500 ms 内实际帧数，供 CI 复现时定位；本计划不声称该用例稳定，M4 在远程多轮结果出来前保持未完成。`visual-presentation` 的编码失败与本机内存压力同时出现，同样记录待 CI 观察。
 
+**`paintline-assembly` 归因（2026-11-04）**：复核第 3 轮保留的 trace（`retain-on-failure`）——没有任何 `pageerror` 或控制台错误；空规划场景于 8.98 s 载入，到断言时（约 16.4 s）仿真时间只有 0.4833 s，HUD 同样显示“已用仿真时间 00:00:00:00.4”；截屏帧在 9.54→13.56 s 间断 4 s、14.60 s 之后不再出现（渲染按需，帧不再交付）；`PaintLine.Position` 69.99 mm = 0.3 m/s × 14 个固定步。即页面在约 7 s 墙钟内只交付了寥寥数帧：该用例强制 SwiftShader（CPU 渲染），而固定步循环与帧耦合、每帧最多积分 0.1 s（`SimulationLoop` 的帧时钳位），故 2 s 墙钟等待对仿真进度没有任何下界。这是**用例前提错误**（以墙钟代替仿真时钟），不是产品缺陷：产线逻辑、暂停与运行时挂接均正常（`paused: false`、`Run: true`、`AssemblyValid: true`）。处理：两处“等 2 s 再断言位置增加”改为先等待页面仿真时钟前进 0.5 s（上限 60 s），再做**同一断言**（位置必须增加），消息附带实际前进的仿真秒数与时钟诊断；循环若真的停止，断言仍会失败。验证：修复前后 `--repeat-each` 单跑与 16 个满载 CPU 进程压力下均通过（修复后 3/3、压力 5/5）；2026-11-04 修复前在 `6c80fb4` 上的全量 `CI=1` 本地运行为 82 / 0 / 5 跳过（8.2 min），说明此前的失败依赖当时的本机负载。
+
+**自托管 GPU runner 首轮（2026-11-04，PR #33 `244d8c6`，run [`41783546100`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41783546100)）**：runner `xyvirtual-m5-session`（本机 Apple M5 / macOS，标签 `self-hosted, macOS, ARM64, gpu`，用户选择“仅会话期运行”，fork PR 一律需维护者批准）。`E2E Gate` 套件步骤 8 min 17 s，87 例 **80 通过 / 2 失败 / 5 跳过**，两例在本地历次全量中均通过：
+
+| 用例 | 归因 | 类别 | 处理 |
+| --- | --- | --- | --- |
+| `hmi-panels` bottom bar renders | 原断言查找 `BottomBar` CSS 类（产品未渲染此类名）或 Play/Pause 控件——后者在 HMI 工作区按设计隐藏（sim-controller，plan-194/198）。本地通过仅因 `[aria-label*="play"]` 子串命中“Toggle Dis**play** panel”；runner 上 dev server 冷启动，该按钮在 3 s 一次性计数之后才出现（失败快照中它已存在） | 用例前提（空断言 + 竞态） | 改为断言真实的 `BottomBar`（对象搜索栏）：按钮 `Search` 可见（自动等待）且搜索框存在 |
+| `overhead-conveyor-render` stops repainting | 停链后固定等待 6 s 墙钟即截图比对；减速需 2 s **仿真**时间（500 mm/s ÷ 250 mm/s²），trace 显示该页在 runner 上约 2 帧/s，停链后约 9 s 仍在重绘——与 `paintline-assembly` 同一前提错误 | 用例前提（墙钟代替仿真时钟） | 改为轮询组件自身的 `OverheadConveyor.Moving` 为 false（上限 60 s）后再做**同一**截图比对；静止后仍重绘仍会失败 |
+
+修复后本地：两文件 6/6；与 `paintline-assembly` 一起在 16 个满载 CPU 进程压力下 7/7。
+
 远程 CI（PR #29，run [`41638500304`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638500304)）：其余七项 Gate 全部通过；`E2E Gate` 在 GitHub 托管 `ubuntu-24.04`（2 workers、无 GPU）上于 35 分钟步骤上限处超时，仅完成约 63 例，约 24 例超时。证据 artifact 显示：点击停在“attempting click action → scrolling into view”（渲染进程被软件渲染的 WebGL 占满）；弱 GPU 判定触发自动画质提示框，拦截未预期它的用例；`sink-test` 在 240 s 内未完成一个机器人周期（模拟按帧推进）；`perf-smoke` 要求平均 ≥ 30 fps，在无 GPU 的 runner 上不可能通过。同一套件在本机 GPU 上全量 82/0（第 4 轮）。据此改为自托管 GPU runner（Decision Log）；该 runner 注册前作业跳过，M4 的远程验证待 runner 就绪后补记。
 
-合入：自托管改动后的 `31ea330` 在 run `41647964686` 中 Browser Gate 的“生产工作台脚本同意”步骤因既有用例竞态失败（见 Surprises），修复后的 `7daf4ef` 在 run [`41652311116`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41652311116) 七项通过、E2E Gate 按设计跳过；2026-11-03T14:55:36Z 合入 `develop`，merge commit `7270e3c`；合并后 `develop` run [`41658536135`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41658536135) 通过。本计划保持 active，直到 E2E Gate 在自托管 GPU runner 上的远程结果留证（届时一并关闭 EP-GOV-004 与 KD-003）。
+合入：自托管改动后的 `31ea330` 在 run `41647964686` 中 Browser Gate 的“生产工作台脚本同意”步骤因既有用例竞态失败（见 Surprises），修复后的 `7daf4ef` 在 run [`41652311116`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41652311116) 七项通过、E2E Gate 按设计跳过；2026-11-03T14:55:36Z 合入 `develop`，merge commit `7270e3c`；合并后 `develop` run [`41658536135`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41658536135) 通过。当时本计划保持 active，直到 E2E Gate 在自托管 GPU runner 上的远程结果留证。
+
+**远程结案证据（2026-11-04，PR #33）**：第二轮 `6c62384` 的 run [`41789510169`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41789510169) 八项全部通过——七项 required（Browser Gate 等，托管 runner）与 `E2E Gate`（自托管 `xyvirtual-m5-session`）：套件步骤 8 min 18 s，87 例 **82 通过 / 0 失败 / 5 跳过 / 0 flaky**（`e2e-results.json`），无 retry；随后 `RV_REQUIRE_EMBED_DIST=1` 的 dist 守卫对本次构建的正式 rv-embed 产物 6/6 通过（KD-003）。该 run 的 `setup-node` 后置步骤把 1.36 GiB 的 npm 缓存以 0.7 MB/s 上传到 GitHub，占去作业 42 分钟中的 33 分钟（60 分钟上限）；结案提交去掉该作业的 `cache: npm`（自托管机器上 `~/.npm` 本就持久），以结案提交上的运行作为合入门禁。据此关闭 EP-GOV-004（M3）与 KD-003。
 
 ## Rollback
 
@@ -153,4 +169,12 @@ authority: normative-process
 
 ## Outcomes & Retrospective
 
-（完成后填写。）
+完成：EP-GOV-004 遗留的 e2e 失败全部逐条归因（2026-11-03 基线 19 个，另有首轮自托管运行暴露的 2 个），修复 5 处产品缺陷（connect-embed 三处、`?model=` 裸文件名、rv-embed `process.env`），其余为用例前提、测试基础设施与基线采集伪影；全量套件以 `E2E Gate` 在自托管 GPU runner 上远程全绿，无 retry、无新增 skip（守卫锁定 16 处既有 skip/fixme 不得增长），并让 KD-003 的正式 embed 产物守卫在 CI 中强制运行。
+
+教训：
+
+- “从未运行”的用例掩盖的不只是自身——欢迎框挡住的用例一旦能点击就暴露了 `?model=`，`embed-smoke` 一旦有产物就暴露了产物本身不能运行。
+- 三个间歇或环境相关的失败（`paintline-assembly`、`overhead-conveyor-render`，以及 hmi-panels 的空断言）是同一类前提错误：仿真与帧耦合、每帧最多积分 0.1 s，墙钟等待对仿真进度没有下界；空断言则靠子串碰巧命中。等待应以产品自身状态（仿真时钟、`Moving` 信号、具体组件）为条件，断言保持不变。
+- 本地全绿不代表换一台机器也绿：自托管首轮在冷启动 dev server 上立即暴露两例；CI 的作业级开销（缓存上传）也必须看日志而非只看结论。
+
+仍未验证 / 限制：`E2E Gate` 不是 required check（OD-005，由仓库管理员决定）；runner 仅在维护者手动运行时在线，离线时作业排队直至超时；`visual-presentation` 在本机内存压力下的编码失败未在 runner 上复现，未单独修复。

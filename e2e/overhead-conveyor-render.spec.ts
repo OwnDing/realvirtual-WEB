@@ -102,8 +102,20 @@ test.describe('overhead conveyor renders its motion', () => {
       return name;
     });
     expect(stopped, 'could not resolve the chain Run signal').not.toBeNull();
-    // Let the ramp decelerate to a standstill before sampling.
-    await page.waitForTimeout(6_000);
+    // Let the ramp decelerate to a standstill before sampling. EP-E2E-001: this
+    // used to be a fixed 6 s of wall clock. The ramp needs 2 s of SIMULATED
+    // time (500 mm/s at 250 mm/s²), and the fixed-step loop integrates at most
+    // 0.1 s per delivered frame; on the first self-hosted run the software
+    // renderer this spec forces delivered ~2 frames/s, so the chain was still
+    // coasting when the screenshots were taken. Wait for the component's own
+    // standstill flag instead — the assertion below is unchanged.
+    const movingSignal = stopped!.replace(/Run$/, 'Moving');
+    await expect.poll(() => page.evaluate((name) => (window as unknown as {
+      viewer: { signalStore: { get(n: string): unknown } };
+    }).viewer.signalStore.get(name), movingSignal), {
+      timeout: 60_000,
+      message: `${movingSignal} never reported standstill after Run=false`,
+    }).toBe(false);
 
     const canvas = page.locator('[data-main-canvas]');
     const before = await canvas.screenshot();

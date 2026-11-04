@@ -29,13 +29,15 @@ test.describe('HMI panel interactions', () => {
   });
 
   test('bottom bar renders', async ({ page }) => {
-    // The bottom bar should be visible with at least one button/element
-    const bottomBar = page.locator('[class*="BottomBar"], [class*="bottombar"], [class*="bottom-bar"]');
-    // If class-based selector doesn't work, try finding play/pause controls
-    const hasBottomBar = await bottomBar.count() > 0;
-    const hasPlayControls = await page.locator('button:has-text("Play"), button:has-text("Pause"), [aria-label*="play"], [aria-label*="Play"]').count() > 0;
-
-    expect(hasBottomBar || hasPlayControls).toBeTruthy();
+    // EP-E2E-001: the HMI bottom bar (`src/core/hmi/BottomBar.tsx`) is the
+    // object search bar. This case used to count a `BottomBar` CSS class (none
+    // is rendered) or Play/Pause controls, which the HMI workspace hides by
+    // design (sim-controller, plan-194/198). It only passed because
+    // `[aria-label*="play"]` matched "Toggle Dis*play* panel", and it failed on
+    // the first self-hosted run, where a cold dev server rendered that button
+    // after its one-shot count. Assert the real component, waiting for it.
+    await expect(page.getByRole('button', { name: 'Search', exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByPlaceholder('Search drives, sensors, objects...')).toBeAttached();
   });
 
   /**

@@ -44,7 +44,7 @@ authority: normative-process
 - Accepted [ADR-0007](../../adr/ADR-0007-offline-license-evidence.md)：产品授权凭证与开源软件许可证合规是两件事。
 - Accepted [ADR-0009](../../adr/ADR-0009-offline-appliance.md)、[Appliance Bundle 契约](../../contracts/OFFLINE_APPLIANCE_BUNDLE.md)、Active [EP-APPLIANCE-001](../active/EP-APPLIANCE-001-offline-appliance.md)：复用依赖锁、摘要、SBOM 和交付目录，不另建发布格式。
 - Accepted [ADR-0012](../../adr/ADR-0012-protected-presentations.md)、[ADR-0013](../../adr/ADR-0013-single-file-demo-package.md)：访客演示和单文件演示均拒绝模型脚本，不能将工作台脚本攻击面直接套到这两个入口。
-- Active [EP-GOV-004](../active/EP-GOV-004-gate-that-gates.md)：保持原五项门禁、失败关闭、公共构建和完整测试，修改共同入口前确认单写者。
+- Completed [EP-GOV-004](../completed/EP-GOV-004-gate-that-gates.md)：保持原五项门禁、失败关闭、公共构建和完整测试，修改共同入口前确认单写者。
 - [旧文档登记](../../LEGACY_DOCUMENT_REGISTER.md) 中的 `doc-scripting.md`、`doc-lifecycle.md`、信号与 AI 接口文档仅作线索；关键结论已与下列代码交叉核对，实施前继续读对应路径的完整契约。
 
 用户提供的仓库外 `COMMERCIALIZATION_ROADMAP.md` 为 2026-08-24 的 draft。这里只采用用户指定的 L3-3 工作范围，不把其中历史数字、L0-1 法律推断或“下一步行动”当作已批准指令。

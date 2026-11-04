@@ -117,6 +117,27 @@ function runtimeState(page: Page) {
   });
 }
 
+/**
+ * Wait until the page's simulation clock has advanced by `seconds`, and return
+ * how far it actually advanced. The fixed-step loop is frame-coupled: each
+ * delivered frame integrates at most 0.1 s (SimulationLoop clamp), so a
+ * wall-clock sleep does not bound simulated progress on a starved renderer.
+ * Returning instead of throwing lets the caller's real assertion fail with its
+ * own diagnostics when the clock never moves.
+ */
+async function waitForSimulatedSeconds(page: Page, seconds: number, timeoutMs = 60_000): Promise<number> {
+  const read = () => page.evaluate(() => Number((window as any).viewer?.simTime ?? Number.NaN));
+  const start = await read();
+  const deadline = Date.now() + timeoutMs;
+  let now = start;
+  while (Date.now() < deadline) {
+    now = await read();
+    if (now - start >= seconds) break;
+    await page.waitForTimeout(250);
+  }
+  return now - start;
+}
+
 test('Library drag → stable-port loop → runtime → saved rehydrate', async ({ page }) => {
   await openEmptyPlanner(page);
 
@@ -234,15 +255,17 @@ test('Library drag → stable-port loop → runtime → saved rehydrate', async 
     };
   });
   const clockBefore = await clock();
-  await page.waitForTimeout(2_000);
+  // EP-E2E-001: this step used to sleep 2 s of wall clock and failed in 3 of 4
+  // full parallel local runs with the position frozen. The trace showed the
+  // page delivering almost no frames (0.48 s simulated in ~7 s; the software
+  // renderer this spec forces was starved), not a stopped line. Wait for the
+  // simulation clock itself; a loop that really stopped still fails below,
+  // with the clock in the message.
+  const simulated = await waitForSimulatedSeconds(page, 0.5);
   const advanced = await runtimeState(page);
-  // EP-E2E-001: this step failed twice in full parallel local runs with the
-  // position frozen; never alone or with the heavy specs it overlapped. The
-  // message carries the simulation clock so a recurrence says whether the
-  // line stopped or the simulation did.
   expect(advanced.position, JSON.stringify({
     before: before.position, after: advanced.position, moving: advanced.moving,
-    clockBefore, clockAfter: await clock(), runtime: advanced.runtime,
+    simulated, clockBefore, clockAfter: await clock(), runtime: advanced.runtime,
   })).toBeGreaterThan(before.position);
 
   // Read the real autosave, tear every live object/behavior/port out, reload the
@@ -297,6 +320,10 @@ test('Library drag → stable-port loop → runtime → saved rehydrate', async 
     timeout: 30_000,
     message: 'spray processing did not resume after saved rehydrate',
   }).toBeGreaterThan(0);
-  await page.waitForTimeout(2_000);
-  expect((await runtimeState(page)).position).toBeGreaterThan(reopened.position);
+  const resumedFor = await waitForSimulatedSeconds(page, 0.5);
+  const resumed = await runtimeState(page);
+  expect(resumed.position, JSON.stringify({
+    reopened: reopened.position, after: resumed.position, moving: resumed.moving,
+    simulated: resumedFor, clock: await clock(),
+  })).toBeGreaterThan(reopened.position);
 });

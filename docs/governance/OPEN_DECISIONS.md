@@ -50,7 +50,7 @@ OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独�
 - OD-002 于 2026-08-19 关闭。批准来源为用户当前明确指令，落地文档为 Approved [`PS-I18N-001`](../product-specs/MULTILINGUAL_LOCALIZATION.md)；运行时框架、目录、偏好存储和测试由 Proposed `ADR-0001` 与 `EP-I18N-001` 继续约束，不把产品决策关闭解释为代码已经实现。
 - 2026-08-19：[`ADR-0001`](../adr/ADR-0001-i18n-runtime.md) 接受，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 当时激活，批准来源为用户当前明确指令。上一条中的「Proposed `ADR-0001`」记录的是当时状态；该计划的后续完成状态见下一条，OD-002 始终保持 closed。
 - 2026-08-21：用户当前明确指令批准完成最后两批、运行并修复 CI、关闭 `EP-I18N-001`。八类受门禁库存归零、入口预算保持且远程 Quality Gates 留证后，[`EP-I18N-001`](../exec-plans/completed/EP-I18N-001-incremental-foundation.md) 转为 completed，KD-001 关闭；OD-002 继续保持 closed。
-- OD-005 于 2026-08-23 关闭。批准来源为用户当前明确指令（保护 `main`、五项检查全选、管理员不可绕过）。已对 `main` 配置：required checks = `Governance Gate`/`Static Gate`/`Node Gate`/`Browser Gate`/`Build Gate`，`strict`（合入前分支须为最新）、`enforce_admins`、禁止强推与删除；**未要求 PR review**——单人仓库无法自审，要求 review 会使 `main` 完全不可合入。落地记录见 [`EP-GOV-004`](../exec-plans/active/EP-GOV-004-gate-that-gates.md) M2。
+- OD-005 于 2026-08-23 关闭。批准来源为用户当前明确指令（保护 `main`、五项检查全选、管理员不可绕过）。已对 `main` 配置：required checks = `Governance Gate`/`Static Gate`/`Node Gate`/`Browser Gate`/`Build Gate`，`strict`（合入前分支须为最新）、`enforce_admins`、禁止强推与删除；**未要求 PR review**——单人仓库无法自审，要求 review 会使 `main` 完全不可合入。落地记录见 [`EP-GOV-004`](../exec-plans/completed/EP-GOV-004-gate-that-gates.md) M2。
   同日维护者追加决定同样保护 `develop`，配置与 `main` 完全一致（API 复核：两个分支均为 checks=5、strict、enforce_admins、禁止强推与删除、不要求 review）。该追加正是针对本项的触发证据——`f012911` 与 `2c42c21` 的 Browser Gate 连续两次红、两个提交仍被推入 `develop`；只保护 `main` 无法阻止该情形重演。
   **工作方式变更（本决定的直接后果）**：两个分支都不再接受直接 push。任何改动必须走特性分支 + PR，并等五项 Gate 全绿方可合入（Browser Gate 约 9 分钟）。管理员亦不可绕过。
 
