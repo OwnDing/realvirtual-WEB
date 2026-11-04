@@ -246,10 +246,13 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           lfs: true
+      # No `cache: npm` here: on a self-hosted runner ~/.npm already persists on
+      # the machine, and the GitHub copy of it is 1.36 GiB — run 41789510169
+      # spent 33 of its 42 minutes uploading it (0.7 MB/s), most of the job's
+      # 60-minute budget, and every later run would download it again.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-          cache: npm
       - run: npm ci
       - name: Install Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium

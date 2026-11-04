@@ -3,11 +3,15 @@ doc_id: EXEC-COMPLETED-INDEX
 title: 已完成 ExecPlan 索引
 status: approved
 owner: engineering
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-04
 authority: normative-registry
 ---
 
 # 已完成 ExecPlan 索引
+
+- [EP-E2E-001-attribute-fix-and-gate-e2e.md](EP-E2E-001-attribute-fix-and-gate-e2e.md)：第二轮整改第 3 步——e2e 失败逐条归因、修复（含 5 处产品缺陷）并以 `E2E Gate` 纳入 CI；2026-11-04 在自托管 GPU runner 上远程全绿（PR #33 run `41789510169`，82 / 0 / 5 跳过）；`E2E Gate` 非 required，runner 仅会话期在线。
+
+- [EP-GOV-004-gate-that-gates.md](EP-GOV-004-gate-that-gates.md)：让质量门禁真正拦得住东西——本机门禁与 CI 一致、OD-005 分支保护、反退化守卫、Browser Gate 稳定性；M3 遗留 e2e 由 EP-E2E-001 完成，2026-11-04 结案。
 
 - [EP-MULTI-001-multiuser-role-from-session.md](EP-MULTI-001-multiuser-role-from-session.md)：第二轮整改第 4 步——多人会话角色由登录会话决定、Appliance 网关守卫强制（ADR-0028）；PR #30 远程七项通过，2026-11-03 合入 `develop`（`1b15163`）；真实 Unity 与现场防火墙归入 Appliance 现场验收。
 
