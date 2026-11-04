@@ -64,4 +64,35 @@ describe('appliance browser diagnostics', () => {
     expect(report.checks.find((check) => check.id === 'browser')?.data).toMatchObject({ family: 'chromium', major: expect.any(Number) });
     expect(report.summary.pass + report.summary.warn + report.summary.fail).toBe(report.checks.length);
   });
+
+  // EP-APPLIANCE-001 rehearsal (2026-11-04): on a gateway-only appliance the check dialled the
+  // hard-coded CONNECT path and always failed; the realtime socket also needs an HMI session,
+  // which this operator-credential page may not have, and the browser hides the 401.
+  it.each([
+    ['signed-out', 401, 'warn', 'WSS_NEEDS_HMI_SESSION', 0],
+    ['signed-in', 200, 'fail', 'WSS_REQUIRED', 1],
+  ] as const)('dials the advertised realtime path and explains a missing HMI session (%s)', async (_label, sessionStatus, status, code, dials) => {
+    const dialled: string[] = [];
+    class OpenWebSocket extends EventTarget {
+      constructor(url: string) { super(); dialled.push(url); queueMicrotask(() => this.dispatchEvent(new Event('open'))); }
+      close() {}
+    }
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input instanceof Request ? input.url : input), location.href);
+      if (url.pathname === '/appliance/api/info') return new Response(JSON.stringify({ diagnostics: { websocketPath: '/gateway/ws' } }), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (url.pathname === '/api/access/v1/session') return new Response('{}', { status: sessionStatus, headers: { 'content-type': 'application/json' } });
+      return realFetch(input, init);
+    }) as typeof fetch;
+    try {
+      const report = await runDiagnostics({ WebSocketImpl: OpenWebSocket as any, supportMatrix: { browsers: {} } });
+      const check = report.checks.find((item) => item.id === 'websocket')!;
+      // The test page is plain http://, so an opened socket is still not a WSS pass.
+      expect(check).toMatchObject({ status, code, data: { path: '/gateway/ws' } });
+      expect(dialled).toHaveLength(dials);
+      if (dials) expect(new URL(dialled[0]).pathname).toBe('/gateway/ws');
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
 });

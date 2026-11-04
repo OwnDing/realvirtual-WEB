@@ -105,7 +105,31 @@ function copyFileAtomicallyIfChanged(source, destination, mode) {
   mkdirSync(dirname(destination), { recursive: true });
   const temporary = `${destination}.tmp-${process.pid}-${randomBytes(4).toString('hex')}`;
   writeFileSync(temporary, bytes, { mode });
+  if (process.platform !== 'win32') chmodSync(temporary, mode);
   renameSync(temporary, destination);
+}
+
+function certificateEvidencePath(roots) {
+  return join(roots.stateRoot, 'public', 'certificate-evidence.crt');
+}
+
+/**
+ * /diagnostics/ shows the host certificate the browser should trust. The control plane runs
+ * unprivileged (uid 1000 in the container, `xyvirtual` natively) and could not read it from
+ * the PKI tree, where Caddy keeps the internal CA root 0600 beside its private keys: the check
+ * always failed with CERTIFICATE_EVIDENCE_UNAVAILABLE (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+ * Only the PUBLIC certificate is copied out, to a directory that holds nothing else. Called
+ * after the HTTPS entry is ready, because Caddy creates the internal CA on its first start.
+ */
+function publishCertificateEvidence(roots, config) {
+  const source = config.tls.mode === 'internal-ca'
+    ? join(roots.stateRoot, 'pki', 'caddy-data', 'caddy', 'pki', 'authorities', 'local', 'root.crt')
+    : join(roots.stateRoot, 'pki', 'customer', 'server.crt');
+  if (!existsSync(source)) return;
+  const directory = dirname(certificateEvidencePath(roots));
+  mkdirSync(directory, { recursive: true });
+  if (process.platform !== 'win32') chmodSync(directory, 0o755);
+  copyFileAtomicallyIfChanged(source, certificateEvidencePath(roots), 0o644);
 }
 
 function portablePath(path, windows = process.platform === 'win32') {
@@ -401,13 +425,8 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     },
     certificate: {
       mode: config.tls.mode,
-      path: container
-        ? config.tls.mode === 'customer'
-          ? '/state-pki/customer/server.crt'
-          : '/state-pki/caddy-data/caddy/pki/authorities/local/root.crt'
-        : config.tls.mode === 'customer'
-          ? join(roots.stateRoot, 'pki', 'customer', 'server.crt')
-          : join(roots.stateRoot, 'pki', 'caddy-data', 'caddy', 'pki', 'authorities', 'local', 'root.crt'),
+      // The public copy made by publishCertificateEvidence (internal CA root or customer chain).
+      path: container ? '/state-public/certificate-evidence.crt' : certificateEvidencePath(roots),
       hostnames: [config.hostname, config.influxHostname],
     },
     urls: {
@@ -781,6 +800,9 @@ function ensureStateDirectories(roots) {
   for (const rel of ['data/gateway', 'data/connect', 'data/forgejo', 'data/influxdb', 'config/influxdb', 'pki', 'backups', 'logs', 'license', 'secrets']) {
     mkdirSync(join(roots.stateRoot, rel), { recursive: true, mode: rel === 'secrets' ? 0o700 : 0o750 });
   }
+  // Public certificate evidence only (see publishCertificateEvidence); readable by service users.
+  mkdirSync(join(roots.stateRoot, 'public'), { recursive: true });
+  if (process.platform !== 'win32') chmodSync(join(roots.stateRoot, 'public'), 0o755);
 }
 
 function hardenWindowsRoots(roots, runImpl) {
@@ -880,6 +902,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
         });
       }
       await readinessImpl(preflight.config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, mode);
+      publishCertificateEvidence(roots, preflight.config);
     } catch (error) {
       try {
         if (candidateAttempted) stopRuntime({ roots, releaseRoot, manifest: preflight.manifest, mode, runtime: options.containerRuntime, runImpl });
@@ -893,6 +916,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
           const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
           startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
           await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, existing.mode);
+          publishCertificateEvidence(roots, previousConfig);
         }
       } catch (recoveryError) {
         throw new AggregateError([error, recoveryError], `Candidate failed and automatic recovery was not safe: ${recoveryError.message}`);
@@ -941,6 +965,7 @@ export async function rollbackAppliance(options, dependencies = {}) {
   if (!options.noStart) {
     startInstalledRuntime({ roots, state: { ...state, releaseRoot: previousRoot }, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
     await readinessImpl(config, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, state.mode);
+    publishCertificateEvidence(roots, config);
   }
   const next = { ...state, version: state.previousVersion, previousVersion: state.version, releaseRoot: previousRoot, updatedAt: new Date().toISOString() };
   atomicJson(installStatePath(roots), next);
@@ -1071,6 +1096,7 @@ export async function restoreAppliance(options, dependencies = {}) {
     if (!options.noStop) {
       startInstalledRuntime({ roots, state: next, config: restoredConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
       await readinessImpl(restoredConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, next.mode);
+      publishCertificateEvidence(roots, restoredConfig);
     }
   } catch (error) {
     throw Object.assign(error, { safetyBackup });

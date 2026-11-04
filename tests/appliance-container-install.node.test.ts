@@ -123,6 +123,10 @@ describe('appliance container-mode install (gateway-only release)', () => {
       httpsPort: 443, httpPort: 80, controlPort: 8081, connectPort: 5100, forgejoPort: 3000, influxPort: 8086,
       tls: { mode: 'internal-ca', certificate: null, privateKey: null }, authentication: { operatorUser: 'operator' },
     }));
+    // Caddy creates its internal CA root 0600 beside the CA keys on first start; stand in for it.
+    const caRoot = join(root, 'state-root', 'pki', 'caddy-data', 'caddy', 'pki', 'authorities', 'local', 'root.crt');
+    mkdirSync(join(caRoot, '..'), { recursive: true });
+    writeFileSync(caRoot, '-----BEGIN CERTIFICATE-----\nfixture-public-root\n-----END CERTIFICATE-----\n', { mode: 0o600 });
     const commands: string[] = [];
     const previous = process.umask(0o077);
     let result: Awaited<ReturnType<typeof installOrUpgrade>>;
@@ -183,6 +187,20 @@ describe('appliance container-mode install (gateway-only release)', () => {
     expect(caddyfile).toMatch(/basic_auth @it argon2id \{\n\t+operator \$argon2id\$/);
     expect(caddyfile).toMatch(/\tbasic_auth argon2id \{\n\t+operator \$argon2id\$/);
     expect(caddyfile).not.toMatch(/basic_auth (@it )?\{/);
+
+    // The control plane (uid 1000) reads only a PUBLIC copy of the certificate, from a directory
+    // mounted on its own; the PKI tree with the CA keys is not mounted into it at all.
+    const evidence = join(roots.stateRoot, 'public', 'certificate-evidence.crt');
+    expect(readFileSync(evidence, 'utf8')).toBe(readFileSync(caRoot, 'utf8'));
+    expect(mode(evidence)).toBe(0o644);
+    expect(mode(join(roots.stateRoot, 'public'))).toBe(0o755);
+    expect(JSON.parse(controlText).certificate.path).toBe('/state-public/certificate-evidence.crt');
+    const compose = readFileSync(join(state.releaseRoot, 'container', 'compose.yaml'), 'utf8');
+    expect(compose).toContain('"${RV_STATE_ROOT}/public:/state-public:ro"');
+    // Only the edge (root, serves TLS) mounts the PKI tree; the control service no longer does.
+    const controlService = compose.slice(compose.indexOf('\n  control:'), compose.indexOf('\n  gateway:'));
+    expect(controlService).toContain('/state-public:ro');
+    expect(controlService).not.toContain('/pki');
 
     // The project token is handed to the control image user after it is written.
     const token = join(roots.stateRoot, 'data', 'access', 'forgejo-token');
