@@ -19,9 +19,6 @@ authority: normative-registry
 
 - [EP-COMPAT-001：L3-2 兼容性矩阵与最低配置](EP-COMPAT-001-compatibility-matrix.md)
 
-- [EP-MULTI-001](EP-MULTI-001-multiuser-role-from-session.md)：第二轮整改第 4 步——多人会话角色由登录会话决定，并由网关守卫强制（ADR-0028）；2026-11-03 依用户指令激活。
-
 - [EP-SEC-001：供应链与脚本安全](EP-SEC-001-supply-chain-and-script-security.md)：用户于 2026-10-20 批准实施及开 PR。
 
 - [EP-DOCS-001](EP-DOCS-001-user-documentation.md)：双语文档、离线帮助与错误提示。
-- [EP-TRUST-001](EP-TRUST-001-own-model-signing-root-and-readme.md)：第二轮整改第 2 步——自有模型签名信任根（用户生成并保管）与 README 事实更正；2026-11-03 依用户指令激活。

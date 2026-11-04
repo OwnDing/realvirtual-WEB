@@ -145,6 +145,8 @@ authority: normative-process
 
 远程 CI（PR #29，run [`41638500304`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41638500304)）：其余七项 Gate 全部通过；`E2E Gate` 在 GitHub 托管 `ubuntu-24.04`（2 workers、无 GPU）上于 35 分钟步骤上限处超时，仅完成约 63 例，约 24 例超时。证据 artifact 显示：点击停在“attempting click action → scrolling into view”（渲染进程被软件渲染的 WebGL 占满）；弱 GPU 判定触发自动画质提示框，拦截未预期它的用例；`sink-test` 在 240 s 内未完成一个机器人周期（模拟按帧推进）；`perf-smoke` 要求平均 ≥ 30 fps，在无 GPU 的 runner 上不可能通过。同一套件在本机 GPU 上全量 82/0（第 4 轮）。据此改为自托管 GPU runner（Decision Log）；该 runner 注册前作业跳过，M4 的远程验证待 runner 就绪后补记。
 
+合入：自托管改动后的 `31ea330` 在 run `41647964686` 中 Browser Gate 的“生产工作台脚本同意”步骤因既有用例竞态失败（见 Surprises），修复后的 `7daf4ef` 在 run [`41652311116`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41652311116) 七项通过、E2E Gate 按设计跳过；2026-11-03T14:55:36Z 合入 `develop`，merge commit `7270e3c`；合并后 `develop` run [`41658536135`](https://github.com/OwnDing/realvirtual-WEB/actions/runs/41658536135) 通过。本计划保持 active，直到 E2E Gate 在自托管 GPU runner 上的远程结果留证（届时一并关闭 EP-GOV-004 与 KD-003）。
+
 ## Rollback
 
 产品修复与用例修复按提交回退；CI 作业删除即恢复原状，不影响其他门禁。
