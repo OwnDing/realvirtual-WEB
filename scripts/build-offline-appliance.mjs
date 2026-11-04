@@ -3,10 +3,11 @@ import { projectStandaloneBrand } from './prepare-brand-delivery.mjs';
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { cp, lstat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createGunzip } from 'node:zlib';
 import {
   APPLIANCE_MANIFEST,
   APPLIANCE_MANIFEST_DIGEST,
@@ -344,12 +345,152 @@ function exposeLifecycleWrappers(stage, target) {
   if (windows) cpSync(join(folder, 'Invoke-ApplianceManager.ps1'), join(stage, 'Invoke-ApplianceManager.ps1'));
 }
 
-function createArchive(bundleDir) {
+// pax keys that carry build-host file metadata (xattrs, ACLs, flags) into the archive.
+const ARCHIVE_METADATA_KEY = /^LIBARCHIVE\.|^SCHILY\.(?:xattr|acl|fflags)|(?:^|\.)xattr\./;
+
+function cString(bytes) {
+  const end = bytes.indexOf(0);
+  return bytes.subarray(0, end < 0 ? bytes.length : end).toString('utf8');
+}
+
+function tarNumber(field) {
+  // GNU base-256 for sizes beyond the 11 octal digits; otherwise NUL/space-terminated octal.
+  if (field[0] & 0x80) {
+    let value = 0;
+    for (const byte of field.subarray(1)) value = value * 256 + byte;
+    return value;
+  }
+  const text = cString(field).trim();
+  return text ? Number.parseInt(text, 8) : 0;
+}
+
+function paxRecords(body) {
+  const records = {};
+  let at = 0;
+  while (at < body.length) {
+    const space = body.indexOf(0x20, at);
+    const length = space < 0 ? Number.NaN : Number.parseInt(body.subarray(at, space).toString('ascii'), 10);
+    if (!Number.isInteger(length) || length <= space - at || at + length > body.length) throw new Error('Malformed pax header in archive.');
+    const record = body.subarray(space + 1, at + length - 1).toString('utf8');
+    const equals = record.indexOf('=');
+    if (equals > 0) records[record.slice(0, equals)] = record.slice(equals + 1);
+    at += length;
+  }
+  return records;
+}
+
+/**
+ * List a .tar.gz with a built-in ustar/pax/GNU reader. A platform tar is not trusted for
+ * this: macOS bsdtar hides the AppleDouble `._*` entries it wrote itself, which GNU tar on
+ * the customer host then extracts as real files (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+ */
+export async function readArchiveEntries(archive) {
+  const files = [];
+  const directories = [];
+  const violations = [];
+  let buffer = Buffer.alloc(0);
+  let skip = 0;
+  let pending = null;
+  let pax = {};
+  let longName = null;
+  let ended = false;
+  const consume = () => {
+    let offset = 0;
+    while (!ended) {
+      if (skip) {
+        const step = Math.min(skip, buffer.length - offset);
+        skip -= step; offset += step;
+        if (skip) break;
+        continue;
+      }
+      if (pending) {
+        if (buffer.length - offset < pending.padded) break;
+        const body = buffer.subarray(offset, offset + pending.size);
+        offset += pending.padded;
+        if (pending.type === 'L') longName = cString(body);
+        else {
+          const records = paxRecords(body);
+          for (const key of Object.keys(records)) if (ARCHIVE_METADATA_KEY.test(key)) violations.push(`metadata ${key}`);
+          if (pending.type === 'x') pax = records;
+        }
+        pending = null;
+        continue;
+      }
+      if (buffer.length - offset < 512) break;
+      const header = buffer.subarray(offset, offset + 512);
+      offset += 512;
+      if (header.every((byte) => byte === 0)) { ended = true; break; }
+      const size = tarNumber(header.subarray(124, 136));
+      const type = String.fromCharCode(header[156] || 0x30);
+      const padded = Math.ceil(size / 512) * 512;
+      if (type === 'x' || type === 'g' || type === 'L') { pending = { type, size, padded }; continue; }
+      // Only POSIX ustar has a name prefix; GNU tar keeps atime/ctime at that offset.
+      const posix = header.subarray(257, 263).equals(Buffer.from('ustar\0', 'latin1'));
+      const prefix = posix ? cString(header.subarray(345, 500)) : '';
+      const short = cString(header.subarray(0, 100));
+      const name = longName ?? pax.path ?? (prefix ? `${prefix}/${short}` : short);
+      longName = null;
+      pax = {};
+      if (type === '0' || type === '7') files.push(name);
+      else if (type === '5') directories.push(name.replace(/\/+$/, ''));
+      else violations.push(`type ${type} ${name}`);
+      skip = padded;
+    }
+    buffer = buffer.subarray(offset);
+  };
+  for await (const chunk of createReadStream(archive).pipe(createGunzip())) {
+    buffer = buffer.length ? Buffer.concat([buffer, chunk]) : chunk;
+    consume();
+    if (ended) break;
+  }
+  if (!ended) throw new Error(`Archive ended without a tar end marker: ${archive}`);
+  return { files, directories, violations };
+}
+
+/** The archive must contain exactly `rootName/<path>` for every expected path — nothing else. */
+export async function assertArchiveMatchesBundle(archive, rootName, expectedPaths) {
+  const { files, directories, violations } = await readArchiveEntries(archive);
+  const wanted = new Set(expectedPaths.map((path) => `${rootName}/${path}`));
+  const problems = [...violations];
+  const seen = new Set();
+  for (const file of files) {
+    if (seen.has(file)) problems.push(`duplicate ${file}`);
+    seen.add(file);
+    if (!wanted.has(file)) problems.push(`extra ${file}`);
+  }
+  for (const path of wanted) if (!seen.has(path)) problems.push(`missing ${path}`);
+  for (const directory of directories) {
+    if (directory !== rootName && !directory.startsWith(`${rootName}/`)) problems.push(`extra directory ${directory}`);
+  }
+  if (problems.length) {
+    throw new Error(`Archive does not match the bundle inventory (${problems.length} problem(s); first: ${problems.slice(0, 3).join('; ')})`);
+  }
+  return { files: files.length, directories: directories.length };
+}
+
+async function createArchive(bundleDir, manifest) {
   const archive = `${bundleDir}.tar.gz`;
   if (existsSync(archive)) throw new Error(`Archive already exists: ${archive}`);
-  const result = spawnSync('tar', ['-czf', archive, '-C', dirname(bundleDir), basename(bundleDir)], { stdio: 'inherit' });
+  // macOS bsdtar otherwise writes an AppleDouble `._*` entry (copyfile) and pax xattr records
+  // (e.g. com.apple.provenance) for every file; GNU tar on the target extracts the former as
+  // real files and preflight then refuses the bundle. Both switches are needed: measured
+  // 2026-11-04, COPYFILE_DISABLE alone keeps the xattr records, --no-xattrs alone keeps `._*`.
+  const darwin = process.platform === 'darwin';
+  const result = spawnSync('tar', [...(darwin ? ['--no-xattrs'] : []), '-czf', archive, '-C', dirname(bundleDir), basename(bundleDir)], {
+    stdio: 'inherit',
+    env: darwin ? { ...process.env, COPYFILE_DISABLE: '1' } : process.env,
+  });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`tar failed with exit code ${result.status}`);
+  try {
+    // Whatever tar this host has, ship only an archive that extracts to exactly the bundle.
+    await assertArchiveMatchesBundle(archive, basename(bundleDir), [
+      ...manifest.files.map((file) => file.path), APPLIANCE_MANIFEST, APPLIANCE_MANIFEST_DIGEST,
+    ]);
+  } catch (error) {
+    rmSync(archive, { force: true });
+    throw error;
+  }
   return archive;
 }
 
@@ -410,7 +551,7 @@ export async function buildOfflineAppliance(options) {
     writeFileSync(join(temporary, APPLIANCE_MANIFEST), bytes);
     writeFileSync(join(temporary, APPLIANCE_MANIFEST_DIGEST), `${createHash('sha256').update(bytes).digest('hex')}\n`);
     renameSync(temporary, output);
-    return { bundleDir: output, archive: options.archive ? createArchive(output) : null, manifest };
+    return { bundleDir: output, archive: options.archive ? await createArchive(output, manifest) : null, manifest };
   } catch (error) {
     // The caller owns cleanup of a failed staging directory. Keeping it preserves forensic evidence
     // and avoids recursive deletion in a packaging path.

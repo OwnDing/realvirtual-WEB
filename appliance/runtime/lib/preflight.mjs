@@ -61,9 +61,18 @@ async function nearestExistingPath(value) {
   }
 }
 
-async function executableFindings(bundleRoot, target) {
+// CONNECT is optional since ADR-0023: require its binary (and port) only when the release
+// declares it, exactly like the installer's `hasConnect`. Before this, a gateway-only
+// release was refused by its own preflight (EP-APPLIANCE-001 local rehearsal, 2026-11-04).
+function releaseHasConnect(manifest) {
+  return Array.isArray(manifest.services) && manifest.services.includes('connect');
+}
+
+async function executableFindings(bundleRoot, manifest) {
   const findings = [];
-  for (const rel of NATIVE_ENTRYPOINTS[target] ?? []) {
+  const target = manifest.target;
+  const connect = releaseHasConnect(manifest);
+  for (const rel of (NATIVE_ENTRYPOINTS[target] ?? []).filter((path) => connect || !path.startsWith('runtime/connect/'))) {
     try {
       await access(resolve(bundleRoot, rel), target.startsWith('linux-') ? constants.X_OK : constants.F_OK);
       findings.push(finding(`runtime:${rel}`, 'required', 'pass', 'RUNTIME_PRESENT', rel));
@@ -160,7 +169,8 @@ export async function runPreflight(options, dependencies = {}) {
   }
 
   if (!options.skipPortChecks) {
-    for (const [name, port] of Object.entries({ http: config.httpPort, https: config.httpsPort, control: config.controlPort, connect: config.connectPort, forgejo: config.forgejoPort, influxdb: config.influxPort })) {
+    const ports = { http: config.httpPort, https: config.httpsPort, control: config.controlPort, ...(releaseHasConnect(manifest) ? { connect: config.connectPort } : {}), forgejo: config.forgejoPort, influxdb: config.influxPort };
+    for (const [name, port] of Object.entries(ports)) {
       const available = await (dependencies.canBindImpl ?? canBind)(port);
       findings.push(finding(`port:${name}`, 'required', available.ok ? 'pass' : 'fail', available.ok ? 'PORT_AVAILABLE' : available.code, String(port)));
     }
@@ -176,13 +186,14 @@ export async function runPreflight(options, dependencies = {}) {
     findings.push(finding('disk', 'required', 'fail', 'DISK_CHECK_FAILED', error.code ?? 'unknown'));
   }
 
-  findings.push(...await executableFindings(options.bundleRoot, manifest.target));
+  findings.push(...await executableFindings(options.bundleRoot, manifest));
   if (options.mode === 'container') {
     const requested = options.containerRuntime;
-    const runtime = requested
-      ? ['docker', 'podman'].includes(requested) && commandWorks(requested, ['version']) && commandWorks(requested, ['compose', 'version']) ? requested : null
+    const detect = dependencies.containerRuntimeImpl ?? ((wanted) => (wanted
+      ? ['docker', 'podman'].includes(wanted) && commandWorks(wanted, ['version']) && commandWorks(wanted, ['compose', 'version']) ? wanted : null
       : commandWorks('docker', ['version']) && commandWorks('docker', ['compose', 'version']) ? 'docker'
-        : commandWorks('podman', ['version']) && commandWorks('podman', ['compose', 'version']) ? 'podman' : null;
+        : commandWorks('podman', ['version']) && commandWorks('podman', ['compose', 'version']) ? 'podman' : null));
+    const runtime = detect(requested);
     findings.push(finding('container-runtime', 'required', runtime ? 'pass' : 'fail', runtime ? 'CONTAINER_RUNTIME_OK' : 'CONTAINER_RUNTIME_MISSING', runtime ?? `${requested ?? 'Docker or Podman'} with Compose is required for container mode.`));
     try {
       await access(resolve(options.bundleRoot, 'images/appliance-images.tar'), constants.R_OK);

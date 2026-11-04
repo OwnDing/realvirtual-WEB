@@ -18,6 +18,12 @@ export interface OfflineApplianceComponent {
   licenseFiles: string[];
 }
 
+/** Entry list of a .tar.gz read by the builder's own ustar/pax/GNU parser (no platform tar). */
+export function readArchiveEntries(archive: string): Promise<{ files: string[]; directories: string[]; violations: string[] }>;
+
+/** Throws unless the archive holds exactly `rootName/<path>` for each expected path, with no metadata records or links. */
+export function assertArchiveMatchesBundle(archive: string, rootName: string, expectedPaths: string[]): Promise<{ files: number; directories: number }>;
+
 export function buildOfflineAppliance(options: OfflineApplianceBuildOptions): Promise<{
   bundleDir: string;
   archive: string | null;
