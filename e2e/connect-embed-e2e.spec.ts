@@ -253,7 +253,10 @@ test(PERSISTENCE_TEST_NAME, async ({ page }) => {
   ).toBe('1');
 
   await page.reload();
-  await expect(page.getByTestId('connect-embed-gate')).toBeVisible();
+  // A reload boots the page again, so the gate gets the same boot budget as the first load in
+  // startStandaloneDemo (30 s). With the default 5 s, PR #35 runs 41842732433 and 41848825768
+  // failed here once the test budget above no longer ran out first.
+  await expect(page.getByTestId('connect-embed-gate')).toBeVisible({ timeout: 30_000 });
   await page.getByTestId('connect-embed-start').click();
   await waitForDemoRunning(page);
   await expect(page.getByTestId('connect-embed-signal-hint')).toHaveCount(0);
