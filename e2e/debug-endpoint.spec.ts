@@ -18,6 +18,15 @@ test.describe('Debug API endpoints', () => {
   });
 
   test('GET /__api/debug returns valid JSON snapshot', async ({ page }) => {
+    // The debug plugin pushes its first snapshot once the viewer has initialised it, at 1 Hz.
+    // The fixed 5 s in beforeEach is not that condition: PR #34 run 41831300817 (a whole-suite
+    // ~40% slower than its green neighbours) asked before the first push and got the server's
+    // placeholder. Wait for the snapshot itself; the assertions below are unchanged.
+    await expect.poll(async () => (await page.request.get('/__api/debug')).json(), {
+      timeout: 30_000,
+      message: 'the browser never pushed a debug snapshot',
+    }).not.toEqual({ status: 'no data yet' });
+
     const response = await page.request.get('/__api/debug');
     expect(response.ok()).toBeTruthy();
     expect(response.headers()['content-type']).toContain('application/json');
