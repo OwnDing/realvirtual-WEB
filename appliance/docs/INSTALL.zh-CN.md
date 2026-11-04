@@ -103,6 +103,8 @@ CA 私钥是持久状态。丢失它会迫使所有终端重新信任新根，�
 5. 载入真实测试模型，完成 OPFS 保存重开和网关 WebSocket（`/gateway/ws`）断开/重连；
 6. 在出口被阻断时重复启动和主要流程，确认没有外部请求或在线降级下载。
 
+交付验收按 [现场验收清单](FIELD_ACCEPTANCE.zh-CN.md) 逐项执行并留证；其中自动部分由只读探针 `acceptance/probe.mjs` 完成。
+
 ### 6.0 HMI 账户与角色
 
 自本版本起 HMI（WEB、`/gateway/*`、`/api/projects/v1/*`）要求个人账户登录，未登录访问会跳到 `/login/`；`/appliance/`、`/diagnostics/`、`/git/` 仍使用 operator 共享凭据（IT 运维面）。

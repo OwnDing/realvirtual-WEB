@@ -67,6 +67,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>载入真实测试模型，完成 OPFS 保存重开和网关 WebSocket（<code>/gateway/ws</code>）断开/重连；</li>
 <li>在出口被阻断时重复启动和主要流程，确认没有外部请求或在线降级下载。</li>
 </ol>
+<p>交付验收按 现场验收清单 逐项执行并留证；其中自动部分由只读探针 <code>acceptance/probe.mjs</code> 完成。</p>
 <h3 id="60-hmi-账户与角色">6.0 HMI 账户与角色</h3>
 <p>自本版本起 HMI（WEB、<code>/gateway/*</code>、<code>/api/projects/v1/*</code>）要求个人账户登录，未登录访问会跳到 <code>/login/</code>；<code>/appliance/</code>、<code>/diagnostics/</code>、<code>/git/</code> 仍使用 operator 共享凭据（IT 运维面）。</p>
 <ul><li>若访问库中没有 admin 账户，安装器会以 operator 用户名和口令创建一个 HMI 管理员并在输出中提示。首次登录后立即在 <code>/present/</code> 管理页为每个人创建个人账户，并修改该管理员口令。</li>
@@ -108,4 +109,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\preflight.ps1 --config &#3
 <li>升级后浏览器项目看似消失：先检查 origin 是否变化。不要创建新项目覆盖原状态。</li>
 </ul>
 <p>浏览器、最低配置与信任验收见 L3-2 手册。</p>
-<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 3186c9b36e93</span></footer></main></div></body></html>
+<footer>文档版本: <span>6.3.27 · 2026-10-23.1 · 6959e6429991</span></footer></main></div></body></html>

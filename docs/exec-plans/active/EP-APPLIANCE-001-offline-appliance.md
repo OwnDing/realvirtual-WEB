@@ -4,7 +4,7 @@ title: Linux/Windows 完整离线 Appliance
 status: approved
 plan_status: active
 owner: engineering
-last_reviewed: 2026-08-30
+last_reviewed: 2026-11-03
 authority: normative-process
 ---
 
@@ -83,7 +83,8 @@ authority: normative-process
 - [x] 产品规格、ADR、架构与 Bundle 契约建立。
 - [x] 离线构建器和运行拓扑实现。
 - [x] 双平台生命周期脚本和诊断实现。
-- [ ] 自动化与真实环境验证。
+- [x] 现场验收工具包（2026-11-03，第二轮整改第 5 步）：`appliance/docs/FIELD_ACCEPTANCE.zh-CN.md`（权威）/ `.en.md` 的 F1–F15 清单、`appliance/acceptance/FIELD_ACCEPTANCE_RECORD.template.md` 记录模板、只读探针 `appliance/acceptance/probe.mjs`（随归档交付）。
+- [ ] 自动化与真实环境验证（需要用户提供的现场主机、网络、OPC UA 测试端点与可选 Unity 主机，按 FIELD_ACCEPTANCE 执行）。
 
 ## Surprises & Discoveries
 
@@ -94,6 +95,9 @@ authority: normative-process
 - Oracle Linux 10.2 ARM64 实测表明，只接 Docker `internal` 网络的容器即使声明 `ports` 也不会发布宿主端口；因此 Edge 必须同时接非 internal frontend 和 internal backend，其他服务仍只接 backend。网络级零外呼由宿主 ACL 兜底。
 
 ## Decision Log
+
+- 2026-11-03：第二轮整改第 5 步按用户指令“按你建议的顺序……做到第 5 步”只交付**验收准备**：清单、记录模板与只读探针。实机执行需要用户的硬件和现场环境，Agent 不声称任何实机结果。探针不做任何 PLC 写入、驱动点动或多人写类消息；写入类验收项（F8–F10、F12）只在现场书面授权后手工执行。
+- 2026-11-03：ADR-0023 之后 CONNECT 为可选组件，“缺少 CONNECT ARM64 ELF”不再阻断不含 CONNECT 的 Linux 包；含 CONNECT 的发布仍需该发布物。
 
 - 2026-08-30：用户明确批准 Linux + Windows、容器运行时可选、完整 Appliance，作为本计划激活与 ADR 接受依据。
 - 2026-08-30：沿用现有产品设想，将完整范围定义为 WEB、CONNECT、Forgejo、InfluxDB、HTTPS/认证、健康和诊断；不把客户安装阶段联网当作降级路径。
@@ -120,6 +124,8 @@ Linux ARM64 实机证据（Oracle Linux 10.2、AArch64、Docker 29.7.2、Compose
 - 真实 Forgejo 15.0.7 和 InfluxDB 2.9.1 在 internal backend 初始化成功；发现单 internal 网络阻止宿主端口发布后，修正为 Edge 双网络。Caddy 同时接 frontend/backend 后，从宿主代理访问两服务均返回 HTTP 200。
 - Compose 展开确认 Edge 网络为 `backend,frontend`，CONNECT 仅 `backend`，backend `internal=true`，frontend 非 internal，五项 `pull_policy=never`。
 - 镜像构建器使用真实 ARM64 base lock 完成输入平台检查，并按设计在缺少 CONNECT ELF 时以 `Linux CONNECT binary is missing or does not match` 失败关闭。
+
+第二轮整改第 5 步（2026-11-03，本地）：`tests/appliance-acceptance-probe.node.test.ts` 6/6——对回环上的仿真 Appliance（Caddy forward_auth 跳转与 401、访问服务登录/会话/账户列表/登出、网关多人守卫）验证：正确的 Appliance 全部通过、仅未提供的角色记为 skipped；故意破坏的 Appliance（网关对无会话开放、查看者在多人房间获得 operator、会话角色错误）恰好 3 项失败；探针只发送 `room_join` / `room_leave`、登出全部会话；证据中不含口令、Cookie 与 CSRF；非回环明文 HTTP 被拒，缺少 `--url https` 或 `--ca` 时拒绝运行。**这不是实机验收**，实机结果待按 FIELD_ACCEPTANCE 执行后登记。
 
 ## Rollback
 
