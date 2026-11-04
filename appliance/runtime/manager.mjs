@@ -820,11 +820,17 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!['container', 'native'].includes(mode)) throw new Error(`Unsupported mode: ${mode}`);
   const roots = resolveRoots(options);
   const existing = currentState(roots);
+  // A default uninstall keeps the persistent state (version, data formats, origin, data) but
+  // removes the program and its services. Reinstalling over it is a fresh program install that
+  // still honours the downgrade/format checks and the origin; nothing of the removed release may
+  // be verified, stopped or restarted (EP-APPLIANCE-001 rehearsal, 2026-11-04: ENOENT on the
+  // removed release's manifest made every reinstall after uninstall fail).
+  const running = existing && !existing.uninstalledAt ? existing : null;
   const preflight = await runPreflight({
     bundleRoot, configPath: resolve(options.configPath), expectedTarget: options.expectedTarget,
     mode, containerRuntime: options.containerRuntime, verifyPlatform: options.verifyPlatform,
     minimumFreeBytes: options.minimumFreeBytes, diskPath: roots.installRoot,
-    skipPortChecks: Boolean(existing) || options.skipPortChecks,
+    skipPortChecks: Boolean(running) || options.skipPortChecks,
     installedVersion: existing?.version ?? null,
     installedCompatibility: existing?.compatibility ?? null,
   }, dependencies);
@@ -834,14 +840,15 @@ export async function installOrUpgrade(options, dependencies = {}) {
   }
   if (!preflight.manifest.modes.includes(mode)) throw new Error(`Bundle does not contain ${mode} mode.`);
   assertStableOrigin(existing, preflight.config);
-  const existingManifest = existing ? await verifyBundle(existing.releaseRoot, { expectedTarget: existing.target }) : null;
+  if (running) await verifyBundle(running.releaseRoot, { expectedTarget: running.target });
   let safetyBackup = null;
   let existingStoppedForUpgrade = false;
   if (existing && existing.version !== preflight.manifest.version) {
     // The consistency point is only valid while the old release remains stopped.
     // Do not reopen a write window between the snapshot and candidate handoff.
-    safetyBackup = await backupAppliance({ ...options, noStop: false, leaveStopped: true }, dependencies);
-    existingStoppedForUpgrade = true;
+    // After an uninstall nothing runs, so the data is already quiescent.
+    safetyBackup = await backupAppliance({ ...options, noStop: !running, leaveStopped: Boolean(running) }, dependencies);
+    existingStoppedForUpgrade = Boolean(running);
   }
   const configurationSnapshot = existing ? backupConfiguration(roots, preflight.manifest.version) : null;
   ensureStateDirectories(roots);
@@ -857,7 +864,8 @@ export async function installOrUpgrade(options, dependencies = {}) {
     schemaVersion: 1,
     installId: initialized.values.installId,
     version: preflight.manifest.version,
-    previousVersion: existing?.version && existing.version !== preflight.manifest.version ? existing.version : existing?.previousVersion ?? null,
+    // The removed program's releases are gone after an uninstall: nothing to roll back to.
+    previousVersion: !running ? null : existing.version !== preflight.manifest.version ? existing.version : existing.previousVersion ?? null,
     target: preflight.manifest.target,
     mode,
     origin: `https://${preflight.config.hostname}${httpsPortSuffix(preflight.config.httpsPort)}`,
@@ -878,7 +886,7 @@ export async function installOrUpgrade(options, dependencies = {}) {
   if (!options.noStart) {
     let candidateAttempted = false;
     try {
-      if (existing && !existingStoppedForUpgrade) {
+      if (running && !existingStoppedForUpgrade) {
         stopRuntime({ roots, releaseRoot: existing.releaseRoot, manifest: { target: existing.target }, mode: existing.mode, runtime: options.containerRuntime, runImpl });
       }
       if (mode === 'container') {
@@ -913,10 +921,15 @@ export async function installOrUpgrade(options, dependencies = {}) {
               noStop: true, skipSafetyBackup: true,
             }, dependencies);
           } else restoreConfigurationSnapshot(roots, configurationSnapshot);
-          const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
-          startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
-          await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, existing.mode);
-          publishCertificateEvidence(roots, previousConfig);
+          if (running) {
+            const previousConfig = validateApplianceConfig(JSON.parse(readFileSync(join(roots.configRoot, 'appliance.json'), 'utf8')), { baseDir: roots.configRoot });
+            startInstalledRuntime({ roots, state: existing, config: previousConfig, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
+            await readinessImpl(previousConfig, roots, options.readinessTimeoutMs, dependencies.fetchImpl, dependencies.httpsProbeImpl, existing.mode);
+            publishCertificateEvidence(roots, previousConfig);
+          } else {
+            // Back to the uninstalled state it came from: data restored, no program to restart.
+            atomicJson(installStatePath(roots), { ...currentState(roots), uninstalledAt: existing.uninstalledAt });
+          }
         }
       } catch (recoveryError) {
         throw new AggregateError([error, recoveryError], `Candidate failed and automatic recovery was not safe: ${recoveryError.message}`);
@@ -949,6 +962,7 @@ function readInstalledSecrets(roots) {
 export async function rollbackAppliance(options, dependencies = {}) {
   const roots = resolveRoots(options);
   const state = currentState(roots);
+  if (state?.uninstalledAt) throw new Error('The appliance program is uninstalled (state and data are kept); install a release first.');
   if (!state?.previousVersion) throw new Error('No previous appliance release is recorded.');
   const previousRoot = join(roots.installRoot, 'releases', state.previousVersion);
   const manifest = await verifyBundle(previousRoot, { expectedTarget: state.target });
@@ -982,7 +996,9 @@ export async function backupAppliance(options, dependencies = {}) {
   const stamp = new Date().toISOString().replaceAll(':', '-');
   const backupRoot = join(roots.stateRoot, 'backups', `${stamp}-${randomBytes(3).toString('hex')}-${state.version}`);
   if (existsSync(backupRoot)) throw new Error(`Backup already exists: ${backupRoot}`);
-  if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  // Nothing runs after an uninstall: the data is already quiescent and there is nothing to restart.
+  const stop = !options.noStop && !state.uninstalledAt;
+  if (stop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
   let verified = false;
   try {
     mkdirSync(backupRoot, { recursive: true, mode: 0o700 });
@@ -1003,7 +1019,7 @@ export async function backupAppliance(options, dependencies = {}) {
   } finally {
     // A failed snapshot never authorizes an upgrade outage. Keep the runtime
     // stopped only after the requested consistency point was fully verified.
-    if (!options.noStop && (!options.leaveStopped || !verified)) {
+    if (stop && (!options.leaveStopped || !verified)) {
       startInstalledRuntime({ roots, state, config, runtime: options.containerRuntime, runImpl, systemdUnitRoot: options.systemdUnitRoot ?? dependencies.systemdUnitRoot });
     }
   }
@@ -1045,6 +1061,8 @@ export async function restoreAppliance(options, dependencies = {}) {
   const state = currentState(roots);
   if (!state) throw new Error('No appliance installation state was found.');
   if (options.confirmRestore !== state.installId) throw new Error('Restore requires --confirm-restore with the exact installId.');
+  // The internal recovery of a failed reinstall restores with noStop; the CLI needs a runtime.
+  if (state.uninstalledAt && !options.noStop) throw new Error('The appliance program is uninstalled (state and data are kept); install a release first.');
   const backupRoot = resolve(options.backupPath);
   const approvedRoot = `${resolve(roots.stateRoot, 'backups')}${sep}`;
   if (!backupRoot.startsWith(approvedRoot)) throw new Error('Restore source must be inside the appliance backups directory.');
@@ -1112,18 +1130,24 @@ export function uninstallAppliance(options, dependencies = {}) {
     throw new Error('Data purge requires --confirm-purge with the exact installId.');
   }
   const runImpl = dependencies.runImpl ?? run;
-  if (!options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
-  if (state.mode === 'native' && state.target.startsWith('linux-')) {
+  const installed = !state.uninstalledAt;
+  if (installed && !options.noStop) stopRuntime({ roots, releaseRoot: state.releaseRoot, manifest: { target: state.target }, mode: state.mode, runtime: options.containerRuntime, runImpl });
+  if (installed && state.mode === 'native' && state.target.startsWith('linux-')) {
     for (const id of ['edge', 'control', 'gateway', 'connect', 'forgejo', 'influxdb']) {
       const unit = join(options.systemdUnitRoot ?? dependencies.systemdUnitRoot ?? '/etc/systemd/system', `xyvirtual-${id}.service`);
       if (existsSync(unit)) rmSync(unit, { force: false });
     }
     runImpl('systemctl', ['daemon-reload']);
   }
-  rmSync(roots.installRoot, { recursive: true, force: false });
+  // A failed reinstall after an uninstall may have staged a release again.
+  if (installed || existsSync(roots.installRoot)) rmSync(roots.installRoot, { recursive: true, force: false });
   if (options.purgeData) {
     rmSync(roots.stateRoot, { recursive: true, force: false });
     rmSync(roots.configRoot, { recursive: true, force: false });
+  } else if (installed) {
+    // The kept state still guards the next install (downgrade/format checks, origin, data), but
+    // it must say that no program is installed, or the reinstall verifies a removed release.
+    atomicJson(installStatePath(roots), { ...state, uninstalledAt: new Date().toISOString() });
   }
   return { removedPrograms: roots.installRoot, preservedState: !options.purgeData ? roots.stateRoot : null };
 }
@@ -1163,6 +1187,10 @@ async function main() {
       containerRuntime: common.containerRuntime,
       installedVersion: installed?.version ?? null,
       installedCompatibility: installed?.compatibility ?? null,
+      // The documented upgrade runs the candidate's own preflight on a running appliance, which
+      // holds its own ports; the installer already skips this check then. Without the same rule
+      // here the manual's step reported BLOCKED: EADDRINUSE (EP-APPLIANCE-001 rehearsal).
+      skipPortChecks: Boolean(installed && !installed.uninstalledAt),
     });
     printPreflight(report);
     if (!report.ok) process.exitCode = 2;

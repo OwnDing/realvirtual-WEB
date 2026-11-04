@@ -2,11 +2,11 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildOfflineAppliance } from '../scripts/build-offline-appliance.mjs';
-import { installOrUpgrade, waitForReadiness } from '../appliance/runtime/manager.mjs';
+import { backupAppliance, installOrUpgrade, restoreAppliance, rollbackAppliance, uninstallAppliance, waitForReadiness } from '../appliance/runtime/manager.mjs';
 import { gatewayFixture } from './helpers/gateway-fixture';
 import { caddyHashAlgorithm } from '../appliance/runtime/lib/config.mjs';
 
@@ -210,5 +210,78 @@ describe('appliance container-mode install (gateway-only release)', () => {
     const tokenHandedOver = commands.findIndex((line) => line === `chown 1000:1000 ${token}`);
     expect(tokenIssued).toBeGreaterThanOrEqual(0);
     expect(tokenHandedOver).toBeGreaterThan(tokenIssued);
+  });
+});
+
+/**
+ * EP-APPLIANCE-001 rehearsal (2026-11-04), F15: after the documented default uninstall (programs
+ * removed, state kept) a reinstall failed with ENOENT on the removed release's manifest, because
+ * the kept install-state.json still described a running release.
+ */
+describe('appliance reinstall after the default uninstall', () => {
+  it('keeps state and data, refuses runtime-only actions, and reinstalls over them', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'rv-appliance-reinstall-'));
+    cleanups.push(root);
+    const release = await containerRelease(root);
+    const configPath = join(root, 'appliance.json');
+    writeFileSync(configPath, JSON.stringify({
+      schemaVersion: 1, hostname: 'appliance.test.internal', influxHostname: 'influx.appliance.test.internal',
+      httpsPort: 443, httpPort: 80, controlPort: 8081, connectPort: 5100, forgejoPort: 3000, influxPort: 8086,
+      tls: { mode: 'internal-ca', certificate: null, privateKey: null }, authentication: { operatorUser: 'operator' },
+    }));
+    const commands: string[] = [];
+    const options = {
+      bundleRoot: release, configPath, expectedTarget: 'linux-arm64', verifyPlatform: false, mode: 'container',
+      containerRuntime: 'docker', installRoot: join(root, 'install-root'), configRoot: join(root, 'config-root'),
+      stateRoot: join(root, 'state-root'), minimumFreeBytes: 0,
+    };
+    const bound: number[] = [];
+    const deps = {
+      lookupImpl: async () => [{ address: '127.0.0.1', family: 4 }],
+      canBindImpl: async (port: number) => { bound.push(port); return { ok: true }; },
+      isAdministratorImpl: async () => true,
+      containerRuntimeImpl: () => 'docker',
+      runImpl: (command: string, args: string[] = []) => {
+        commands.push(`${command} ${args.join(' ')}`);
+        if (command.includes('caddy') && args[0] === 'hash-password') return '$argon2id$v=19$m=65536,t=3,p=2$fixture$fixture';
+        if (command === 'docker' && args.includes('create')) return 'generated random password: fixture-forgejo-password';
+        if (command === 'docker' && args.includes('generate-access-token')) return 'fixtureforgejotoken0123456789abcdef\n';
+        return '';
+      },
+      waitImpl: async () => {},
+      waitForReadinessImpl: async () => {},
+    };
+    const first = await installOrUpgrade(options, deps);
+    const statePath = join(first.roots.stateRoot, 'install-state.json');
+    const operatorPassword = readFileSync(join(first.roots.stateRoot, 'secrets', 'operator-password'), 'utf8');
+
+    const removed = uninstallAppliance(options, deps);
+    expect(removed.preservedState).toBe(first.roots.stateRoot);
+    expect(existsSync(first.roots.installRoot)).toBe(false);
+    const kept = JSON.parse(readFileSync(statePath, 'utf8'));
+    expect(kept).toMatchObject({ installId: first.state.installId, version: '6.3.27', origin: first.state.origin });
+    expect(typeof kept.uninstalledAt).toBe('string');
+
+    // Nothing that needs the removed program may run against it.
+    await expect(rollbackAppliance(options, deps)).rejects.toThrow(/uninstalled/);
+    commands.length = 0;
+    const backup = await backupAppliance(options, deps);
+    expect(existsSync(join(backup, 'backup-manifest.json'))).toBe(true);
+    expect(commands.filter((line) => / (down|up) /.test(line))).toEqual([]);
+    await expect(restoreAppliance({ ...options, backupPath: backup, confirmRestore: first.state.installId }, deps)).rejects.toThrow(/uninstalled/);
+    expect(() => uninstallAppliance(options, deps)).not.toThrow();
+
+    commands.length = 0;
+    bound.length = 0;
+    const again = await installOrUpgrade(options, deps);
+    expect(again.state).toMatchObject({ installId: first.state.installId, version: '6.3.27', previousVersion: null });
+    expect(again.state.uninstalledAt).toBeUndefined();
+    expect(again.generatedOperatorPassword).toBeNull();
+    expect(readFileSync(join(first.roots.stateRoot, 'secrets', 'operator-password'), 'utf8')).toBe(operatorPassword);
+    // The ports are checked again (nothing holds them), and no `compose down` hits the removed release.
+    expect(bound).toEqual(expect.arrayContaining([80, 443]));
+    expect(commands.filter((line) => line.includes(' down'))).toEqual([]);
+    expect(commands.some((line) => line.includes(' up -d --pull never'))).toBe(true);
+    expect(existsSync(join(again.state.releaseRoot, 'appliance-manifest.json'))).toBe(true);
   });
 });

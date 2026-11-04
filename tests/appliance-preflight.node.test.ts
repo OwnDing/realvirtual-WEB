@@ -19,7 +19,7 @@ afterEach(() => { for (const path of cleanups.splice(0)) rmSync(path, { recursiv
 const BASE = ['runtime/node/bin/node', 'runtime/caddy/caddy', 'runtime/forgejo/forgejo', 'runtime/influxdb/influxd', 'runtime/influx-cli/influx'];
 const CONNECT = 'runtime/connect/realvirtual-Connect';
 
-async function preflight(services: string[], present: string[]) {
+async function preflight(services: string[], present: string[], extra: Record<string, unknown> = {}) {
   const root = mkdtempSync(join(tmpdir(), 'rv-appliance-preflight-'));
   cleanups.push(root);
   const bundle = join(root, 'bundle');
@@ -38,7 +38,7 @@ async function preflight(services: string[], present: string[]) {
   const bound: number[] = [];
   const report = await runPreflight({
     bundleRoot: bundle, configPath, expectedTarget: 'linux-arm64', mode: 'container',
-    containerRuntime: 'unavailable-in-test', verifyPlatform: false, minimumFreeBytes: 0,
+    containerRuntime: 'unavailable-in-test', verifyPlatform: false, minimumFreeBytes: 0, ...extra,
   }, {
     verifyBundleImpl: async () => ({ version: '6.3.27', target: 'linux-arm64', services, compatibility: null }),
     isAdministratorImpl: async () => true,
@@ -66,5 +66,13 @@ describe('appliance preflight follows the release components (ADR-0023)', () => 
     expect(missing.bound).toContain(5100);
     const shipped = await preflight(services, [...BASE, CONNECT]);
     expect(shipped.runtime.find((item: any) => item.detail === CONNECT)).toMatchObject({ status: 'pass', code: 'RUNTIME_PRESENT' });
+  });
+
+  // The manual runs the candidate's own preflight on a RUNNING appliance before `upgrade`; its
+  // ports are held by that appliance, and the rehearsal's preflight said BLOCKED: EADDRINUSE.
+  it('says so, instead of failing, when an installed appliance holds the ports', async () => {
+    const { report, bound } = await preflight(['edge', 'control', 'web', 'gateway', 'forgejo', 'influxdb'], BASE, { skipPortChecks: true });
+    expect(bound).toEqual([]);
+    expect(report.findings.find((item: any) => item.id === 'ports')).toMatchObject({ level: 'advisory', status: 'pass', code: 'PORT_CHECK_SKIPPED_INSTALLED' });
   });
 });

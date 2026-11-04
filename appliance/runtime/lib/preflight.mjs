@@ -168,7 +168,9 @@ export async function runPreflight(options, dependencies = {}) {
     }
   }
 
-  if (!options.skipPortChecks) {
+  if (options.skipPortChecks) {
+    findings.push(finding('ports', 'advisory', 'pass', 'PORT_CHECK_SKIPPED_INSTALLED', 'An installed appliance holds its own ports; the candidate reuses them.'));
+  } else {
     const ports = { http: config.httpPort, https: config.httpsPort, control: config.controlPort, ...(releaseHasConnect(manifest) ? { connect: config.connectPort } : {}), forgejo: config.forgejoPort, influxdb: config.influxPort };
     for (const [name, port] of Object.entries(ports)) {
       const available = await (dependencies.canBindImpl ?? canBind)(port);
