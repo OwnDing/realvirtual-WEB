@@ -9,6 +9,10 @@ HTTP_PORT = {{FORGEJO_PORT}}
 DOMAIN = {{HOSTNAME}}
 ROOT_URL = https://{{HOSTNAME}}{{HTTPS_PORT_SUFFIX}}/git/
 OFFLINE_MODE = true
+; Git is offered only over HTTPS through the entry (/git/). With SSH enabled Forgejo manages
+; ~/.ssh/authorized_keys in the service user's home (the state root, not writable for it) and the
+; native service died on start (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+DISABLE_SSH = true
 
 [database]
 DB_TYPE = sqlite3
@@ -21,6 +25,12 @@ ROOT = {{FORGEJO_DATA}}/repositories
 INSTALL_LOCK = true
 SECRET_KEY_URI = file:{{FORGEJO_SECRET_FILE}}
 INTERNAL_TOKEN_URI = file:{{FORGEJO_INTERNAL_TOKEN_FILE}}
+
+[oauth2]
+; Supplied like the other secrets: Forgejo otherwise generates it on first start and saves it into
+; this file, which native mode keeps read-only (ProtectSystem=strict) — the service then failed on
+; every start (EP-APPLIANCE-001 rehearsal, 2026-11-04).
+JWT_SECRET_URI = file:{{FORGEJO_JWT_SECRET_FILE}}
 
 [service]
 DISABLE_REGISTRATION = true

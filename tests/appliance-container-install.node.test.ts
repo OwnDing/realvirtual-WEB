@@ -171,6 +171,8 @@ describe('appliance container-mode install (gateway-only release)', () => {
     expect(mode(join(state.releaseRoot, 'runtime', 'node', 'bin', 'node'))).toBe(0o755);
     expect(mode(roots.installRoot)).toBe(0o755);
     expect(mode(join(roots.installRoot, 'releases'))).toBe(0o755);
+    // The state root is traversable for service users (native mode reaches data/ through it).
+    expect(mode(roots.stateRoot)).toBe(0o755);
     // Secrets stay private.
     expect(mode(join(roots.stateRoot, 'secrets'))).toBe(0o700);
     expect(mode(join(roots.stateRoot, 'secrets', 'operator-password'))).toBe(0o600);
@@ -201,6 +203,16 @@ describe('appliance container-mode install (gateway-only release)', () => {
     const controlService = compose.slice(compose.indexOf('\n  control:'), compose.indexOf('\n  gateway:'));
     expect(controlService).toContain('/state-public:ro');
     expect(controlService).not.toContain('/pki');
+
+    // Native Forgejo must never need to write its app.ini (read-only under ProtectSystem=strict):
+    // the OAuth2 JWT secret is supplied from the secrets directory like SECRET_KEY.
+    const forgejoIni = readFileSync(join(roots.configRoot, 'forgejo.app.ini'), 'utf8');
+    const jwtFile = join(roots.stateRoot, 'secrets', 'forgejo-jwt-secret');
+    expect(forgejoIni).toContain(`[oauth2]\n`);
+    expect(forgejoIni).toContain('\nDISABLE_SSH = true\n');
+    expect(forgejoIni).toContain(`JWT_SECRET_URI = file:${jwtFile}\n`);
+    expect(mode(jwtFile)).toBe(0o600);
+    expect(Buffer.from(readFileSync(jwtFile, 'utf8').trim(), 'base64url')).toHaveLength(32);
 
     // The project token is handed to the control image user after it is written.
     const token = join(roots.stateRoot, 'data', 'access', 'forgejo-token');

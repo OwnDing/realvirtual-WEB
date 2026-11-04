@@ -44,6 +44,7 @@ async function preflight(services: string[], present: string[], extra: Record<st
     isAdministratorImpl: async () => true,
     lookupImpl: async () => [{ address: '192.0.2.10', family: 4 }],
     canBindImpl: async (port: number) => { bound.push(port); return { ok: true }; },
+    ...(typeof extra.commandExists === 'boolean' ? { commandExistsImpl: () => extra.commandExists as boolean } : {}),
   });
   const runtime = report.findings.filter((item: any) => item.id.startsWith('runtime:'));
   return { report, runtime, bound };
@@ -74,5 +75,18 @@ describe('appliance preflight follows the release components (ADR-0023)', () => 
     const { report, bound } = await preflight(['edge', 'control', 'web', 'gateway', 'forgejo', 'influxdb'], BASE, { skipPortChecks: true });
     expect(bound).toEqual([]);
     expect(report.findings.find((item: any) => item.id === 'ports')).toMatchObject({ level: 'advisory', status: 'pass', code: 'PORT_CHECK_SKIPPED_INSTALLED' });
+  });
+
+  // Native Forgejo needs the host git; a host without it failed inside `forgejo migrate`.
+  it.each([[true, 'pass', 'HOST_TOOL_PRESENT'], [false, 'fail', 'HOST_TOOL_MISSING']] as const)(
+    'native mode requires the host git (present=%s)', async (present, status, code) => {
+      const { report } = await preflight(['edge', 'control', 'web', 'gateway', 'forgejo', 'influxdb'], BASE, { mode: 'native', commandExists: present });
+      expect(report.findings.find((item: any) => item.id === 'host-tool:git')).toMatchObject({ level: 'required', status, code });
+      if (!present) expect(report.ok).toBe(false);
+    });
+
+  it('container mode does not ask for a host git (the Forgejo image has its own)', async () => {
+    const { report } = await preflight(['edge', 'control', 'web', 'gateway', 'forgejo', 'influxdb'], BASE, { commandExists: false });
+    expect(report.findings.some((item: any) => item.id === 'host-tool:git')).toBe(false);
   });
 });

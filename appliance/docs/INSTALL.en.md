@@ -10,7 +10,9 @@ failure.
 
 No installation or upgrade command downloads packages or images. Container mode requires a
 customer-managed Docker/Podman installation and loads only `images/appliance-images.tar` with pull
-disabled. Native mode uses only the signed runtimes inside `runtime/`.
+disabled. Native mode uses the signed runtimes inside `runtime/` plus one host prerequisite: `git`
+(Git for Windows on Windows), which Forgejo calls at run time and the archive does not contain;
+preflight blocks a native install without it. Container mode uses the git inside the Forgejo image.
 
 After installation, trust the internal CA root through an approved out-of-band GPO/MDM/manual
 process, verify its SHA-256 fingerprint, and open `/diagnostics/` from a real operator device. HTTPS,

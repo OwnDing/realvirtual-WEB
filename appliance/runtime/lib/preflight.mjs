@@ -141,6 +141,14 @@ export async function runPreflight(options, dependencies = {}) {
     const available = commandExists('icacls.exe');
     findings.push(finding('host-tool:icacls', 'required', available ? 'pass' : 'fail', available ? 'HOST_TOOL_PRESENT' : 'HOST_TOOL_MISSING', 'icacls.exe'));
   }
+  if (options.mode === 'native') {
+    // Native Forgejo shells out to git, which the release does not contain. Without it the
+    // install died in `forgejo migrate` with "git not found" (EP-APPLIANCE-001 rehearsal,
+    // 2026-11-04); container mode uses the git inside the Forgejo image.
+    const available = (dependencies.commandExistsImpl ?? commandExists)('git');
+    findings.push(finding('host-tool:git', 'required', available ? 'pass' : 'fail', available ? 'HOST_TOOL_PRESENT' : 'HOST_TOOL_MISSING',
+      available ? 'git' : 'git (native mode: Forgejo needs the host git; install it from the approved OS packages, or use container mode)'));
+  }
 
   try {
     const certificate = await validateCustomerCertificate(config);

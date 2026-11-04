@@ -9,7 +9,9 @@
 <p>failure.</p>
 <p>No installation or upgrade command downloads packages or images. Container mode requires a</p>
 <p>customer-managed Docker/Podman installation and loads only <code>images/appliance-images.tar</code> with pull</p>
-<p>disabled. Native mode uses only the signed runtimes inside <code>runtime/</code>.</p>
+<p>disabled. Native mode uses the signed runtimes inside <code>runtime/</code> plus one host prerequisite: <code>git</code></p>
+<p>(Git for Windows on Windows), which Forgejo calls at run time and the archive does not contain;</p>
+<p>preflight blocks a native install without it. Container mode uses the git inside the Forgejo image.</p>
 <p>After installation, trust the internal CA root through an approved out-of-band GPO/MDM/manual</p>
 <p>process, verify its SHA-256 fingerprint, and open <code>/diagnostics/</code> from a real operator device. HTTPS,</p>
 <p>secure context, WebGL2, OPFS round trip, release integrity, the industrial gateway (and CONNECT when</p>
@@ -33,4 +35,4 @@
 <p>acceptance.</p>
 <p>Browser, hardware and trust acceptance: L3-2 guide. Hand-over acceptance:</p>
 <p>field acceptance checklist, with the read-only probe <code>acceptance/probe.mjs</code>.</p>
-<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 6959e6429991</span></footer></main></div></body></html>
+<footer>Documentation version: <span>6.3.27 · 2026-10-23.1 · 974d754f8714</span></footer></main></div></body></html>

@@ -30,6 +30,8 @@ export interface PreflightDependencies {
   canBindImpl?: (port: number) => Promise<{ ok: boolean; code?: string }>;
   /** Returns the usable container runtime ('docker' | 'podman') for the requested one, or null. */
   containerRuntimeImpl?: (requested: string | undefined) => string | null;
+  /** Whether a host command exists (native-mode tool checks such as git). */
+  commandExistsImpl?: (command: string) => boolean;
 }
 
 export function runPreflight(options: PreflightOptions, dependencies?: PreflightDependencies): Promise<{

@@ -278,6 +278,8 @@ function initializeSecrets(roots, config, releaseRoot, target, runImpl) {
     influxToken: writeInfluxSetupSecret(roots, join(secrets, 'influx-token'), 36),
     forgejoSecret: writeSecret(join(secrets, 'forgejo-secret'), randomSecret(32)),
     forgejoInternalToken: writeSecret(join(secrets, 'forgejo-internal-token'), randomSecret(48)),
+    // [oauth2] JWT_SECRET_URI: raw-URL base64 of exactly 32 bytes, as Forgejo requires.
+    forgejoJwtSecret: writeSecret(join(secrets, 'forgejo-jwt-secret'), randomSecret(32)),
   };
   return { values, generatedOperatorPassword: operatorPassword };
 }
@@ -477,6 +479,7 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
     HOSTNAME: config.hostname, HTTPS_PORT_SUFFIX: httpsPortSuffix(config.httpsPort),
     FORGEJO_SECRET_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-secret'), windows),
     FORGEJO_INTERNAL_TOKEN_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-internal-token'), windows),
+    FORGEJO_JWT_SECRET_FILE: portablePath(join(roots.stateRoot, 'secrets', 'forgejo-jwt-secret'), windows),
   }), { mode: 0o600 });
   const influxTemplate = readFileSync(join(releaseRoot, 'config', 'influxdb.toml.template'), 'utf8');
   writeFileSync(join(roots.configRoot, 'influxdb.toml'), renderTemplate(influxTemplate, {
@@ -506,12 +509,25 @@ function renderRuntimeConfiguration({ config, roots, releaseRoot, manifest, mode
 
 function systemdQuote(value) {
   if (/[\r\n]/.test(value)) throw new Error('Systemd arguments cannot contain line breaks.');
-  return `"${String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+  // `%` starts a systemd specifier (%h, %n, ...): a literal one must be doubled.
+  return `"${String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('%', '%%')}"`;
+}
+
+/**
+ * WorkingDirectory= is not unquoted by systemd: the quoted form was rejected as "path is not
+ * absolute", every native unit had a fatal setting and no native Linux install could start
+ * (EP-APPLIANCE-001 rehearsal, 2026-11-04; checked with systemd-analyze verify). It takes the
+ * rest of the line verbatim, so a path with spaces needs no quoting; `%` is still a specifier.
+ */
+function systemdPath(value) {
+  const path = String(value);
+  if (/[\0\r\n]/.test(path) || !path.startsWith('/')) throw new Error(`Systemd paths must be absolute single-line paths: ${path}`);
+  return path.replaceAll('%', '%%');
 }
 
 function linuxUnit(description, command, roots, { user = 'xyvirtual', environment = {} } = {}) {
   const environmentLines = Object.entries(environment).map(([key, value]) => `Environment=${systemdQuote(`${key}=${value}`)}`).join('\n');
-  return `[Unit]\nDescription=${description}\nAfter=network.target\n\n[Service]\nType=simple\nUser=${user}\nWorkingDirectory=${systemdQuote(roots.stateRoot)}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\nUMask=0077\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths=${systemdQuote(roots.stateRoot)}\n${environmentLines ? `${environmentLines}\n` : ''}\n[Install]\nWantedBy=multi-user.target\n`;
+  return `[Unit]\nDescription=${description}\nAfter=network.target\n\n[Service]\nType=simple\nUser=${user}\nWorkingDirectory=${systemdPath(roots.stateRoot)}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\nUMask=0077\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths=${systemdQuote(roots.stateRoot)}\n${environmentLines ? `${environmentLines}\n` : ''}\n[Install]\nWantedBy=multi-user.target\n`;
 }
 
 export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, config }) {
@@ -525,7 +541,11 @@ export function buildNativeServiceDefinitions({ roots, releaseRoot, manifest, co
       { id: 'gateway', unit: linuxUnit('XYvirtual Industrial Gateway', `${systemdQuote(node)} ${systemdQuote(join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs'))} --config ${systemdQuote(join(roots.configRoot, 'gateway.json'))}`, roots) },
       ...(hasConnect(manifest) ? [{ id: 'connect', unit: linuxUnit('XYvirtual CONNECT', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'connect'))} --project-root ${systemdQuote(join(data, 'connect'))} --port ${config.connectPort}`, roots) }] : []),
       { id: 'forgejo', unit: linuxUnit('XYvirtual Project Git', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'forgejo'))} --work-path ${systemdQuote(join(data, 'forgejo'))} --config ${systemdQuote(join(roots.configRoot, 'forgejo.app.ini'))} web`, roots) },
-      { id: 'influxdb', unit: linuxUnit('XYvirtual Historian', `${systemdQuote(serviceBinary(releaseRoot, manifest.target, 'influxdb'))} --config ${systemdQuote(join(roots.configRoot, 'influxdb.toml'))}`, roots) },
+      // influxd 2.x has no --config flag (it exited "unknown flag: --config" on every start,
+      // EP-APPLIANCE-001 rehearsal 2026-11-04); it reads INFLUXD_CONFIG_PATH.
+      { id: 'influxdb', unit: linuxUnit('XYvirtual Historian', systemdQuote(serviceBinary(releaseRoot, manifest.target, 'influxdb')), roots, {
+        environment: { INFLUXD_CONFIG_PATH: join(roots.configRoot, 'influxdb.toml') },
+      }) },
       { id: 'edge', unit: linuxUnit('XYvirtual HTTPS Edge', `${systemdQuote(caddy)} run --config ${systemdQuote(join(roots.configRoot, 'Caddyfile'))} --adapter caddyfile`, roots, {
         user: 'root',
         environment: {
@@ -547,9 +567,10 @@ function prepareLinuxNativePermissions(roots, runImpl) {
   runImpl('chown', ['-R', 'xyvirtual:xyvirtual', roots.configRoot, join(roots.stateRoot, 'data'), join(roots.stateRoot, 'logs'), join(roots.stateRoot, 'secrets')]);
 }
 
-function windowsServiceXml(id, executable, argumentsValue, logPath) {
+function windowsServiceXml(id, executable, argumentsValue, logPath, environment = {}) {
   const xml = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
-  return `<service>\n  <id>xyvirtual-${xml(id)}</id>\n  <name>XYvirtual Appliance ${xml(id)}</name>\n  <description>XYvirtual Appliance managed service.</description>\n  <executable>${xml(executable)}</executable>\n  <arguments>${xml(argumentsValue.replaceAll('&quot;', '"'))}</arguments>\n  <logpath>${xml(logPath)}</logpath>\n  <log mode="roll-by-size"><sizeThreshold>10485760</sizeThreshold><keepFiles>5</keepFiles></log>\n  <onfailure action="restart" delay="5 sec"/>\n  <stoptimeout>30 sec</stoptimeout>\n</service>\n`;
+  const env = Object.entries(environment).map(([name, value]) => `  <env name="${xml(name)}" value="${xml(value)}"/>\n`).join('');
+  return `<service>\n  <id>xyvirtual-${xml(id)}</id>\n  <name>XYvirtual Appliance ${xml(id)}</name>\n  <description>XYvirtual Appliance managed service.</description>\n  <executable>${xml(executable)}</executable>\n  <arguments>${xml(argumentsValue.replaceAll('&quot;', '"'))}</arguments>\n${env}  <logpath>${xml(logPath)}</logpath>\n  <log mode="roll-by-size"><sizeThreshold>10485760</sizeThreshold><keepFiles>5</keepFiles></log>\n  <onfailure action="restart" delay="5 sec"/>\n  <stoptimeout>30 sec</stoptimeout>\n</service>\n`;
 }
 
 function installNativeServices({ roots, releaseRoot, manifest, config, runImpl = run, unitRoot = '/etc/systemd/system' }) {
@@ -571,13 +592,14 @@ function installNativeServices({ roots, releaseRoot, manifest, config, runImpl =
     gateway: [nodeBinary(releaseRoot, manifest.target), `&quot;${join(releaseRoot, 'runtime', 'gateway', 'src', 'main.mjs')}&quot; --config &quot;${join(roots.configRoot, 'gateway.json')}&quot;`],
     connect: [serviceBinary(releaseRoot, manifest.target, 'connect'), `--project-root &quot;${join(roots.stateRoot, 'data', 'connect')}&quot; --port ${config.connectPort}`],
     forgejo: [serviceBinary(releaseRoot, manifest.target, 'forgejo'), `web --config &quot;${join(roots.configRoot, 'forgejo.app.ini')}&quot;`],
-    influxdb: [serviceBinary(releaseRoot, manifest.target, 'influxdb'), `--config &quot;${join(roots.configRoot, 'influxdb.toml')}&quot;`],
+    // influxd 2.x has no --config flag; the config path goes through INFLUXD_CONFIG_PATH.
+    influxdb: [serviceBinary(releaseRoot, manifest.target, 'influxdb'), '', { INFLUXD_CONFIG_PATH: join(roots.configRoot, 'influxdb.toml') }],
     edge: [caddyBinary(releaseRoot, manifest.target), `run --config &quot;${join(roots.configRoot, 'Caddyfile')}&quot; --adapter caddyfile`],
   };
   for (const definition of definitions) {
     cpSync(winsw, definition.wrapper, { force: true });
-    const [executable, argumentsValue] = commands[definition.id];
-    writeFileSync(definition.xml, windowsServiceXml(definition.id, executable, argumentsValue, logRoot));
+    const [executable, argumentsValue, environment] = commands[definition.id];
+    writeFileSync(definition.xml, windowsServiceXml(definition.id, executable, argumentsValue, logRoot, environment));
     runImpl(definition.wrapper, ['install']);
     runImpl(definition.wrapper, ['start']);
   }
@@ -749,7 +771,7 @@ async function bootstrapNativeInflux({ config, secrets, fetchImpl = fetch, waitI
         }
       } else lastCode = `HTTP_${check.status}`;
     } catch (error) {
-      lastCode = error.code ?? error.name ?? 'UNREACHABLE';
+      lastCode = error.code ?? error.cause?.code ?? error.name ?? 'UNREACHABLE';
     }
     await delay(1000);
   }
@@ -819,6 +841,12 @@ export async function waitForReadiness(config, roots, timeoutMs = 300_000, fetch
 }
 
 function ensureStateDirectories(roots) {
+  // The state root is only traversed: secrets/ (0700) and data/ (service-owned) protect their
+  // contents. Under a hardened installer umask it was created 0700 root, and the native service
+  // user could not reach its own data: `runuser -u xyvirtual forgejo migrate` failed
+  // (EP-APPLIANCE-001 rehearsal, 2026-11-04). Explicit, like the default umask would give.
+  mkdirSync(roots.stateRoot, { recursive: true });
+  if (process.platform !== 'win32') chmodSync(roots.stateRoot, 0o755);
   for (const rel of ['data/gateway', 'data/connect', 'data/forgejo', 'data/influxdb', 'config/influxdb', 'pki', 'backups', 'logs', 'license', 'secrets']) {
     mkdirSync(join(roots.stateRoot, rel), { recursive: true, mode: rel === 'secrets' ? 0o700 : 0o750 });
   }
