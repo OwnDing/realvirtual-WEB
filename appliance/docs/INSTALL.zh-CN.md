@@ -11,7 +11,7 @@
 - 企业 CA 证书，或批准 Appliance internal CA 根证书的分发流程；
 - `container` 或 `native` 模式；容器模式要求客户预装 Docker Engine/Compose、Docker Desktop/WSL2 或 Podman Compose，安装器不会修改这些平台；
 - 原生模式要求主机已安装 `git`（Forgejo 运行时调用，归档不含 git；Windows 为 Git for Windows），预检会检查并在缺失时阻断；容器模式使用 Forgejo 镜像内的 git，不需要主机 git；
-- 80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行；
+- 80/443 对操作网络开放，网关 5200、CONNECT 5100（若有）、3000/8081/8086 只允许 loopback、容器网络或 Windows host bridge；网关到 PLC 的 OPC UA 端口（常为 4840）按客户 OT 策略单独放行。容器模式下网关经专用网络 `ot`（Linux 宿主网桥 `xyv-ot`）出站，它是除 Edge 外唯一能离开容器网络的服务：宿主防火墙必须把 `xyv-ot` 的转发流量限制为批准的 PLC 端点，其余拒绝（示例见 6.1，[ADR-0029](../../docs/adr/ADR-0029-container-gateway-ot-network.md)）；
 - 至少 10 GiB 安装余量，另按模型、Git 和历史保留期规划数据盘与备份盘；
 - 系统时间和时区正确。离线环境也必须有可靠的 NTP/PTP 或人工校时流程。
 
@@ -73,7 +73,7 @@ Windows 原生模式：
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 --config 'C:\ProgramData\XYvirtual Appliance Input\appliance.json' --mode native
 ```
 
-安装器只使用 `images/appliance-images.tar` 和 `runtime/`。Compose 强制 `pull=never`；CONNECT、Forgejo、InfluxDB 和控制面只连接 internal backend，只有 edge 同时连接 frontend 并向宿主发布 HTTP/HTTPS 端口。首次安装会显示一次 operator 密码；立即记录到客户密码管理器。Influx token 保存在 `state/secrets/runtime.env`；Forgejo 初始管理员凭证保存在 `state/secrets/forgejo-admin-bootstrap.txt`。两者都只允许管理员和服务账户读取，初次登录后应把 Forgejo 密码轮换进客户密码管理器并删除引导文件。
+安装器只使用 `images/appliance-images.tar` 和 `runtime/`。Compose 强制 `pull=never`；CONNECT、Forgejo、InfluxDB 和控制面只连接 internal backend，只有 edge 同时连接 frontend 并向宿主发布 HTTP/HTTPS 端口；网关另接 `ot` 网络（`xyv-ot`）以出站到 PLC，不发布宿主端口。首次安装会显示一次 operator 密码；立即记录到客户密码管理器。Influx token 保存在 `state/secrets/runtime.env`；Forgejo 初始管理员凭证保存在 `state/secrets/forgejo-admin-bootstrap.txt`。两者都只允许管理员和服务账户读取，初次登录后应把 Forgejo 密码轮换进客户密码管理器并删除引导文件。
 
 默认持久位置：
 
@@ -120,6 +120,17 @@ CA 私钥是持久状态。丢失它会迫使所有终端重新信任新根，�
 
 首次安装生成 `config/gateway.json`：**只读、未连接任何 PLC**（`/gateway/health` 显示 `unconfigured`）。由客户 OT 负责人按 [网关契约](../../docs/contracts/GATEWAY.md) 填写 `source`（OPC UA 端点、安全模式、身份）和 `signals`（WEB 信号名 → NodeId、PLC 类型、是否可写），然后重启网关服务。此后升级不会覆盖该文件。
 
+- 网络出口（容器模式）：网关从 `xyv-ot` 网桥出站。Linux 宿主示例（以 PLC `192.0.2.50:4840` 为例，按客户实际地址修改，并按客户防火墙工具持久化）：
+
+  ```bash
+  iptables -I DOCKER-USER 1 -i xyv-ot -j DROP
+  iptables -I DOCKER-USER 1 -i xyv-ot -d 192.0.2.50 -p tcp --dport 4840 -j ACCEPT
+  iptables -I DOCKER-USER 1 -i xyv-ot -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  # 宿主本机的服务（sshd 等）走 INPUT，不经过 DOCKER-USER；网关不需要访问宿主本机任何端口
+  iptables -I INPUT 1 -i xyv-ot -j DROP
+  ```
+
+  只写 DOCKER-USER 规则时，网关仍可访问宿主本机的所有服务（2026-11-04 在 Oracle Linux 实测：DOCKER-USER 生效后网关到宿主 `:22` 仍可连接），因此 INPUT 规则必不可少。规则按网桥名匹配，升级、回滚重建网络后依然有效（同次实测）。`source.endpointUrl` 使用 IP 时无需放行 DNS；使用主机名时还需放行客户 DNS 服务器。原生模式网关作为宿主服务运行，按服务用户（`xyvirtual`）或进程限制出口。Windows 容器模式由客户防火墙约束 Docker/WSL 后端的出站。
 - 写入默认关闭：只有 `PLCInput*` 且显式 `writable: true` 的信号可写，`readOnly` 改为 `false` 前须完成现场授权、联锁与急停确认；
 - 每次写尝试记录在 `state/data/gateway/audit/writes.jsonl`；超时或断线的写入记为 `unknown`，网关不会自动重试，须先读回 PLC 状态；
 - 用户名身份要求 `Sign` 或 `SignAndEncrypt`；密码通过环境变量提供，不写入文件；首次连接后把 PLC 证书从 `pki/rejected` 移到 `pki/trusted`；

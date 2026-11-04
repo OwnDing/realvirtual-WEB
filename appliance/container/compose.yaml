@@ -49,7 +49,11 @@ services:
       - "${RV_RELEASE_ROOT}:/release:ro"
       - "${RV_CONFIG_ROOT}/gateway.json:/etc/xyvirtual-gateway/gateway.json:ro"
       - "${RV_STATE_ROOT}/data/gateway:/var/lib/xyvirtual-gateway"
-    networks: [backend]
+    # backend: edge, control and InfluxDB reach the gateway. ot: the ONLY service network with
+    # a route off the host, so the gateway can reach PLCs on the plant/OT network (ADR-0029;
+    # on backend alone every PLC was ENETUNREACH). The customer's host firewall must restrict
+    # the `xyv-ot` bridge to the PLC endpoints (INSTALL section 1 / 6.1).
+    networks: [backend, ot]
 
   connect:
     image: xyvirtual-appliance/connect:${RV_APPLIANCE_VERSION}
@@ -101,3 +105,8 @@ networks:
   frontend:
   backend:
     internal: true
+  ot:
+    driver: bridge
+    driver_opts:
+      # A stable host interface name for the customer's egress ACL (DOCKER-USER -i xyv-ot).
+      com.docker.network.bridge.name: xyv-ot

@@ -95,4 +95,25 @@ describe('appliance runtime topology', () => {
     expect(source).toContain('rv_connect_origin=1');
     expect(source).toContain('@connectRoot path /health /ws /webviewer');
   });
+
+  // ADR-0029 (OD-012, user decision 2026-11-04): only the gateway may leave the internal
+  // network, through the dedicated `ot` bridge the customer's host ACL restricts to the PLCs.
+  it('gives only the gateway a route to the OT network, on a bridge the host ACL can name', () => {
+    const compose = readFileSync(resolve(root, 'appliance/container/compose.yaml'), 'utf8');
+    const services = compose.slice(compose.indexOf('\nservices:'), compose.indexOf('\nnetworks:'));
+    const blocks = Object.fromEntries([...services.matchAll(/\n {2}([a-z]+):\n([\s\S]*?)(?=\n {2}[a-z]+:\n|$)/g)].map((m) => [m[1], m[2]]));
+    const networksOf = (id: string) => /\n {4}networks: \[([^\]]+)\]/.exec(blocks[id])?.[1].split(',').map((n) => n.trim());
+    expect(Object.keys(blocks).sort()).toEqual(['connect', 'control', 'edge', 'forgejo', 'gateway', 'influxdb']);
+    expect(networksOf('gateway')).toEqual(['backend', 'ot']);
+    expect(networksOf('edge')).toEqual(['frontend', 'backend']);
+    for (const id of ['control', 'connect', 'forgejo', 'influxdb']) expect(networksOf(id), id).toEqual(['backend']);
+    const networks = compose.slice(compose.indexOf('\nnetworks:'));
+    expect(networks).toMatch(/\n {2}backend:\n {4}internal: true\n/);
+    const ot = /\n {2}ot:\n([\s\S]*)$/.exec(networks)![1];
+    expect(ot).not.toContain('internal: true');
+    expect(ot).toContain('com.docker.network.bridge.name: xyv-ot');
+    // The OT route is outbound only: the gateway publishes no host port; only the edge does.
+    expect(blocks.gateway).not.toContain('ports:');
+    expect(Object.entries(blocks).filter(([, block]) => block.includes('\n    ports:')).map(([id]) => id)).toEqual(['edge']);
+  });
 });

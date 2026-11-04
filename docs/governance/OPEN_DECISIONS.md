@@ -23,7 +23,8 @@ authority: normative-registry
 | OD-009 | AGPL 商业路线、独立发行身份及阶段 A 定性与清点的结案范围 | product、security | 已落入 ADR-0021 与完成计划 EP-LEGAL-001；法律/发布证据转 OD-010 | closed |
 | OD-010 | 阶段 A 遗留的权属事实、法律签收及实际交付履约 | product、security、engineering | A-01–A-08 对应的权利声明、实际制品与正式商业发布 | open |
 | OD-011 | 工业协议网关的归属：继续依赖上游 CONNECT，还是自有网关、CONNECT 可选 | product、architecture | 新服务端协议组件、Appliance 组件清单、Historian 数据源 | closed |
-| OD-012 | 容器模式下工业网关到 PLC（OT 网络）的网络通路，及原生模式是否随包提供 git | product、architecture、security | 容器模式 F7–F10（网关读写 PLC）；原生模式主机前置条件；EP-APPLIANCE-001 关闭 | open |
+| OD-012 | 容器模式下工业网关到 PLC（OT 网络）的网络通路 | product、architecture、security | 已落入 ADR-0029（方案 a） | closed |
+| OD-013 | 原生模式是否随包提供 git（Forgejo 运行时依赖），还是保持为主机前置条件 | product、security | 原生模式主机前置条件、GPLv2 来源义务、EP-APPLIANCE-001 关闭 | open |
 
 ## 执行规则
 
@@ -35,7 +36,11 @@ OD-010：遗留权属、法律与发布证据，Owner 为 product/security/engin
 
 OD-008：供应链门禁风险策略、内容绑定的脚本授权和企业独立测试证据，Owner 为 security/product/maintainers，状态 **closed**。2026-10-20 用户明确“同意，开 pr 实施”，认可 EP-SEC-001 D1–D5；落地 [ADR-0019](../adr/ADR-0019-supply-chain-and-script-trust.md) 与 [活动计划](../exec-plans/active/EP-SEC-001-supply-chain-and-script-security.md)。需同步门禁/策略/运行时/授权迁移/验收；决策关闭不代表代码、远程保护设置或第三方测试完成。OD-005 的原五项保护不撤销，新增检查的远程强制单独留证。
 
-OD-012：容器模式网关的 PLC 通路与原生模式的 git 依赖，Owner 为 product/architecture/security，状态 **open**（2026-11-04 由 EP-APPLIANCE-001 本机演练登记）。实测（Debian 12 主机、Docker 29.9.3）：容器模式的 `gateway` 服务只接 `internal: true` 的 `backend` 网络，容器内仅有 backend 子网路由，对演练“工厂网络”上 OPC UA 模拟器 `172.30.0.20:4840` 的 TCP 连接得到 `ENETUNREACH`，而宿主本身可达；因此容器模式下网关无法连接位于容器网络之外的任何 PLC，F7–F10 在容器模式不可能通过。同一模拟器在原生模式下连接成功（`source connected`）。可选方案（未实施，需决策）：(a) 仅给网关增加一个非 internal 的 `ot` 网络，网络级零外呼继续由客户宿主 ACL 兜底（与 Edge 现状一致）；(b) 声明容器模式不支持网关直连 PLC，工业连接只在原生模式交付；(c) 网关使用宿主网络。三者改变的是已文档化的网络边界（[架构](../architecture/OFFLINE_APPLIANCE.md)“backend 为 internal”），按 AI_SAFETY §1 由 Owner 决定，Agent 不自行选择。同时登记：原生 Forgejo 运行时调用主机 `git`，归档不含 git；本轮已让预检在原生模式要求主机 git 并写入安装手册，是否改为随包提供（GPLv2 来源义务）待决。
+OD-012：容器模式网关的 PLC 通路，Owner 为 product/architecture/security，状态 **closed**（2026-11-04）。用户对下述三个方案明确选择“采用 a”，批准来源为该用户当前明确指令；落地为 Accepted [ADR-0029](../adr/ADR-0029-container-gateway-ot-network.md)：只有网关另接非 internal 的 `ot` 网络（宿主网桥 `xyv-ot`），不发布宿主端口，出口由客户宿主 ACL 限制到 PLC 端点；同步修改 `appliance/container/compose.yaml`、[架构](../architecture/OFFLINE_APPLIANCE.md)、安装手册与 `tests/appliance-runtime.node.test.ts`，实机结果登记于 EP-APPLIANCE-001。原 OD-012 中的 git 问题移入 OD-013。
+
+OD-013：原生模式的 git 依赖，Owner 为 product/security，状态 **open**（2026-11-04 自 OD-012 拆出）。原生 Forgejo 运行时调用主机 `git`，归档不含 git；当前处理是预检在原生模式要求主机 git、安装手册列为前置条件。待决：维持主机前置条件，还是随包提供 git 并承担 GPLv2 来源义务。
+
+以下为 OD-012 登记时的原始记录（2026-11-04 由 EP-APPLIANCE-001 本机演练登记）。实测（Debian 12 主机、Docker 29.9.3）：容器模式的 `gateway` 服务只接 `internal: true` 的 `backend` 网络，容器内仅有 backend 子网路由，对演练“工厂网络”上 OPC UA 模拟器 `172.30.0.20:4840` 的 TCP 连接得到 `ENETUNREACH`，而宿主本身可达；因此容器模式下网关无法连接位于容器网络之外的任何 PLC，F7–F10 在容器模式不可能通过。同一模拟器在原生模式下连接成功（`source connected`）。可选方案（未实施，需决策）：(a) 仅给网关增加一个非 internal 的 `ot` 网络，网络级零外呼继续由客户宿主 ACL 兜底（与 Edge 现状一致）；(b) 声明容器模式不支持网关直连 PLC，工业连接只在原生模式交付；(c) 网关使用宿主网络。三者改变的是已文档化的网络边界（[架构](../architecture/OFFLINE_APPLIANCE.md)“backend 为 internal”），按 AI_SAFETY §1 由 Owner 决定，Agent 不自行选择。同时登记：原生 Forgejo 运行时调用主机 `git`，归档不含 git；本轮已让预检在原生模式要求主机 git 并写入安装手册，是否改为随包提供（GPLv2 来源义务）待决。
 
 1. 任务碰到阻塞范围时，ExecPlan 必须引用对应 OD。
 2. 决策完成后创建或更新 ADR/产品规格/契约，再把状态改为 `closed`。

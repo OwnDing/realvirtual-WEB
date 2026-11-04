@@ -85,7 +85,7 @@ authority: normative-process
 - [x] 双平台生命周期脚本和诊断实现。
 - [x] 现场验收工具包（2026-11-03，第二轮整改第 5 步）：`appliance/docs/FIELD_ACCEPTANCE.zh-CN.md`（权威）/ `.en.md` 的 F1–F15 清单、`appliance/acceptance/FIELD_ACCEPTANCE_RECORD.template.md` 记录模板、只读探针 `appliance/acceptance/probe.mjs`（随归档交付）。
 - [x] 本机演练（2026-11-04，用户指令“要测试的话就在本机上进行测试”）：linux-arm64 container 与 native 两种模式按 FIELD_ACCEPTANCE 逐项演练，发现并修复 20 项缺陷；证据与未执行项见 Validation“本机演练”。
-- [ ] 自动化与真实环境验证（需要用户提供的现场主机、网络、OPC UA 测试端点与可选 Unity 主机，按 FIELD_ACCEPTANCE 执行）；另受 OD-012 阻塞容器模式的 F7–F10。
+- [ ] 自动化与真实环境验证（需要用户提供的现场主机、网络、OPC UA 测试端点与可选 Unity 主机，按 FIELD_ACCEPTANCE 执行）。OD-012 已按用户选择的方案 (a) 落地为 ADR-0029，容器模式 F7–F10 已在 Oracle Linux 实机通过（见 Validation）。
 
 ## Surprises & Discoveries
 
@@ -99,12 +99,13 @@ authority: normative-process
 - 归档在 macOS 构建时每个文件带 AppleDouble `._*` 与 xattr 记录，而 macOS 的 `tar -t` 会隐藏它们，所以归档核对必须用构建器自己的解析器，不能信任平台 tar。
 - 容器模式控制面与 `/diagnostics/` 的代码来自 OCI 镜像（`/app`），而不是归档中的 `runtime/`；本轮一次演练因镜像是旧源码构建而得到过期的诊断页。构建器目前不核对镜像与归档出自同一源码——登记为待跟进，正式发布流程必须同一提交构建两者。
 - 失败恢复遇到从未加载的 systemd 单元时，`systemctl disable --now` 返回 5，恢复报告“automatic recovery was not safe”。根因（单元无法加载）已修，但恢复路径对“单元不存在/未加载”仍不宽容，登记待跟进。
-- 容器模式网关只在 internal backend 网络，无法到达容器网络之外的 PLC（OD-012）。
+- 容器模式网关只在 internal backend 网络，无法到达容器网络之外的 PLC（OD-012）。用户 2026-11-04 选择方案 (a)，落地为 ADR-0029（网关专用 `ot` 网络，网桥 `xyv-ot`）。实机验证又发现手册示例只写 `DOCKER-USER` 不够：到宿主本机服务的流量走 INPUT，网关仍能连宿主 `:22`；已补 `INPUT -i xyv-ot -j DROP`。
 
 ## Decision Log
 
 - 2026-11-04：按用户指令“e2e plan (EP-E2E-001)，以及 Appliance plan (EP-APPLIANCE-001) 都进行，要测试的话就在本机上进行测试”，在维护者 Apple M5 上用 Docker Desktop 内的一次性 Debian 12 + systemd + Docker 29 主机演练 linux-arm64；OPC UA 端点是进程外**模拟器**，不是 PLC；没有 Unity 主机，F12 不执行；Windows 与 linux-x64 需要实机。批准来源：用户当前明确指令。
 - 2026-11-04：容器模式网关到 PLC 的网络通路会改变已文档化的网络边界，按 AI_SAFETY §1 登记 OD-012，不由 Agent 选择；F7–F10 改在原生模式演练。
+- 2026-11-04：用户对 OD-012 回复“采用 a”，并回复“在 orcal 上可以真实安装”。批准来源：用户当前明确指令。落地 ADR-0029；在用户的 Oracle Linux 主机上以 sudo 真实安装 native 与 container 两种模式，测试结束后按原样清理（卸载 `--purge-data`、删除 `xyvirtual` 系统用户、移除临时 hosts 行、ACL 规则、模拟器与本次产生的镜像）。
 - 2026-11-04：原生模式需要主机 git（Forgejo 运行时调用，归档不含）。本轮只把它变成预检阻断项并写入安装手册；是否随包提供 git 并承担 GPLv2 来源义务列入 OD-012。
 - 2026-11-04：Forgejo 原生模式关闭 SSH（`DISABLE_SSH = true`）：Appliance 只经入口以 HTTPS 提供 Git，且没有发布或记录过 SSH 端口。
 - 2026-11-04：`scripts/test-protected-presentations.mjs`（不在本计划允许路径内）同步修改：Caddyfile 新变量 `OPERATOR_HASH_ALGORITHM` 必须由该 HTTPS 旅程设置（`tests/appliance-runtime.node.test.ts` 强制），并补上“正确 operator 凭据可进、错误被拒”的正向断言。安装手册修改连带重新生成 `public/user-help`（页脚摘要变化）。
@@ -164,8 +165,8 @@ OCI 基础镜像按锁定的 arm64 child digest 拉取并核对 `linux/arm64`；
 | F4 CA 与跳转 | 部分 | 部分 | 指纹带外取得；两主机名链与 SAN 正确；无 CA 客户端被拒；HTTP 301 到同路径 HTTPS。**未在真实终端信任库导入 CA** |
 | F5 探针 | 通过 | 通过 | 每次 25 通过 / 0 失败 / 1 跳过（M0 多人未请求）；证据 0600、无口令/Cookie/CSRF；`accounts.json` 用后删除 |
 | F6 诊断页 | 部分 | 部分 | 无头 Chromium 156（宿主 GPU）：未登录 HMI 8 通过/4 警告/0 失败，登录后 9/3/0，证书上下文与 `wss://…/gateway/ws` 通过。信任来自固定内部 CA 中间证书公钥，不是信任库；**不是操作终端** |
-| F7 网关源/实时/历史 | 阻塞（OD-012） | 通过（模拟器） | 源 `opcua/connected`、5 信号、历史已连接；查看者收到快照；历史查询有数据 |
-| F8 写入与审计 | 阻塞（OD-012） | 通过（模拟器） | 操作员写入 `written/Good`、模拟器收到；查看者 `forbidden-role`；输出方向与越界被拒；`writes.jsonl` 每条带用户与角色。**“查看者看不到写控件”是界面项，未验证** |
+| F7 网关源/实时/历史 | 阻塞（OD-012；ADR-0029 后见 Oracle 实机） | 通过（模拟器） | 源 `opcua/connected`、5 信号、历史已连接；查看者收到快照；历史查询有数据 |
+| F8 写入与审计 | 阻塞（OD-012；ADR-0029 后见 Oracle 实机） | 通过（模拟器） | 操作员写入 `written/Good`、模拟器收到；查看者 `forbidden-role`；输出方向与越界被拒；`writes.jsonl` 每条带用户与角色。**“查看者看不到写控件”是界面项，未验证** |
 | F9 强制设置/解除 | 不适用于网关 | 通过（API 级） | 工程师 201×2、操作员 403；访问审计带用户与角色。浏览器侧强制未经界面操作 |
 | F10 告警确认/搁置 | — | 通过（API 级） | 操作员确认 201、工程师搁置 201、查看者确认 403、操作员搁置 403；均入审计 |
 | F11 服务端项目 | 通过 | 通过 | Forgejo 提交作者为 `acc-engineer`；陈旧基线 409；查看者读 200、写 403 |
@@ -199,7 +200,36 @@ OCI 基础镜像按锁定的 arm64 child digest 拉取并核对 `linux/arm64`；
 
 Linux 实机补充（2026-11-04，用户提供的 Oracle Linux 10.2 aarch64 主机，systemd 257，Docker 29.7.2，分支 `d5bffc2`）：完整 `./scripts/verify.sh node` 102/102 文件、988 通过 / 1 跳过，其中 `tests/appliance-lifecycle.node.test.ts` 7/7（macOS 上因缺 Linux 主机工具无法运行）；`tests/appliance-runtime.node.test.ts` 的 `systemd-analyze verify` 分支在真实 systemd 上执行并通过，且对旧的带引号 `WorkingDirectory` 单元确实报错（反例成立）；真实 Caddy HTTPS 旅程 `scripts/test-protected-presentations.mjs` 通过（36 s），把模板临时换回 develop 的裸 `basic_auth` 后在新断言 “operator credential opens /appliance/”（实际 401、期望 200）处失败，随后恢复；`tests/appliance-diagnostics.test.ts` 5/5。首轮 Node 门禁的 3 项失败（`bundle-chunk`、`embed-spike`、`user-help`）来自该工作副本 2026-10-24 的陈旧 `dist/`、`dist-embed/`；在本分支重新构建后 3/3 通过，完整门禁复跑全绿。
 
-未执行或未验证（不得写成通过）：Windows x64 container/native、linux-x64、真实 PLC/OT 网络与 OPC UA 安全模式/证书信任、F12 多人与 Unity、客户证书模式、真实操作终端的 CA 信任与 HMI 界面、容器模式 F7–F10（OD-012）、CONNECT（本轮发布不含）、原生模式安装尚未在 Oracle Linux（SELinux、RHEL 系 `useradd`）实机执行。本轮演练脚本与原始证据保存在会话临时目录，未入库。
+### Oracle Linux 实机安装（2026-11-04，用户授权“在 orcal 上可以真实安装”）
+
+主机：用户的 Oracle Linux 10.2 aarch64（4 vCPU、22 GiB、systemd 257、SELinux **Enforcing**、firewalld、Docker 29.7.2 且 daemon 未启用 SELinux 标签、iptables nf_tables 后端），同机运行用户的 GitLab 与 Stirling-PDF 容器，均未触碰。归档在该主机上以 Linux 构建：上游依赖从原 URL 下载并按记录的 SHA-256/大小核对，10 个输入文件与 Mac 演练锁定的字节完全一致；基础镜像按锁定 digest 拉取；构建器走 GNU tar 路径。
+
+| 制品（提交 `8e65a24`） | 字节 | SHA-256 |
+| --- | --- | --- |
+| 6.3.27 | 718,114,295 | `d668183c18b83997f9a0ea8ba932fbccfbee910f0fed1e22fd408c9e5a8054f2` |
+| 6.3.28 候选（`git archive` 副本中改版本） | 718,103,579 | `4fb5df4574e49ee0f99406cf2a87765d521de66adeda7452542001f53c37f506` |
+
+OPC UA **模拟器**以容器运行，仅发布在主机私网地址 `10.0.0.36:4840`；名称经临时 hosts 行解析；HTTPS 8443 / HTTP 8080（GitLab 占用 80/443）。安装均以 `umask 077` 由 root 执行。
+
+| 项 | native | container |
+| --- | --- | --- |
+| F2/F3 预检与安装 | 通过（19 s；5 单元运行；edge 为 root，其余 `xyvirtual`） | 通过（27 s；5 服务运行；`ot` 非 internal、网桥 `xyv-ot`、成员只有网关；backend 仍 internal） |
+| SELinux | 安装、运行与完整生命周期期间审计记录 1,258 + 2,074 条，AVC 拒绝 0 | （Docker 未启用 SELinux 标签，见下） |
+| F4 | 通过（两主机名经内部 CA 校验；无 CA 被拒；HTTP 301） | 同左 |
+| F5 探针 | 25/0/1 | 25/0/1 |
+| F6 诊断（主机无 GPU 的无头 Chromium） | 未登录 7/5/0、登录后 8/4/0；证书上下文与 `wss://…/gateway/ws` 通过；WebGPU 无 adapter（警告） | 未执行 |
+| F7–F10（模拟器） | 通过 | **通过（经 `ot`，ADR-0029）** |
+| F11 | 通过（提交作者 `acc-engineer`） | 未执行 |
+| F13 | 通过：重启全部服务（未重启主机，避免影响 GitLab），以 `xyvirtual` 用户出站 ACL 计数，外部丢弃 0；edge 以 root 运行不在该 ACL 内 | 按手册 ACL：见下 |
+| F14/F15 | 通过：备份、候选预检 READY、升级 6.3.28、回滚、恢复、默认卸载、重装，每步数据不变 | 升级与回滚通过；ACL 在网络重建后仍有效 |
+
+容器模式出口 ACL 实测：无 ACL 时网关可访问互联网（`1.1.1.1:443` OPEN）；按手册加入 `DOCKER-USER` 规则后 PLC 仍可达、互联网与其他私网主机被丢弃（计数 8），但宿主本机 `:22` 仍 OPEN；补上 `INPUT -i xyv-ot -j DROP` 后宿主本机不可达（计数 9），PLC 与网关重连不受影响，入口 `/health/ready` 200。模拟器位于本机 Docker 端口 DNAT 之后，因此 PLC 放行规则用 `conntrack --ctorigdst` 匹配原始目的地；真实独立 PLC 用手册中的 `-d <PLC>`。
+
+清理：`uninstall --purge-data --confirm-purge <installId>`（native 与 container 各一次）后三棵根目录均已删除、无单元与容器残留；删除 `xyvirtual` 系统用户（卸载按设计保留系统用户）、临时 hosts 行、输入配置、全部 ACL 规则与模拟器；删除本次构建的 `xyvirtual-appliance/*` 镜像与按 digest 拉取的基础镜像，主机原有镜像保留；工作副本切回 `develop`。构建输入、归档与证据保留在主机 `/home/opc/vdisk/xyv-rehearsal`（约 7.5 GB），待用户决定是否删除。
+
+风险登记：若客户 Docker 启用 SELinux 标签（`selinux-enabled: true`），Compose 中对宿主目录的绑定挂载需要 `:z`/`:Z` 重新标记，否则容器可能无法读取；本主机未启用，未验证。
+
+未执行或未验证（不得写成通过）：Windows x64 container/native、linux-x64、真实 PLC/OT 网络与 OPC UA 安全模式/证书信任、F12 多人与 Unity、客户证书模式、真实操作终端的 CA 信任与 HMI 界面、CONNECT（本轮发布不含）、主机整机重启（Oracle 主机未重启）、启用 SELinux 标签的 Docker。本轮演练脚本与原始证据保存在会话临时目录，未入库。
 
 ## Rollback
 
