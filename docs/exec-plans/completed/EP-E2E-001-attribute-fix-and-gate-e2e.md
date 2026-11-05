@@ -4,7 +4,7 @@ title: 第二轮整改第 3 步：e2e 失败逐条归因、修复并纳入 CI
 status: approved
 plan_status: completed
 owner: engineering
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-05
 authority: normative-process
 ---
 
@@ -177,4 +177,4 @@ authority: normative-process
 - 三个间歇或环境相关的失败（`paintline-assembly`、`overhead-conveyor-render`，以及 hmi-panels 的空断言）是同一类前提错误：仿真与帧耦合、每帧最多积分 0.1 s，墙钟等待对仿真进度没有下界；空断言则靠子串碰巧命中。等待应以产品自身状态（仿真时钟、`Moving` 信号、具体组件）为条件，断言保持不变。
 - 本地全绿不代表换一台机器也绿：自托管首轮在冷启动 dev server 上立即暴露两例；CI 的作业级开销（缓存上传）也必须看日志而非只看结论。
 
-仍未验证 / 限制：`E2E Gate` 不是 required check（OD-005，由仓库管理员决定）；runner 仅在维护者手动运行时在线，离线时作业排队直至超时；`visual-presentation` 在本机内存压力下的编码失败未在 runner 上复现，未单独修复。
+仍未验证 / 限制：`E2E Gate` 不是 required check（OD-005，由仓库管理员决定）；runner 仅在维护者手动运行时在线，离线时作业排队直至超时；`visual-presentation` 在本机内存压力下的编码失败未单独修复：2026-11-05 在 runner 上复现一次（develop run 41866903664，PR #35 合并后），失败时页面显示同一产品提示“Browser encoding failed. Check memory and format support before retrying.”（编码 0 字节或停止看门狗触发，产品按设计失败关闭并告知用户），同期该机 swap 约 2.9 GiB、Docker Desktop 虚拟机预留 8 GiB；测试期望（短录制应完成）合理，未修改。同一运行中 `smoke`“at least 1 drive exists after model load”的固定 5 s 前提错误另行修复（见该提交）。
